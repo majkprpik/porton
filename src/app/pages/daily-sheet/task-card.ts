@@ -17,7 +17,8 @@ export type TaskState = 'pending' | 'in-progress' | 'completed';
       [class.in-progress]="state === 'in-progress'"
       [class.completed]="state === 'completed'"
       [class.assignable]="canBeAssigned"
-      (click)="onClick()"
+      [class.in-active-group]="isInActiveGroup"
+      (click)="onClick($event)"
       (contextmenu)="onContextMenu($event)"
     >
       <div class="house-number">{{houseNumber}}</div>
@@ -81,6 +82,12 @@ export type TaskState = 'pending' | 'in-progress' | 'completed';
         }
       }
 
+      &.in-active-group {
+        &:hover {
+          background: var(--p-red-500) !important;
+        }
+      }
+
       :host-context(.dark) & {
         &.pending {
           background: var(--p-yellow-400);
@@ -117,8 +124,10 @@ export class TaskCardComponent {
   @Input() taskIcon: string = 'pi-home';
   @Input() task?: Task;
   @Input() canBeAssigned: boolean = false;
+  @Input() isInActiveGroup: boolean = false;
   
   @Output() taskClicked = new EventEmitter<void>();
+  @Output() removeFromGroup = new EventEmitter<void>();
   
   @ViewChild('cm') contextMenu!: ContextMenu;
 
@@ -163,14 +172,19 @@ export class TaskCardComponent {
     }
   ];
 
-  onClick() {
-    if (this.canBeAssigned) {
+  onClick(event: MouseEvent) {
+    event.stopPropagation();
+    
+    if (this.isInActiveGroup) {
+      this.removeFromGroup.emit();
+    } else if (this.canBeAssigned) {
       this.taskClicked.emit();
     }
   }
 
   onContextMenu(event: MouseEvent) {
     event.preventDefault();
+    event.stopPropagation();
     this.contextMenu.show(event);
   }
 

@@ -7,15 +7,25 @@ import { TagModule } from 'primeng/tag';
 import { StaffCardComponent } from './staff-card';
 import { MenuItem } from 'primeng/api';
 import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
+import { forkJoin } from 'rxjs';
+import { map, take } from 'rxjs/operators';
+import { WorkGroupService } from './work-group.service';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-work-group',
   standalone: true,
-  imports: [CommonModule, ButtonModule, TaskCardComponent, TagModule, StaffCardComponent, ContextMenuModule],
+  imports: [
+    CommonModule, 
+    ButtonModule, 
+    TaskCardComponent, 
+    TagModule, 
+    StaffCardComponent, 
+    ContextMenuModule,
+    TooltipModule
+  ],
   template: `
-    <div class="work-group-container" 
-         [class.active]="isActive"
-         (click)="onGroupClick()">
+    <div class="work-group-container" [class.active]="isActive">
       <div class="active-border"></div>
       <div class="work-group-header">
         <div class="work-group-title-area">
@@ -25,14 +35,21 @@ import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
             [severity]="workGroup?.is_locked ? 'success' : 'secondary'"
           ></p-tag>
         </div>
+        <p-button 
+          [label]="isActive ? 'DEACTIVATE' : 'ACTIVATE'"
+          [severity]="isActive ? 'secondary' : 'success'"
+          (onClick)="onGroupClick()"
+          class="activate-button"
+        ></p-button>
         <div class="header-actions">
           <p-button 
             icon="pi pi-trash" 
             severity="danger" 
             [text]="true"
             [rounded]="true"
-            (click)="onDeleteClick($event)">
-          </p-button>
+            (onClick)="onDeleteClick($event)"
+            pTooltip="Delete Group"
+          ></p-button>
         </div>
       </div>
       <div class="work-group-content">
@@ -45,7 +62,9 @@ import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
                 <app-task-card 
                   [houseNumber]="task.house_id"
                   [state]="'in-progress'"
-                  [taskIcon]="getTaskIcon(task.task_type_id)">
+                  [taskIcon]="getTaskIcon(task.task_type_id)"
+                  [isInActiveGroup]="isActive"
+                  (removeFromGroup)="onRemoveTask(task)">
                 </app-task-card>
               }
             </div>
@@ -59,6 +78,8 @@ import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
               @for (staff of assignedStaff; track staff.id) {
                 <app-staff-card 
                   [staff]="staff"
+                  [isInActiveGroup]="isActive"
+                  (removeFromGroup)="onRemoveStaff(staff)"
                   (contextmenu)="onStaffContextMenu($event, staff)"
                 ></app-staff-card>
               }
@@ -88,14 +109,22 @@ import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
       box-shadow: var(--card-shadow);
       position: relative;
       transition: all 0.2s;
-      cursor: pointer;
 
       &:hover {
         background-color: var(--surface-hover);
       }
 
       &.active {
-        background-color: var(--primary-50);
+        background-color: rgba(50, 177, 151, 0.1);
+        border: 2px solid rgba(50, 177, 151, 0.2);
+
+        .work-group-title {
+          color: var(--text-color);
+        }
+
+        &:hover {
+          background-color: rgba(50, 177, 151, 0.15);
+        }
 
         .active-border {
           position: absolute;
@@ -103,10 +132,10 @@ import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
           border-radius: 6px;
           pointer-events: none;
           background-image: 
-            linear-gradient(to right, var(--primary-color) 50%, transparent 50%),
-            linear-gradient(to bottom, var(--primary-color) 50%, transparent 50%),
-            linear-gradient(to left, var(--primary-color) 50%, transparent 50%),
-            linear-gradient(to top, var(--primary-color) 50%, transparent 50%);
+            linear-gradient(to right, rgba(50, 177, 151, 0.5) 50%, transparent 50%),
+            linear-gradient(to bottom, rgba(50, 177, 151, 0.5) 50%, transparent 50%),
+            linear-gradient(to left, rgba(50, 177, 151, 0.5) 50%, transparent 50%),
+            linear-gradient(to top, rgba(50, 177, 151, 0.5) 50%, transparent 50%);
           background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
           background-position: 0 0, 100% 0, 100% 100%, 0 100%;
           background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
@@ -120,12 +149,14 @@ import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1rem;
+      gap: 1rem;
     }
 
     .work-group-title-area {
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex: 1;
     }
 
     .header-actions {
@@ -137,6 +168,24 @@ import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
       font-weight: 600;
       font-size: 1.1rem;
       color: var(--text-color);
+    }
+
+    .activate-button-container {
+      display: flex;
+      justify-content: center;
+      margin: -0.5rem 0 1rem 0;
+    }
+
+    :host ::ng-deep {
+      .activate-button {
+        .p-button {
+          min-width: 200px;
+          font-size: 1.1rem;
+          font-weight: 600;
+          padding: 0.75rem 2rem;
+          text-transform: uppercase;
+        }
+      }
     }
 
     .work-group-content {
@@ -177,6 +226,8 @@ export class WorkGroup implements OnInit {
   
   @Output() groupSelected = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
+  @Output() taskRemoved = new EventEmitter<Task>();
+  @Output() staffRemoved = new EventEmitter<Profile>();
   
   @ViewChild('staffContextMenu') staffContextMenu!: ContextMenu;
 
@@ -189,7 +240,10 @@ export class WorkGroup implements OnInit {
     }
   ];
 
-  constructor(private dataService: DataService) {}
+  constructor(
+    private dataService: DataService,
+    private workGroupService: WorkGroupService
+  ) {}
 
   ngOnInit() {
     if (this.workGroup) {
@@ -207,7 +261,13 @@ export class WorkGroup implements OnInit {
   }
 
   onGroupClick() {
-    this.groupSelected.emit();
+    if (this.isActive) {
+      // If the group is already active, deactivate it
+      this.workGroupService.setActiveGroup(undefined);
+    } else {
+      // If the group is not active, activate it
+      this.groupSelected.emit();
+    }
   }
 
   onDeleteClick(event: Event) {
@@ -217,8 +277,52 @@ export class WorkGroup implements OnInit {
 
   onStaffContextMenu(event: MouseEvent, staff: Profile) {
     event.preventDefault();
+    event.stopPropagation();
     this.selectedStaff = staff;
     this.staffContextMenu.show(event);
+  }
+
+  onRemoveTask(task: Task) {
+    if (this.workGroup?.work_group_id) {
+      // Get the progress type ID for "Nije dodijeljeno"
+      this.dataService.taskProgressTypes$.pipe(
+        map(types => types.find(type => type.task_progress_type_name === 'Nije dodijeljeno')),
+        take(1)
+      ).subscribe(nijeDodijeljenoType => {
+        if (!nijeDodijeljenoType) {
+          console.error('Could not find progress type "Nije dodijeljeno"');
+          return;
+        }
+
+        const operations = [
+          this.dataService.removeTaskFromWorkGroup(this.workGroup!.work_group_id, task.task_id),
+          this.dataService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id)
+        ];
+
+        forkJoin(operations).subscribe({
+          next: () => {
+            this.taskRemoved.emit(task);
+          },
+          error: (error: any) => {
+            console.error('Error removing task:', error);
+          }
+        });
+      });
+    }
+  }
+
+  onRemoveStaff(staff: Profile) {
+    if (staff.id && this.workGroup?.work_group_id) {
+      this.dataService.removeStaffFromWorkGroup(staff.id, this.workGroup.work_group_id)
+        .subscribe({
+          next: () => {
+            this.staffRemoved.emit(staff);
+          },
+          error: (error: any) => {
+            console.error('Error removing staff:', error);
+          }
+        });
+    }
   }
 
   removeStaffFromGroup() {
@@ -226,10 +330,10 @@ export class WorkGroup implements OnInit {
       this.dataService.removeStaffFromWorkGroup(this.selectedStaff.id, this.workGroup.work_group_id)
         .subscribe({
           next: () => {
-            //console.log('Staff removed successfully');
+            this.staffRemoved.emit(this.selectedStaff);
             this.loadAssignedStaff();
           },
-          error: (error) => {
+          error: (error: any) => {
             console.error('Error removing staff:', error);
           }
         });

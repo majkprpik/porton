@@ -3,6 +3,7 @@ import { StaffGroup } from './staff-group';
 import { ChipModule } from 'primeng/chip';
 import { DataService, Profile } from '../service/data.service';
 import { CommonModule } from '@angular/common';
+import { WorkGroupService } from './work-group.service';
 
 @Component({
   selector: 'app-staff-groups',
@@ -16,6 +17,12 @@ import { CommonModule } from '@angular/common';
           <span>Loading staff...</span>
         </div>
       } @else {
+        @if (activeWorkGroupId) {
+          <div class="staff-groups-header">
+            <h3>Available Staff for Team {{activeWorkGroupId}}</h3>
+          </div>
+        }
+
         <app-staff-group
           groupName="Cleaner"
           groupIcon="pi pi-home"
@@ -54,6 +61,19 @@ import { CommonModule } from '@angular/common';
       background-color: var(--surface-card);
       border-radius: 8px;
       overflow-y: auto;
+    }
+
+    .staff-groups-header {
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--surface-border);
+
+      h3 {
+        margin: 0;
+        color: var(--text-color);
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
     }
 
     .loading-state {
@@ -102,10 +122,20 @@ export class StaffGroups implements OnInit {
   loading = true;
   profiles: Profile[] = [];
   debug = true; // Enable debug mode
+  activeWorkGroupId?: number;
 
-  constructor(private dataService: DataService) {}
+  constructor(
+    private dataService: DataService,
+    private workGroupService: WorkGroupService
+  ) {}
 
   ngOnInit() {
+    this.workGroupService.activeGroupId$.subscribe(
+      (groupId: number | undefined) => {
+        this.activeWorkGroupId = groupId;
+      }
+    );
+
     this.dataService.profiles$.subscribe({
       next: profiles => {
         //console.log('Loaded profiles:', profiles);

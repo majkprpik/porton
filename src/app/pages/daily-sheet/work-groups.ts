@@ -4,37 +4,41 @@ import { ButtonModule } from 'primeng/button';
 import { WorkGroup } from './work-group';
 import { DataService, Task, Profile } from '../service/data.service';
 import { WorkGroupService } from './work-group.service';
+import { combineLatest } from 'rxjs';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { map, take } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-work-groups',
   standalone: true,
-  imports: [CommonModule, ButtonModule, WorkGroup],
+  imports: [CommonModule, ButtonModule, WorkGroup, ProgressSpinnerModule],
   template: `
-    <div class="work-groups-container">
-      <div class="work-groups-header">
-        <h2>Work Groups</h2>
-        <div class="header-actions">
-          <p-button 
-            label="Create Work Group" 
-            icon="pi pi-plus"
-            severity="secondary"
-            (onClick)="createWorkGroup()"
-          ></p-button>
-          <p-button 
-            label="Publish" 
-            icon="pi pi-check"
-            (onClick)="publishWorkGroups()"
-          ></p-button>
-        </div>
+    @if (loading) {
+      <div class="loading-container">
+        <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
+        <span>Loading work groups...</span>
       </div>
-
-      <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
-        @if (loading) {
-          <div class="loading-state">
-            <i class="pi pi-spin pi-spinner"></i>
-            <span>Loading work groups...</span>
+    } @else {
+      <div class="work-groups-container">
+        <div class="work-groups-header">
+          <h2>Work Groups</h2>
+          <div class="header-actions">
+            <p-button 
+              label="Create Work Group" 
+              icon="pi pi-plus"
+              severity="secondary"
+              (onClick)="createWorkGroup()"
+            ></p-button>
+            <p-button 
+              label="Publish" 
+              icon="pi pi-check"
+              (onClick)="publishWorkGroups()"
+            ></p-button>
           </div>
-        } @else {
+        </div>
+
+        <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
           @if (workGroups.length === 0) {
             <div class="empty-state">
               <p>No work groups created yet.</p>
@@ -50,17 +54,29 @@ import { WorkGroupService } from './work-group.service';
                     [assignedStaff]="getAssignedStaff(group.work_group_id)"
                     (groupSelected)="setActiveGroup(group.work_group_id)"
                     (deleteClicked)="deleteWorkGroup(group.work_group_id)"
+                    (taskRemoved)="onTaskRemoved($event)"
+                    (staffRemoved)="onStaffRemoved($event)"
                     [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
                   ></app-work-group>
                 </div>
               }
             </div>
           }
-        }
+        </div>
       </div>
-    </div>
+    }
   `,
   styles: `
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 1rem;
+      color: var(--text-color-secondary);
+    }
+
     .work-groups-container {
       height: 100%;
       padding: 1rem;
@@ -121,7 +137,7 @@ import { WorkGroupService } from './work-group.service';
       position: relative;
     }
 
-    .loading-state, .empty-state {
+    .empty-state {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -147,6 +163,7 @@ export class WorkGroups implements OnInit {
   activeGroupId?: number;
   workGroupTasks: { [key: number]: Task[] } = {};
   workGroupStaff: { [key: number]: Profile[] } = {};
+  allTasks: Task[] = [];
 
   constructor(
     private dataService: DataService,
@@ -154,48 +171,51 @@ export class WorkGroups implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.workGroupService.activeGroupId$.subscribe(
-      groupId => {
-        this.activeGroupId = groupId;
-      }
-    );
-
-    this.dataService.workGroups$.subscribe(
-      workGroups => {
+    // Use combineLatest to wait for all required data
+    combineLatest([
+      this.workGroupService.activeGroupId$,
+      this.dataService.workGroups$,
+      this.dataService.workGroupTasks$,
+      this.dataService.tasks$,
+      this.dataService.workGroupProfiles$,
+      this.dataService.profiles$
+    ]).subscribe({
+      next: ([activeGroupId, workGroups, workGroupTasks, tasks, workGroupProfiles, profiles]) => {
+        this.activeGroupId = activeGroupId;
         this.workGroups = workGroups;
-        this.loading = false;
-      }
-    );
-
-    this.dataService.workGroupTasks$.subscribe(
-      workGroupTasks => {
+        this.allTasks = tasks;
+        
+        // Map work group tasks
         this.workGroupTasks = {};
         workGroupTasks.forEach(workGroupTask => {
           if (!this.workGroupTasks[workGroupTask.work_group_id]) {
             this.workGroupTasks[workGroupTask.work_group_id] = [];
           }
-          const task = this.dataService.getTaskById(workGroupTask.task_id);
+          const task = tasks.find(t => t.task_id === workGroupTask.task_id);
           if (task) {
             this.workGroupTasks[workGroupTask.work_group_id].push(task);
           }
         });
-      }
-    );
 
-    this.dataService.workGroupProfiles$.subscribe(
-      assignments => {
+        // Map work group staff
         this.workGroupStaff = {};
-        assignments.forEach(assignment => {
+        workGroupProfiles.forEach(assignment => {
           if (!this.workGroupStaff[assignment.work_group_id]) {
             this.workGroupStaff[assignment.work_group_id] = [];
           }
-          const profile = this.dataService.getProfileById(assignment.profile_id);
+          const profile = profiles.find(p => p.id === assignment.profile_id);
           if (profile) {
             this.workGroupStaff[assignment.work_group_id].push(profile);
           }
         });
+
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading work groups data:', error);
+        this.loading = false;
       }
-    );
+    });
   }
 
   getAssignedTasks(workGroupId: number): Task[] {
@@ -206,18 +226,16 @@ export class WorkGroups implements OnInit {
     return this.workGroupStaff[workGroupId] || [];
   }
 
-  setActiveGroup(groupId: number) {
-    if (this.activeGroupId === groupId) {
-      this.workGroupService.setActiveGroup(undefined);
-    } else {
-      this.workGroupService.setActiveGroup(groupId);
-    }
+  setActiveGroup(workGroupId: number) {
+    this.workGroupService.setActiveGroup(workGroupId);
   }
 
   createWorkGroup() {
     this.dataService.createWorkGroup().subscribe({
-      next: () => {
-        //console.log('Work group created successfully');
+      next: (workGroup) => {
+        if (workGroup) {
+          this.setActiveGroup(workGroup.work_group_id);
+        }
       },
       error: (error) => {
         console.error('Error creating work group:', error);
@@ -229,14 +247,85 @@ export class WorkGroups implements OnInit {
     if (this.activeGroupId === workGroupId) {
       this.workGroupService.setActiveGroup(undefined);
     }
-    this.dataService.deleteWorkGroup(workGroupId).subscribe({
+    
+    // Get the tasks that will be removed from this work group
+    const tasksToReturn = this.getAssignedTasks(workGroupId);
+    
+    // Get the progress type ID for "Nije dodijeljeno"
+    this.dataService.taskProgressTypes$.pipe(
+      map(types => types.find(type => type.task_progress_type_name === 'Nije dodijeljeno')),
+      take(1)
+    ).subscribe(nijeDodijeljenoType => {
+      if (!nijeDodijeljenoType) {
+        console.error('Could not find progress type "Nije dodijeljeno"');
+        return;
+      }
+      
+      // Create operations to update task progress types
+      const updateOperations = tasksToReturn.map(task => 
+        this.dataService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id)
+      );
+      
+      // Delete the work group
+      this.dataService.deleteWorkGroup(workGroupId).subscribe({
+        next: () => {
+          // After work group is deleted, update all tasks to "Nije dodijeljeno"
+          if (updateOperations.length > 0) {
+            forkJoin(updateOperations).subscribe({
+              next: () => {
+                console.log(`Updated ${updateOperations.length} tasks to "Nije dodijeljeno"`);
+                
+                // Refresh the local state
+                this.refreshData();
+              },
+              error: (error) => {
+                console.error('Error updating tasks after work group deletion:', error);
+              }
+            });
+          } else {
+            // If no tasks to update, still refresh the data
+            this.refreshData();
+          }
+        },
+        error: (error: Error) => {
+          console.error('Error deleting work group:', error);
+        }
+      });
+    });
+  }
+  
+  // Helper method to refresh all data
+  refreshData() {
+    // Reload tasks and work group tasks
+    forkJoin([
+      this.dataService.loadTasks(),
+      this.dataService.loadWorkGroupTasks()
+    ]).subscribe({
       next: () => {
-        //console.log('Work group deleted successfully');
+        console.log('Data refreshed after work group deletion');
       },
-      error: (error: Error) => {
-        console.error('Error deleting work group:', error);
+      error: (error) => {
+        console.error('Error refreshing data:', error);
       }
     });
+  }
+
+  onTaskRemoved(task: Task) {
+    // Refresh the tasks list for the active group
+    if (this.activeGroupId) {
+      const tasks = this.getAssignedTasks(this.activeGroupId);
+      const updatedTasks = tasks.filter(t => t.task_id !== task.task_id);
+      this.workGroupTasks[this.activeGroupId] = updatedTasks;
+    }
+  }
+
+  onStaffRemoved(staff: Profile) {
+    // Refresh the staff list for the active group
+    if (this.activeGroupId && staff.id) {
+      const staffList = this.getAssignedStaff(this.activeGroupId);
+      const updatedStaff = staffList.filter(s => s.id !== staff.id);
+      this.workGroupStaff[this.activeGroupId] = updatedStaff;
+    }
   }
 
   publishWorkGroups() {

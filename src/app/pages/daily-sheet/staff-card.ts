@@ -10,7 +10,8 @@ import { Profile } from '../service/data.service';
     <div 
       class="staff-card" 
       [class.assignable]="canBeAssigned"
-      (click)="onClick()"
+      [class.in-active-group]="isInActiveGroup"
+      (click)="onClick($event)"
     >
       <div class="staff-icon">
         <i class="pi pi-user"></i>
@@ -54,6 +55,17 @@ import { Profile } from '../service/data.service';
         }
       }
 
+      &.in-active-group {
+        &:hover {
+          background: var(--p-red-500) !important;
+          color: var(--p-surface-0) !important;
+          
+          .staff-icon i {
+            color: var(--p-surface-0) !important;
+          }
+        }
+      }
+
       .staff-icon {
         i {
           color: var(--text-color-secondary);
@@ -69,11 +81,17 @@ import { Profile } from '../service/data.service';
 export class StaffCardComponent {
   @Input() staff?: Profile;
   @Input() canBeAssigned: boolean = false;
+  @Input() isInActiveGroup: boolean = false;
   
   @Output() staffClicked = new EventEmitter<void>();
+  @Output() removeFromGroup = new EventEmitter<void>();
 
-  onClick() {
-    if (this.canBeAssigned) {
+  onClick(event: MouseEvent) {
+    event.stopPropagation();
+    
+    if (this.isInActiveGroup) {
+      this.removeFromGroup.emit();
+    } else if (this.canBeAssigned) {
       this.staffClicked.emit();
     }
   }

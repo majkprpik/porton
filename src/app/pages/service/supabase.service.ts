@@ -67,6 +67,35 @@ export class SupabaseService {
     return data;
   }
 
+  // Delete data from a table based on a filter condition
+  async deleteData(table: string, filter: string, schema: string = 'public') {
+    const conditions = filter.split(' AND ').map(condition => {
+      const [column, value] = condition.trim().split(' = ');
+      return {
+        column: column.trim(),
+        value: value.trim().replace(/'/g, '')
+      };
+    });
+
+    let query = this.supabase
+      .schema(schema)
+      .from(table)
+      .delete();
+
+    conditions.forEach(({ column, value }) => {
+      query = query.eq(column, value);
+    });
+
+    const { data, error } = await query.select();
+
+    if (error) {
+      console.error('Error deleting data:', error.message);
+      return null;
+    }
+
+    return data;
+  }
+
   // Update all records in a table
   async updateAll(table: string, updates: any, schema: string = 'public') {
     const { data, error } = await this.supabase

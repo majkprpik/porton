@@ -669,10 +669,11 @@ export class DataService {
     );
   }
 
+  // Method to remove staff from work group
   removeStaffFromWorkGroup(profileId: string, workGroupId: number): Observable<any> {
     const filter = `profile_id = '${profileId}' AND work_group_id = ${workGroupId}`;
 
-    return from(this.supabase.updateData('work_group_profiles', { deleted_at: new Date() }, filter, this.schema)).pipe(
+    return from(this.supabase.deleteData('work_group_profiles', filter, this.schema)).pipe(
       tap(() => {
         const currentAssignments = this.workGroupProfilesSubject.value;
         const updatedAssignments = currentAssignments.filter(
@@ -682,6 +683,25 @@ export class DataService {
       }),
       catchError(error => {
         console.error('Error removing staff from work group:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Method to remove task from work group
+  removeTaskFromWorkGroup(workGroupId: number, taskId: number): Observable<any> {
+    const filter = `work_group_id = ${workGroupId} AND task_id = ${taskId}`;
+
+    return from(this.supabase.deleteData('work_group_tasks', filter, this.schema)).pipe(
+      tap(() => {
+        const currentTasks = this.workGroupTasksSubject.value;
+        const updatedTasks = currentTasks.filter(
+          task => !(task.work_group_id === workGroupId && task.task_id === taskId)
+        );
+        this.workGroupTasksSubject.next(updatedTasks);
+      }),
+      catchError(error => {
+        console.error('Error removing task from work group:', error);
         return throwError(() => error);
       })
     );
@@ -710,8 +730,11 @@ export class DataService {
     return this.profilesSubject.value.find(profile => profile.id === profileId);
   }
 
+  // Method to delete work group
   deleteWorkGroup(workGroupId: number): Observable<any> {
-    return from(this.supabase.updateData('work_groups', { deleted_at: new Date() }, `work_group_id = ${workGroupId}`, this.schema)).pipe(
+    const filter = `work_group_id = ${workGroupId}`;
+
+    return from(this.supabase.deleteData('work_groups', filter, this.schema)).pipe(
       tap(() => {
         const currentGroups = this.workGroupsSubject.value;
         const updatedGroups = currentGroups.filter(group => group.work_group_id !== workGroupId);

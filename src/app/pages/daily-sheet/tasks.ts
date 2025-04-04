@@ -4,34 +4,45 @@ import { TaskGroupComponent } from './task-group';
 import { DataService, Task, TaskType, TaskProgressType } from '../service/data.service';
 import { WorkGroupService } from './work-group.service';
 import { combineLatest, forkJoin } from 'rxjs';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 @Component({
   selector: 'app-tasks',
   standalone: true,
-  imports: [CommonModule, TaskGroupComponent],
+  imports: [CommonModule, TaskGroupComponent, ProgressSpinnerModule],
   template: `
-    <div class="tasks-container">
-      @if (loading) {
-        <div class="loading-state">
-          <i class="pi pi-spin pi-spinner"></i>
-          <span>Loading tasks...</span>
-        </div>
-      } @else {
+    @if (loading) {
+      <div class="loading-container">
+        <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
+        <span>Loading tasks...</span>
+      </div>
+    } @else {
+      <div class="tasks-container">
         @for (taskType of taskTypes; track taskType.task_type_id) {
           <app-task-group 
             [taskType]="taskType"
-            [tasks]="tasks"
+            [tasks]="getAvailableTasks()"
             [canAssignTasks]="hasActiveWorkGroup"
             (taskAssigned)="onTaskAssigned($event)">
           </app-task-group>
         }
-      }
-    </div>
+      </div>
+    }
   `,
   styles: [`
     :host {
       display: block;
       height: 100%;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 1rem;
+      color: var(--text-color-secondary);
     }
 
     .tasks-container {
@@ -43,20 +54,6 @@ import { combineLatest, forkJoin } from 'rxjs';
       flex-direction: column;
       gap: 0.5rem;
       padding: 1rem;
-    }
-
-    .loading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem;
-      color: var(--text-color-secondary);
-
-      i {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-      }
     }
   `]
 })
@@ -107,12 +104,21 @@ export class TasksComponent implements OnInit {
 
   onTaskAssigned(task: Task) {
     if (this.activeWorkGroupId) {
+      const nijeDodijeljenoType = this.progressTypes.find(
+        type => type.task_progress_type_name === 'Nije dodijeljeno'
+      );
+
+      if (!nijeDodijeljenoType) {
+        console.error('Could not find progress type "Nije dodijeljeno"');
+        return;
+      }
+
       // Create an array of operations to perform
       const operations = [
         // Add task to work group
         this.dataService.addTaskToWorkGroup(this.activeWorkGroupId, task.task_id),
-        // Update task progress type to "Dodijeljeno" (150)
-        this.dataService.updateTaskProgressType(task.task_id, 150)
+        // Update task progress type to "Nije dodijeljeno"
+        this.dataService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id)
       ];
 
       // Execute both operations
