@@ -746,4 +746,34 @@ export class DataService {
       })
     );
   }
+
+  // Method to update work group locked status
+  updateWorkGroupLocked(workGroupId: number, isLocked: boolean): Observable<WorkGroup[] | null> {
+    this.loadingSubject.next(true);
+
+    return from(this.supabase.updateByIds(
+      'work_groups', 
+      { is_locked: isLocked }, 
+      [workGroupId],
+      'work_group_id',
+      this.schema
+    )).pipe(
+      tap((data) => {
+        if (data) {
+          // Update only the specified work group in the BehaviorSubject
+          const currentGroups = this.workGroupsSubject.value;
+          const updatedGroups = currentGroups.map(group => 
+            group.work_group_id === workGroupId
+              ? { ...group, is_locked: isLocked }
+              : group
+          );
+          this.workGroupsSubject.next(updatedGroups);
+          this.logData('Updated Work Group Lock Status', data);
+        }
+      }),
+      map((data) => data || null),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
 }

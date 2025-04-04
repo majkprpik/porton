@@ -118,10 +118,12 @@ export class TasksComponent implements OnInit {
         // Add task to work group
         this.dataService.addTaskToWorkGroup(this.activeWorkGroupId, task.task_id),
         // Update task progress type to "Nije dodijeljeno"
-        this.dataService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id)
+        this.dataService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id),
+        // Set work group to unlocked
+        this.dataService.updateWorkGroupLocked(this.activeWorkGroupId, false)
       ];
 
-      // Execute both operations
+      // Execute all operations
       forkJoin(operations).subscribe({
         next: ([workGroupTask, updatedTask]) => {
           //console.log('Task assigned and updated:', { workGroupTask, updatedTask });

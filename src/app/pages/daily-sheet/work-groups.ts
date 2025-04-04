@@ -17,21 +17,21 @@ import { forkJoin } from 'rxjs';
     @if (loading) {
       <div class="loading-container">
         <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
-        <span>Loading work groups...</span>
+        <span>Učitavanje radnih grupa...</span>
       </div>
     } @else {
       <div class="work-groups-container">
         <div class="work-groups-header">
-          <h2>Work Groups</h2>
+          <h2>Radne Grupe</h2>
           <div class="header-actions">
             <p-button 
-              label="Create Work Group" 
+              label="Nova Grupa" 
               icon="pi pi-plus"
               severity="secondary"
               (onClick)="createWorkGroup()"
             ></p-button>
             <p-button 
-              label="Publish" 
+              label="OBJAVI" 
               icon="pi pi-check"
               (onClick)="publishWorkGroups()"
             ></p-button>
@@ -41,7 +41,7 @@ import { forkJoin } from 'rxjs';
         <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
           @if (workGroups.length === 0) {
             <div class="empty-state">
-              <p>No work groups created yet.</p>
+              <p>Nema kreiranih radnih grupa</p>
             </div>
           } @else {
             <div class="groups-container">

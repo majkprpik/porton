@@ -11,6 +11,7 @@ import { forkJoin } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import { WorkGroupService } from './work-group.service';
 import { TooltipModule } from 'primeng/tooltip';
+import { DragDropModule } from 'primeng/dragdrop';
 
 @Component({
   selector: 'app-work-group',
@@ -22,21 +23,22 @@ import { TooltipModule } from 'primeng/tooltip';
     TagModule, 
     StaffCardComponent, 
     ContextMenuModule,
-    TooltipModule
+    TooltipModule,
+    DragDropModule
   ],
   template: `
-    <div class="work-group-container" [class.active]="isActive">
-      <div class="active-border"></div>
+    <div class="work-group-container" [class.active]="isActive" [style.background-color]="isActive ? getGroupColor() : null" [style.border-color]="isActive ? getGroupBorderColor() : null">
+      <div class="active-border" [style.background-image]="isActive ? 'linear-gradient(to right, ' + getGroupBorderColor() + ' 50%, transparent 50%), linear-gradient(to bottom, ' + getGroupBorderColor() + ' 50%, transparent 50%), linear-gradient(to left, ' + getGroupBorderColor() + ' 50%, transparent 50%), linear-gradient(to top, ' + getGroupBorderColor() + ' 50%, transparent 50%)' : null"></div>
       <div class="work-group-header">
         <div class="work-group-title-area">
-          <span class="work-group-title">Team {{workGroup?.work_group_id}}</span>
+          <span class="work-group-title">{{getGroupColorName()}}</span>
           <p-tag 
-            [value]="workGroup?.is_locked ? 'PUBLISHED' : 'NOT PUBLISHED'"
+            [value]="workGroup?.is_locked ? 'OBJAVLJENO' : 'NEOBJAVLJENO'"
             [severity]="workGroup?.is_locked ? 'success' : 'secondary'"
           ></p-tag>
         </div>
         <p-button 
-          [label]="isActive ? 'DEACTIVATE' : 'ACTIVATE'"
+          [label]="isActive ? 'ZAVRŠI IZMJENE' : 'ZAPOČNI IZMJENE'"
           [severity]="isActive ? 'secondary' : 'success'"
           (onClick)="onGroupClick()"
           class="activate-button"
@@ -55,24 +57,32 @@ import { TooltipModule } from 'primeng/tooltip';
       <div class="work-group-content">
         <div class="tasks-area">
           @if (assignedTasks.length === 0) {
-            <div class="drop-area">Click tasks to assign here</div>
+            <div class="drop-area">Kliknite zadatke za dodjelu</div>
           } @else {
-            <div class="tasks-list">
-              @for (task of assignedTasks; track task.task_id) {
-                <app-task-card 
-                  [houseNumber]="task.house_id"
-                  [state]="'in-progress'"
-                  [taskIcon]="getTaskIcon(task.task_type_id)"
-                  [isInActiveGroup]="isActive"
-                  (removeFromGroup)="onRemoveTask(task)">
-                </app-task-card>
+            <div class="tasks-list" pDroppable="tasks" (onDrop)="onDrop($event)">
+              @for (task of assignedTasks; track task.task_id; let i = $index) {
+                <div 
+                  class="task-card-container"
+                  [class.dragging]="draggedTaskIndex === i"
+                  pDraggable="tasks"
+                  (onDragStart)="onDragStart($event, i)"
+                  (onDragEnd)="onDragEnd()"
+                >
+                  <app-task-card 
+                    [houseNumber]="task.house_id"
+                    [state]="'in-progress'"
+                    [taskIcon]="getTaskIcon(task.task_type_id)"
+                    [isInActiveGroup]="isActive"
+                    (removeFromGroup)="onRemoveTask(task)">
+                  </app-task-card>
+                </div>
               }
             </div>
           }
         </div>
         <div class="staff-area">
           @if (assignedStaff.length === 0) {
-            <div class="drop-area">Click staff to assign here</div>
+            <div class="drop-area">Kliknite osoblje za dodjelu</div>
           } @else {
             <div class="staff-list">
               @for (staff of assignedStaff; track staff.id) {
@@ -115,15 +125,12 @@ import { TooltipModule } from 'primeng/tooltip';
       }
 
       &.active {
-        background-color: rgba(50, 177, 151, 0.1);
-        border: 2px solid rgba(50, 177, 151, 0.2);
-
         .work-group-title {
           color: var(--text-color);
         }
 
         &:hover {
-          background-color: rgba(50, 177, 151, 0.15);
+          opacity: 0.9;
         }
 
         .active-border {
@@ -131,11 +138,6 @@ import { TooltipModule } from 'primeng/tooltip';
           inset: 0;
           border-radius: 6px;
           pointer-events: none;
-          background-image: 
-            linear-gradient(to right, rgba(50, 177, 151, 0.5) 50%, transparent 50%),
-            linear-gradient(to bottom, rgba(50, 177, 151, 0.5) 50%, transparent 50%),
-            linear-gradient(to left, rgba(50, 177, 151, 0.5) 50%, transparent 50%),
-            linear-gradient(to top, rgba(50, 177, 151, 0.5) 50%, transparent 50%);
           background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
           background-position: 0 0, 100% 0, 100% 100%, 0 100%;
           background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
@@ -216,6 +218,34 @@ import { TooltipModule } from 'primeng/tooltip';
       flex-wrap: wrap;
       gap: 0.5rem;
     }
+
+    .tasks-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      min-height: 50px;
+      padding: 0.25rem;
+      transition: all 0.2s ease;
+
+      &.p-droppable-enter {
+        background-color: var(--surface-hover);
+      }
+    }
+
+    .task-card-container {
+      display: flex;
+      align-items: center;
+      cursor: move;
+
+      &:hover {
+        transform: translateY(-2px);
+      }
+
+      &.dragging {
+        opacity: 0.5;
+        transform: scale(0.98);
+      }
+    }
   `
 })
 export class WorkGroup implements OnInit {
@@ -239,6 +269,77 @@ export class WorkGroup implements OnInit {
       command: () => this.removeStaffFromGroup()
     }
   ];
+
+  draggedTaskIndex: number = -1;
+  
+  // Array of 12 distinct colors for work groups
+  private groupColors = [
+    'rgba(50, 177, 151, 0.1)',   // Teal
+    'rgba(255, 99, 71, 0.1)',    // Tomato
+    'rgba(65, 105, 225, 0.1)',   // Royal Blue
+    'rgba(147, 112, 219, 0.1)',  // Medium Purple
+    'rgba(255, 165, 0, 0.1)',    // Orange
+    'rgba(46, 139, 87, 0.1)',    // Sea Green
+    'rgba(220, 20, 60, 0.1)',    // Crimson
+    'rgba(0, 191, 255, 0.1)',    // Deep Sky Blue
+    'rgba(255, 215, 0, 0.1)',    // Gold
+    'rgba(138, 43, 226, 0.1)',   // Blue Violet
+    'rgba(0, 128, 128, 0.1)',    // Teal
+    'rgba(255, 69, 0, 0.1)'      // Red Orange
+  ];
+  
+  // Array of color names matching the colors above
+  private groupColorNames = [
+    'Tirkizna',    // Teal
+    'Narančasta',  // Tomato
+    'Plava',       // Royal Blue
+    'Ljubičasta',  // Medium Purple
+    'Žuta',        // Orange
+    'Zelena',      // Sea Green
+    'Crvena',      // Crimson
+    'Svijetloplava', // Deep Sky Blue
+    'Zlatna',      // Gold
+    'Indigo',      // Blue Violet
+    'Tirkizna 2',  // Teal
+    'Koraljna'     // Red Orange
+  ];
+  
+  // Array of 12 distinct border colors for work groups
+  private groupBorderColors = [
+    'rgba(50, 177, 151, 0.2)',   // Teal
+    'rgba(255, 99, 71, 0.2)',    // Tomato
+    'rgba(65, 105, 225, 0.2)',   // Royal Blue
+    'rgba(147, 112, 219, 0.2)',  // Medium Purple
+    'rgba(255, 165, 0, 0.2)',    // Orange
+    'rgba(46, 139, 87, 0.2)',    // Sea Green
+    'rgba(220, 20, 60, 0.2)',    // Crimson
+    'rgba(0, 191, 255, 0.2)',    // Deep Sky Blue
+    'rgba(255, 215, 0, 0.2)',    // Gold
+    'rgba(138, 43, 226, 0.2)',   // Blue Violet
+    'rgba(0, 128, 128, 0.2)',    // Teal
+    'rgba(255, 69, 0, 0.2)'      // Red Orange
+  ];
+  
+  // Get the color for this work group based on its ID
+  getGroupColor(): string {
+    if (!this.workGroup) return 'rgba(50, 177, 151, 0.1)'; // Default teal
+    const index = (this.workGroup.work_group_id - 1) % 12;
+    return this.groupColors[index];
+  }
+  
+  // Get the border color for this work group based on its ID
+  getGroupBorderColor(): string {
+    if (!this.workGroup) return 'rgba(50, 177, 151, 0.2)'; // Default teal
+    const index = (this.workGroup.work_group_id - 1) % 12;
+    return this.groupBorderColors[index];
+  }
+
+  // Get the color name for this work group based on its ID
+  getGroupColorName(): string {
+    if (!this.workGroup) return this.groupColorNames[0];
+    const index = (this.workGroup.work_group_id - 1) % 12;
+    return this.groupColorNames[index];
+  }
 
   constructor(
     private dataService: DataService,
@@ -296,11 +397,15 @@ export class WorkGroup implements OnInit {
 
         const operations = [
           this.dataService.removeTaskFromWorkGroup(this.workGroup!.work_group_id, task.task_id),
-          this.dataService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id)
+          this.dataService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id),
+          this.dataService.updateWorkGroupLocked(this.workGroup!.work_group_id, false)
         ];
 
         forkJoin(operations).subscribe({
           next: () => {
+            if (this.workGroup) {
+              this.workGroup.is_locked = false;
+            }
             this.taskRemoved.emit(task);
           },
           error: (error: any) => {
@@ -313,30 +418,44 @@ export class WorkGroup implements OnInit {
 
   onRemoveStaff(staff: Profile) {
     if (staff.id && this.workGroup?.work_group_id) {
-      this.dataService.removeStaffFromWorkGroup(staff.id, this.workGroup.work_group_id)
-        .subscribe({
-          next: () => {
-            this.staffRemoved.emit(staff);
-          },
-          error: (error: any) => {
-            console.error('Error removing staff:', error);
+      const operations = [
+        this.dataService.removeStaffFromWorkGroup(staff.id, this.workGroup.work_group_id),
+        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
+      ];
+
+      forkJoin(operations).subscribe({
+        next: () => {
+          if (this.workGroup) {
+            this.workGroup.is_locked = false;
           }
-        });
+          this.staffRemoved.emit(staff);
+        },
+        error: (error: any) => {
+          console.error('Error removing staff:', error);
+        }
+      });
     }
   }
 
   removeStaffFromGroup() {
     if (this.selectedStaff?.id && this.workGroup?.work_group_id) {
-      this.dataService.removeStaffFromWorkGroup(this.selectedStaff.id, this.workGroup.work_group_id)
-        .subscribe({
-          next: () => {
-            this.staffRemoved.emit(this.selectedStaff);
-            this.loadAssignedStaff();
-          },
-          error: (error: any) => {
-            console.error('Error removing staff:', error);
+      const operations = [
+        this.dataService.removeStaffFromWorkGroup(this.selectedStaff.id, this.workGroup.work_group_id),
+        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
+      ];
+
+      forkJoin(operations).subscribe({
+        next: () => {
+          if (this.workGroup) {
+            this.workGroup.is_locked = false;
           }
-        });
+          this.staffRemoved.emit(this.selectedStaff);
+          this.loadAssignedStaff();
+        },
+        error: (error: any) => {
+          console.error('Error removing staff:', error);
+        }
+      });
     }
   }
 
@@ -349,5 +468,116 @@ export class WorkGroup implements OnInit {
       5: 'pi pi-wrench'     // Popravak
     };
     return iconMap[taskTypeId] || 'pi pi-file';
+  }
+
+  onDragStart(event: any, index: number) {
+    this.draggedTaskIndex = index;
+    event.currentTarget.classList.add('dragging');
+  }
+
+  onDragEnd() {
+    const draggingElement = document.querySelector('.dragging');
+    if (draggingElement) {
+      draggingElement.classList.remove('dragging');
+    }
+    this.draggedTaskIndex = -1;
+  }
+
+  onDrop(event: any) {
+    if (this.draggedTaskIndex !== -1 && this.workGroup?.work_group_id) {
+      const dropIndex = this.calculateDropIndex(event);
+      if (this.draggedTaskIndex !== dropIndex) {
+        const [movedTask] = this.assignedTasks.splice(this.draggedTaskIndex, 1);
+        this.assignedTasks.splice(dropIndex, 0, movedTask);
+        
+        // Update work group to unlocked state when tasks are reordered
+        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
+          .subscribe({
+            next: () => {
+              if (this.workGroup) {
+                this.workGroup.is_locked = false;
+              }
+            },
+            error: (error: any) => {
+              console.error('Error updating work group lock state:', error);
+            }
+          });
+      }
+    }
+  }
+
+  private calculateDropIndex(event: any): number {
+    const taskElements = Array.from(document.querySelectorAll('.task-card-container'));
+    const dropY = event.pageY;
+    
+    for (let i = 0; i < taskElements.length; i++) {
+      const rect = taskElements[i].getBoundingClientRect();
+      const centerY = rect.top + rect.height / 2;
+      
+      if (dropY < centerY) {
+        return i;
+      }
+    }
+    
+    return taskElements.length;
+  }
+
+  // Method to handle task assignment
+  onTaskAssigned(task: Task) {
+    if (this.workGroup?.work_group_id) {
+      const operations = [
+        this.dataService.addTaskToWorkGroup(this.workGroup.work_group_id, task.task_id),
+        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
+      ];
+
+      forkJoin(operations).subscribe({
+        next: () => {
+          if (this.workGroup) {
+            this.workGroup.is_locked = false;
+          }
+          // Refresh the tasks list
+          this.loadAssignedTasks();
+        },
+        error: (error: any) => {
+          console.error('Error assigning task:', error);
+        }
+      });
+    }
+  }
+
+  // Method to handle staff assignment
+  onStaffAssigned(staff: Profile) {
+    if (staff.id && this.workGroup?.work_group_id) {
+      const operations = [
+        this.dataService.assignStaffToWorkGroup(staff.id, this.workGroup.work_group_id),
+        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
+      ];
+
+      forkJoin(operations).subscribe({
+        next: () => {
+          if (this.workGroup) {
+            this.workGroup.is_locked = false;
+          }
+          this.loadAssignedStaff();
+        },
+        error: (error: any) => {
+          console.error('Error assigning staff:', error);
+        }
+      });
+    }
+  }
+
+  loadAssignedTasks() {
+    if (this.workGroup?.work_group_id) {
+      this.dataService.workGroupTasks$.pipe(
+        map(workGroupTasks => workGroupTasks
+          .filter(wgt => wgt.work_group_id === this.workGroup!.work_group_id)
+          .map(wgt => this.dataService.getTaskById(wgt.task_id))
+          .filter((task): task is Task => task !== undefined)
+        )
+      ).subscribe(tasks => {
+        this.assignedTasks = tasks;
+      });
+    }
   }
 } 

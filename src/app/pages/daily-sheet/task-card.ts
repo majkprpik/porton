@@ -37,7 +37,7 @@ export type TaskState = 'pending' | 'in-progress' | 'completed';
       padding: 0.35rem 0.75rem;
       border-radius: 4px;
       margin-bottom: 0.25rem;
-      min-height: 1.75rem;
+      min-height: 2.75rem;
       font-size: 0.875rem;
       width: fit-content;
       cursor: pointer;
