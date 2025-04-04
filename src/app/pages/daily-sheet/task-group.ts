@@ -32,7 +32,7 @@ import { BadgeModule } from 'primeng/badge';
             [state]="getTaskState(task.task_progress_type_id)"
             [taskIcon]="getTaskIcon(task.task_type_id)"
             [task]="task"
-            [canBeAssigned]="canAssignTasks"
+            [canBeAssigned]="canAssignTasks && isTaskAvailable(task)"
             (taskClicked)="onTaskClicked(task)">
           </app-task-card>
         }
@@ -108,6 +108,7 @@ export class TaskGroupComponent implements OnInit {
   @Output() taskAssigned = new EventEmitter<Task>();
   
   progressTypes: TaskProgressType[] = [];
+  workGroupTasks: { work_group_id: number; task_id: number }[] = [];
 
   constructor(private dataService: DataService) {}
 
@@ -115,10 +116,21 @@ export class TaskGroupComponent implements OnInit {
     this.dataService.taskProgressTypes$.subscribe(types => {
       this.progressTypes = types;
     });
+
+    this.dataService.workGroupTasks$.subscribe(tasks => {
+      this.workGroupTasks = tasks;
+    });
   }
 
   get filteredTasks(): Task[] {
-    return this.tasks.filter(task => task.task_type_id === this.taskType?.task_type_id);
+    return this.tasks.filter(task => 
+      task.task_type_id === this.taskType?.task_type_id && 
+      task.task_progress_type_id !== 150 // Filter out tasks that are already assigned
+    );
+  }
+
+  isTaskAvailable(task: Task): boolean {
+    return !this.workGroupTasks.some(wgt => wgt.task_id === task.task_id);
   }
 
   getTaskState(progressTypeId: number): TaskState {
@@ -143,7 +155,7 @@ export class TaskGroupComponent implements OnInit {
   }
 
   onTaskClicked(task: Task) {
-    if (this.canAssignTasks) {
+    if (this.canAssignTasks && this.isTaskAvailable(task)) {
       this.taskAssigned.emit(task);
     }
   }

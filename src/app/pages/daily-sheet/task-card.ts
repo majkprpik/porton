@@ -13,7 +13,10 @@ export type TaskState = 'pending' | 'in-progress' | 'completed';
   template: `
     <div 
       class="task-card" 
-      [ngClass]="[state, { 'assignable': canBeAssigned }]"
+      [class.pending]="state === 'pending'"
+      [class.in-progress]="state === 'in-progress'"
+      [class.completed]="state === 'completed'"
+      [class.assignable]="canBeAssigned"
       (click)="onClick()"
       (contextmenu)="onContextMenu($event)"
     >
@@ -172,22 +175,22 @@ export class TaskCardComponent {
   }
 
   updateStatus(newState: TaskState) {
-    console.log('Update status to:', newState);
+    //console.log('Update status to:', newState);
     // Implement status update logic
   }
 
   viewDetails() {
-    console.log('View task details');
+    //console.log('View task details');
     // Implement view details logic
   }
 
   editTask() {
-    console.log('Edit task');
+    //console.log('Edit task');
     // Implement edit task logic
   }
 
   deleteTask() {
-    console.log('Delete task');
+    //console.log('Delete task');
     // Implement delete task logic
   }
 } 

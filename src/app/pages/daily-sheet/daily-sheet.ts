@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { TasksComponent } from './tasks';
-import { WorkGroupsComponent } from './work-groups';
+import { WorkGroups } from './work-groups';
 import { StaffComponent } from './staff';
 
 @Component({
   selector: 'app-daily-sheet',
-  imports: [TasksComponent, WorkGroupsComponent, StaffComponent],
+  imports: [TasksComponent, WorkGroups, StaffComponent],
   template: `
     <div class="container">
       <div class="tasks">

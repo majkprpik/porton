@@ -27,6 +27,23 @@ import { CommonModule } from '@angular/common';
           groupIcon="pi pi-wrench"
           [staffMembers]="getProfilesByRole('maintenance')"
         ></app-staff-group>
+
+        <!-- @if (debug) {
+          <div class="debug-info">
+            <h4>Debug Information</h4>
+            <p>Total Profiles: {{profiles.length}}</p>
+            <p>Cleaners: {{getProfilesByRole('cleaner').length}}</p>
+            <p>Maintenance: {{getProfilesByRole('maintenance').length}}</p>
+            <div class="roles-list">
+              <h5>Available Roles:</h5>
+              <ul>
+                @for (role of getUniqueRoles(); track role) {
+                  <li>{{role || 'null'}}</li>
+                }
+              </ul>
+            </div>
+          </div>
+        } -->
       }
     </div>
   `,
@@ -52,28 +69,65 @@ import { CommonModule } from '@angular/common';
         margin-bottom: 1rem;
       }
     }
+
+    .debug-info {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--surface-ground);
+      border-radius: 4px;
+
+      h4, h5 {
+        margin: 0 0 0.5rem 0;
+        color: var(--text-color);
+      }
+
+      p {
+        margin: 0.25rem 0;
+        color: var(--text-color-secondary);
+      }
+
+      .roles-list {
+        margin-top: 1rem;
+
+        ul {
+          margin: 0;
+          padding-left: 1.5rem;
+          color: var(--text-color-secondary);
+        }
+      }
+    }
   `
 })
 export class StaffGroups implements OnInit {
   loading = true;
   profiles: Profile[] = [];
+  debug = true; // Enable debug mode
 
   constructor(private dataService: DataService) {}
 
   ngOnInit() {
-    this.dataService.profiles$.subscribe(
-      profiles => {
+    this.dataService.profiles$.subscribe({
+      next: profiles => {
+        //console.log('Loaded profiles:', profiles);
         this.profiles = profiles;
         this.loading = false;
       },
-      error => {
+      error: error => {
         console.error('Error loading profiles:', error);
         this.loading = false;
       }
-    );
+    });
   }
 
   getProfilesByRole(role: string): Profile[] {
-    return this.profiles.filter(profile => profile.role?.toLowerCase() === role.toLowerCase());
+    const filteredProfiles = this.profiles.filter(profile => 
+      profile.role?.toLowerCase() === role.toLowerCase()
+    );
+    //console.log(`Profiles for role ${role}:`, filteredProfiles);
+    return filteredProfiles;
+  }
+
+  getUniqueRoles(): (string | null)[] {
+    return Array.from(new Set(this.profiles.map(profile => profile.role)));
   }
 } 

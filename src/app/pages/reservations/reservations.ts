@@ -36,13 +36,13 @@ export class Reservations implements OnInit, OnDestroy {
         // Subscribe to houses data from DataService
         const housesSubscription = this.dataService.houses$.subscribe(houses => {
             this.houses.set(houses);
-            console.log('Houses:', houses); // Debug log
+            //console.log('Houses:', houses); // Debug log
         });
         
         // Subscribe to house availabilities data from DataService
         const availabilitiesSubscription = this.dataService.houseAvailabilities$.subscribe(availabilities => {
             this.houseAvailabilities.set(availabilities);
-            console.log('Availabilities:', availabilities); // Debug log
+            //console.log('Availabilities:', availabilities); // Debug log
         });
         
         // Store subscriptions for cleanup

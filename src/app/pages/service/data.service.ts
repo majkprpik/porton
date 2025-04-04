@@ -8,6 +8,7 @@ import {
   map,
   catchError,
   tap,
+  combineLatest,
 } from 'rxjs';
 
 // Interfaces for enum types
@@ -154,12 +155,12 @@ export class DataService {
   // Method to enable/disable debug mode
   setDebug(enabled: boolean): void {
     this.debug = enabled;
-    console.log(`Debug mode ${enabled ? 'enabled' : 'disabled'}`);
+    //console.log(`Debug mode ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   private logData(source: string, data: any): void {
     if (this.debug) {
-      console.log(`[DataService] ${source}:`, data);
+      //console.log(`[DataService] ${source}:`, data);
     }
   }
 
@@ -175,7 +176,7 @@ export class DataService {
   // Method to load all initial data
   private loadInitialData(): void {
     if (this.debug) {
-      console.log('[DataService] Loading initial data...');
+      //console.log('[DataService] Loading initial data...');
     }
     // Load house availabilities first
     this.loadHouseAvailabilities().subscribe();
@@ -191,7 +192,7 @@ export class DataService {
   // Method to load all enum types at once
   private loadAllEnumTypes(): void {
     if (this.debug) {
-      console.log('[DataService] Loading enum types...');
+      //console.log('[DataService] Loading enum types...');
     }
     // Load house availability types first
     this.getHouseAvailabilityTypes().subscribe();
@@ -205,7 +206,7 @@ export class DataService {
   setSchema(schemaName: string): void {
     this.schema = schemaName;
     if (this.debug) {
-      console.log(`[DataService] Schema changed to: ${schemaName}`);
+      //console.log(`[DataService] Schema changed to: ${schemaName}`);
     }
   }
 
@@ -556,7 +557,7 @@ export class DataService {
   // Method to refresh all data
   refreshData(): void {
     if (this.debug) {
-      console.log('[DataService] Refreshing all data...');
+      //console.log('[DataService] Refreshing all data...');
     }
     this.houseAvailabilityTypesSubject.next([]);
     this.taskTypesSubject.next([]);
@@ -588,6 +589,138 @@ export class DataService {
       map((data) => (data ? data[0] : null)),
       catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to update task progress type
+  updateTaskProgressType(taskId: number, progressTypeId: number): Observable<Task | null> {
+    this.loadingSubject.next(true);
+
+    const updates = { task_progress_type_id: progressTypeId };
+
+    return from(this.supabase.updateData('tasks', updates, taskId.toString(), this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          // Update the tasks in the BehaviorSubject
+          const currentTasks = this.tasksSubject.value;
+          const updatedTasks = currentTasks.map(task => 
+            task.task_id === taskId 
+              ? { ...task, task_progress_type_id: progressTypeId }
+              : task
+          );
+          this.tasksSubject.next(updatedTasks);
+          this.logData('Updated Task Progress Type', data[0]);
+        }
+      }),
+      map((data) => (data ? data[0] : null)),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to publish work groups (set all to locked)
+  publishWorkGroups(workGroupIds: number[]): Observable<WorkGroup[] | null> {
+    this.loadingSubject.next(true);
+
+    return from(this.supabase.updateByIds(
+      'work_groups', 
+      { is_locked: true }, 
+      workGroupIds,
+      'work_group_id',
+      this.schema
+    )).pipe(
+      tap((data) => {
+        if (data) {
+          // Update only the specified work groups in the BehaviorSubject
+          const currentGroups = this.workGroupsSubject.value;
+          const updatedGroups = currentGroups.map(group => 
+            workGroupIds.includes(group.work_group_id) 
+              ? { ...group, is_locked: true }
+              : group
+          );
+          this.workGroupsSubject.next(updatedGroups);
+          this.logData('Published Work Groups', data);
+        }
+      }),
+      map((data) => data || null),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  assignStaffToWorkGroup(profileId: string, workGroupId: number): Observable<WorkGroupProfile | null> {
+    const assignment: WorkGroupProfile = {
+      work_group_id: workGroupId,
+      profile_id: profileId
+    };
+
+    return from(this.supabase.insertData('work_group_profiles', assignment, this.schema)).pipe(
+      tap(result => {
+        if (result) {
+          const currentAssignments = this.workGroupProfilesSubject.value;
+          this.workGroupProfilesSubject.next([...currentAssignments, assignment]);
+        }
+      }),
+      map(data => data ? data[0] : null),
+      catchError(error => {
+        console.error('Error assigning staff to work group:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  removeStaffFromWorkGroup(profileId: string, workGroupId: number): Observable<any> {
+    const filter = `profile_id = '${profileId}' AND work_group_id = ${workGroupId}`;
+
+    return from(this.supabase.updateData('work_group_profiles', { deleted_at: new Date() }, filter, this.schema)).pipe(
+      tap(() => {
+        const currentAssignments = this.workGroupProfilesSubject.value;
+        const updatedAssignments = currentAssignments.filter(
+          assignment => !(assignment.profile_id === profileId && assignment.work_group_id === workGroupId)
+        );
+        this.workGroupProfilesSubject.next(updatedAssignments);
+      }),
+      catchError(error => {
+        console.error('Error removing staff from work group:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getAssignedStaffForWorkGroup(workGroupId: number): Observable<Profile[]> {
+    return combineLatest([
+      this.workGroupProfiles$,
+      this.profiles$
+    ]).pipe(
+      map(([assignments, profiles]) => {
+        const assignedProfileIds = assignments
+          .filter(assignment => assignment.work_group_id === workGroupId)
+          .map(assignment => assignment.profile_id);
+        
+        return profiles.filter(profile => profile.id && assignedProfileIds.includes(profile.id));
+      })
+    );
+  }
+
+  getTaskById(taskId: number): Task | undefined {
+    return this.tasksSubject.value.find(task => task.task_id === taskId);
+  }
+
+  getProfileById(profileId: string): Profile | undefined {
+    return this.profilesSubject.value.find(profile => profile.id === profileId);
+  }
+
+  deleteWorkGroup(workGroupId: number): Observable<any> {
+    return from(this.supabase.updateData('work_groups', { deleted_at: new Date() }, `work_group_id = ${workGroupId}`, this.schema)).pipe(
+      tap(() => {
+        const currentGroups = this.workGroupsSubject.value;
+        const updatedGroups = currentGroups.filter(group => group.work_group_id !== workGroupId);
+        this.workGroupsSubject.next(updatedGroups);
+      }),
+      catchError(error => {
+        console.error('Error deleting work group:', error);
+        return throwError(() => error);
+      })
     );
   }
 }

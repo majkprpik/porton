@@ -4,3 +4,47 @@
 @use 'primeicons/primeicons.css';
 @use './assets/demo/demo.scss';
 @import 'handsontable/dist/handsontable.full.min.css';
+
+/* Flying animation styles */
+.flying-task-card {
+    background-color: var(--surface-card);
+    border-radius: 4px;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    transform-origin: center;
+    animation: flying-card 0.5s ease-in-out;
+  }
+  
+  @keyframes flying-card {
+    0% {
+      transform: scale(1);
+      box-shadow: var(--card-shadow);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: var(--card-shadow);
+    }
+  }
+  
+  /* Task card in work group with transition */
+  .task-card-transitioning {
+    opacity: 0.3;
+    transition: opacity 0.5s ease;
+  }
+  
+  /* Task card in work group after transition */
+  .task-card-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  } 

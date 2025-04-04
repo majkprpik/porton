@@ -51,12 +51,45 @@ export class SupabaseService {
   }
 
   // Update data in a table
-  async updateData(table: string, updates: any, match: string, schema: string = 'public') {
+  async updateData(table: string, updates: any, condition: string, schema: string = 'public') {
     const { data, error } = await this.supabase
       .schema(schema)
       .from(table)
       .update(updates)
-      .match({ id: match })
+      .eq('task_id', condition)
+      .select();
+
+    if (error) {
+      console.error('Error updating data:', error.message);
+      return null;
+    }
+
+    return data;
+  }
+
+  // Update all records in a table
+  async updateAll(table: string, updates: any, schema: string = 'public') {
+    const { data, error } = await this.supabase
+      .schema(schema)
+      .from(table)
+      .update(updates)
+      .select();
+
+    if (error) {
+      console.error('Error updating data:', error.message);
+      return null;
+    }
+
+    return data;
+  }
+
+  // Update multiple records in a table by IDs
+  async updateByIds(table: string, updates: any, ids: number[], idColumn: string, schema: string = 'public') {
+    const { data, error } = await this.supabase
+      .schema(schema)
+      .from(table)
+      .update(updates)
+      .in(idColumn, ids)
       .select();
 
     if (error) {

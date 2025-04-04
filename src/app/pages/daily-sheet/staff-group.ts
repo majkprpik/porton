@@ -1,15 +1,17 @@
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input, ViewChild, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { ChipModule } from 'primeng/chip';
-import { Profile } from '../service/data.service';
+import { Profile, DataService } from '../service/data.service';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
+import { StaffCardComponent } from './staff-card';
+import { WorkGroupService } from './work-group.service';
 
 @Component({
   selector: 'app-staff-group',
   standalone: true,
-  imports: [CommonModule, PanelModule, ChipModule, ContextMenuModule],
+  imports: [CommonModule, PanelModule, ChipModule, ContextMenuModule, StaffCardComponent],
   template: `
     <p-panel 
       [toggleable]="true" 
@@ -26,13 +28,13 @@ import { MenuItem } from 'primeng/api';
         </div>
       </ng-template>
       <div class="staff-list">
-        <p-chip 
-          *ngFor="let member of staffMembers" 
-          [label]="getProfileDisplayName(member)"
-          icon="pi pi-user"
-          class="staff-chip"
-          (contextmenu)="onContextMenu($event, member)"
-        ></p-chip>
+        @for (member of availableStaff; track member.id) {
+          <app-staff-card 
+            [staff]="member"
+            [canBeAssigned]="hasActiveWorkGroup"
+            (staffClicked)="onStaffClicked(member)"
+          ></app-staff-card>
+        }
       </div>
     </p-panel>
 
@@ -69,27 +71,11 @@ import { MenuItem } from 'primeng/api';
           .p-panel-header {
             background: var(--surface-ground);
           }
-          .p-chip {
-            background: var(--surface-card);
-            border: 2px solid transparent;
-            &:hover {
-              border-color: var(--primary-color);
-              background: var(--surface-hover);
-            }
-          }
         }
 
         &.maintenance-group {
           .p-panel-header {
             background: var(--surface-ground);
-          }
-          .p-chip {
-            background: var(--surface-card);
-            border: 2px solid transparent;
-            &:hover {
-              border-color: var(--primary-color);
-              background: var(--surface-hover);
-            }
           }
         }
 
@@ -98,29 +84,6 @@ import { MenuItem } from 'primeng/api';
           flex-wrap: wrap;
           gap: 0.5rem;
           padding: 0.5rem;
-        }
-
-        .staff-chip {
-          .p-chip {
-            border: 2px solid transparent;
-            background: var(--surface-card);
-            cursor: pointer;
-            transition: all 0.2s;
-
-            &:hover {
-              border-color: var(--primary-color);
-              background: var(--surface-hover);
-              transform: translateY(-1px);
-              box-shadow: var(--card-shadow);
-            }
-          }
-          .p-chip-text {
-            color: var(--text-color);
-          }
-          .p-chip-icon {
-            color: var(--text-color);
-            margin-right: 0.5rem;
-          }
         }
       }
     }
@@ -136,7 +99,7 @@ import { MenuItem } from 'primeng/api';
     }
   `
 })
-export class StaffGroup {
+export class StaffGroup implements OnInit, OnChanges {
   @Input() groupName: string = '';
   @Input() groupIcon: string = '';
   @Input() staffMembers: Profile[] = [];
@@ -144,6 +107,9 @@ export class StaffGroup {
   
   isExpanded: boolean = true;
   selectedProfile?: Profile;
+  hasActiveWorkGroup: boolean = false;
+  availableStaff: Profile[] = [];
+
   menuItems: MenuItem[] = [
     {
       label: 'View Profile',
@@ -162,6 +128,48 @@ export class StaffGroup {
       command: () => this.removeFromGroup()
     }
   ];
+
+  constructor(
+    private workGroupService: WorkGroupService,
+    private dataService: DataService
+  ) {
+    this.workGroupService.activeGroupId$.subscribe(
+      groupId => {
+        this.hasActiveWorkGroup = groupId !== undefined;
+        if (groupId !== undefined) {
+          this.updateAvailableStaff(groupId);
+        } else {
+          this.availableStaff = this.staffMembers;
+        }
+      }
+    );
+  }
+
+  ngOnInit() {
+    this.availableStaff = this.staffMembers;
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['staffMembers']) {
+      const activeGroupId = this.workGroupService.getActiveGroup();
+      if (activeGroupId !== undefined) {
+        this.updateAvailableStaff(activeGroupId);
+      } else {
+        this.availableStaff = this.staffMembers;
+      }
+    }
+  }
+
+  updateAvailableStaff(workGroupId: number) {
+    this.dataService.getAssignedStaffForWorkGroup(workGroupId).subscribe(
+      assignedStaff => {
+        const assignedIds = assignedStaff.map(staff => staff.id);
+        this.availableStaff = this.staffMembers.filter(
+          staff => staff.id && !assignedIds.includes(staff.id)
+        );
+      }
+    );
+  }
 
   handleCollapsedChange(collapsed: boolean) {
     this.isExpanded = !collapsed;
@@ -185,23 +193,38 @@ export class StaffGroup {
     this.contextMenu.show(event);
   }
 
+  onStaffClicked(staff: Profile) {
+    const activeGroupId = this.workGroupService.getActiveGroup();
+    if (activeGroupId !== undefined && staff.id) {
+      this.dataService.assignStaffToWorkGroup(staff.id, activeGroupId).subscribe({
+        next: () => {
+          //console.log('Staff assigned successfully');
+          this.updateAvailableStaff(activeGroupId);
+        },
+        error: (error) => {
+          console.error('Error assigning staff:', error);
+        }
+      });
+    }
+  }
+
   viewProfile() {
     if (this.selectedProfile) {
-      console.log('View profile:', this.selectedProfile);
+      //console.log('View profile:', this.selectedProfile);
       // Implement view profile logic
     }
   }
 
   editProfile() {
     if (this.selectedProfile) {
-      console.log('Edit profile:', this.selectedProfile);
+      //console.log('Edit profile:', this.selectedProfile);
       // Implement edit profile logic
     }
   }
 
   removeFromGroup() {
     if (this.selectedProfile) {
-      console.log('Remove from group:', this.selectedProfile);
+      //console.log('Remove from group:', this.selectedProfile);
       // Implement remove from group logic
     }
   }

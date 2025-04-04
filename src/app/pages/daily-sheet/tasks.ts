@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { TaskGroupComponent } from './task-group';
 import { DataService, Task, TaskType, TaskProgressType } from '../service/data.service';
 import { WorkGroupService } from './work-group.service';
-import { combineLatest } from 'rxjs';
+import { combineLatest, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-tasks',
@@ -20,7 +20,7 @@ import { combineLatest } from 'rxjs';
         @for (taskType of taskTypes; track taskType.task_type_id) {
           <app-task-group 
             [taskType]="taskType"
-            [tasks]="getAvailableTasks()"
+            [tasks]="tasks"
             [canAssignTasks]="hasActiveWorkGroup"
             (taskAssigned)="onTaskAssigned($event)">
           </app-task-group>
@@ -101,21 +101,27 @@ export class TasksComponent implements OnInit {
   }
 
   getAvailableTasks(): Task[] {
-    // Filter out tasks that are already assigned to any work group
     const assignedTaskIds = this.workGroupTasks.map(wgt => wgt.task_id);
     return this.tasks.filter(task => !assignedTaskIds.includes(task.task_id));
   }
 
   onTaskAssigned(task: Task) {
     if (this.activeWorkGroupId) {
-      this.dataService.addTaskToWorkGroup(this.activeWorkGroupId, task.task_id).subscribe(
-        result => {
-          if (result) {
-            console.log('Task assigned to group:', result);
-          }
+      // Create an array of operations to perform
+      const operations = [
+        // Add task to work group
+        this.dataService.addTaskToWorkGroup(this.activeWorkGroupId, task.task_id),
+        // Update task progress type to "Dodijeljeno" (150)
+        this.dataService.updateTaskProgressType(task.task_id, 150)
+      ];
+
+      // Execute both operations
+      forkJoin(operations).subscribe({
+        next: ([workGroupTask, updatedTask]) => {
+          //console.log('Task assigned and updated:', { workGroupTask, updatedTask });
         },
-        error => console.error('Error assigning task:', error)
-      );
+        error: error => console.error('Error assigning task:', error)
+      });
     }
   }
 }
