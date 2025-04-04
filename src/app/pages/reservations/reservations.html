@@ -1,0 +1,61 @@
+<div class="reservations-container">
+    <!-- Debug info -->
+    @if (houses().length === 0 && houseAvailabilities().length === 0) {
+        <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s" [style]="{ width: '50px', height: '50px' }" />
+    }
+    <!-- @if (houseAvailabilities().length === 0) {
+        <div style="color: red;">No availabilities loaded</div>
+    } -->
+    @else {
+        <div class="card">
+            <table class="reservations-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        @for (day of days(); track day.getTime()) {
+                            <th [ngClass]="{
+                                'today-column': isToday(day),
+                                'saturday-column': isSaturday(day),
+                                'sunday-column': isSunday(day)
+                            }"
+                            pTooltip="{{day | date:'fullDate'}}"
+                            tooltipPosition="top">
+                                @if (isToday(day)) {
+                                    <div class="today-label">TODAY</div>
+                                }
+                                {{day | date:'d.M'}}
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (house of houses(); track house.house_id) {
+                        <tr>
+                            <td pTooltip="{{house.house_name || 'House ' + house.house_number}}"
+                                tooltipPosition="right">
+                                {{house.house_name || 'House ' + house.house_number}}
+                            </td>
+                            @for (day of days(); track day.getTime()) {
+                                <!-- @let reservationColor = day | pipeZaRezeravaciju : house.house_id; -->
+                                <td [ngClass]="{
+                                    'reservation-slot': isReserved(house.house_id, day),
+                                    'today-column': isToday(day),
+                                    'saturday-column': isSaturday(day),
+                                    'sunday-column': isSunday(day)
+                                }"
+                                [style.background-color]="getReservationColor(house.house_id, day)"
+                                [class]="getReservationIdentifier(house.house_id, day)"
+                                [pTooltip]="getReservationInfo(house.house_id, day)"
+                                [tooltipDisabled]="!isReserved(house.house_id, day)"
+                                tooltipPosition="top"
+                                [tooltipStyleClass]="'reservation-tooltip'">
+                                    {{ getReservationDisplay(house.house_id, day) }}
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
