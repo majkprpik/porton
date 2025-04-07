@@ -9,6 +9,7 @@ import {
   catchError,
   tap,
   combineLatest,
+  of,
 } from 'rxjs';
 
 // Interfaces for enum types
@@ -105,6 +106,31 @@ export interface HouseAvailability {
   color_tint: number;
 }
 
+// Interface for house status task
+export interface HouseStatusTask {
+  taskId: number;
+  taskTypeId: number;
+  taskTypeName: string;
+  taskProgressTypeId: number;
+  taskProgressTypeName: string;
+  startTime: string | null;
+  endTime: string | null;
+  description: string | null;
+  createdBy: string;
+  createdAt: string;
+}
+
+// Interface for house status from view
+export interface HouseStatus {
+  house_id: number;
+  housename: string;
+  housetypeid: number;
+  housetypename: string;
+  availabilityid: number | null;
+  availabilityname: string | null;
+  housetasks: HouseStatusTask[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -129,6 +155,7 @@ export class DataService {
   private workGroupTasksSubject = new BehaviorSubject<WorkGroupTask[]>([]);
   private profilesSubject = new BehaviorSubject<Profile[]>([]);
   private housesSubject = new BehaviorSubject<House[]>([]);
+  private houseStatusesSubject = new BehaviorSubject<HouseStatus[]>([]);
 
   // Public Observables
   loading$ = this.loadingSubject.asObservable();
@@ -144,6 +171,7 @@ export class DataService {
   workGroupTasks$ = this.workGroupTasksSubject.asObservable();
   profiles$ = this.profilesSubject.asObservable();
   houses$ = this.housesSubject.asObservable();
+  houseStatuses$ = this.houseStatusesSubject.asObservable();
 
   constructor(private supabase: SupabaseService) {
     // Load all enum types when service is initialized
@@ -178,9 +206,10 @@ export class DataService {
     if (this.debug) {
       //console.log('[DataService] Loading initial data...');
     }
-    // Load house availabilities first
-    this.loadHouseAvailabilities().subscribe();
+    // Load house statuses first
+    this.loadHouseStatuses().subscribe();
     // Then load other data
+    this.loadHouseAvailabilities().subscribe();
     this.loadTasks().subscribe();
     this.loadWorkGroups().subscribe();
     this.loadWorkGroupProfiles().subscribe();
@@ -559,6 +588,7 @@ export class DataService {
     if (this.debug) {
       //console.log('[DataService] Refreshing all data...');
     }
+    this.houseStatusesSubject.next([]);
     this.houseAvailabilityTypesSubject.next([]);
     this.taskTypesSubject.next([]);
     this.taskProgressTypesSubject.next([]);
@@ -775,5 +805,43 @@ export class DataService {
       catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
     );
+  }
+
+  // Method to load house statuses
+  loadHouseStatuses(): Observable<HouseStatus[]> {
+    this.loadingSubject.next(true);
+
+    return from(this.supabase.getData('house_statuses_view', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          // Parse the housetasks JSON string into actual objects
+          const processedData = data.map(status => ({
+            ...status,
+            housetasks: status.housetasks ? JSON.parse(status.housetasks) : []
+          }));
+          this.houseStatusesSubject.next(processedData);
+          this.logData('House Statuses', processedData);
+        }
+      }),
+      map((data) => {
+        if (data) {
+          return data.map(status => ({
+            ...status,
+            housetasks: status.housetasks ? JSON.parse(status.housetasks) : []
+          }));
+        }
+        return [];
+      }),
+      catchError((error) => {
+        this.handleError(error);
+        return of([]);
+      }),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Add method to refresh house statuses
+  refreshHouseStatuses(): Observable<HouseStatus[]> {
+    return this.loadHouseStatuses();
   }
 }

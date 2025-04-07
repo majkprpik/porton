@@ -6,11 +6,15 @@ import { Notfound } from './app/pages/notfound/notfound';
 import { Reservations } from './app/pages/reservations/reservations';
 // import { Tasks } from './app/pages/tasks/tasks';
 import { DailySheetComponent } from './app/pages/daily-sheet/daily-sheet';
+import { Home } from './app/pages/home/home';
+
 export const appRoutes: Routes = [
     {
         path: '',
         component: AppLayout,
         children: [
+            { path: '', component: Home },  // Default route
+            { path: 'home', component: Home },
             { path: 'reservations', component: Reservations },
             // { path: 'tasks', component: Tasks },
             { path: 'daily-sheet', component: DailySheetComponent },
