@@ -25,7 +25,8 @@ export class AppMenu {
                     { label: 'Pregled', icon: 'pi pi-fw pi-home', routerLink: ['/home'] },
                     { label: 'Rezervacije', icon: 'pi pi-fw pi-calendar', routerLink: ['/reservations'] },
                     // { label: 'Zadaci', icon: 'pi pi-fw pi-check-square', routerLink: ['/tasks'] },
-                    { label: 'Dnevni list', icon: 'pi pi-fw pi-file', routerLink: ['/daily-sheet'] }
+                    { label: 'Dnevni list', icon: 'pi pi-fw pi-file', routerLink: ['/daily-sheet'] },
+                    { label: 'Timovi', icon: 'pi pi-fw pi-users', routerLink: ['/teams'] }
                 ]
             },
             // {

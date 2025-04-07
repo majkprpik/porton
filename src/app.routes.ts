@@ -7,6 +7,8 @@ import { Reservations } from './app/pages/reservations/reservations';
 // import { Tasks } from './app/pages/tasks/tasks';
 import { DailySheetComponent } from './app/pages/daily-sheet/daily-sheet';
 import { Home } from './app/pages/home/home';
+import { Teams } from './app/pages/teams/teams';
+import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
 
 export const appRoutes: Routes = [
     {
@@ -18,6 +20,8 @@ export const appRoutes: Routes = [
             { path: 'reservations', component: Reservations },
             // { path: 'tasks', component: Tasks },
             { path: 'daily-sheet', component: DailySheetComponent },
+            { path: 'teams', component: Teams },
+            { path: 'teams/:id', component: WorkGroupDetail },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },
             { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') },
