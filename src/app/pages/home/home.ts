@@ -1,10 +1,9 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService, House, HouseAvailability, HouseStatus, HouseStatusTask } from '../service/data.service';
+import { DataService, House, HouseAvailability, HouseStatus, HouseStatusTask, TaskType } from '../service/data.service';
 import { Subscription } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { SpeedDialModule } from 'primeng/speeddial';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextarea } from 'primeng/inputtextarea';
@@ -19,7 +18,6 @@ import { signal } from '@angular/core';
         CommonModule, 
         CardModule, 
         ButtonModule, 
-        SpeedDialModule, 
         DialogModule,
         DropdownModule,
         InputTextarea,
@@ -91,16 +89,6 @@ import { signal } from '@angular/core';
                 }
             </div>
 
-            <p-speedDial 
-                [model]="menuItems" 
-                direction="up"
-                [style]="{ position: 'fixed', bottom: '2rem', right: '2rem' }"
-                buttonClassName="p-button-success"
-                [buttonProps]="{ size: 'large', raised: true }"
-                showIcon="pi pi-plus"
-                hideIcon="pi pi-times"
-            ></p-speedDial>
-
             <!-- Fault Report Dialog -->
             <p-dialog 
                 header="Prijava kvara" 
@@ -150,6 +138,72 @@ import { signal } from '@angular/core';
                             label="Prijavi" 
                             (click)="submitFaultReport()"
                             [disabled]="!isFormValid()"
+                        ></button>
+                    </div>
+                </ng-template>
+            </p-dialog>
+
+            <!-- Extraordinary Task Dialog -->
+            <p-dialog 
+                header="Prijava izvanrednog zadatka" 
+                [(visible)]="extraordinaryTaskVisible" 
+                [modal]="true"
+                [style]="{ width: '30rem' }"
+                [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
+            >
+                <div class="task-form">
+                    <div class="field">
+                        <label for="location" class="font-bold block mb-2">Lokacija*</label>
+                        <p-dropdown
+                            id="location"
+                            [options]="houses()"
+                            [(ngModel)]="selectedHouseForTask"
+                            optionLabel="house_number"
+                            [filter]="true"
+                            filterBy="house_number"
+                            placeholder="Odaberi kuću"
+                            [style]="{ width: '100%' }"
+                        ></p-dropdown>
+                    </div>
+                    
+                    <div class="field mt-4">
+                        <label for="taskType" class="font-bold block mb-2">Vrsta zadatka*</label>
+                        <p-dropdown
+                            id="taskType"
+                            [options]="taskTypes()"
+                            [(ngModel)]="selectedTaskType"
+                            optionLabel="task_type_name"
+                            placeholder="Odaberi vrstu zadatka"
+                            [style]="{ width: '100%' }"
+                        ></p-dropdown>
+                    </div>
+
+                    <div class="field mt-4">
+                        <label for="taskDescription" class="font-bold block mb-2">Opis*</label>
+                        <textarea
+                            id="taskDescription"
+                            pInputTextarea
+                            [(ngModel)]="taskDescription"
+                            [rows]="5"
+                            [style]="{ width: '100%' }"
+                            placeholder="Unesite opis zadatka"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <ng-template pTemplate="footer">
+                    <div class="flex justify-content-end gap-2">
+                        <button 
+                            pButton 
+                            label="Odustani" 
+                            class="p-button-text" 
+                            (click)="extraordinaryTaskVisible = false"
+                        ></button>
+                        <button 
+                            pButton 
+                            label="Prijavi zadatak" 
+                            (click)="submitExtraordinaryTask()"
+                            [disabled]="!isTaskFormValid()"
                         ></button>
                     </div>
                 </ng-template>
@@ -464,42 +518,19 @@ import { signal } from '@angular/core';
             }
         }
 
-        ::ng-deep {
-            .p-speeddial {
-                .p-speeddial-button {
-                    width: 4.5rem !important;
-                    height: 4.5rem !important;
-                    
-                    .p-button-icon {
-                        font-size: 2rem;
-                    }
-                }
+        .fault-report-form {
+            padding: 1.5rem 0;
 
-                .p-speeddial-action {
-                    width: 3.5rem !important;
-                    height: 3.5rem !important;
-                    background: var(--surface-card);
-                    color: var(--text-color);
-                    border: 1px solid var(--surface-border);
-                    margin-bottom: 0.5rem;
+            .field {
+                margin-bottom: 1rem;
+            }
 
-                    &:hover {
-                        background: var(--surface-hover);
-                    }
-
-                    .p-speeddial-action-icon {
-                        font-size: 1.5rem;
-                    }
-                }
-
-                .p-speeddial-list {
-                    padding: 0;
-                    margin: 0;
-                }
+            label {
+                color: var(--text-color);
             }
         }
 
-        .fault-report-form {
+        .task-form {
             padding: 1.5rem 0;
 
             .field {
@@ -522,17 +553,30 @@ export class Home implements OnInit, OnDestroy {
 
     // Dialog visibility flags
     faultReportVisible: boolean = false;
+    extraordinaryTaskVisible: boolean = false;
     phoneDialogVisible: boolean = false;
 
     // Form fields
     selectedHouse: House | null = null;
     faultDescription: string = '';
 
+    // Form fields for extraordinary task
+    selectedHouseForTask: House | null = null;
+    selectedTaskType: TaskType | null = null;
+    taskDescription: string = '';
+    taskTypes = signal<TaskType[]>([]);
+
     menuItems: MenuItem[] = [
         {
             icon: 'pi pi-exclamation-circle',
             command: () => {
                 this.faultReportVisible = true;
+            }
+        },
+        {
+            icon: 'pi pi-plus-circle',
+            command: () => {
+                this.extraordinaryTaskVisible = true;
             }
         },
         {
@@ -869,6 +913,17 @@ export class Home implements OnInit, OnDestroy {
         
         // Store subscriptions for cleanup
         this.subscriptions.push(housesSubscription, availabilitiesSubscription, statusesSubscription);
+
+        // Subscribe to task types
+        const taskTypesSubscription = this.dataService.taskTypes$.subscribe(types => {
+            this.taskTypes.set(types);
+        });
+        
+        // Add to subscriptions array
+        this.subscriptions.push(taskTypesSubscription);
+
+        // Load task types if not already loaded
+        this.dataService.getTaskTypes().subscribe();
     }
 
     isHouseOccupied(houseId: number): boolean {
@@ -912,5 +967,30 @@ export class Home implements OnInit, OnDestroy {
         this.selectedHouse = null;
         this.faultDescription = '';
         this.faultReportVisible = false;
+    }
+
+    isTaskFormValid(): boolean {
+        return !!this.selectedHouseForTask && 
+               !!this.selectedTaskType && 
+               !!this.taskDescription.trim();
+    }
+
+    submitExtraordinaryTask() {
+        if (!this.isTaskFormValid()) return;
+
+        console.log('Submitting extraordinary task:', {
+            house: this.selectedHouseForTask,
+            taskType: this.selectedTaskType,
+            description: this.taskDescription
+        });
+
+        // Here you would typically call a service method to save the task
+        // For example: this.dataService.createTask({...}).subscribe();
+
+        // Reset form and close dialog
+        this.selectedHouseForTask = null;
+        this.selectedTaskType = null;
+        this.taskDescription = '';
+        this.extraordinaryTaskVisible = false;
     }
 } 

@@ -22,7 +22,7 @@ export class AppMenu {
         this.model = [
             {
                 items: [
-                    { label: 'Home', icon: 'pi pi-fw pi-home', routerLink: ['/home'] },
+                    { label: 'Pregled', icon: 'pi pi-fw pi-home', routerLink: ['/home'] },
                     { label: 'Rezervacije', icon: 'pi pi-fw pi-calendar', routerLink: ['/reservations'] },
                     // { label: 'Zadaci', icon: 'pi pi-fw pi-check-square', routerLink: ['/tasks'] },
                     { label: 'Dnevni list', icon: 'pi pi-fw pi-file', routerLink: ['/daily-sheet'] }
