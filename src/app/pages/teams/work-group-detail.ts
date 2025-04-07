@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
-import { DataService, WorkGroup, Profile, Task, House } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, TeamTask } from '../service/data.service';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { TeamService } from '../service/team.service';
 
 @Component({
     selector: 'app-work-group-detail',
@@ -245,53 +245,159 @@ export class WorkGroupDetail implements OnInit {
     loading = true;
     workGroup: WorkGroup | null = null;
     assignedTasks: Task[] = [];
+    team: any;
+    teams: any[] = [];
+    taskTypes: any;
+    progressTypes: any;
     assignedStaff: Profile[] = [];
     houses: House[] = [];
+    profiles: any;
+    workGroupTasks: any;
 
     constructor(
         private route: ActivatedRoute,
-        private dataService: DataService
+        private dataService: DataService,
+        private teamService: TeamService
     ) {}
 
     ngOnInit() {
-        const workGroupId = Number(this.route.snapshot.paramMap.get('id'));
-        
-        if (!workGroupId) {
-            this.loading = false;
-            return;
-        }
+      const workGroupId = Number(this.route.snapshot.paramMap.get('id'));
+      
+      if (!workGroupId) {
+          this.loading = false;
+          return;
+      }
 
-        combineLatest([
-            this.dataService.workGroups$,
-            this.dataService.workGroupTasks$,
-            this.dataService.tasks$,
-            this.dataService.workGroupProfiles$,
-            this.dataService.profiles$,
-            this.dataService.houses$
-        ]).subscribe({
-            next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses]) => {
-                this.workGroup = workGroups.find(wg => wg.work_group_id === workGroupId) || null;
-                this.houses = houses;
+      combineLatest([
+          this.dataService.workGroups$,
+          this.dataService.workGroupTasks$,
+          this.dataService.tasks$,
+          this.dataService.workGroupProfiles$,
+          this.dataService.profiles$,
+          this.dataService.houses$,
+          this.teamService.lockedTeams$,
+          this.dataService.taskTypes$,
+          this.dataService.taskProgressTypes$,
+      ]).subscribe({
+          next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, teams, taskTypes, taskProgressTypes]) => {
+            this.workGroup = workGroups.find(wg => wg.work_group_id === workGroupId) || null;
+            this.houses = houses;
+            this.workGroupTasks = workGroupTasks;
+            this.teams = teams;
+            this.taskTypes = taskTypes;
+            this.progressTypes = taskProgressTypes;
 
-                // Get tasks for this work group
-                const groupTaskIds = workGroupTasks
-                    .filter(wgt => wgt.work_group_id === workGroupId)
-                    .map(wgt => wgt.task_id);
-                this.assignedTasks = tasks.filter(task => groupTaskIds.includes(task.task_id));
-
-                // Get staff for this work group
-                const groupProfileIds = workGroupProfiles
-                    .filter(wgp => wgp.work_group_id === workGroupId)
-                    .map(wgp => wgp.profile_id);
-                this.assignedStaff = profiles.filter(profile => groupProfileIds.includes(profile.id));
-
-                this.loading = false;
-            },
-            error: (error) => {
-                console.error('Error loading work group details:', error);
-                this.loading = false;
+            this.team = teams.find((t) => t.id == workGroupId.toString());
+            // Initialize tasks array if it doesn't exist
+            if (this.team && !this.team.tasks) {
+                this.team.tasks = [];
             }
-        });
+            // Ensure all tasks have a progressType
+            if (this.team?.tasks) {
+              this.team.tasks.forEach((task: any) => {
+              if (!task.progressType) {
+                  task.progressType = TaskProgressType.ASSIGNED;
+              }
+        
+              let workGroupTask = this.workGroupTasks.find((workGroupTask: any) => workGroupTask.task_id == task.id);
+        
+              if(workGroupTask){
+                  if(task.id == workGroupTask.task_id){
+                  task.index = workGroupTask.index;
+                  }
+              }
+              });
+            }
+
+            // Get tasks for this work group
+            const groupTaskIds = workGroupTasks
+                .filter(wgt => wgt.work_group_id === workGroupId)
+                .map(wgt => wgt.task_id);
+            this.assignedTasks = tasks.filter(task => groupTaskIds.includes(task.task_id));
+
+            // Get staff for this work group
+            const groupProfileIds = workGroupProfiles
+                .filter(wgp => wgp.work_group_id === workGroupId)
+                .map(wgp => wgp.profile_id);
+            this.assignedStaff = profiles.filter(profile => groupProfileIds.includes(profile.id));
+
+            this.loading = false;
+          },
+          error: (error) => {
+              console.error('Error loading work group details:', error);
+              this.loading = false;
+          }
+      });
+
+      this.dataService.$workGroupTasksUpdate.subscribe(async res => {
+        if(res && res.eventType == 'INSERT'){
+          this.workGroupTasks.push(res.new);
+          let task = await this.dataService.getTaskByTaskId(res.new.task_id);
+    
+          let team = this.teams.find((team: any) => team.id == res.new.work_group_id.toString());
+          let houseNumber = this.houses.find((house: any) => house.house_id == task.house_id);
+          let taskType = this.taskTypes.find((taskType: any) => taskType.task_type_id == task.task_type_id);
+          let progressType = this.progressTypes.find((progressType: any) => progressType.task_progress_type_id == task.task_progress_type_id);
+          let workGroupTask = this.workGroupTasks.find((workGroupTask: any) => workGroupTask.task_id == task.task_id);
+    
+          if(!team.tasks.find((task: any) => task.id == res.new.task_id) && houseNumber && taskType && progressType && workGroupTask){
+            let newTask: TeamTask = {
+              id: task.task_id,
+              house_number: houseNumber.house_number,
+              task_type_name: taskType.task_type_name,
+              progress_type_name: progressType.task_progress_type_name,
+              index: workGroupTask.index,
+            }
+    
+            team.tasks = [...team.tasks, newTask];
+          }
+        } else if(res && res.eventType == 'DELETE'){
+          let team = this.teams.find((team: any) => team.id == res.old.work_group_id.toString());
+          if(team){
+            team.tasks = team.tasks.filter((task: any) => task.task_id != res.old.task_id);
+            this.workGroupTasks = this.workGroupTasks.filter((task: any) => task.task_id != res.old.task_id);
+          }
+        }
+      });
+    
+      this.dataService.$workGroupProfiles.subscribe(res => {
+        if(res && res.eventType == 'INSERT'){
+          let team = this.teams.find((team: any) => team.id == res.new.work_group_id.toString());
+          let profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
+    
+          if(!team.members.find((member: any) => member.id == res.new.profile_id)){
+            let newStaff: Profile = {
+              id: res.new.profile_id,
+              role: null,
+              first_name: profile.first_name,
+              last_name: profile.last_name,
+              phone_number: null,
+              created_at: null,
+            }
+
+            team.members.push(newStaff);
+          }
+        } else if(res && res.eventType == 'DELETE'){
+          let team = this.teams.find((team: any) => team.id == res.old.work_group_id.toString());
+          if(team){
+            team.members = team.members.filter((member: any) => member.id != res.old.profile_id);
+          }
+        }
+      });
+    
+      this.dataService.$tasksUpdate.subscribe(async res => {
+        if(res){
+          let taskProgress = await this.dataService.getTaskProgressTypeByTaskProgressId(res.new.task_progress_type_id);
+          if(taskProgress.task_progress_type_name == 'Završeno'){
+            for (let team of this.teams) {
+              let task = team.tasks.find((task: any) => task.id == res.new.task_id);
+              if (task) {
+                task.progressType = 'Završeno';
+              }
+            }
+          }
+        }
+      });
     }
 
     getStaffFullName(staff: Profile): string {
@@ -340,7 +446,7 @@ export class WorkGroupDetail implements OnInit {
         return 'Započni';
     }
 
-    getActionButtonSeverity(task: Task): string {
+    getActionButtonSeverity(task: Task): 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' {
         if (this.isTaskInProgress(task)) return 'success';
         return 'primary';
     }
@@ -357,3 +463,9 @@ export class WorkGroupDetail implements OnInit {
         });
     }
 } 
+
+enum TaskProgressType {
+    ASSIGNED = 'Dodijeljeno',
+    IN_PROGRESS = 'U progresu',
+    COMPLETED = 'Završeno',
+}

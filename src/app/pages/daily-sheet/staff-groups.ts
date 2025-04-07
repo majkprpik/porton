@@ -157,7 +157,7 @@ export class StaffGroups implements OnInit {
     return filteredProfiles;
   }
 
-  getUniqueRoles(): (string | null)[] {
+  getUniqueRoles(): (string | null | undefined)[] {
     return Array.from(new Set(this.profiles.map(profile => profile.role)));
   }
 } 

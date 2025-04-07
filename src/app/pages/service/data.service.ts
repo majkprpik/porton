@@ -44,11 +44,11 @@ export interface House {
 // Interface for profiles
 export interface Profile {
   id: string; // uuid
-  role: string | null;
+  role?: string | null;
   first_name: string | null;
   last_name: string | null;
-  phone_number: string | null;
-  created_at: string;
+  phone_number?: string | null;
+  created_at?: string | null;
 }
 
 // Interface for work groups and related entities
@@ -56,6 +56,15 @@ export interface WorkGroup {
   work_group_id: number;
   created_at: string;
   is_locked: boolean;
+}
+
+export interface LockedTeam {
+  id: string;
+  name: string;
+  members: Profile[];
+  homes?: House[];
+  tasks?: Task[];
+  isLocked?: boolean;
 }
 
 export interface WorkGroupProfile {
@@ -75,11 +84,21 @@ export interface Task {
   task_type_id: number;
   task_progress_type_id: number;
   house_id: number;
+  house_number: number;
   start_time: string | null;
   end_time: string | null;
   description: string | null;
   created_by: string;
   created_at: string;
+  index?: number | null; 
+}
+
+export interface TeamTask {
+  id: number; 
+  house_number: number;
+  task_type_name: string;
+  progress_type_name: string;
+  index: number | null;
 }
 
 // Interface for house availabilities
@@ -172,12 +191,19 @@ export class DataService {
   profiles$ = this.profilesSubject.asObservable();
   houses$ = this.housesSubject.asObservable();
   houseStatuses$ = this.houseStatusesSubject.asObservable();
+  
+  $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
+  $tasksUpdate = new BehaviorSubject<any>('');
+  $workGroupTasksUpdate = new BehaviorSubject<any>('');
+  $workGroupProfiles = new BehaviorSubject<any>('');
+  $workGroups = new BehaviorSubject<any>('');
 
-  constructor(private supabase: SupabaseService) {
+  constructor(private supabaseService: SupabaseService) {
     // Load all enum types when service is initialized
     this.loadAllEnumTypes();
     // Load all data
     this.loadInitialData();
+    this.listenToDatabaseChanges();
   }
 
   // Method to enable/disable debug mode
@@ -253,7 +279,7 @@ export class DataService {
       return this.houseAvailabilityTypes$;
     }
 
-    return from(this.supabase.getData('house_availability_types', this.schema)).pipe(
+    return from(this.supabaseService.getData('house_availability_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.houseAvailabilityTypesSubject.next(data);
@@ -275,7 +301,7 @@ export class DataService {
       return this.taskTypes$;
     }
 
-    return from(this.supabase.getData('task_types', this.schema)).pipe(
+    return from(this.supabaseService.getData('task_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.taskTypesSubject.next(data);
@@ -297,7 +323,7 @@ export class DataService {
       return this.taskProgressTypes$;
     }
 
-    return from(this.supabase.getData('task_progress_types', this.schema)).pipe(
+    return from(this.supabaseService.getData('task_progress_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.taskProgressTypesSubject.next(data);
@@ -319,7 +345,7 @@ export class DataService {
       return this.houseTypes$;
     }
 
-    return from(this.supabase.getData('house_types', this.schema)).pipe(
+    return from(this.supabaseService.getData('house_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.houseTypesSubject.next(data);
@@ -335,7 +361,7 @@ export class DataService {
   loadHouseAvailabilities(): Observable<HouseAvailability[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.getData('house_availabilities', this.schema)).pipe(
+    return from(this.supabaseService.getData('house_availabilities', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.houseAvailabilitiesSubject.next(data);
@@ -351,7 +377,7 @@ export class DataService {
   loadTasks(): Observable<Task[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.getData('tasks', this.schema)).pipe(
+    return from(this.supabaseService.getData('tasks', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.tasksSubject.next(data);
@@ -367,7 +393,7 @@ export class DataService {
   loadWorkGroups(): Observable<WorkGroup[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.getData('work_groups', this.schema)).pipe(
+    return from(this.supabaseService.getData('work_groups', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.workGroupsSubject.next(data);
@@ -383,7 +409,7 @@ export class DataService {
   loadWorkGroupProfiles(): Observable<WorkGroupProfile[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.getData('work_group_profiles', this.schema)).pipe(
+    return from(this.supabaseService.getData('work_group_profiles', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.workGroupProfilesSubject.next(data);
@@ -399,7 +425,7 @@ export class DataService {
   loadWorkGroupTasks(): Observable<WorkGroupTask[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.getData('work_group_tasks', this.schema)).pipe(
+    return from(this.supabaseService.getData('work_group_tasks', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.workGroupTasksSubject.next(data);
@@ -415,7 +441,7 @@ export class DataService {
   loadProfiles(): Observable<Profile[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.getData('profiles', this.schema)).pipe(
+    return from(this.supabaseService.getData('profiles', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.profilesSubject.next(data);
@@ -431,7 +457,7 @@ export class DataService {
   loadHouses(): Observable<House[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.getData('houses', this.schema)).pipe(
+    return from(this.supabaseService.getData('houses', this.schema)).pipe(
       tap((data) => {
         if (data) {
           this.housesSubject.next(data);
@@ -448,7 +474,7 @@ export class DataService {
   createWorkGroup(): Observable<WorkGroup | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.insertData('work_groups', {}, this.schema)).pipe(
+    return from(this.supabaseService.insertData('work_groups', {}, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentWorkGroups = this.workGroupsSubject.value;
@@ -471,7 +497,7 @@ export class DataService {
       profile_id: profileId
     };
 
-    return from(this.supabase.insertData('work_group_profiles', workGroupProfile, this.schema)).pipe(
+    return from(this.supabaseService.insertData('work_group_profiles', workGroupProfile, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentProfiles = this.workGroupProfilesSubject.value;
@@ -494,7 +520,7 @@ export class DataService {
       index: index || null
     };
 
-    return from(this.supabase.insertData('work_group_tasks', workGroupTask, this.schema)).pipe(
+    return from(this.supabaseService.insertData('work_group_tasks', workGroupTask, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentTasks = this.workGroupTasksSubject.value;
@@ -507,11 +533,98 @@ export class DataService {
     );
   }
 
+  
+  async getWorkGroupByWorkGroupId(workGroupId: number): Promise<any>{
+    try{
+      const { data: existingWorkGroup, error: existingWorkGroupError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_groups')
+        .select('*')
+        .eq('work_group_id', workGroupId)
+        .single();
+
+      if(existingWorkGroupError) throw existingWorkGroupError;
+
+      return existingWorkGroup;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  async getAllWorkGroups(): Promise<any>{
+    try{
+      const { data: existingWorkGroups, error: existingWorkGroupsError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_groups')
+        .select('*');
+
+      if(existingWorkGroupsError) throw existingWorkGroupsError;
+
+      return existingWorkGroups;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  async getWorkGroupProfilesByWorkGroupId(workGroupId: number): Promise<any>{
+    try{
+      const { data: existingWorkGroup, error: existingWorkGroupError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_profiles')
+        .select('*')
+        .eq('work_group_id', workGroupId);
+
+      if(existingWorkGroupError) throw existingWorkGroupError;
+
+      return existingWorkGroup;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async getWorkGroupTasksByWorkGroupId(workGroupId: number){
+    try{
+      const { data: existingWorkGroupTask, error: existingWorkGroupTaskError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_tasks')
+        .select('*')
+        .eq('work_group_id', workGroupId);
+
+      if(existingWorkGroupTaskError) throw existingWorkGroupTaskError;
+
+      return existingWorkGroupTask;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async getWorkGroupTasksByTaskId(taskId: number){
+    try{
+      const { data: existingWorkGroupTask, error: existingWorkGroupTaskError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_tasks')
+        .select('*')
+        .eq('task_id', taskId)
+        .single();
+
+      if(existingWorkGroupTaskError) throw existingWorkGroupTaskError;
+
+      return existingWorkGroupTask;
+    } catch (error) {
+      console.log(error);
+      return {};
+    }
+  }
+
   // Method to create a new profile
   createProfile(profile: Omit<Profile, 'id' | 'created_at'>): Observable<Profile | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.insertData('profiles', profile, this.schema)).pipe(
+    return from(this.supabaseService.insertData('profiles', profile, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentProfiles = this.profilesSubject.value;
@@ -529,7 +642,7 @@ export class DataService {
   updateProfile(id: string, updates: Partial<Omit<Profile, 'id' | 'created_at'>>): Observable<Profile | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.updateData('profiles', updates, `id = '${id}'`, this.schema)).pipe(
+    return from(this.supabaseService.updateData('profiles', updates, `id = '${id}'`, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentProfiles = this.profilesSubject.value;
@@ -545,11 +658,150 @@ export class DataService {
     );
   }
 
+  async getHomesForDate(date: string): Promise<HouseStatus[]> {
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('house_statuses_view')
+        .select('*');
+
+      if (error) throw error;
+      // Return the data directly as it already matches our interface
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching houses:', error);
+      return [];
+    }
+  }
+
+  async getHomesWithTodaysStartDate(){
+    try {
+      const today = new Date();
+      const specificDateStr = today.toISOString().split('T')[0];
+
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('house_availabilities')
+        .select('*') 
+        .eq('house_availability_start_date', specificDateStr)
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching houses for today: ', error);
+      return [];
+    }
+  }
+
+  async getHomesWithYesterdaysEndDate(){
+    try {
+      const today = new Date(); 
+      today.setHours(0, 0, 0, 0);
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      
+      const specificDateStr = yesterday.toISOString().split('T')[0];
+
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('house_availabilities')
+        .select('*') 
+        .eq('house_availability_end_date', specificDateStr)
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching houses for today: ', error);
+      return [];
+    }
+  }
+
+  async getHouseAvailabilityTypeByName(name: string){
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('house_availability_types')
+        .select('*')
+        .eq('house_availability_type_name', name)
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Error updating house availability:', error);
+      return null;
+    }
+  }
+
+  async getHouseNumberByHouseId(houseId: number){
+    try{
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('houses')
+        .select('house_number')
+        .eq('house_id', houseId)
+        .single();
+
+      if (error) throw error;
+
+      return data ? data.house_number : null;
+    } catch (error) {
+      console.error('Error fetching house number:', error);
+      return null;
+    }
+  }
+
+  async getHouseIdByHouseNumber(houseNumber: string): Promise<number | null> {
+    try{
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('houses')
+        .select('house_id')
+        .eq('house_number', houseNumber)
+        .single();
+
+      if (error) throw error;
+
+      return data.house_id || null;
+    } catch (error) {
+      console.error('Error fetching house number:', error);
+      return null;
+    }
+  }
+
+  async getHomesWithRepairTasks(){
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('house_statuses_view')
+        .select('*');
+
+      if (error) throw error;
+
+      let housesWithRepairTasks = data.flatMap(house => 
+        house.housetasks
+            .filter((houseTask: any) => houseTask.taskTypeName === "Popravak")
+            .map((houseTask: any) => ({
+                ...house,
+                ...houseTask,
+            }))
+      );
+
+      return housesWithRepairTasks;
+    } catch (error) {
+      console.error('Error fetching houses:', error);
+      return [];
+    }
+  }
+
   // Method to create a new house
   createHouse(house: Omit<House, 'house_id'>): Observable<House | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.insertData('houses', house, this.schema)).pipe(
+    return from(this.supabaseService.insertData('houses', house, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentHouses = this.housesSubject.value;
@@ -567,7 +819,7 @@ export class DataService {
   updateHouse(houseId: number, updates: Partial<Omit<House, 'house_id'>>): Observable<House | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.updateData('houses', updates, houseId.toString(), this.schema)).pipe(
+    return from(this.supabaseService.updateData('houses', updates, houseId.toString(), this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentHouses = this.housesSubject.value;
@@ -608,7 +860,7 @@ export class DataService {
   createTask(task: Omit<Task, 'task_id' | 'created_at'>): Observable<Task | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.insertData('tasks', task, this.schema)).pipe(
+    return from(this.supabaseService.insertData('tasks', task, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentTasks = this.tasksSubject.value;
@@ -628,7 +880,7 @@ export class DataService {
 
     const updates = { task_progress_type_id: progressTypeId };
 
-    return from(this.supabase.updateData('tasks', updates, taskId.toString(), this.schema)).pipe(
+    return from(this.supabaseService.updateData('tasks', updates, taskId.toString(), this.schema)).pipe(
       tap((data) => {
         if (data) {
           // Update the tasks in the BehaviorSubject
@@ -652,7 +904,7 @@ export class DataService {
   publishWorkGroups(workGroupIds: number[]): Observable<WorkGroup[] | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.updateByIds(
+    return from(this.supabaseService.updateByIds(
       'work_groups', 
       { is_locked: true }, 
       workGroupIds,
@@ -684,7 +936,7 @@ export class DataService {
       profile_id: profileId
     };
 
-    return from(this.supabase.insertData('work_group_profiles', assignment, this.schema)).pipe(
+    return from(this.supabaseService.insertData('work_group_profiles', assignment, this.schema)).pipe(
       tap(result => {
         if (result) {
           const currentAssignments = this.workGroupProfilesSubject.value;
@@ -703,7 +955,7 @@ export class DataService {
   removeStaffFromWorkGroup(profileId: string, workGroupId: number): Observable<any> {
     const filter = `profile_id = '${profileId}' AND work_group_id = ${workGroupId}`;
 
-    return from(this.supabase.deleteData('work_group_profiles', filter, this.schema)).pipe(
+    return from(this.supabaseService.deleteData('work_group_profiles', filter, this.schema)).pipe(
       tap(() => {
         const currentAssignments = this.workGroupProfilesSubject.value;
         const updatedAssignments = currentAssignments.filter(
@@ -722,7 +974,7 @@ export class DataService {
   removeTaskFromWorkGroup(workGroupId: number, taskId: number): Observable<any> {
     const filter = `work_group_id = ${workGroupId} AND task_id = ${taskId}`;
 
-    return from(this.supabase.deleteData('work_group_tasks', filter, this.schema)).pipe(
+    return from(this.supabaseService.deleteData('work_group_tasks', filter, this.schema)).pipe(
       tap(() => {
         const currentTasks = this.workGroupTasksSubject.value;
         const updatedTasks = currentTasks.filter(
@@ -736,6 +988,159 @@ export class DataService {
       })
     );
   }
+
+  async getTaskProgressTypeIdByTaskProgressTypeName(taskProgressTypeName: string){
+    try{
+      const { data: existingProgressTypeId, error: progressTypeIdError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('task_progress_types')
+        .select('task_progress_type_id')
+        .eq('task_progress_type_name', taskProgressTypeName)
+        .single();
+
+      if(progressTypeIdError) throw progressTypeIdError
+
+      return existingProgressTypeId?.task_progress_type_id;
+    } catch (error) {
+      console.error('Error fetching task type ids', error);
+      return null;
+    }
+  }
+
+  async getTaskProgressTypeByTaskProgressId(taskProgressId: number){
+    try{
+      const { data: taskProgress, error: progressTypeIdError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('task_progress_types')
+        .select('*')
+        .eq('task_progress_type_id', taskProgressId)
+        .single();
+
+      if(progressTypeIdError) throw progressTypeIdError
+
+      return taskProgress;
+    } catch (error) {
+      console.error('Error fetching task type ids', error);
+      return null;
+    }
+  }
+
+  
+  async getAllHousesByTaskTypeName(taskTypeName: string){
+    try{
+      const today = new Date().toISOString().split('T')[0];
+      let taskTypeId = await this.getTaskTypeIdByTaskName(taskTypeName);
+      let mobileHomesForRepair;
+
+      const { data: existingHouseIds, error: houseIdError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('tasks')
+        .select('house_id')
+        .eq('task_type_id', taskTypeId)
+
+      if(houseIdError) throw houseIdError
+
+      const houseIdList = existingHouseIds.map(house => house.house_id);
+      const homes = await this.getHomesForDate(today);
+      mobileHomesForRepair = homes.filter((home: any) => houseIdList.includes(home.house_id));
+
+      return mobileHomesForRepair;
+    } catch (error) {
+      console.error('Error fetching task type ids', error);
+      return [];
+    }
+  }
+
+  async getAllTaskTypes(){
+    try {
+      const { data: taskTypes, error: houseIdError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('task_types')
+        .select('*')
+
+      if (houseIdError) throw houseIdError;
+
+      return taskTypes;
+    } catch (error) {
+      console.error('Error fetching task types:', error);
+      return [];
+    }
+  }
+
+  async getAllTasksByTaskTypeName(taskTypeName: string): Promise<HouseStatusTask[]>{
+    try {
+      let taskTypeId = await this.getTaskTypeIdByTaskName(taskTypeName);
+
+      const { data: existingHouseIds, error: houseIdError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('tasks')
+        .select('*')
+        .eq('task_type_id', taskTypeId)
+
+      if (houseIdError) throw houseIdError;
+
+      return existingHouseIds;
+    } catch (error) {
+      console.error('Error fetching houses:', error);
+      return [];
+    }
+  }
+
+  async getTaskByTaskId(taskId: number){
+    try{
+      const { data: task, error: taskTypeIdError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('tasks')
+        .select('*')
+        .eq('task_id', taskId)
+        .single();
+
+      if(taskTypeIdError) throw taskTypeIdError
+
+      return task;
+    } catch (error) {
+      console.error('Error fetching task type ids', error);
+      return [];
+    }
+  }
+
+  async getTaskTypeByTaskTypeId(taskTypeId: number){
+    try{
+      const { data: task, error: taskTypeIdError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('task_types')
+        .select('*')
+        .eq('task_type_id', taskTypeId)
+        .single();
+
+      if(taskTypeIdError) throw taskTypeIdError
+
+      return task;
+    } catch (error) {
+      console.error('Error fetching task type ids', error);
+      return [];
+    }
+  }
+
+  
+  async getTaskTypeIdByTaskName(taskName: string){
+    try{
+      const { data: existingTaskTypeId, error: taskTypeIdError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('task_types')
+        .select('task_type_id')
+        .eq('task_type_name', taskName)
+        .single();
+
+      if(taskTypeIdError) throw taskTypeIdError
+
+      return existingTaskTypeId?.task_type_id;
+    } catch (error) {
+      console.error('Error fetching task type ids', error);
+      return null;
+    }
+  }
+  
 
   getAssignedStaffForWorkGroup(workGroupId: number): Observable<Profile[]> {
     return combineLatest([
@@ -764,7 +1169,7 @@ export class DataService {
   deleteWorkGroup(workGroupId: number): Observable<any> {
     const filter = `work_group_id = ${workGroupId}`;
 
-    return from(this.supabase.deleteData('work_groups', filter, this.schema)).pipe(
+    return from(this.supabaseService.deleteData('work_groups', filter, this.schema)).pipe(
       tap(() => {
         const currentGroups = this.workGroupsSubject.value;
         const updatedGroups = currentGroups.filter(group => group.work_group_id !== workGroupId);
@@ -781,7 +1186,7 @@ export class DataService {
   updateWorkGroupLocked(workGroupId: number, isLocked: boolean): Observable<WorkGroup[] | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.updateByIds(
+    return from(this.supabaseService.updateByIds(
       'work_groups', 
       { is_locked: isLocked }, 
       [workGroupId],
@@ -811,7 +1216,7 @@ export class DataService {
   loadHouseStatuses(): Observable<HouseStatus[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabase.getData('house_statuses_view', this.schema)).pipe(
+    return from(this.supabaseService.getData('house_statuses_view', this.schema)).pipe(
       tap((data) => {
         if (data) {
           // Parse the housetasks JSON string into actual objects
@@ -843,5 +1248,62 @@ export class DataService {
   // Add method to refresh house statuses
   refreshHouseStatuses(): Observable<HouseStatus[]> {
     return this.loadHouseStatuses();
+  }
+
+  listenToDatabaseChanges(){
+    this.supabaseService.getClient().channel('realtime:porton')
+    .on(
+      'postgres_changes',
+      { 
+        event: 'UPDATE',
+        schema: 'porton',
+        table: 'house_availabilities'
+      },
+      async (payload: any) => {
+        this.$houseAvailabilitiesUpdate.next(payload);
+      }
+    )
+    .on(
+      'postgres_changes',
+      { 
+        event: 'UPDATE',
+        schema: 'porton',
+        table: 'tasks'
+      },
+      async (payload: any) => {
+        this.$tasksUpdate.next(payload);
+      }
+    ).on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'porton',
+        table: 'work_group_tasks'
+      },
+      async (payload: any) => {
+        this.$workGroupTasksUpdate.next(payload);
+      }
+    ).on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'porton',
+        table: 'work_group_profiles'
+      },
+      async (payload: any) => {
+        this.$workGroupProfiles.next(payload);
+      }
+    ).on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'porton',
+        table: 'work_groups'
+      },
+      async (payload: any) => {
+        this.$workGroups.next(payload);
+      }
+    )
+    .subscribe();
   }
 }

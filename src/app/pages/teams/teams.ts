@@ -2,13 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { DataService, WorkGroup, Profile, Task, House } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, LockedTeam } from '../service/data.service';
 import { WorkGroupService } from '../daily-sheet/work-group.service';
 import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { TeamService } from '../service/team.service';
 
 @Component({
     selector: 'app-teams',
@@ -305,11 +305,13 @@ export class Teams implements OnInit {
     allTasks: Task[] = [];
     allProfiles: Profile[] = [];
     houses: House[] = [];
+    teams: LockedTeam[] = [];
 
     constructor(
         private dataService: DataService,
         private workGroupService: WorkGroupService,
-        private router: Router
+        private router: Router,
+        private teamsService: TeamService,
     ) {}
 
     ngOnInit() {
@@ -320,13 +322,15 @@ export class Teams implements OnInit {
             this.dataService.tasks$,
             this.dataService.workGroupProfiles$,
             this.dataService.profiles$,
-            this.dataService.houses$
+            this.dataService.houses$,
+            this.teamsService.lockedTeams$,
         ]).subscribe({
-            next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses]) => {
+            next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, teams]) => {
                 this.workGroups = workGroups;
                 this.allTasks = tasks;
                 this.allProfiles = profiles;
                 this.houses = houses;
+                this.teams = teams;
                 
                 // Map work group tasks
                 this.workGroupTasks = {};
@@ -358,6 +362,25 @@ export class Teams implements OnInit {
                 console.error('Error loading work groups data:', error);
                 this.loading = false;
             }
+        });
+
+        this.dataService.$workGroups.subscribe(res => {
+          if(res && res.eventType == 'INSERT') {
+            if(!this.teams.find((team: LockedTeam) => team.id == res.new.work_group_id)) {
+              let newLockedTeam: LockedTeam = {
+                homes: [],
+                id: res.new.work_group_id.toString(),
+                isLocked: false,
+                members: [],
+                name: "Team " + res.new.work_group_id,
+                tasks: [],
+              }
+              this.teams.push(newLockedTeam);
+            }
+          } else if(res && res.eventType == 'DELETE') {
+            this.teams = this.teams.filter((team: LockedTeam) => team.id != res.old.work_group_id);
+            this.teamsService.updateLockedTeams(this.teams);
+          }
         });
     }
 
