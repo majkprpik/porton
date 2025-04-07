@@ -4,12 +4,27 @@ import { DataService, House, HouseAvailability, HouseStatus, HouseStatusTask } f
 import { Subscription } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
+import { SpeedDialModule } from 'primeng/speeddial';
+import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputTextarea } from 'primeng/inputtextarea';
+import { MenuItem } from 'primeng/api';
+import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
 
 @Component({
     selector: 'app-home',
     standalone: true,
-    imports: [CommonModule, CardModule, ButtonModule],
+    imports: [
+        CommonModule, 
+        CardModule, 
+        ButtonModule, 
+        SpeedDialModule, 
+        DialogModule,
+        DropdownModule,
+        InputTextarea,
+        FormsModule
+    ],
     template: `
         <div class="home-container" (click)="handleContainerClick($event)">
             
@@ -75,6 +90,87 @@ import { signal } from '@angular/core';
                     </div>
                 }
             </div>
+
+            <p-speedDial 
+                [model]="menuItems" 
+                direction="up"
+                [style]="{ position: 'fixed', bottom: '2rem', right: '2rem' }"
+                buttonClassName="p-button-success"
+                [buttonProps]="{ size: 'large', raised: true }"
+                showIcon="pi pi-plus"
+                hideIcon="pi pi-times"
+            ></p-speedDial>
+
+            <!-- Fault Report Dialog -->
+            <p-dialog 
+                header="Prijava kvara" 
+                [(visible)]="faultReportVisible" 
+                [modal]="true"
+                [style]="{ width: '30rem' }"
+                [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
+            >
+                <div class="fault-report-form">
+                    <div class="field">
+                        <label for="location" class="font-bold block mb-2">Lokacija*</label>
+                        <p-dropdown
+                            id="location"
+                            [options]="houses()"
+                            [(ngModel)]="selectedHouse"
+                            optionLabel="house_number"
+                            [filter]="true"
+                            filterBy="house_number"
+                            placeholder="Odaberi kuću"
+                            [style]="{ width: '100%' }"
+                        ></p-dropdown>
+                    </div>
+                    
+                    <div class="field mt-4">
+                        <label for="description" class="font-bold block mb-2">Opis*</label>
+                        <textarea
+                            id="description"
+                            pInputTextarea
+                            [(ngModel)]="faultDescription"
+                            [rows]="5"
+                            [style]="{ width: '100%' }"
+                            placeholder="Unesite opis kvara"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <ng-template pTemplate="footer">
+                    <div class="flex justify-content-end gap-2">
+                        <button 
+                            pButton 
+                            label="Odustani" 
+                            class="p-button-text" 
+                            (click)="faultReportVisible = false"
+                        ></button>
+                        <button 
+                            pButton 
+                            label="Prijavi" 
+                            (click)="submitFaultReport()"
+                            [disabled]="!isFormValid()"
+                        ></button>
+                    </div>
+                </ng-template>
+            </p-dialog>
+
+            <!-- Phone Dialog -->
+            <p-dialog 
+                header="Phone" 
+                [(visible)]="phoneDialogVisible" 
+                [modal]="true"
+                [style]="{ width: '50vw' }"
+                [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
+            >
+                <div class="p-4">
+                    <h3>Phone Content</h3>
+                    <p>This is a placeholder for the phone functionality.</p>
+                </div>
+                <ng-template pTemplate="footer">
+                    <button pButton label="Close" (click)="phoneDialogVisible = false"></button>
+                </ng-template>
+            </p-dialog>
         </div>
     `,
     styles: [`
@@ -367,6 +463,53 @@ import { signal } from '@angular/core';
                 font-size: 1rem;
             }
         }
+
+        ::ng-deep {
+            .p-speeddial {
+                .p-speeddial-button {
+                    width: 4.5rem !important;
+                    height: 4.5rem !important;
+                    
+                    .p-button-icon {
+                        font-size: 2rem;
+                    }
+                }
+
+                .p-speeddial-action {
+                    width: 3.5rem !important;
+                    height: 3.5rem !important;
+                    background: var(--surface-card);
+                    color: var(--text-color);
+                    border: 1px solid var(--surface-border);
+                    margin-bottom: 0.5rem;
+
+                    &:hover {
+                        background: var(--surface-hover);
+                    }
+
+                    .p-speeddial-action-icon {
+                        font-size: 1.5rem;
+                    }
+                }
+
+                .p-speeddial-list {
+                    padding: 0;
+                    margin: 0;
+                }
+            }
+        }
+
+        .fault-report-form {
+            padding: 1.5rem 0;
+
+            .field {
+                margin-bottom: 1rem;
+            }
+
+            label {
+                color: var(--text-color);
+            }
+        }
     `]
 })
 export class Home implements OnInit, OnDestroy {
@@ -376,6 +519,29 @@ export class Home implements OnInit, OnDestroy {
     private subscriptions: Subscription[] = [];
     expandedHouseId: number | null = null;
     currentReservationIndex = new Map<number, number>();
+
+    // Dialog visibility flags
+    faultReportVisible: boolean = false;
+    phoneDialogVisible: boolean = false;
+
+    // Form fields
+    selectedHouse: House | null = null;
+    faultDescription: string = '';
+
+    menuItems: MenuItem[] = [
+        {
+            icon: 'pi pi-exclamation-circle',
+            command: () => {
+                this.faultReportVisible = true;
+            }
+        },
+        {
+            icon: 'pi pi-phone',
+            command: () => {
+                this.phoneDialogVisible = true;
+            }
+        }
+    ];
 
     constructor(private dataService: DataService) {}
 
@@ -725,5 +891,26 @@ export class Home implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         // Unsubscribe from all subscriptions to prevent memory leaks
         this.subscriptions.forEach(sub => sub.unsubscribe());
+    }
+
+    isFormValid(): boolean {
+        return !!this.selectedHouse && !!this.faultDescription.trim();
+    }
+
+    submitFaultReport() {
+        if (!this.isFormValid()) return;
+
+        console.log('Submitting fault report:', {
+            house: this.selectedHouse,
+            description: this.faultDescription
+        });
+
+        // Here you would typically call a service method to save the fault report
+        // For example: this.dataService.submitFaultReport(this.selectedHouse.house_id, this.faultDescription).subscribe();
+
+        // Reset form and close dialog
+        this.selectedHouse = null;
+        this.faultDescription = '';
+        this.faultReportVisible = false;
     }
 } 
