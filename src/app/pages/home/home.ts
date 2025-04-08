@@ -229,7 +229,7 @@ import { signal } from '@angular/core';
     `,
     styles: [`
         .home-container {
-            padding: 1rem;
+            padding: 0.5rem;
         }
         
         .header-card {
@@ -247,9 +247,9 @@ import { signal } from '@angular/core';
 
         .house-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-            gap: 0.5rem;
-            padding: 0.5rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.25rem;
+            padding: 0;
             position: relative;
         }
 
@@ -261,7 +261,7 @@ import { signal } from '@angular/core';
                        0 1px 3px 0 rgba(0,0,0,.12);
             transition: all 0.2s ease;
             cursor: pointer;
-            min-width: 150px;
+            min-width: unset;
             position: relative;
             z-index: 1;
 
@@ -295,7 +295,7 @@ import { signal } from '@angular/core';
             }
 
             .house-content {
-                padding: 0.75rem 1rem;
+                padding: 0.5rem;
                 display: flex;
                 flex-direction: row;
                 align-items: center;
@@ -318,7 +318,7 @@ import { signal } from '@angular/core';
                 z-index: 3;
 
                 &.expanded-occupied {
-                    background: var(--p-red-500);
+                    background: var(--p-red-400);
                     color: white;
 
                     .date-nav i {
@@ -329,7 +329,7 @@ import { signal } from '@angular/core';
                     }
 
                     & + .house-content {
-                        background: var(--p-red-500);
+                        background: var(--p-red-400);
                         color: white;
                         border-radius: 6px 6px 0 0;
                     }
@@ -408,7 +408,7 @@ import { signal } from '@angular/core';
                 }
 
                 @media (prefers-color-scheme: dark) {
-                    background: var(--p-green-500);
+                    background: var(--p-green-400);
                     .house-number, .house-icons i {
                         color: var(--p-green-100);
                     }
@@ -422,7 +422,7 @@ import { signal } from '@angular/core';
                 }
 
                 @media (prefers-color-scheme: dark) {
-                    background: var(--p-red-500);
+                    background: var(--p-red-400);
                     .house-number, .house-icons i {
                         color: var(--p-red-100);
                     }
@@ -435,50 +435,49 @@ import { signal } from '@angular/core';
             }
 
             .house-number {
-                font-size: 1.5rem;
+                font-size: 1.25rem;
                 font-weight: 700;
-                padding-left: 0.25rem;
+                padding-left: 0;
             }
 
             .house-icons {
                 display: flex;
-                gap: 0.5rem;
-                padding-right: 0.25rem;
+                gap: 0.25rem;
+                padding-right: 0;
 
                 i {
-                    font-size: 1.5rem;
-                    cursor: pointer;
-                    transition: transform 0.2s;
-
-                    &:hover {
-                        transform: scale(1.2);
-                    }
-
-                    &:first-child {
-                        animation: rotate 2s linear infinite;
-                    }
+                    font-size: 1.25rem;
                 }
-            }
-        }
-
-        @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
             }
         }
 
         @media screen and (min-width: 768px) {
             .house-grid {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                grid-template-columns: repeat(4, 1fr);
+                gap: 0.5rem;
+            }
+
+            .house-card {
+                .house-content {
+                    padding: 0.75rem 1rem;
+                }
+
+                .house-number {
+                    font-size: 1.5rem;
+                }
+
+                .house-icons {
+                    gap: 0.5rem;
+                    i {
+                        font-size: 1.5rem;
+                    }
+                }
             }
         }
 
         @media screen and (min-width: 1200px) {
             .house-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                grid-template-columns: repeat(6, 1fr);
             }
         }
 
@@ -743,11 +742,13 @@ export class Home implements OnInit, OnDestroy {
         const formatDate = (date: Date) => `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.`;
         
         if (slot.isGap) {
-            // For gaps, show full date range
+            // For gaps, show normal date range
             return `${formatDate(slot.startDate)} - ${formatDate(slot.endDate!)}`;
         } else {
-            // For reservations, show full date range
-            return `${formatDate(slot.startDate)} - ${formatDate(slot.endDate!)}`;
+            // For reservations, add one day to end date
+            const endDatePlusOne = new Date(slot.endDate!);
+            endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
+            return `${formatDate(slot.startDate)} - ${formatDate(endDatePlusOne)}`;
         }
     }
 

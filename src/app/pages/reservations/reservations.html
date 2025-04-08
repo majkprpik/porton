@@ -1,6 +1,6 @@
 <div class="reservations-container">
     <!-- Debug info -->
-    @if (houses().length === 0 && houseAvailabilities().length === 0) {
+    @if (houses().length === 0 || houseAvailabilities().length === 0) {
         <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s" [style]="{ width: '50px', height: '50px' }" />
     }
     <!-- @if (houseAvailabilities().length === 0) {
@@ -48,7 +48,8 @@
                                 [pTooltip]="getReservationInfo(house.house_id, day)"
                                 [tooltipDisabled]="!isReserved(house.house_id, day)"
                                 tooltipPosition="top"
-                                [tooltipStyleClass]="'reservation-tooltip'">
+                                [tooltipStyleClass]="'reservation-tooltip'"
+                                (click)="onSlotClick(house.house_id, day)">
                                     {{ getReservationDisplay(house.house_id, day) }}
                                 </td>
                             }
@@ -57,5 +58,111 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- New Reservation Dialog -->
+        <p-dialog 
+            [visible]="showNewReservationDialog()" (visibleChange)="showNewReservationDialog.set($event)"
+            [modal]="true"
+            [draggable]="false"
+            [resizable]="false"
+            [style]="{width: '450px'}"
+            header="New Reservation"
+            (onHide)="resetNewReservationForm()">
+            
+            <div class="new-reservation-form">
+                <div class="field">
+                    <label for="name">Guest Name</label>
+                    <input id="name" type="text" pInputText 
+                           [ngModel]="newReservation().name" 
+                           (ngModelChange)="updateNewReservationField('name', $event)" 
+                           class="w-full">
+                </div>
+
+                <div class="field">
+                    <label for="pmsNumber">PMS Reservation Number</label>
+                    <input id="pmsNumber" type="text" pInputText 
+                           [ngModel]="newReservation().pmsNumber" 
+                           (ngModelChange)="updateNewReservationField('pmsNumber', $event)" 
+                           class="w-full">
+                </div>
+
+                <div class="field">
+                    <label for="startDate">Start Date</label>
+                    <p-calendar id="startDate" 
+                              [ngModel]="newReservation().startDate" 
+                              (ngModelChange)="updateNewReservationField('startDate', $event)"
+                              [showIcon]="true"
+                              [readonlyInput]="true"
+                              dateFormat="dd.mm.yy"
+                              class="w-full"></p-calendar>
+                </div>
+
+                <div class="field">
+                    <label for="endDate">End Date</label>
+                    <p-calendar id="endDate" 
+                              [ngModel]="newReservation().endDate" 
+                              (ngModelChange)="updateNewReservationField('endDate', $event)"
+                              [showIcon]="true"
+                              [readonlyInput]="true"
+                              dateFormat="dd.mm.yy"
+                              class="w-full"></p-calendar>
+                </div>
+
+                <div class="formgrid grid">
+                    <div class="field col">
+                        <label for="adults">Adults</label>
+                        <p-inputNumber id="adults" 
+                                     [ngModel]="newReservation().adults" 
+                                     (ngModelChange)="updateNewReservationField('adults', $event)"
+                                     [showButtons]="true"
+                                     [min]="0"
+                                     class="w-full"></p-inputNumber>
+                    </div>
+
+                    <div class="field col">
+                        <label for="children">Children</label>
+                        <p-inputNumber id="children" 
+                                     [ngModel]="newReservation().children" 
+                                     (ngModelChange)="updateNewReservationField('children', $event)"
+                                     [showButtons]="true"
+                                     [min]="0"
+                                     class="w-full"></p-inputNumber>
+                    </div>
+                </div>
+
+                <div class="formgrid grid">
+                    <div class="field col">
+                        <label for="babies">Babies</label>
+                        <p-inputNumber id="babies" 
+                                     [ngModel]="newReservation().babies" 
+                                     (ngModelChange)="updateNewReservationField('babies', $event)"
+                                     [showButtons]="true"
+                                     [min]="0"
+                                     class="w-full"></p-inputNumber>
+                    </div>
+
+                    <div class="field col">
+                        <label for="cribs">Cribs</label>
+                        <p-inputNumber id="cribs" 
+                                     [ngModel]="newReservation().cribs" 
+                                     (ngModelChange)="updateNewReservationField('cribs', $event)"
+                                     [showButtons]="true"
+                                     [min]="0"
+                                     class="w-full"></p-inputNumber>
+                    </div>
+                </div>
+            </div>
+
+            <ng-template pTemplate="footer">
+                <button pButton 
+                        label="Cancel" 
+                        class="p-button-text" 
+                        (click)="showNewReservationDialog.set(false)"></button>
+                <button pButton 
+                        label="Save" 
+                        (click)="onSubmitNewReservation()"
+                        [disabled]="!isValidDateRange()"></button>
+            </ng-template>
+        </p-dialog>
     }
 </div>

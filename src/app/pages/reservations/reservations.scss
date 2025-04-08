@@ -17,6 +17,38 @@
         display: flex;
         flex-direction: column;
     }
+
+    .new-reservation-form {
+        padding: 1rem;
+
+        .field {
+            margin-bottom: 1.5rem;
+
+            label {
+                display: block;
+                margin-bottom: 0.5rem;
+                font-weight: 500;
+            }
+        }
+
+        .formgrid {
+            margin-bottom: 1rem;
+
+            .field {
+                margin-bottom: 0;
+            }
+        }
+
+        :host ::ng-deep {
+            .p-calendar {
+                width: 100%;
+            }
+
+            .p-inputnumber {
+                width: 100%;
+            }
+        }
+    }
 }
 
 .reservations-table {
