@@ -10,11 +10,13 @@ import { Home } from './app/pages/home/home';
 import { Teams } from './app/pages/teams/teams';
 import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
 import { Reservation2Component } from './app/pages/reservation-2/reservation-2.component';
+import { AuthGuard } from './app/layout/guard/auth.guard';
 
 export const appRoutes: Routes = [
     {
         path: '',
         component: AppLayout,
+        canActivate: [AuthGuard],
         children: [
             { path: '', component: Home },  // Default route
             { path: 'home', component: Home },
@@ -29,7 +31,7 @@ export const appRoutes: Routes = [
             { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') },
         ]
     },
-    { path: 'landing', component: Landing },
+    // { path: 'landing', component: Landing, canActivate: [AuthGuard] },
     { path: 'notfound', component: Notfound },
     { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
     { path: '**', redirectTo: '/notfound' },

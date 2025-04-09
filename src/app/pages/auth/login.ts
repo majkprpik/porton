@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -7,11 +7,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
-
+import { AuthService } from '../../layout/service/auth.service';
+import { Router } from '@angular/router';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { CommonModule } from '@angular/common';
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RouterModule, RippleModule, AppFloatingConfigurator],
+    imports: [CommonModule, ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RouterModule, RippleModule, AppFloatingConfigurator, ProgressSpinnerModule],
     template: `
         <app-floating-configurator />
         <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
@@ -54,7 +57,16 @@ import { AppFloatingConfigurator } from '../../layout/component/app.floatingconf
                                 </div>
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
                             </div>
-                            <p-button label="Sign In" styleClass="w-full" routerLink="/"></p-button>
+
+                            <div *ngIf="errorMessage" class="text-red-500 mb-4">{{ errorMessage }}</div>
+                            
+                            <p-button 
+                                label="Sign In" 
+                                styleClass="w-full" 
+                                (onClick)="onLogin()"
+                                [loading]="loading"
+                                [disabled]="loading">
+                            </p-button>
                         </div>
                     </div>
                 </div>
@@ -62,10 +74,40 @@ import { AppFloatingConfigurator } from '../../layout/component/app.floatingconf
         </div>
     `
 })
-export class Login {
+export class Login implements OnInit {
     email: string = '';
-
     password: string = '';
-
     checked: boolean = false;
+    loading: boolean = false;
+    errorMessage: string = '';
+
+    constructor(
+        private authService: AuthService,
+        private router: Router
+    ) {}
+
+    ngOnInit() {
+        if (this.authService.isLoggedIn()) {
+            this.router.navigate(['/dashboard']);
+        }
+    }
+
+    async onLogin() {
+        if (this.email.trim()) {
+            this.loading = true;
+            this.errorMessage = '';
+
+            try {
+                const success = await this.authService.login(this.email.trim());
+                if (!success) {
+                    this.errorMessage = 'Invalid email or password';
+                }
+            } catch (error) {
+                this.errorMessage = 'An error occurred during login';
+                console.error('Login error:', error);
+            } finally {
+                this.loading = false;
+            }
+        }
+    }
 }

@@ -3,7 +3,7 @@
     <ng-container *ngIf="houses().length === 0 || houseAvailabilities().length === 0">
         <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s" [style]="{ width: '50px', height: '50px' }" />
     </ng-container>
-    
+
     <ng-container *ngIf="houses().length > 0 && houseAvailabilities().length > 0">
         <div class="card">
             <table class="reservations-table">
@@ -11,37 +11,33 @@
                     <tr>
                         <th></th>
                         @for (day of days(); track dayIndex; let dayIndex = $index) {
-                            <th [ngClass]="getColumnClasses(day)"
-                                pTooltip="{{day | date:'fullDate'}}"
-                                tooltipPosition="top">
-                                <ng-container *ngIf="isToday(day)">
-                                    <div class="today-label">TODAY</div>
-                                </ng-container>
-                                {{day | date:'d.M'}}
-                            </th>
+                        <th [ngClass]="getColumnClasses(day)">
+                            <ng-container *ngIf="isToday(day)">
+                                <div class="today-label">TODAY</div>
+                            </ng-container>
+                            {{day | date:'d.M'}}
+                        </th>
                         }
                     </tr>
                 </thead>
                 <tbody>
                     @for (house of houses(); track houseIndex; let houseIndex = $index) {
-                        <tr>
-                            <td pTooltip="{{house.house_name || 'House ' + house.house_number}}"
-                                tooltipPosition="right">
-                                {{house.house_name || 'House ' + house.house_number}}
-                            </td>
-                            @for (day of days(); track dayIndex; let dayIndex = $index) {
-                                @let cellData = gridMatrix()[houseIndex][dayIndex];
-                                <td [ngClass]="getCellClasses(cellData)"
-                                    [style.background-color]="cellData.color"
-                                    [class]="cellData.identifier"
-                                    [pTooltip]="cellData.tooltip"
-                                    [tooltipDisabled]="!cellData.isReserved"
-                                    tooltipPosition="top"
-                                    [tooltipStyleClass]="'reservation-tooltip'">
-                                    {{ cellData.displayText }}
-                                </td>
-                            }
-                        </tr>
+                    <tr>
+                        <td>{{house.house_name || 'House ' + house.house_number}}</td>
+                        @for (day of days(); track dayIndex; let dayIndex = $index) { @let cellData = gridMatrix()[houseIndex][dayIndex];
+                        <td
+                            [ngClass]="getCellClasses(cellData)"
+                            [style.background-color]="cellData.color"
+                            [class]="cellData.identifier"
+                            [pTooltip]="cellData.tooltip"
+                            [tooltipDisabled]="!cellData.isReserved"
+                            tooltipPosition="top"
+                            [tooltipStyleClass]="'reservation-tooltip'"
+                        >
+                            {{ cellData.displayText }}
+                        </td>
+                        }
+                    </tr>
                     }
                 </tbody>
             </table>
@@ -51,13 +47,21 @@
 
 <!-- Template for cell content -->
 <ng-template #cellTemplate let-cellData="cellData">
-    <div [ngClass]="getCellClasses(cellData)"
+    <!-- <div [ngClass]="getCellClasses(cellData)"
          [style.background-color]="cellData.color"
          [class]="cellData.identifier"
          [pTooltip]="cellData.tooltip"
          [tooltipDisabled]="!cellData.isReserved"
          tooltipPosition="top"
          [tooltipStyleClass]="'reservation-tooltip'">
+        {{ cellData.displayText }}
+    </div> -->
+    <div
+        [ngClass]="getCellClasses(cellData)"
+        [style.background-color]="cellData.color"
+        [class]="cellData.identifier"
+        
+    >
         {{ cellData.displayText }}
     </div>
 </ng-template>
