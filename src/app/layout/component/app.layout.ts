@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
 import { DataService, House, TaskType } from '../../pages/service/data.service';
-// import { DebugOverlayComponent } from '../../shared/debug-overlay/debug-overlay.component';
+import { DebugOverlayComponent } from '../../shared/debug-overlay/debug-overlay.component';
 
 @Component({
     selector: 'app-layout',
@@ -29,7 +29,7 @@ import { DataService, House, TaskType } from '../../pages/service/data.service';
         InputTextarea,
         ButtonModule,
         FormsModule,
-        // DebugOverlayComponent
+        DebugOverlayComponent
     ],
     template: `
     <div class="layout-wrapper" [ngClass]="containerClass">
@@ -41,7 +41,7 @@ import { DataService, House, TaskType } from '../../pages/service/data.service';
             </div>
         </div>
         <div class="layout-mask animate-fadein"></div>
-        <!-- <app-debug-overlay></app-debug-overlay> -->
+        <app-debug-overlay></app-debug-overlay>
 
         <p-speedDial 
             [model]="menuItems" 
