@@ -12,6 +12,7 @@ import { map, take } from 'rxjs/operators';
 import { WorkGroupService } from './work-group.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { DragDropModule } from 'primeng/dragdrop';
+import { TaskService } from '../service/task.service';
 
 @Component({
   selector: 'app-work-group',
@@ -341,13 +342,50 @@ export class WorkGroup implements OnInit {
     return this.groupColorNames[index];
   }
 
+  taskProgressTypes: any;
+  tasks: any;
+  workGroupTasks: any;
+
   constructor(
     private dataService: DataService,
-    private workGroupService: WorkGroupService
+    private workGroupService: WorkGroupService,
+    private taskService: TaskService,
   ) {}
 
   ngOnInit() {
+    this.dataService.taskProgressTypes$.subscribe(taskProgressTypes => {
+      this.taskProgressTypes = taskProgressTypes;
+    });
+
+    this.dataService.tasks$.subscribe(tasks => {
+      this.tasks = tasks;
+    });
+
+    this.dataService.workGroupTasks$.subscribe(workGroupTasks => {
+      this.workGroupTasks = workGroupTasks;
+    })
+
     if (this.workGroup) {
+      this.taskService.$selectedTask.subscribe(selectedTask => {
+        const activeGroup = this.workGroupService.getActiveGroup();
+
+        if(activeGroup && this.workGroup?.work_group_id == activeGroup){
+          let lockedTeams = this.workGroupService.getLockedTeams();
+          let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup)
+          if(lockedTeam && !lockedTeam.tasks?.find(task => task.task_id == selectedTask.task_id)){
+            if(selectedTask.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
+              selectedTask.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
+            }
+            if(!lockedTeam.tasks){
+              lockedTeam.tasks = [];
+            }
+            lockedTeam.tasks.push(selectedTask);
+            lockedTeam.isLocked = false;
+            this.workGroupService.updateLockedTeam(lockedTeam);
+          }
+        }
+      });
+
       this.loadAssignedStaff();
     }
   }
@@ -364,7 +402,18 @@ export class WorkGroup implements OnInit {
   onGroupClick() {
     if (this.isActive) {
       // If the group is already active, deactivate it
+      if(this.workGroup){
+        this.workGroupService.updateLockedTeam({
+          id: this.workGroup?.work_group_id.toString(),
+          name: "Team " + this.workGroup.work_group_id,
+          members: this.assignedStaff,
+          tasks: this.assignedTasks,
+          homes: [],
+          isLocked: true,
+        });
+      }
       this.workGroupService.setActiveGroup(undefined);
+      
     } else {
       // If the group is not active, activate it
       this.groupSelected.emit();
@@ -383,36 +432,21 @@ export class WorkGroup implements OnInit {
     this.staffContextMenu.show(event);
   }
 
-  onRemoveTask(task: Task) {
+  onRemoveTask(taskToRemove: Task) {
     if (this.workGroup?.work_group_id) {
-      // Get the progress type ID for "Nije dodijeljeno"
-      this.dataService.taskProgressTypes$.pipe(
-        map(types => types.find(type => type.task_progress_type_name === 'Nije dodijeljeno')),
-        take(1)
-      ).subscribe(nijeDodijeljenoType => {
-        if (!nijeDodijeljenoType) {
-          console.error('Could not find progress type "Nije dodijeljeno"');
-          return;
+      this.taskService.$taskToRemove.next(taskToRemove);
+      let lockedTeams = this.workGroupService.getLockedTeams();
+      let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == this.workGroup?.work_group_id)
+
+      if(lockedTeam?.tasks){
+        lockedTeam.tasks = lockedTeam.tasks.filter(task => task.task_id != taskToRemove.task_id);
+        if(taskToRemove.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id){
+          let task = this.tasks.find((task: any) => task.task_id == taskToRemove.task_id);
+          task.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id;
         }
-
-        const operations = [
-          this.dataService.removeTaskFromWorkGroup(this.workGroup!.work_group_id, task.task_id),
-          this.dataService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id),
-          this.dataService.updateWorkGroupLocked(this.workGroup!.work_group_id, false)
-        ];
-
-        forkJoin(operations).subscribe({
-          next: () => {
-            if (this.workGroup) {
-              this.workGroup.is_locked = false;
-            }
-            this.taskRemoved.emit(task);
-          },
-          error: (error: any) => {
-            console.error('Error removing task:', error);
-          }
-        });
-      });
+        lockedTeam.isLocked = false;
+        this.workGroupService.updateLockedTeam(lockedTeam);
+      }
     }
   }
 
@@ -461,11 +495,11 @@ export class WorkGroup implements OnInit {
 
   getTaskIcon(taskTypeId: number): string {
     const iconMap: { [key: number]: string } = {
-      1: 'pi pi-home',      // Čišćenje kućice
-      2: 'pi pi-table',     // Čišćenje terase
-      3: 'pi pi-inbox',     // Mijenjanje posteljine
-      4: 'pi pi-bookmark',  // Mijenjanje ručnika
-      5: 'pi pi-wrench'     // Popravak
+      56: 'pi pi-home',      // Čišćenje kućice
+      57: 'pi pi-table',     // Čišćenje terase
+      59: 'pi pi-inbox',     // Mijenjanje posteljine
+      60: 'pi pi-bookmark',  // Mijenjanje ručnika
+      58: 'pi pi-wrench'     // Popravak
     };
     return iconMap[taskTypeId] || 'pi pi-file';
   }
@@ -536,7 +570,7 @@ export class WorkGroup implements OnInit {
             this.workGroup.is_locked = false;
           }
           // Refresh the tasks list
-          this.loadAssignedTasks();
+          // this.loadAssignedTasks();
         },
         error: (error: any) => {
           console.error('Error assigning task:', error);
@@ -567,17 +601,17 @@ export class WorkGroup implements OnInit {
     }
   }
 
-  loadAssignedTasks() {
-    if (this.workGroup?.work_group_id) {
-      this.dataService.workGroupTasks$.pipe(
-        map(workGroupTasks => workGroupTasks
-          .filter(wgt => wgt.work_group_id === this.workGroup!.work_group_id)
-          .map(wgt => this.dataService.getTaskById(wgt.task_id))
-          .filter((task): task is Task => task !== undefined)
-        )
-      ).subscribe(tasks => {
-        this.assignedTasks = tasks;
-      });
-    }
-  }
+  // loadAssignedTasks() {
+  //   if (this.workGroup?.work_group_id) {
+  //     this.dataService.workGroupTasks$.pipe(
+  //       map(workGroupTasks => workGroupTasks
+  //         .filter(wgt => wgt.work_group_id === this.workGroup!.work_group_id)
+  //         .map(wgt => this.dataService.getTaskById(wgt.task_id))
+  //         .filter((task): task is Task => task !== undefined)
+  //       )
+  //     ).subscribe(tasks => {
+  //       this.assignedTasks = tasks;
+  //     });
+  //   }
+  // }
 } 
