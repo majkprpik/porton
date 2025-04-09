@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { DataService, HouseStatus, HouseStatusTask } from './data.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TaskService {
   mobileHomes: HouseStatus[] = [];
+  $selectedTask = new BehaviorSubject<any>(null);
+  $taskToRemove = new BehaviorSubject<any>(null);
 
   constructor(
     private supabase: SupabaseService,
