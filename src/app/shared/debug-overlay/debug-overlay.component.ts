@@ -61,7 +61,7 @@ import { environment } from '../../../environments/environment';
   `]
 })
 export class DebugOverlayComponent implements OnInit, OnDestroy {
-  isDevelopment = !environment.production;
+  isDevelopment = true;
   logs: { timestamp: Date; message: string }[] = [];
   private logLimit = 50;
   private performanceObserver: PerformanceObserver | null = null;
