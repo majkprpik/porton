@@ -9,6 +9,7 @@ import { DailySheetComponent } from './app/pages/daily-sheet/daily-sheet';
 import { Home } from './app/pages/home/home';
 import { Teams } from './app/pages/teams/teams';
 import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
+import { Reservation2Component } from './app/pages/reservation-2/reservation-2.component';
 
 export const appRoutes: Routes = [
     {
@@ -18,6 +19,7 @@ export const appRoutes: Routes = [
             { path: '', component: Home },  // Default route
             { path: 'home', component: Home },
             { path: 'reservations', component: Reservations },
+            { path: 'reservations-2', component: Reservation2Component },
             // { path: 'tasks', component: Tasks },
             { path: 'daily-sheet', component: DailySheetComponent },
             { path: 'teams', component: Teams },

@@ -1,0 +1,7 @@
+<div class="reservation-2-container">
+    @if (houses().length === 0 || houseAvailabilities().length === 0) {
+        <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s" [style]="{ width: '50px', height: '50px' }" />
+    } @else {
+        <hot-table [settings]="hotSettings()"></hot-table>
+    }
+</div> 

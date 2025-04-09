@@ -1,56 +1,44 @@
 <div class="reservations-container">
     <!-- Debug info -->
-    @if (houses().length === 0 || houseAvailabilities().length === 0) {
+    <ng-container *ngIf="houses().length === 0 || houseAvailabilities().length === 0">
         <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s" [style]="{ width: '50px', height: '50px' }" />
-    }
-    <!-- @if (houseAvailabilities().length === 0) {
-        <div style="color: red;">No availabilities loaded</div>
-    } -->
-    @else {
+    </ng-container>
+    
+    <ng-container *ngIf="houses().length > 0 && houseAvailabilities().length > 0">
         <div class="card">
             <table class="reservations-table">
                 <thead>
                     <tr>
                         <th></th>
-                        @for (day of days(); track day.getTime()) {
-                            <th [ngClass]="{
-                                'today-column': isToday(day),
-                                'saturday-column': isSaturday(day),
-                                'sunday-column': isSunday(day)
-                            }"
-                            pTooltip="{{day | date:'fullDate'}}"
-                            tooltipPosition="top">
-                                @if (isToday(day)) {
+                        @for (day of days(); track dayIndex; let dayIndex = $index) {
+                            <th [ngClass]="getColumnClasses(day)"
+                                pTooltip="{{day | date:'fullDate'}}"
+                                tooltipPosition="top">
+                                <ng-container *ngIf="isToday(day)">
                                     <div class="today-label">TODAY</div>
-                                }
+                                </ng-container>
                                 {{day | date:'d.M'}}
                             </th>
                         }
                     </tr>
                 </thead>
                 <tbody>
-                    @for (house of houses(); track house.house_id) {
+                    @for (house of houses(); track houseIndex; let houseIndex = $index) {
                         <tr>
                             <td pTooltip="{{house.house_name || 'House ' + house.house_number}}"
                                 tooltipPosition="right">
                                 {{house.house_name || 'House ' + house.house_number}}
                             </td>
-                            @for (day of days(); track day.getTime()) {
-                                <!-- @let reservationColor = day | pipeZaRezeravaciju : house.house_id; -->
-                                <td [ngClass]="{
-                                    'reservation-slot': isReserved(house.house_id, day),
-                                    'today-column': isToday(day),
-                                    'saturday-column': isSaturday(day),
-                                    'sunday-column': isSunday(day)
-                                }"
-                                [style.background-color]="getReservationColor(house.house_id, day)"
-                                [class]="getReservationIdentifier(house.house_id, day)"
-                                [pTooltip]="getReservationInfo(house.house_id, day)"
-                                [tooltipDisabled]="!isReserved(house.house_id, day)"
-                                tooltipPosition="top"
-                                [tooltipStyleClass]="'reservation-tooltip'"
-                                (click)="onSlotClick(house.house_id, day)">
-                                    {{ getReservationDisplay(house.house_id, day) }}
+                            @for (day of days(); track dayIndex; let dayIndex = $index) {
+                                @let cellData = gridMatrix()[houseIndex][dayIndex];
+                                <td [ngClass]="getCellClasses(cellData)"
+                                    [style.background-color]="cellData.color"
+                                    [class]="cellData.identifier"
+                                    [pTooltip]="cellData.tooltip"
+                                    [tooltipDisabled]="!cellData.isReserved"
+                                    tooltipPosition="top"
+                                    [tooltipStyleClass]="'reservation-tooltip'">
+                                    {{ cellData.displayText }}
                                 </td>
                             }
                         </tr>
@@ -58,111 +46,18 @@
                 </tbody>
             </table>
         </div>
-
-        <!-- New Reservation Dialog -->
-        <p-dialog 
-            [visible]="showNewReservationDialog()" (visibleChange)="showNewReservationDialog.set($event)"
-            [modal]="true"
-            [draggable]="false"
-            [resizable]="false"
-            [style]="{width: '450px'}"
-            header="New Reservation"
-            (onHide)="resetNewReservationForm()">
-            
-            <div class="new-reservation-form">
-                <div class="field">
-                    <label for="name">Guest Name</label>
-                    <input id="name" type="text" pInputText 
-                           [ngModel]="newReservation().name" 
-                           (ngModelChange)="updateNewReservationField('name', $event)" 
-                           class="w-full">
-                </div>
-
-                <div class="field">
-                    <label for="pmsNumber">PMS Reservation Number</label>
-                    <input id="pmsNumber" type="text" pInputText 
-                           [ngModel]="newReservation().pmsNumber" 
-                           (ngModelChange)="updateNewReservationField('pmsNumber', $event)" 
-                           class="w-full">
-                </div>
-
-                <div class="field">
-                    <label for="startDate">Start Date</label>
-                    <p-calendar id="startDate" 
-                              [ngModel]="newReservation().startDate" 
-                              (ngModelChange)="updateNewReservationField('startDate', $event)"
-                              [showIcon]="true"
-                              [readonlyInput]="true"
-                              dateFormat="dd.mm.yy"
-                              class="w-full"></p-calendar>
-                </div>
-
-                <div class="field">
-                    <label for="endDate">End Date</label>
-                    <p-calendar id="endDate" 
-                              [ngModel]="newReservation().endDate" 
-                              (ngModelChange)="updateNewReservationField('endDate', $event)"
-                              [showIcon]="true"
-                              [readonlyInput]="true"
-                              dateFormat="dd.mm.yy"
-                              class="w-full"></p-calendar>
-                </div>
-
-                <div class="formgrid grid">
-                    <div class="field col">
-                        <label for="adults">Adults</label>
-                        <p-inputNumber id="adults" 
-                                     [ngModel]="newReservation().adults" 
-                                     (ngModelChange)="updateNewReservationField('adults', $event)"
-                                     [showButtons]="true"
-                                     [min]="0"
-                                     class="w-full"></p-inputNumber>
-                    </div>
-
-                    <div class="field col">
-                        <label for="children">Children</label>
-                        <p-inputNumber id="children" 
-                                     [ngModel]="newReservation().children" 
-                                     (ngModelChange)="updateNewReservationField('children', $event)"
-                                     [showButtons]="true"
-                                     [min]="0"
-                                     class="w-full"></p-inputNumber>
-                    </div>
-                </div>
-
-                <div class="formgrid grid">
-                    <div class="field col">
-                        <label for="babies">Babies</label>
-                        <p-inputNumber id="babies" 
-                                     [ngModel]="newReservation().babies" 
-                                     (ngModelChange)="updateNewReservationField('babies', $event)"
-                                     [showButtons]="true"
-                                     [min]="0"
-                                     class="w-full"></p-inputNumber>
-                    </div>
-
-                    <div class="field col">
-                        <label for="cribs">Cribs</label>
-                        <p-inputNumber id="cribs" 
-                                     [ngModel]="newReservation().cribs" 
-                                     (ngModelChange)="updateNewReservationField('cribs', $event)"
-                                     [showButtons]="true"
-                                     [min]="0"
-                                     class="w-full"></p-inputNumber>
-                    </div>
-                </div>
-            </div>
-
-            <ng-template pTemplate="footer">
-                <button pButton 
-                        label="Cancel" 
-                        class="p-button-text" 
-                        (click)="showNewReservationDialog.set(false)"></button>
-                <button pButton 
-                        label="Save" 
-                        (click)="onSubmitNewReservation()"
-                        [disabled]="!isValidDateRange()"></button>
-            </ng-template>
-        </p-dialog>
-    }
+    </ng-container>
 </div>
+
+<!-- Template for cell content -->
+<ng-template #cellTemplate let-cellData="cellData">
+    <div [ngClass]="getCellClasses(cellData)"
+         [style.background-color]="cellData.color"
+         [class]="cellData.identifier"
+         [pTooltip]="cellData.tooltip"
+         [tooltipDisabled]="!cellData.isReserved"
+         tooltipPosition="top"
+         [tooltipStyleClass]="'reservation-tooltip'">
+        {{ cellData.displayText }}
+    </div>
+</ng-template>
