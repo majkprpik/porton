@@ -11,6 +11,7 @@ import { Teams } from './app/pages/teams/teams';
 import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
 import { Reservation2Component } from './app/pages/reservation-2/reservation-2.component';
 import { AuthGuard } from './app/layout/guard/auth.guard';
+import { ProfilesComponent } from './app/pages/profiles/profiles.component';
 
 export const appRoutes: Routes = [
     {
@@ -18,21 +19,22 @@ export const appRoutes: Routes = [
         component: AppLayout,
         canActivate: [AuthGuard],
         children: [
-            { path: '', component: Home },  // Default route
+            { path: '', component: Home }, // Default route
             { path: 'home', component: Home },
             { path: 'reservations', component: Reservations },
             { path: 'reservations-2', component: Reservation2Component },
             // { path: 'tasks', component: Tasks },
+            { path: 'profiles', component: ProfilesComponent },
             { path: 'daily-sheet', component: DailySheetComponent },
             { path: 'teams', component: Teams },
             { path: 'teams/:id', component: WorkGroupDetail },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },
-            { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') },
+            { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') }
         ]
     },
     // { path: 'landing', component: Landing, canActivate: [AuthGuard] },
     { path: 'notfound', component: Notfound },
     { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
-    { path: '**', redirectTo: '/notfound' },
+    { path: '**', redirectTo: '/notfound' }
 ];

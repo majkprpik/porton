@@ -7,16 +7,25 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 })
 export class SupabaseService {
   private supabase: SupabaseClient;
-
+  private supabaseAdmin: SupabaseClient;
   constructor() {
     this.supabase = createClient(
       environment.supabaseUrl as string,
       environment.supabaseAnonKey as string
     );
+
+    this.supabaseAdmin = createClient(
+      environment.supabaseUrl as string,
+      environment.supabaseServiceKey as string
+    );
   }
 
   getClient() {
     return this.supabase;
+  }
+  
+  getAdminClient() {
+    return this.supabaseAdmin;
   }
 
   // Example: Fetch data from a table

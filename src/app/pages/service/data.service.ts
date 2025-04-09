@@ -175,6 +175,7 @@ export class DataService {
   private profilesSubject = new BehaviorSubject<Profile[]>([]);
   private housesSubject = new BehaviorSubject<House[]>([]);
   private houseStatusesSubject = new BehaviorSubject<HouseStatus[]>([]);
+  private authUsersSubject = new BehaviorSubject<Profile[]>([]);
 
   // Public Observables
   loading$ = this.loadingSubject.asObservable();
@@ -191,6 +192,7 @@ export class DataService {
   profiles$ = this.profilesSubject.asObservable();
   houses$ = this.housesSubject.asObservable();
   houseStatuses$ = this.houseStatusesSubject.asObservable();
+  authUsers$ = this.authUsersSubject.asObservable();
   
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tasksUpdate = new BehaviorSubject<any>('');
@@ -242,6 +244,7 @@ export class DataService {
     this.loadWorkGroupTasks().subscribe();
     this.loadProfiles().subscribe();
     this.loadHouses().subscribe();
+    this.loadAuthUsers().subscribe();
   }
 
   // Method to load all enum types at once
@@ -1305,5 +1308,22 @@ export class DataService {
       }
     )
     .subscribe();
+  }
+
+  // Method to load authenticated users
+  loadAuthUsers(): Observable<Profile[]> {
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('users', 'auth')).pipe(
+      tap((data) => {
+        if (data) {
+          this.authUsersSubject.next(data);
+          this.logData('Authenticated Users', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
   }
 }
