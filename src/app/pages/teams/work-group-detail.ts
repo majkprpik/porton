@@ -253,6 +253,7 @@ export class WorkGroupDetail implements OnInit {
     houses: House[] = [];
     profiles: any;
     workGroupTasks: any;
+    tasks: any;
 
     constructor(
         private route: ActivatedRoute,
@@ -275,39 +276,17 @@ export class WorkGroupDetail implements OnInit {
           this.dataService.workGroupProfiles$,
           this.dataService.profiles$,
           this.dataService.houses$,
-          this.teamService.lockedTeams$,
           this.dataService.taskTypes$,
           this.dataService.taskProgressTypes$,
       ]).subscribe({
-          next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, teams, taskTypes, taskProgressTypes]) => {
+          next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, taskTypes, taskProgressTypes]) => {
             this.workGroup = workGroups.find(wg => wg.work_group_id === workGroupId) || null;
             this.houses = houses;
             this.workGroupTasks = workGroupTasks;
-            this.teams = teams;
             this.taskTypes = taskTypes;
             this.progressTypes = taskProgressTypes;
-
-            this.team = teams.find((t) => t.id == workGroupId.toString());
-            // Initialize tasks array if it doesn't exist
-            if (this.team && !this.team.tasks) {
-                this.team.tasks = [];
-            }
-            // Ensure all tasks have a progressType
-            if (this.team?.tasks) {
-              this.team.tasks.forEach((task: any) => {
-              if (!task.progressType) {
-                  task.progressType = TaskProgressType.ASSIGNED;
-              }
-        
-              let workGroupTask = this.workGroupTasks.find((workGroupTask: any) => workGroupTask.task_id == task.id);
-        
-              if(workGroupTask){
-                  if(task.id == workGroupTask.task_id){
-                  task.index = workGroupTask.index;
-                  }
-              }
-              });
-            }
+            this.tasks = tasks;
+            this.profiles = profiles;
 
             // Get tasks for this work group
             const groupTaskIds = workGroupTasks
@@ -331,57 +310,20 @@ export class WorkGroupDetail implements OnInit {
 
       this.dataService.$workGroupTasksUpdate.subscribe(async res => {
         if(res && res.eventType == 'INSERT'){
-          this.workGroupTasks.push(res.new);
-          let task = await this.dataService.getTaskByTaskId(res.new.task_id);
-    
-          let team = this.teams.find((team: any) => team.id == res.new.work_group_id.toString());
-          let houseNumber = this.houses.find((house: any) => house.house_id == task.house_id);
-          let taskType = this.taskTypes.find((taskType: any) => taskType.task_type_id == task.task_type_id);
-          let progressType = this.progressTypes.find((progressType: any) => progressType.task_progress_type_id == task.task_progress_type_id);
-          let workGroupTask = this.workGroupTasks.find((workGroupTask: any) => workGroupTask.task_id == task.task_id);
-    
-          if(!team.tasks.find((task: any) => task.id == res.new.task_id) && houseNumber && taskType && progressType && workGroupTask){
-            let newTask: TeamTask = {
-              id: task.task_id,
-              house_number: houseNumber.house_number,
-              task_type_name: taskType.task_type_name,
-              progress_type_name: progressType.task_progress_type_name,
-              index: workGroupTask.index,
-            }
-    
-            team.tasks = [...team.tasks, newTask];
-          }
+            const task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
+            const workGroupTask = this.workGroupTasks.find((wgt: any)=> wgt.task_id == task.task_id);
+            this.assignedTasks = [...this.assignedTasks, task];
         } else if(res && res.eventType == 'DELETE'){
-          let team = this.teams.find((team: any) => team.id == res.old.work_group_id.toString());
-          if(team){
-            team.tasks = team.tasks.filter((task: any) => task.task_id != res.old.task_id);
-            this.workGroupTasks = this.workGroupTasks.filter((task: any) => task.task_id != res.old.task_id);
-          }
+            this.assignedTasks = this.assignedTasks.filter(task => task.task_id != res.old.task_id);
         }
       });
     
       this.dataService.$workGroupProfiles.subscribe(res => {
         if(res && res.eventType == 'INSERT'){
-          let team = this.teams.find((team: any) => team.id == res.new.work_group_id.toString());
-          let profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
-    
-          if(!team.members.find((member: any) => member.id == res.new.profile_id)){
-            let newStaff: Profile = {
-              id: res.new.profile_id,
-              role: null,
-              first_name: profile.first_name,
-              last_name: profile.last_name,
-              phone_number: null,
-              created_at: null,
-            }
-
-            team.members.push(newStaff);
-          }
+            const profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
+            this.assignedStaff = [...this.assignedStaff, profile];
         } else if(res && res.eventType == 'DELETE'){
-          let team = this.teams.find((team: any) => team.id == res.old.work_group_id.toString());
-          if(team){
-            team.members = team.members.filter((member: any) => member.id != res.old.profile_id);
-          }
+            this.assignedStaff = this.assignedStaff.filter(profile => profile.id != res.old.profile_id);
         }
       });
     

@@ -23,7 +23,7 @@ export type TaskState = 'pending' | 'in-progress' | 'completed';
     >
       <div class="house-number">{{houseNumber}}</div>
       <div class="task-icon">
-        <i class="pi {{taskIcon}}"></i>
+        <i class="{{taskIcon}}"></i>
       </div>
     </div>
 

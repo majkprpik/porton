@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { WorkGroup } from './work-group';
-import { DataService, Task, Profile } from '../service/data.service';
+import { DataService, Task, Profile, LockedTeam } from '../service/data.service';
 import { WorkGroupService } from './work-group.service';
 import { combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { map, take } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-work-groups',
@@ -49,7 +50,7 @@ import { forkJoin } from 'rxjs';
                 <div class="group-wrapper">
                   <app-work-group
                     [workGroup]="group"
-                    [isActive]="group.work_group_id === activeGroupId"
+                    [isActive]="group.work_group_id == activeGroupId"
                     [assignedTasks]="getAssignedTasks(group.work_group_id)"
                     [assignedStaff]="getAssignedStaff(group.work_group_id)"
                     (groupSelected)="setActiveGroup(group.work_group_id)"
@@ -164,10 +165,14 @@ export class WorkGroups implements OnInit {
   workGroupTasks: { [key: number]: Task[] } = {};
   workGroupStaff: { [key: number]: Profile[] } = {};
   allTasks: Task[] = [];
+  lockedTeams: LockedTeam[] = [];
+  init = true;
+  taskProgressTypes: any;
 
   constructor(
     private dataService: DataService,
-    private workGroupService: WorkGroupService
+    private workGroupService: WorkGroupService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -178,12 +183,14 @@ export class WorkGroups implements OnInit {
       this.dataService.workGroupTasks$,
       this.dataService.tasks$,
       this.dataService.workGroupProfiles$,
-      this.dataService.profiles$
+      this.dataService.profiles$,
+      this.dataService.taskProgressTypes$
     ]).subscribe({
-      next: ([activeGroupId, workGroups, workGroupTasks, tasks, workGroupProfiles, profiles]) => {
+      next: ([activeGroupId, workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, taskProgressTypes]) => {
         this.activeGroupId = activeGroupId;
         this.workGroups = workGroups;
         this.allTasks = tasks;
+        this.taskProgressTypes = taskProgressTypes;
         
         // Map work group tasks
         this.workGroupTasks = {};
@@ -193,6 +200,9 @@ export class WorkGroups implements OnInit {
           }
           const task = tasks.find(t => t.task_id === workGroupTask.task_id);
           if (task) {
+            if(task.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
+              task.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
+            }
             this.workGroupTasks[workGroupTask.work_group_id].push(task);
           }
         });
@@ -209,6 +219,23 @@ export class WorkGroups implements OnInit {
           }
         });
 
+        if(workGroups.length > 0 && workGroupProfiles.length > 0 && workGroupTasks.length > 0){
+          if(!this.workGroups.some(workGroup => this.lockedTeams.some(lockedTeam => parseInt(lockedTeam.id) == workGroup.work_group_id))){
+            this.workGroups.forEach(workGroup => {
+              this.lockedTeams.push({
+                id: workGroup.work_group_id.toString(),
+                name: "Team " + workGroup.work_group_id.toString(),
+                members: this.workGroupStaff[workGroup.work_group_id],
+                tasks: this.workGroupTasks[workGroup.work_group_id],
+                homes: [],
+                isLocked: activeGroupId != workGroup.work_group_id,       
+              });
+            });
+            
+            this.workGroupService.setLockedTeams(this.lockedTeams);
+          }
+        }
+
         this.loading = false;
       },
       error: (error) => {
@@ -219,7 +246,17 @@ export class WorkGroups implements OnInit {
   }
 
   getAssignedTasks(workGroupId: number): Task[] {
-    return this.workGroupTasks[workGroupId] || [];
+    let lockedTeam = this.workGroupService.getLockedTeams().find(lockedTeam => parseInt(lockedTeam.id) == workGroupId);
+
+    if(lockedTeam && lockedTeam.tasks){
+      console.log(lockedTeam);
+    }
+
+    if(lockedTeam?.tasks){
+      return lockedTeam?.tasks || [];
+    }
+
+    return [];
   }
 
   getAssignedStaff(workGroupId: number): Profile[] {
@@ -328,16 +365,30 @@ export class WorkGroups implements OnInit {
     }
   }
 
-  publishWorkGroups() {
-    const workGroupIds = this.workGroups.map(group => group.work_group_id);
-    this.dataService.publishWorkGroups(workGroupIds).subscribe({
-      next: () => {
-        //console.log('Work groups published successfully');
-        this.workGroupService.setActiveGroup(undefined);
-      },
-      error: (error) => {
-        console.error('Error publishing work groups:', error);
+  async publishWorkGroups() {
+    let lockedWorkGroups = this.workGroupService.getLockedTeams();
+
+    for (const lockedWorkGroup of lockedWorkGroups) {
+      const isLocked = await this.workGroupService.lockWorkGroup(parseInt(lockedWorkGroup.id));
+      console.log('Locked:', isLocked);
+    }
+  
+    for (const lockedWorkGroup of lockedWorkGroups) {
+      const isDeleted = await this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(parseInt(lockedWorkGroup.id));
+      console.log('Deleted:', isDeleted);
+    }
+  
+    for (const lockedWorkGroup of lockedWorkGroups) {
+      if(!lockedWorkGroup.tasks){
+        lockedWorkGroup.tasks = [];
       }
-    });
+
+      for (const [index, task] of lockedWorkGroup.tasks.entries()) {
+        const isCreated = await this.workGroupService.createWorkGroupTask(parseInt(lockedWorkGroup.id), task.task_id, index);
+        console.log('Created:', isCreated);
+      }
+    }
+    
+    window.location.reload();
   }
 } 
