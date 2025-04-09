@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div *ngIf="isDevelopment" class="debug-overlay">
+    <div *ngIf="true" class="debug-overlay">
       <div class="debug-content">
         <h3>Performance Logs</h3>
         <div class="log-entry" *ngFor="let log of logs">
