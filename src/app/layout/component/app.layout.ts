@@ -41,7 +41,7 @@ import { DebugOverlayComponent } from '../../shared/debug-overlay/debug-overlay.
             </div>
         </div>
         <div class="layout-mask animate-fadein"></div>
-        <app-debug-overlay></app-debug-overlay>
+        <!-- <app-debug-overlay></app-debug-overlay> -->
 
         <p-speedDial 
             [model]="menuItems" 
