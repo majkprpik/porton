@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { DataService } from '../service/data.service';
 import { Profile } from '../service/data.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-profiles',
+  imports: [CommonModule],
   template: `
     <h1>Profile Management</h1>
     <table>
@@ -17,8 +19,7 @@ import { Profile } from '../service/data.service';
       <tbody>
         <tr *ngFor="let profile of profiles">
           <td>{{ profile.first_name }}</td>
-          <!-- <td>{{ profile.last_name }}</td> -->
-          <td>{{ profile.email }}</td>
+          <td>{{ profile.phone_number }}</td>
           <td>{{ profile.role }}</td>
         </tr>
       </tbody>

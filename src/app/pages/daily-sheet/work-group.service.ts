@@ -10,6 +10,7 @@ export class WorkGroupService {
   private activeGroupIdSubject = new BehaviorSubject<number | undefined>(undefined);
   activeGroupId$ = this.activeGroupIdSubject.asObservable();
   private lockedTeams: LockedTeam[] = [];
+  $workGroupToDelete = new BehaviorSubject<any>(null);
 
   constructor(
     private supabaseService: SupabaseService

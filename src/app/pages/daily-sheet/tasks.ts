@@ -74,43 +74,76 @@ export class TasksComponent implements OnInit {
 
   ngOnInit() {
     this.taskService.$taskToRemove.subscribe(taskToRemove => {
-      let task = this.tasks.find(task => task.task_id == taskToRemove.task_id);
-      let taskProgressType = this.progressTypes.find(taksProgressType => taksProgressType.task_progress_type_name == "Nije dodijeljeno");
-      if(task && taskProgressType){
-        task.task_progress_type_id = taskProgressType.task_progress_type_id;
-
-        this.tasks = this.tasks.map(t => 
-          t.task_id === task.task_id ? { ...t, task_progress_type_id: taskProgressType.task_progress_type_id } : t
-        );
-
-        this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
+      if(taskToRemove){
+        let task = this.tasks.find(task => task.task_id == taskToRemove.task_id);
+        let taskProgressType = this.progressTypes.find(taksProgressType => taksProgressType.task_progress_type_name == "Nije dodijeljeno");
+        if(task && taskProgressType){
+          task.task_progress_type_id = taskProgressType.task_progress_type_id;
+  
+          this.tasks = this.tasks.map(t => 
+            t.task_id === task.task_id ? { ...t, task_progress_type_id: taskProgressType.task_progress_type_id } : t
+          );
+  
+          this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
+        }
       }
     });
 
     this.taskService.$selectedTask.subscribe(taskToAdd => {
-      if(this.activeWorkGroupId){
-        this.workGroupTasks = [...this.workGroupTasks, {
-          work_group_id: this.activeWorkGroupId,
-          task_id: taskToAdd.task_id,
-        }]
+      if(taskToAdd){
+        if(this.activeWorkGroupId){
+          this.workGroupTasks = [...this.workGroupTasks, {
+            work_group_id: this.activeWorkGroupId,
+            task_id: taskToAdd.task_id,
+          }]
+        }
+      }
+    });
+
+    this.workGroupService.$workGroupToDelete.subscribe(workGroupToDelete => {
+      if(workGroupToDelete){
+        let workGroupTasksToDelete = this.workGroupTasks.filter(wgt => wgt.work_group_id == workGroupToDelete);
+        this.tasks = this.tasks.map(task => {
+          if (workGroupTasksToDelete.some(t => t.task_id === task.task_id)) {
+            const notAssignedProgressType = this.progressTypes.find(pt => pt.task_progress_type_name === "Nije dodijeljeno");
+            if (notAssignedProgressType) {
+              return {
+                ...task,
+                task_progress_type_id: notAssignedProgressType.task_progress_type_id
+              };
+            }
+          }
+          return task;
+        });
+  
+        this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.work_group_id != workGroupToDelete);
+        
+        this.dataService.setTasks(this.tasks);
+        this.dataService.setWorkGroupTasks(this.workGroupTasks);
       }
     });
 
     this.workGroupService.activeGroupId$.subscribe(activeGroupId => {
-      this.activeWorkGroupId = activeGroupId;
+      if(activeGroupId){
+        this.activeWorkGroupId = activeGroupId;
+      }
+    });
+
+    this.dataService.workGroupTasks$.subscribe(workGroupTasks => {
+      if(workGroupTasks){
+        this.workGroupTasks = workGroupTasks;
+      }
     });
 
     combineLatest([
       this.dataService.tasks$,
       this.dataService.taskTypes$,
       this.dataService.taskProgressTypes$,
-      this.dataService.workGroupTasks$,
     ]).subscribe(
-      ([tasks, taskTypes, progressTypes, workGroupTasks]) => {
+      ([tasks, taskTypes, progressTypes]) => {
         this.tasks = tasks;
         this.taskTypes = taskTypes;
         this.progressTypes = progressTypes;
-        this.workGroupTasks = workGroupTasks;
         this.loading = false;
       },
       error => {

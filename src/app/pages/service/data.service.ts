@@ -75,7 +75,7 @@ export interface WorkGroupProfile {
 export interface WorkGroupTask {
   work_group_id: number;
   task_id: number;
-  index: number | null;
+  index?: number | null;
 }
 
 // Interface for tasks
@@ -208,6 +208,18 @@ export class DataService {
     this.listenToDatabaseChanges();
   }
 
+  setTasks(tasks: Task[]){
+    if(tasks){
+      this.tasksSubject.next(tasks);
+    }
+  }
+
+  setWorkGroupTasks(workGroupTasks: WorkGroupTask[]){
+    if(workGroupTasks){
+      this.workGroupTasksSubject.next(workGroupTasks);
+    }
+  }
+
   // Method to enable/disable debug mode
   setDebug(enabled: boolean): void {
     this.debug = enabled;
@@ -271,6 +283,14 @@ export class DataService {
   // Method to get schema name
   getSchema(): string {
     return this.schema;
+  }
+
+  updateTasksSubject(tasks: any){
+    this.tasksSubject.next(tasks);
+  }
+
+  updateWorkGroupTasks(workGroupTasks: any){
+    this.workGroupTasksSubject.next(workGroupTasks);
   }
 
   getHouseAvailabilityTypes(): Observable<HouseAvailabilityType[]> {
@@ -375,6 +395,28 @@ export class DataService {
       catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
     );
+  }
+
+  async loadTasksFromDb(){
+    try{
+      
+      this.loadingSubject.next(true);
+      const { data: tasks, error: tasksError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('tasks')
+        .select('*');
+
+      if(tasksError) throw tasksError
+
+      this.tasksSubject.next(tasks);
+      this.loadingSubject.next(false)
+
+      return tasks;
+    } catch (error) {
+      console.error('Error fetching task type ids', error);
+      this.loadingSubject.next(false)
+      return null;
+    }
   }
 
   loadTasks(): Observable<Task[]> {
@@ -1004,6 +1046,24 @@ export class DataService {
       if(progressTypeIdError) throw progressTypeIdError
 
       return existingProgressTypeId?.task_progress_type_id;
+    } catch (error) {
+      console.error('Error fetching task type ids', error);
+      return null;
+    }
+  }
+
+  async updateTaskProgressType1(taskId: number, taskProgressTypeId: number){
+    try{
+      const { data: task, error: taskError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('tasks')
+        .update({ task_progress_type_id: taskProgressTypeId })
+        .eq('task_id', taskId)
+        .select();
+
+      if(taskError) throw taskError
+
+      return task;
     } catch (error) {
       console.error('Error fetching task type ids', error);
       return null;

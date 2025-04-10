@@ -412,8 +412,22 @@ export class WorkGroup implements OnInit {
           isLocked: true,
         });
       }
-      this.workGroupService.setActiveGroup(undefined);
+
+      let lockedTeams = this.workGroupService.getLockedTeams();
+      let lockedWorkGroupTasks: any[] = [];
       
+      lockedTeams.forEach(lockedTeam => {
+        lockedTeam.tasks?.forEach((task, index) => {
+          lockedWorkGroupTasks.push({
+            work_group_id: parseInt(lockedTeam.id),
+            task_id: task.task_id,
+            index: index,
+          });
+        });
+      });
+
+      this.dataService.updateWorkGroupTasks(lockedWorkGroupTasks);
+      this.workGroupService.setActiveGroup(undefined);
     } else {
       // If the group is not active, activate it
       this.groupSelected.emit();

@@ -5,6 +5,7 @@ import { Task, TaskType, TaskProgressType, DataService } from '../service/data.s
 import { TaskState } from './task-card';
 import { PanelModule } from 'primeng/panel';
 import { BadgeModule } from 'primeng/badge';
+import { WorkGroupService } from './work-group.service';
 
 @Component({
   selector: 'app-task-group',
@@ -110,7 +111,10 @@ export class TaskGroupComponent implements OnInit {
   progressTypes: TaskProgressType[] = [];
   workGroupTasks: { work_group_id: number; task_id: number }[] = [];
 
-  constructor(private dataService: DataService) {}
+  constructor(
+    private dataService: DataService,
+    private workGroupService: WorkGroupService,
+  ) {}
 
   ngOnInit() {
     this.dataService.taskProgressTypes$.subscribe(types => {
@@ -120,7 +124,7 @@ export class TaskGroupComponent implements OnInit {
     this.dataService.workGroupTasks$.subscribe(tasks => {
       this.workGroupTasks = tasks;
     });
-  }
+  } 
 
   get filteredTasks(): Task[] {
     let ftsks; 
