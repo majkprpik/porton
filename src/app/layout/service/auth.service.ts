@@ -18,7 +18,7 @@ export class AuthService {
     private profileService: ProfileService
   ) {
     // this.initializeTestUsers();
-    // this.createRealUsers();
+    this.createRealUsers();
   }
 
   private async initializeTestUsers(): Promise<void> {
@@ -130,19 +130,25 @@ export class AuthService {
     }
   }
 
+  // za majstora zadaci
+  // odlasci/dolasci - vide svi? ureduje recepcija, matej, customer service
+  // pregled - svi mogu videti
+    
+
   async createRealUsers(): Promise<string[] | null> {
     const users = [
-      { name: 'Matej Adrić', role: 'voditelj_kampa', password: 'NzW3dj' },
-      { name: 'Marko Sovulj', role: 'savjetnik_uprave', password: 'uNgVn1' },
-      { name: 'Mirela Dronjić', role: 'voditelj_recepcije', password: '2Az84E' },
-      { name: 'Mila Malivuk', role: 'recepcija', password: 'aYqv9A' },
-      { name: 'Mina Cvejić', role: 'recepcija', password: 'k8DN4U' },
-      { name: 'Ana Perak', role: 'recepcija', password: 'p9Xm2K' },
+      { name: 'Matej Adrić', role: 'voditelj_kampa', password: 'NzW3dj' }, // rezervacije(unos), dnevni list
+      { name: 'Marko Sovulj', role: 'savjetnik_uprave', password: 'uNgVn1' }, // rezervacije, 
+      { name: 'Mirela Dronjić', role: 'voditelj_recepcije', password: '2Az84E' }, // rezervacije(unos)
+      { name: 'Elena Rudan', role: 'prodaja', password: 't3Wd6N' }, // rezervacije(unos)
+      { name: 'Simona Gjeorgievska', role: 'prodaja', password: 'u2Xe7P' }, // rezervacije(unos)
+      { name: 'Mia Lukić', role: 'voditelj_domaćinstva', password: 'v1Yf8Q' }, // rezervacije, dnevni list
+      { name: 'Mila Malivuk', role: 'recepcija', password: 'aYqv9A' }, // rezervacije
+      { name: 'Ana Perak', role: 'recepcija', password: 'p9Xm2K' }, // rezervacije
+      { name: 'Mina Cvejić', role: 'recepcija', password: 'k8DN4U' }, // rezervacije
+      { name: 'Mauro Boljunčić', role: 'kućni_majstor', password: 'f2Ip8A' }, // pregled, zadaci, 
       { name: 'Damir Zaharija', role: 'customer_service', password: 'r7Yb5L' },
       { name: 'Ivica Nagel', role: 'noćni_recepcioner', password: 's4Vc8M' },
-      { name: 'Elena Rudan', role: 'prodaja', password: 't3Wd6N' },
-      { name: 'Simona Gjeorgievska', role: 'prodaja', password: 'u2Xe7P' },
-      { name: 'Mia Lukić', role: 'voditelj_domaćinstva', password: 'v1Yf8Q' },
       { name: 'Liudmyla Babii', role: 'sobarica', password: 'w5Zg9R' },
       { name: 'Iryna Kara', role: 'sobarica', password: 'x4Ah0S' },
       { name: 'Tetiana Leonenko', role: 'sobarica', password: 'y3Bi1T' },
@@ -152,7 +158,6 @@ export class AuthService {
       { name: 'Slavica Petković', role: 'sobarica', password: 'c5Fm5X' },
       { name: 'Jelena Kaluđer', role: 'sobarica', password: 'd4Gn6Y' },
       { name: 'Sandi Maružin', role: 'terase', password: 'e3Ho7Z' },
-      { name: 'Mauro Boljunčić', role: 'kućni_majstor', password: 'f2Ip8A' },
       { name: 'Đani Guštin', role: 'kućni_majstor', password: 'g1Jq9B' },
       { name: 'Dražen Pendeš', role: 'kućni_majstor', password: 'h5Kr0C' },
       { name: 'Ivo Pranjić', role: 'održavanje', password: 'i4Ls1D' },
