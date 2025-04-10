@@ -26,7 +26,8 @@ export class AppMenu {
                     { label: 'Rezervacije', icon: 'pi pi-fw pi-calendar', routerLink: ['/reservations'] },
                     { label: 'Rezervacije 2', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/reservations-2'] },
                     { label: 'Dnevni list', icon: 'pi pi-fw pi-file', routerLink: ['/daily-sheet'] },
-                    { label: 'Timovi', icon: 'pi pi-fw pi-users', routerLink: ['/teams'] }
+                    { label: 'Timovi', icon: 'pi pi-fw pi-users', routerLink: ['/teams'] },
+                    { label: 'Profili', icon: 'pi pi-fw pi-user', routerLink: ['/profiles'] }
                 ]
             },
             // {

@@ -244,7 +244,7 @@ export class DataService {
     this.loadWorkGroupTasks().subscribe();
     this.loadProfiles().subscribe();
     this.loadHouses().subscribe();
-    this.loadAuthUsers().subscribe();
+    // this.loadAuthUsers().subscribe();
   }
 
   // Method to load all enum types at once
