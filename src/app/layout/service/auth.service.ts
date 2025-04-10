@@ -18,7 +18,7 @@ export class AuthService {
     private profileService: ProfileService
   ) {
     // this.initializeTestUsers();
-    this.createRealUsers();
+    // this.createRealUsers();
   }
 
   private async initializeTestUsers(): Promise<void> {
