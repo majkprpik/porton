@@ -16,7 +16,7 @@ import { Profile } from '../service/data.service';
       </thead>
       <tbody>
         <tr *ngFor="let profile of profiles">
-          <td>{{ profile.name }}</td>
+          <td>{{ profile.firstName }}</td>
           <td>{{ profile.email }}</td>
           <td>{{ profile.role }}</td>
         </tr>
