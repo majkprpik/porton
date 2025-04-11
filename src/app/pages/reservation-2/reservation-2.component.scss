@@ -1,13 +1,23 @@
 @import 'handsontable/dist/handsontable.full.css';
 
-.reservation-2-container {
-    padding: 1rem;
-    position: relative;
+.full-page-calendar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
-    height: calc(100vh - 8rem);
+    height: 100vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    
+    .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
     
     .handsontable-wrapper {
         flex: 1;
@@ -56,6 +66,11 @@
         text-align: center;
     }
 } 
+
+// Styles for the old container - keep for compatibility
+.reservation-2-container {
+    display: none; // Hide this since we're now using full-page-calendar
+}
 
 // Transparent grid borders - with !important tags and higher specificity
 body .handsontable .htCore td, 

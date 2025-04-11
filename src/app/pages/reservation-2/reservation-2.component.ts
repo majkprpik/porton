@@ -659,9 +659,9 @@ export class Reservation2Component implements OnInit, OnDestroy {
             if (cellData.isReserved) {
                 // In a real application, you would show a modal with reservation details
                 console.log('View reservation:', cellData);
-                alert(`Viewing reservation: ${cellData.tooltip}`);
+                // // alert(`Viewing reservation: ${cellData.tooltip}`);
             } else {
-                alert('No reservation at this location');
+                // // alert('No reservation at this location');
             }
         }
     }
@@ -677,7 +677,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 
                 if (!reservation) {
                     console.error('Could not find reservation data for cell');
-                    alert('Error: Could not find reservation data.');
+                    // alert('Error: Could not find reservation data.');
                     return;
                 }
                 
@@ -723,7 +723,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     }, 300);
                 }, 0);
             } else {
-                alert('No reservation at this location to edit');
+                // alert('No reservation at this location to edit');
             }
         }
     }
@@ -739,7 +739,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 
                 if (!reservation) {
                     console.error('Could not find reservation data for cell');
-                    alert('Error: Could not find reservation data.');
+                    // alert('Error: Could not find reservation data.');
                     return;
                 }
                 
@@ -779,7 +779,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                             // Update was already done optimistically above
                             
                             // Show success message
-                            alert(`Reservation for ${lastName} has been deleted successfully.`);
+                            // alert(`Reservation for ${lastName} has been deleted successfully.`);
                         },
                         error: (error: any) => {
                             console.error('Error deleting reservation:', error);
@@ -789,7 +789,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                             this.updateGridMatrix();
                             
                             // Show error to user
-                            alert('Failed to delete reservation: ' + (error.message || 'Unknown error'));
+                            // alert('Failed to delete reservation: ' + (error.message || 'Unknown error'));
                         },
                         complete: () => {
                             // Hide loading indicator if needed
@@ -798,7 +798,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     });
                 }
             } else {
-                alert('No reservation at this location to delete');
+                // alert('No reservation at this location to delete');
             }
         }
     }
@@ -852,7 +852,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.dataService.getHouseAvailabilityTypeByName("Occupied").then(occupiedType => {
                     if (!occupiedType || !occupiedType.house_availability_type_id) {
                         console.error('Could not find "Occupied" house availability type');
-                        alert('Error: Could not find appropriate reservation type. Please try again later.');
+                        // alert('Error: Could not find appropriate reservation type. Please try again later.');
                         return;
                     }
                     
@@ -888,7 +888,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     console.log('Form should now be visible with new data');
                 }).catch(error => {
                     console.error('Error retrieving house availability type:', error);
-                    alert('Failed to get required availability type information. Please try again later.');
+                    // alert('Failed to get required availability type information. Please try again later.');
                 });
             }, 0); // Use timeout of 0 to defer execution to next event cycle
         }
@@ -917,13 +917,13 @@ export class Reservation2Component implements OnInit, OnDestroy {
         
         // Ensure dates are valid
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-            alert('Please select valid start and end dates.');
+            // alert('Please select valid start and end dates.');
             return;
         }
         
         // Validate that end date is not before start date
         if (endDate < startDate) {
-            alert('End date cannot be before start date. Please correct the dates.');
+            // alert('End date cannot be before start date. Please correct the dates.');
             return;
         }
         
@@ -941,7 +941,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             
             // If our end date is on or after the next reservation's start date, we have an overlap
             if (endDate >= nextStartDate) {
-                alert(`This reservation overlaps with another reservation in the same house starting on ${nextStartDate.toLocaleDateString()}. Please adjust the dates.`);
+                // alert(`This reservation overlaps with another reservation in the same house starting on ${nextStartDate.toLocaleDateString()}. Please adjust the dates.`);
                 return;
             }
         }
@@ -964,7 +964,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
         this.dataService.getHouseAvailabilityTypeByName("Occupied").then(occupiedType => {
             if (!occupiedType || !occupiedType.house_availability_type_id) {
                 console.error('Could not find "Occupied" house availability type');
-                alert('Error: Could not find appropriate reservation type. Please try again later.');
+                // alert('Error: Could not find appropriate reservation type. Please try again later.');
                 return;
             }
             
@@ -1006,7 +1006,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         } else {
                             console.error('Failed to update reservation - received null response');
                             // Show error to user
-                            alert('Failed to update reservation on server. Please try again.');
+                            // alert('Failed to update reservation on server. Please try again.');
                             
                             // Revert the optimistic update
                             this.houseAvailabilities.set(currentAvailabilities);
@@ -1016,7 +1016,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     error: (error: any) => {
                         console.error('Error updating reservation:', error);
                         // Show error to user
-                        alert('An error occurred while updating the reservation: ' + (error.message || 'Unknown error'));
+                        // alert('An error occurred while updating the reservation: ' + (error.message || 'Unknown error'));
                         
                         // Revert the optimistic update
                         this.houseAvailabilities.set(currentAvailabilities);
@@ -1075,19 +1075,19 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         } else {
                             console.error('Failed to save reservation - received null response');
                             // Show error to user
-                            alert('Failed to save reservation to server. Please try again.');
+                            // alert('Failed to save reservation to server. Please try again.');
                         }
                     },
                     error: (error: any) => {
                         console.error('Error saving reservation:', error);
                         // Show error to user
-                        alert('An error occurred while saving the reservation: ' + (error.message || 'Unknown error'));
+                        // alert('An error occurred while saving the reservation: ' + (error.message || 'Unknown error'));
                     }
                 });
             }
         }).catch(error => {
             console.error('Error retrieving house availability type:', error);
-            alert('Failed to get required availability type information. Please try again later.');
+            // alert('Failed to get required availability type information. Please try again later.');
         });
     }
     
@@ -1264,7 +1264,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
         const nextDate = this.nextReservationDate();
         if (nextDate && newDate >= nextDate) {
             // Warn the user but still allow setting the date (we'll validate on save)
-            alert(`Warning: This end date overlaps with another reservation starting on ${nextDate.toLocaleDateString()}`);
+            // alert(`Warning: This end date overlaps with another reservation starting on ${nextDate.toLocaleDateString()}`);
         }
     }
     
@@ -1344,25 +1344,25 @@ export class Reservation2Component implements OnInit, OnDestroy {
     // New methods for additional context menu options
     private handleBulkReservation(): void {
         // In a real application, this would open a modal for creating multiple reservations
-        alert('Opening bulk reservation interface (not implemented in this demo)');
+        // alert('Opening bulk reservation interface (not implemented in this demo)');
     }
 
     private handleExportData(): void {
         // In a real application, this would export the visible data to CSV/Excel
-        alert('Exporting current view to file (not implemented in this demo)');
+        // alert('Exporting current view to file (not implemented in this demo)');
     }
 
     private handleFilterReservations(): void {
         // In a real application, this would open a filter dialog
         const filterType = prompt('Enter filter type (e.g., "confirmed", "pending", "all")', 'all');
         if (filterType) {
-            alert(`Filtering reservations by type: ${filterType} (not implemented in this demo)`);
+            // alert(`Filtering reservations by type: ${filterType} (not implemented in this demo)`);
         }
     }
 
     private handlePrintView(): void {
         // In a real application, this would create a print-friendly view
-        alert('Opening print-friendly view (not implemented in this demo)');
+        // alert('Opening print-friendly view (not implemented in this demo)');
     }
 
     // Check if a cell has a reservation
