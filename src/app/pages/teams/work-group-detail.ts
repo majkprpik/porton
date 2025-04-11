@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
-import { DataService, WorkGroup, Profile, Task, House, TaskType } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType } from '../service/data.service';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { TeamService } from '../service/team.service';
@@ -69,6 +69,15 @@ import { TeamService } from '../service/team.service';
                                                     [severity]="getActionButtonSeverity(task)"
                                                     (onClick)="handleTaskAction(task)"
                                                 ></p-button>
+                                                
+                                                @if (isCleaningHouseTask(task) && isTaskInProgress(task)) {
+                                                    <p-button 
+                                                        label="Pauza"
+                                                        severity="warn" 
+                                                        (onClick)="handleTaskPause(task)"
+                                                        [style]="{'margin-left': '0.5rem'}"
+                                                    ></p-button>
+                                                }
                                             }
                                         </div>
                                     </div>
@@ -285,6 +294,10 @@ export class WorkGroupDetail implements OnInit {
             this.workGroupTasks = workGroupTasks;
             this.taskTypes = taskTypes;
             this.progressTypes = taskProgressTypes;
+            
+            // Log progress types to debug
+            console.log('Progress Types:', taskProgressTypes);
+            
             this.tasks = tasks;
             this.profiles = profiles;
 
@@ -293,6 +306,9 @@ export class WorkGroupDetail implements OnInit {
                 .filter(wgt => wgt.work_group_id === workGroupId)
                 .map(wgt => wgt.task_id);
             this.assignedTasks = tasks.filter(task => groupTaskIds.includes(task.task_id));
+            
+            // Log tasks with their progress types
+            console.log('Assigned Tasks:', this.assignedTasks);
 
             // Get staff for this work group
             const groupProfileIds = workGroupProfiles
@@ -371,11 +387,13 @@ export class WorkGroupDetail implements OnInit {
     }
 
     isTaskCompleted(task: Task): boolean {
-        return task.task_progress_type_id === 3; // Assuming 3 is "Completed"
+        const completedProgressType = this.progressTypes?.find((pt: any) => pt.task_progress_type_name === "Završeno");
+        return completedProgressType && task.task_progress_type_id === completedProgressType.task_progress_type_id;
     }
 
     isTaskInProgress(task: Task): boolean {
-        return task.task_progress_type_id === 2; // Assuming 2 is "In Progress"
+        const inProgressType = this.progressTypes?.find((pt: any) => pt.task_progress_type_name === "U progresu");
+        return inProgressType && task.task_progress_type_id === inProgressType.task_progress_type_id;
     }
 
     getTaskStatusIcon(task: Task): string {
@@ -385,35 +403,113 @@ export class WorkGroupDetail implements OnInit {
     }
 
     getTaskStatusText(task: Task): string {
+        // Find the progress type by ID from our progressTypes array
+        const progressType = this.progressTypes.find((pt: any) => pt.task_progress_type_id === task.task_progress_type_id);
+        if (progressType) {
+            return progressType.task_progress_type_name;
+        }
+        
+        // Fallback
         if (this.isTaskCompleted(task)) return 'Završeno';
-        if (this.isTaskInProgress(task)) return 'U tijeku';
-        return 'Nije započeto';
+        if (this.isTaskInProgress(task)) return 'U progresu';
+        if (this.isTaskPaused(task)) return 'Pauza';
+        return 'Nije dodijeljeno';
     }
 
     getActionButtonLabel(task: Task): string {
-        if (this.isTaskInProgress(task)) return 'Završi';
+        const isCleaningHouse = this.isCleaningHouseTask(task);
+        const isPaused = this.isTaskPaused(task);
+        
+        if (this.isTaskInProgress(task)) {
+            return 'Završi';
+        } else if (isPaused) {
+            return 'Nastavi';
+        }
+        
         return 'Započni';
     }
 
     getActionButtonSeverity(task: Task): 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' {
         if (this.isTaskInProgress(task)) return 'success';
+        if (this.isTaskPaused(task)) return 'warn';
         return 'primary';
     }
 
+    isCleaningHouseTask(task: Task): boolean {
+        const cleaningHouseType = this.taskTypes.find(tt => tt.task_type_name === "Čišćenje kućice");
+        return task.task_type_id === cleaningHouseType?.task_type_id;
+    }
+
+    isTaskPaused(task: Task): boolean {
+        // Find "Pauza" progress type
+        const pauseProgressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === "Pauza");
+        return pauseProgressType && task.task_progress_type_id === pauseProgressType.task_progress_type_id;
+    }
+
     handleTaskAction(task: Task) {
-        const newProgressTypeId = this.isTaskInProgress(task) ? 3 : 2; // 3 = Completed, 2 = In Progress
-        this.dataService.updateTaskProgressType(task.task_id, newProgressTypeId).subscribe({
+        const isCleaningHouse = this.isCleaningHouseTask(task);
+        let newProgressTypeName: string;
+        
+        if (this.isTaskInProgress(task)) {
+            // For any task type, when in progress, "Završi" goes to "Završeno"
+            newProgressTypeName = "Završeno";
+        } else if (this.isTaskPaused(task)) {
+            // If paused, resume task (go back to "U progresu")
+            newProgressTypeName = "U progresu";
+        } else {
+            // Starting a task
+            newProgressTypeName = "U progresu";
+        }
+        
+        // Get progress type ID from name
+        const progressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === newProgressTypeName);
+        if (!progressType) {
+            console.error(`Progress type not found: ${newProgressTypeName}`);
+            return;
+        }
+        
+        this.dataService.updateTaskProgressType(task.task_id, progressType.task_progress_type_id).subscribe({
             next: () => {
-                console.log('Task progress updated:', { taskId: task.task_id, progressTypeId: newProgressTypeId });
+                console.log('Task progress updated:', { taskId: task.task_id, progressType: newProgressTypeName });
+                
+                // Update the task in the UI to reflect the new status
+                const updatedTask = this.assignedTasks.find(t => t.task_id === task.task_id);
+                if (updatedTask) {
+                    updatedTask.task_progress_type_id = progressType.task_progress_type_id;
+                }
             },
             error: (error: unknown) => {
                 console.error('Error updating task progress:', error);
             }
         });
     }
+    
+    handleTaskPause(task: Task) {
+        // Find Pauza progress type
+        const pauseProgressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === "Pauza");
+        if (!pauseProgressType) {
+            console.error("Pause progress type not found");
+            return;
+        }
+        
+        this.dataService.updateTaskProgressType(task.task_id, pauseProgressType.task_progress_type_id).subscribe({
+            next: () => {
+                console.log('Task paused:', { taskId: task.task_id });
+                
+                // Update the task in the UI to reflect the new status
+                const updatedTask = this.assignedTasks.find(t => t.task_id === task.task_id);
+                if (updatedTask) {
+                    updatedTask.task_progress_type_id = pauseProgressType.task_progress_type_id;
+                }
+            },
+            error: (error: unknown) => {
+                console.error('Error pausing task:', error);
+            }
+        });
+    }
 } 
 
-enum TaskProgressType {
+enum LocalTaskProgressType {
     ASSIGNED = 'Dodijeljeno',
     IN_PROGRESS = 'U progresu',
     COMPLETED = 'Završeno',
