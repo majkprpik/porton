@@ -52,12 +52,50 @@ export class SupabaseService {
 
   // Update data in a table
   async updateData(table: string, updates: any, condition: string, schema: string = 'public') {
-    const { data, error } = await this.supabase
-      .schema(schema)
-      .from(table)
-      .update(updates)
-      .eq('task_id', condition)
-      .select();
+    let query;
+    
+    // Check if condition looks like a simple ID
+    if (/^\d+$/.test(condition)) {
+      // Use the appropriate ID column based on the table
+      let idColumn;
+      
+      switch (table) {
+        case 'tasks':
+          idColumn = 'task_id';
+          break;
+        case 'house_availabilities':
+          idColumn = 'house_availability_id';
+          break;
+        case 'houses':
+          idColumn = 'house_id';
+          break;
+        case 'work_groups':
+          idColumn = 'work_group_id';
+          break;
+        default:
+          // For other tables, assume the column is named 'id'
+          idColumn = 'id';
+      }
+      
+      query = this.supabase
+        .schema(schema)
+        .from(table)
+        .update(updates)
+        .eq(idColumn, condition);
+    } else {
+      // Assume the condition is already a fully-formed condition string like "column = value"
+      const [column, value] = condition.split(' = ');
+      // Remove any quotes from the value if present
+      const cleanValue = value ? value.replace(/['"]/g, '') : value;
+      
+      query = this.supabase
+        .schema(schema)
+        .from(table)
+        .update(updates)
+        .eq(column.trim(), cleanValue);
+    }
+    
+    const { data, error } = await query.select();
 
     if (error) {
       console.error('Error updating data:', error.message);

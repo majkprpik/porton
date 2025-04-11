@@ -11,6 +11,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { FormsModule } from '@angular/forms';
+import { ReservationFormComponent } from './reservation-form/reservation-form.component';
 
 interface CellData {
     isReserved: boolean;
@@ -38,7 +39,8 @@ interface CellData {
         InputTextModule,
         InputNumberModule,
         CalendarModule,
-        FormsModule
+        FormsModule,
+        ReservationFormComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -49,6 +51,13 @@ export class Reservations implements OnInit, OnDestroy {
     
     // Signal for the entire grid matrix
     gridMatrix = signal<CellData[][]>([]);
+
+    // Reservation form state
+    showReservationForm = signal<boolean>(false);
+    newReservation = signal<Partial<HouseAvailability>>({});
+    selectedHouseId = signal<number>(0);
+    selectedStartDate = signal<Date>(new Date());
+    selectedEndDate = signal<Date>(new Date());
 
     // Store subscriptions to unsubscribe later
     private subscriptions: Subscription[] = [];
@@ -336,5 +345,66 @@ export class Reservations implements OnInit, OnDestroy {
         
         // Update grid matrix
         this.updateGridMatrix();
+    }
+
+    // Handle click on an empty cell
+    onCellClick(houseIndex: number, dayIndex: number): void {
+        const cellData = this.gridMatrix()[houseIndex][dayIndex];
+        
+        // Only open form if cell is not reserved
+        if (!cellData.isReserved) {
+            const house = this.houses()[houseIndex];
+            const day = this.days()[dayIndex];
+            
+            // Set selected data for the form
+            this.selectedHouseId.set(house.house_id);
+            this.selectedStartDate.set(new Date(day));
+            this.selectedEndDate.set(new Date(day));
+            
+            // Initialize new reservation with default values
+            this.newReservation.set({
+                house_id: house.house_id,
+                house_availability_type_id: 1, // Default availability type
+                color_theme: Math.floor(Math.random() * 10), // Random color theme
+                color_tint: Math.random(), // Random tint
+                adults: 0,
+                babies: 0,
+                cribs: 0,
+                dogs_d: 0,
+                dogs_s: 0,
+                dogs_b: 0,
+                has_arrived: false,
+                has_departed: false,
+                prev_connected: false,
+                next_connected: false
+            });
+            
+            // Force update and open the form
+            setTimeout(() => {
+                this.showReservationForm.set(true);
+            }, 0);
+        }
+    }
+
+    // Handle form submission
+    handleSaveReservation(reservation: HouseAvailability): void {
+        this.createReservation(reservation);
+        this.closeReservationForm();
+    }
+
+    // Handle form cancellation
+    handleCancelReservation(): void {
+        this.closeReservationForm();
+    }
+    
+    // Centralized method to close the form and reset state
+    private closeReservationForm(): void {
+        // First close the form
+        this.showReservationForm.set(false);
+        
+        // Then reset form data after a short delay
+        setTimeout(() => {
+            this.newReservation.set({});
+        }, 100);
     }
 } 

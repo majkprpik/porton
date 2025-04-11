@@ -1,0 +1,35 @@
+<p-dialog [(visible)]="visible" [modal]="true" [style]="{width: '450px'}" [draggable]="false" [resizable]="false">
+    <ng-template pTemplate="header">
+        <h3>{{ reservation.house_availability_id ? 'Edit Reservation' : 'New Reservation' }}</h3>
+    </ng-template>
+    <div class="p-fluid">
+        <div class="field">
+            <label for="lastName">Last Name</label>
+            <input id="lastName" type="text" pInputText [(ngModel)]="reservation.last_name" />
+        </div>
+        <div class="field">
+            <label for="reservationNumber">Reservation Number</label>
+            <input id="reservationNumber" type="text" pInputText [(ngModel)]="reservation.reservation_number" />
+        </div>
+        <div class="field">
+            <label for="adults">Adults</label>
+            <p-inputNumber id="adults" [(ngModel)]="reservation.adults" [min]="0" [max]="10"></p-inputNumber>
+        </div>
+        <div class="field">
+            <label for="babies">Babies</label>
+            <p-inputNumber id="babies" [(ngModel)]="reservation.babies" [min]="0" [max]="10"></p-inputNumber>
+        </div>
+        <div class="field">
+            <label for="startDate">Start Date</label>
+            <p-calendar id="startDate" [(ngModel)]="startDate" [readonlyInput]="true" dateFormat="dd.mm.yy"></p-calendar>
+        </div>
+        <div class="field">
+            <label for="endDate">End Date</label>
+            <p-calendar id="endDate" [(ngModel)]="endDate" [readonlyInput]="true" dateFormat="dd.mm.yy"></p-calendar>
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <p-button label="Cancel" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
+        <p-button label="Save" icon="pi pi-check" (click)="onSave()" styleClass="p-button-text"></p-button>
+    </ng-template>
+</p-dialog> 

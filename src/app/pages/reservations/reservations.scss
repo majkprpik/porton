@@ -197,3 +197,25 @@ thead th.today-column.sunday-column {
     position: relative;
     z-index: 1;
 }
+
+// Empty cell hover effect to indicate it's clickable
+td:not(.reservation-slot):hover {
+    background-color: var(--surface-200) !important;
+    transition: background-color 0.2s;
+}
+
+// Add plus icon on hover for empty cells
+td:not(.reservation-slot) {
+    position: relative;
+
+    &:hover::after {
+        content: '+';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        opacity: 0.7;
+    }
+}

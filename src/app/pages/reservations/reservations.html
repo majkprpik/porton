@@ -1,9 +1,4 @@
 <div class="reservations-container">
-    <!-- Debug info -->
-    <ng-container *ngIf="houses().length === 0 || houseAvailabilities().length === 0">
-        <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s" [style]="{ width: '50px', height: '50px' }" />
-    </ng-container>
-
     <ng-container *ngIf="houses().length > 0 && houseAvailabilities().length > 0">
         <div class="card">
             <table class="reservations-table">
@@ -33,6 +28,8 @@
                             [tooltipDisabled]="!cellData.isReserved"
                             tooltipPosition="top"
                             [tooltipStyleClass]="'reservation-tooltip'"
+                            (click)="onCellClick(houseIndex, dayIndex)"
+                            [style.cursor]="cellData.isReserved ? 'default' : 'pointer'"
                         >
                             {{ cellData.displayText }}
                         </td>
@@ -43,25 +40,16 @@
             </table>
         </div>
     </ng-container>
+    
+    <!-- Reservation Form Component -->
+    <app-reservation-form 
+        [visible]="showReservationForm()" 
+        (visibleChange)="showReservationForm.set($event)"
+        [reservation]="newReservation()"
+        [houseId]="selectedHouseId()"
+        [startDate]="selectedStartDate()"
+        [endDate]="selectedEndDate()"
+        (save)="handleSaveReservation($event)"
+        (cancel)="handleCancelReservation()"
+    ></app-reservation-form>
 </div>
-
-<!-- Template for cell content -->
-<ng-template #cellTemplate let-cellData="cellData">
-    <!-- <div [ngClass]="getCellClasses(cellData)"
-         [style.background-color]="cellData.color"
-         [class]="cellData.identifier"
-         [pTooltip]="cellData.tooltip"
-         [tooltipDisabled]="!cellData.isReserved"
-         tooltipPosition="top"
-         [tooltipStyleClass]="'reservation-tooltip'">
-        {{ cellData.displayText }}
-    </div> -->
-    <div
-        [ngClass]="getCellClasses(cellData)"
-        [style.background-color]="cellData.color"
-        [class]="cellData.identifier"
-        
-    >
-        {{ cellData.displayText }}
-    </div>
-</ng-template>

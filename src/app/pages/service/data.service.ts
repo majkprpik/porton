@@ -703,6 +703,154 @@ export class DataService {
     );
   }
 
+  // Method to save a house availability to the backend
+  saveHouseAvailability(reservation: HouseAvailability): Observable<HouseAvailability | null> {
+    this.loadingSubject.next(true);
+    
+    // Remove house_availability_id if it's a new reservation (backend will generate it)
+    const saveData = { ...reservation };
+    if (saveData.house_availability_id && saveData.house_availability_id > 1000000) {
+      // If it's a temporary ID (we used a large number), remove it
+      delete (saveData as any).house_availability_id;
+    }
+    
+    // Ensure we only include fields that exist in the house_availabilities table
+    // Remove any fields that might be accidentally included but don't exist
+    const validFields = [
+      'house_availability_id',
+      'house_id',
+      'house_availability_type_id',
+      'house_availability_start_date',
+      'house_availability_end_date',
+      'has_arrived',
+      'has_departed',
+      'last_name',
+      'reservation_number',
+      'reservation_length',
+      'prev_connected',
+      'next_connected',
+      'adults',
+      'babies',
+      'cribs',
+      'dogs_d',
+      'dogs_s',
+      'dogs_b',
+      'color_theme',
+      'color_tint'
+    ];
+    
+    // Create clean object with only valid fields
+    const cleanSaveData: any = {};
+    for (const field of validFields) {
+      if (field in saveData) {
+        cleanSaveData[field] = (saveData as any)[field];
+      }
+    }
+    
+    return from(this.supabaseService.insertData('house_availabilities', cleanSaveData, this.schema)).pipe(
+      tap((data) => {
+        if (data && data.length > 0) {
+          // Update the local BehaviorSubject with the new data
+          const currentAvailabilities = this.houseAvailabilitiesSubject.value;
+          this.houseAvailabilitiesSubject.next([...currentAvailabilities, data[0]]);
+          this.logData('Created House Availability', data[0]);
+        }
+      }),
+      map((data) => (data && data.length > 0 ? data[0] : null)),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to update an existing house availability (reservation)
+  updateHouseAvailability(reservation: HouseAvailability): Observable<HouseAvailability | null> {
+    this.loadingSubject.next(true);
+    
+    // Make sure we have a valid ID
+    if (!reservation.house_availability_id) {
+      console.error('Cannot update house availability without an ID');
+      return throwError(() => new Error('Missing house_availability_id'));
+    }
+    
+    // Create a copy of the reservation data for the update
+    const updateData = { ...reservation };
+    const availabilityId = updateData.house_availability_id;
+    
+    // Ensure we only include fields that exist in the house_availabilities table
+    // Remove any fields that might be accidentally included but don't exist
+    const validFields = [
+      'house_availability_id',
+      'house_id',
+      'house_availability_type_id',
+      'house_availability_start_date',
+      'house_availability_end_date',
+      'has_arrived',
+      'has_departed',
+      'last_name',
+      'reservation_number',
+      'reservation_length',
+      'prev_connected',
+      'next_connected',
+      'adults',
+      'babies',
+      'cribs',
+      'dogs_d',
+      'dogs_s',
+      'dogs_b',
+      'color_theme',
+      'color_tint'
+    ];
+    
+    // Create clean object with only valid fields
+    const cleanUpdateData: any = {};
+    for (const field of validFields) {
+      if (field in updateData) {
+        cleanUpdateData[field] = (updateData as any)[field];
+      }
+    }
+    
+    return from(this.supabaseService.updateData('house_availabilities', cleanUpdateData, availabilityId.toString(), this.schema)).pipe(
+      tap((data) => {
+        if (data && data.length > 0) {
+          // Update the local BehaviorSubject with the updated data
+          const currentAvailabilities = this.houseAvailabilitiesSubject.value;
+          const updatedAvailabilities = currentAvailabilities.map(avail => 
+            avail.house_availability_id === availabilityId ? data[0] : avail
+          );
+          this.houseAvailabilitiesSubject.next(updatedAvailabilities);
+          this.logData('Updated House Availability', data[0]);
+        }
+      }),
+      map((data) => (data && data.length > 0 ? data[0] : null)),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to delete a house availability (reservation) from the backend
+  deleteHouseAvailability(availabilityId: number): Observable<any> {
+    this.loadingSubject.next(true);
+    
+    // Create the filter condition string
+    const filterCondition = `house_availability_id = ${availabilityId}`;
+    
+    return from(this.supabaseService.deleteData('house_availabilities', filterCondition, this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          // Remove the deleted availability from local state
+          const currentAvailabilities = this.houseAvailabilitiesSubject.value;
+          const updatedAvailabilities = currentAvailabilities.filter(
+            availability => availability.house_availability_id !== availabilityId
+          );
+          this.houseAvailabilitiesSubject.next(updatedAvailabilities);
+          this.logData('Deleted House Availability', { house_availability_id: availabilityId });
+        }
+      }),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
   async getHomesForDate(date: string): Promise<HouseStatus[]> {
     try {
       const { data, error } = await this.supabaseService.getClient()
