@@ -24,23 +24,46 @@ import { WorkGroupService } from './work-group.service';
         }
 
         <app-staff-group
-          groupName="Cleaner"
-          groupIcon="pi pi-home"
-          [staffMembers]="getProfilesByRole('cleaner')"
+          groupName="UPRAVA"
+          groupIcon="pi pi-briefcase"
+          [staffMembers]="getProfilesByRoles(managementRoles)"
         ></app-staff-group>
 
         <app-staff-group
-          groupName="Maintenance"
-          groupIcon="pi pi-wrench"
-          [staffMembers]="getProfilesByRole('maintenance')"
+          groupName="ODJEL RECEPCIJA"
+          groupIcon="pi pi-users"
+          [staffMembers]="getProfilesByRoles(receptionRoles)"
         ></app-staff-group>
+
+        <app-staff-group
+          groupName="ODJEL DOMAĆINSTVA"
+          groupIcon="pi pi-home"
+          [staffMembers]="getProfilesByRoles(housekeepingRoles)"
+        ></app-staff-group>
+
+        <app-staff-group
+          groupName="ODJEL TEHNIKA"
+          groupIcon="pi pi-wrench"
+          [staffMembers]="getProfilesByRoles(technicalRoles)"
+        ></app-staff-group>
+
+        @if (getProfilesByRoles(otherRoles).length > 0) {
+          <app-staff-group
+            groupName="OSTALO"
+            groupIcon="pi pi-circle"
+            [staffMembers]="getProfilesByRoles(otherRoles)"
+          ></app-staff-group>
+        }
 
         <!-- @if (debug) {
           <div class="debug-info">
             <h4>Debug Information</h4>
             <p>Total Profiles: {{profiles.length}}</p>
-            <p>Cleaners: {{getProfilesByRole('cleaner').length}}</p>
-            <p>Maintenance: {{getProfilesByRole('maintenance').length}}</p>
+            <p>Management: {{getProfilesByRoles(managementRoles).length}}</p>
+            <p>Reception: {{getProfilesByRoles(receptionRoles).length}}</p>
+            <p>Housekeeping: {{getProfilesByRoles(housekeepingRoles).length}}</p>
+            <p>Technical: {{getProfilesByRoles(technicalRoles).length}}</p>
+            <p>Other: {{getProfilesByRoles(otherRoles).length}}</p>
             <div class="roles-list">
               <h5>Available Roles:</h5>
               <ul>
@@ -124,6 +147,13 @@ export class StaffGroups implements OnInit {
   debug = true; // Enable debug mode
   activeWorkGroupId?: number;
 
+  // Role categories, matching the ones in ProfilesComponent
+  managementRoles = ['voditelj_kampa', 'savjetnik_uprave'];
+  receptionRoles = ['voditelj_recepcije', 'recepcija', 'customer_service', 'nocni_recepcioner', 'prodaja'];
+  housekeepingRoles = ['voditelj_domacinstva', 'sobarica', 'terase'];
+  technicalRoles = ['kucni_majstor', 'odrzavanje'];
+  otherRoles: string[] = [];
+
   constructor(
     private dataService: DataService,
     private workGroupService: WorkGroupService
@@ -147,6 +177,29 @@ export class StaffGroups implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  getProfilesByRoles(roles: string[]): Profile[] {
+    if (roles === this.otherRoles) {
+      // For "Other" category, get profiles that don't match any of the defined categories
+      return this.profiles.filter(profile => 
+        !profile.role || 
+        (!this.managementRoles.includes(profile.role) && 
+         !this.receptionRoles.includes(profile.role) && 
+         !this.housekeepingRoles.includes(profile.role) && 
+         !this.technicalRoles.includes(profile.role))
+      );
+    }
+    
+    return this.profiles.filter(profile => 
+      profile.role && roles.includes(profile.role)
+    ).sort(this.sortByName);
+  }
+
+  sortByName(a: Profile, b: Profile): number {
+    const nameA = `${a.first_name || ''} ${a.last_name || ''}`.toLowerCase();
+    const nameB = `${b.first_name || ''} ${b.last_name || ''}`.toLowerCase();
+    return nameA.localeCompare(nameB);
   }
 
   getProfilesByRole(role: string): Profile[] {
