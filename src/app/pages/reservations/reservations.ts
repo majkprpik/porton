@@ -258,8 +258,8 @@ export class Reservations implements OnInit, OnDestroy {
 
     private generateDays(): Date[] {
         const days: Date[] = [];
-        const startDate = new Date(2025, 3, 1); // April 1st 2025 (month is 0-based)
-        const endDate = new Date(2025, 9, 30); // October 30th 2025
+        const startDate = new Date(2025, 2, 31); // March 31st 2025 (month is 0-based)
+        const endDate = new Date(2025, 10, 15); // November 15th 2025
 
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
             days.push(new Date(d));
