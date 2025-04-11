@@ -25,21 +25,19 @@ import { MessageService } from 'primeng/api';
   providers: [MessageService],
   template: `
     <div class="card">
-      <h1>Profile Management</h1>
+      <h1>Upravljanje profilima</h1>
       <p-table [value]="profiles" [tableStyle]="{'min-width': '50rem'}">
         <ng-template pTemplate="header">
           <tr>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Role</th>
-            <th>Actions</th>
+            <th>Ime</th>
+            <th>Pozicija</th>
+            <th>Akcije</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-profile>
           <tr>
             <td>{{ profile.first_name }} {{ profile.last_name }}</td>
-            <td>{{ profile.phone_number }}</td>
-            <td>{{ profile.role }}</td>
+            <td>{{ getRoleLabel(profile.role) }}</td>
             <td>
               <p-button 
                 icon="pi pi-pencil" 
@@ -115,18 +113,18 @@ export class ProfilesComponent implements OnInit {
   selectedProfile: Profile | null = null;
   
   availableRoles = [
-    { label: 'voditelj kampa', value: 'manager' },
-    { label: 'savjetnik uprave', value: 'manager' },
-    { label: 'Voditelj recepcije', value: 'manager' },
-    { label: 'recepcija', value: 'manager' },
-    { label: 'customer service', value: 'manager' },
-    { label: 'noćni recepcioner', value: 'manager' },
-    { label: 'prodaja', value: 'manager' },
-    { label: 'voditelj domaćinstva', value: 'manager' },
-    { label: 'sobarica', value: 'cleaner' },
-    { label: 'terase', value: 'cleaner' },
-    { label: 'kućni majstor', value: 'maintenance' },
-    { label: 'održavanje', value: 'maintenance' }
+    { label: 'voditelj kampa', value: 'voditelj_kampa' },
+    { label: 'savjetnik uprave', value: 'savjetnik_uprave' },
+    { label: 'Voditelj recepcije', value: 'voditelj_recepcije' },
+    { label: 'recepcija', value: 'recepcija' },
+    { label: 'customer service', value: 'customer_service' },
+    { label: 'noćni recepcioner', value: 'nocni_recepcioner' },
+    { label: 'prodaja', value: 'prodaja' },
+    { label: 'voditelj domaćinstva', value: 'voditelj_domacinstva' },
+    { label: 'sobarica', value: 'sobarica' },
+    { label: 'terase', value: 'terase' },
+    { label: 'kućni majstor', value: 'kucni_majstor' },
+    { label: 'održavanje', value: 'odrzavanje' }
   ];
 
   constructor(
@@ -136,7 +134,11 @@ export class ProfilesComponent implements OnInit {
 
   ngOnInit() {
     this.dataService.profiles$.subscribe(profiles => {
-      this.profiles = profiles;
+      this.profiles = profiles.sort((a, b) => {
+        const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+        const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
     });
   }
 
@@ -176,5 +178,10 @@ export class ProfilesComponent implements OnInit {
         }
       });
     }
+  }
+
+  getRoleLabel(roleValue: string): string {
+    const role = this.availableRoles.find(r => r.value === roleValue);
+    return role ? role.label : roleValue;
   }
 }
