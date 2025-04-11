@@ -65,6 +65,7 @@ export interface LockedTeam {
   homes?: House[];
   tasks?: Task[];
   isLocked?: boolean;
+  isPublished?: boolean;
 }
 
 export interface WorkGroupProfile {
@@ -199,7 +200,7 @@ export class DataService {
   $tasksUpdate = new BehaviorSubject<any>('');
   $workGroupTasksUpdate = new BehaviorSubject<any>('');
   $workGroupProfiles = new BehaviorSubject<any>('');
-  $workGroups = new BehaviorSubject<any>('');
+  $workGroupsUpdate = new BehaviorSubject<any>('');
 
   constructor(private supabaseService: SupabaseService) {
     // Load all enum types when service is initialized
@@ -284,6 +285,10 @@ export class DataService {
   // Method to get schema name
   getSchema(): string {
     return this.schema;
+  }
+
+  updateWorkGroups(workGroups: WorkGroup[]){
+    this.workGroupsSubject.next(workGroups);
   }
 
   updateTasksSubject(tasks: any){
@@ -1203,6 +1208,7 @@ export class DataService {
 
   async updateTaskProgressType1(taskId: number, taskProgressTypeId: number){
     try{
+      this.loadingSubject.next(true);
       const { data: task, error: taskError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
@@ -1212,9 +1218,12 @@ export class DataService {
 
       if(taskError) throw taskError
 
+      
+      this.loadingSubject.next(false);
       return task;
     } catch (error) {
       console.error('Error fetching task type ids', error);
+      this.loadingSubject.next(false);
       return null;
     }
   }
@@ -1513,7 +1522,7 @@ export class DataService {
         table: 'work_groups'
       },
       async (payload: any) => {
-        this.$workGroups.next(payload);
+        this.$workGroupsUpdate.next(payload);
       }
     )
     .subscribe();

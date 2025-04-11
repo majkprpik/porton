@@ -426,7 +426,7 @@ export class WorkGroup implements OnInit {
           members: this.assignedStaff,
           tasks: this.assignedTasks,
           homes: [],
-          isLocked: true,
+          isLocked: this.workGroup.is_locked,
         });
       }
 

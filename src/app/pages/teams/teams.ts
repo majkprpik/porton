@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { DataService, WorkGroup, Profile, Task, House, LockedTeam, TaskProgressType, TaskType } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, LockedTeam, TaskProgressType, TaskType, WorkGroupTask } from '../service/data.service';
 import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
@@ -307,6 +307,7 @@ export class Teams implements OnInit {
     teams: LockedTeam[] = [];
     taskProgressTypes: TaskProgressType[] = [];
     taskTypes: TaskType[] = [];
+    allWorkGroupTasks: WorkGroupTask[] = [];
 
     constructor(
         private dataService: DataService,
@@ -318,7 +319,6 @@ export class Teams implements OnInit {
         // Use combineLatest to wait for all required data
         combineLatest([
             this.dataService.workGroups$,
-            this.dataService.workGroupTasks$,
             this.dataService.tasks$,
             this.dataService.workGroupProfiles$,
             this.dataService.profiles$,
@@ -327,7 +327,7 @@ export class Teams implements OnInit {
             this.dataService.taskProgressTypes$,
             this.dataService.taskTypes$,
         ]).subscribe({
-            next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, teams, taskProgressTypes, taskTypes]) => {
+            next: ([workGroups, tasks, workGroupProfiles, profiles, houses, teams, taskProgressTypes, taskTypes]) => {
                 this.workGroups = workGroups;
                 this.allTasks = tasks;
                 this.allProfiles = profiles;
@@ -336,18 +336,6 @@ export class Teams implements OnInit {
                 this.taskProgressTypes = taskProgressTypes;
                 this.taskTypes = taskTypes;
                 
-                // Map work group tasks
-                this.workGroupTasks = {};
-                workGroupTasks.forEach(workGroupTask => {
-                    if (!this.workGroupTasks[workGroupTask.work_group_id]) {
-                        this.workGroupTasks[workGroupTask.work_group_id] = [];
-                    }
-                    const task = tasks.find(t => t.task_id === workGroupTask.task_id);
-                    if (task) {
-                        this.workGroupTasks[workGroupTask.work_group_id].push(task);
-                    }
-                });
-
                 // Map work group staff
                 this.workGroupStaff = {};
                 workGroupProfiles.forEach(assignment => {
@@ -356,7 +344,7 @@ export class Teams implements OnInit {
                     }
                     const profile = profiles.find(p => p.id === assignment.profile_id);
                     if (profile) {
-                        this.workGroupStaff[assignment.work_group_id].push(profile);
+                        this.workGroupStaff[assignment.work_group_id] = [...this.workGroupStaff[assignment.work_group_id], profile];
                     }
                 });
 
@@ -368,22 +356,50 @@ export class Teams implements OnInit {
             }
         });
 
-        this.dataService.$workGroups.subscribe(res => {
+        this.dataService.workGroupTasks$.subscribe(workGroupTasks => {
+            this.allWorkGroupTasks = workGroupTasks;
+            this.workGroupTasks = {};
+
+            workGroupTasks.forEach(workGroupTask => {
+                if (!this.workGroupTasks[workGroupTask.work_group_id]) {
+                    this.workGroupTasks[workGroupTask.work_group_id] = [];
+                }
+                const task = this.allTasks.find(t => t.task_id === workGroupTask.task_id);
+                if (task) {
+                    this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], task];
+                }
+            });
+        });
+
+        this.dataService.$workGroupsUpdate.subscribe(res => {
           if(res && res.eventType == 'INSERT') {
-            if(!this.teams.find((team: LockedTeam) => team.id == res.new.work_group_id)) {
-              let newLockedTeam: LockedTeam = {
-                homes: [],
-                id: res.new.work_group_id.toString(),
-                isLocked: false,
-                members: [],
-                name: "Team " + res.new.work_group_id,
-                tasks: [],
-              }
-              this.teams.push(newLockedTeam);
+            if(!this.workGroups.find(wg => wg.work_group_id == res.new.work_group_id)) {
+                this.workGroups = [...this.workGroups, res.new];
+                this.dataService.updateWorkGroups(this.workGroups);
             }
           } else if(res && res.eventType == 'DELETE') {
-            this.teams = this.teams.filter((team: LockedTeam) => team.id != res.old.work_group_id);
-            this.teamsService.updateLockedTeams(this.teams);
+                this.workGroups = this.workGroups.filter(wg => wg.work_group_id != res.old.work_group_id);
+          }
+        });
+
+        this.dataService.$workGroupTasksUpdate.subscribe(res => {
+          if(res && res.eventType == 'INSERT'){
+            if(!this.workGroupTasks[res.new.work_group_id]){
+                this.workGroupTasks[res.new.work_group_id] = [];
+            }
+
+            if(!this.workGroupTasks[res.new.work_group_id].some(task => task.task_id == res.new.task_id)){
+                let task = this.allTasks.find(task => task.task_id == res.new.task_id);
+                if(task){
+                    this.workGroupTasks[res.new.work_group_id] = [...this.workGroupTasks[res.new.work_group_id], task];
+                    this.allWorkGroupTasks = [...this.allWorkGroupTasks, res.new];
+                }
+            }
+        
+            this.dataService.setWorkGroupTasks(this.allWorkGroupTasks);
+          } else if(res && res.eventType == 'DELETE'){
+                this.workGroupTasks[res.old.work_group_id] = this.workGroupTasks[res.old.work_group_id].filter(task => task.task_id != res.old.task_id);
+                this.allWorkGroupTasks = this.allWorkGroupTasks.filter(wgt => wgt.task_id != res.old.task_id);
           }
         });
     }

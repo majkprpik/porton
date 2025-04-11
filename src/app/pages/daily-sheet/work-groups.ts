@@ -203,7 +203,7 @@ export class WorkGroups implements OnInit {
             if(task.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
               task.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
             }
-            this.workGroupTasks[workGroupTask.work_group_id].push(task);
+            this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], task];
           }
         });
 
@@ -215,7 +215,7 @@ export class WorkGroups implements OnInit {
           }
           const profile = profiles.find(p => p.id === assignment.profile_id);
           if (profile) {
-            this.workGroupStaff[assignment.work_group_id].push(profile);
+            this.workGroupStaff[assignment.work_group_id] = [...this.workGroupStaff[assignment.work_group_id], profile];
           }
         });
 
@@ -233,7 +233,7 @@ export class WorkGroups implements OnInit {
                 members: this.workGroupStaff[workGroup.work_group_id],
                 tasks: this.workGroupTasks[workGroup.work_group_id],
                 homes: [],
-                isLocked: activeGroupId != workGroup.work_group_id,       
+                isLocked: workGroup.is_locked,       
               });
             });
             this.workGroupService.setLockedTeams(this.lockedTeams);
@@ -362,29 +362,29 @@ export class WorkGroups implements OnInit {
   async publishWorkGroups() {
     let lockedWorkGroups = this.workGroupService.getLockedTeams();
     let assignedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Dodijeljeno");
+    let unlockedWorkGroupsCount = lockedWorkGroups.filter(lwg => !lwg.isLocked).length;
 
-    for (const lockedWorkGroup of lockedWorkGroups) {
-      await this.workGroupService.lockWorkGroup(parseInt(lockedWorkGroup.id));
-    }
-  
-    for (const lockedWorkGroup of lockedWorkGroups) {
-      await this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(parseInt(lockedWorkGroup.id));
-    }
-  
-    for (const lockedWorkGroup of lockedWorkGroups) {
-      if(!lockedWorkGroup.tasks){
-        lockedWorkGroup.tasks = [];
-      }
+    for(let lockedWorkGroup of lockedWorkGroups){
+      if(!lockedWorkGroup.isLocked){
+        await this.workGroupService.lockWorkGroup(parseInt(lockedWorkGroup.id));
+        await this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(parseInt(lockedWorkGroup.id));
 
-      for (const [index, task] of lockedWorkGroup.tasks.entries()) {
-        await this.workGroupService.createWorkGroupTask(parseInt(lockedWorkGroup.id), task.task_id, index);
-      }
+        if(!lockedWorkGroup.tasks){
+          lockedWorkGroup.tasks = [];
+        }
 
-      for (const task of lockedWorkGroup.tasks){
-        let updatedTask = await this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
+        for (const [index, task] of lockedWorkGroup.tasks.entries()) {
+          await this.workGroupService.createWorkGroupTask(parseInt(lockedWorkGroup.id), task.task_id, index);
+        }
+
+        for (const task of lockedWorkGroup.tasks){
+          await this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
+        }
       }
     }
-    
-    window.location.reload();
+
+    if(unlockedWorkGroupsCount){
+      window.location.reload();
+    }
   }
 } 

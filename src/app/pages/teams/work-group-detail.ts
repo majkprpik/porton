@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
-import { DataService, WorkGroup, Profile, Task, House, TeamTask } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, TaskType } from '../service/data.service';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { TeamService } from '../service/team.service';
@@ -247,7 +247,7 @@ export class WorkGroupDetail implements OnInit {
     assignedTasks: Task[] = [];
     team: any;
     teams: any[] = [];
-    taskTypes: any;
+    taskTypes: TaskType[] = [];
     progressTypes: any;
     assignedStaff: Profile[] = [];
     houses: House[] = [];
@@ -311,8 +311,9 @@ export class WorkGroupDetail implements OnInit {
       this.dataService.$workGroupTasksUpdate.subscribe(async res => {
         if(res && res.eventType == 'INSERT'){
             const task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
-            const workGroupTask = this.workGroupTasks.find((wgt: any)=> wgt.task_id == task.task_id);
-            this.assignedTasks = [...this.assignedTasks, task];
+            if(!this.assignedTasks.some(at => at.task_id == task.task_id)){
+                this.assignedTasks = [...this.assignedTasks, task];
+            }
         } else if(res && res.eventType == 'DELETE'){
             this.assignedTasks = this.assignedTasks.filter(task => task.task_id != res.old.task_id);
         }
@@ -353,14 +354,20 @@ export class WorkGroupDetail implements OnInit {
     }
 
     getTaskTypeIcon(taskTypeId: number): string {
-        switch (taskTypeId) {
-            case 1: // Cleaning
-                return 'pi pi-home';
-            case 2: // Maintenance
-                return 'pi pi-wrench';
-            default:
-                return 'pi pi-question';
-        }
+        switch(taskTypeId){
+            case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
+              return 'pi pi-home';
+            case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
+              return 'pi pi-table';
+            case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
+              return 'pi pi-inbox';
+            case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
+              return 'pi pi-bookmark';
+            case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
+              return 'pi pi-wrench';
+            default: 
+              return 'pi pi-file';
+          }
     }
 
     isTaskCompleted(task: Task): boolean {
