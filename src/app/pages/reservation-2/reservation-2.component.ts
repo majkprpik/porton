@@ -86,7 +86,8 @@ export class Reservation2Component implements OnInit, OnDestroy {
             autoRowSize: false,
             autoColumnSize: false,
             // Ensure headers are properly sized
-            renderAllRows: false,
+            renderAllRows: true,
+            renderAllColumns: true,
             // Replace simple boolean with custom context menu
             contextMenu: {
                 items: {
