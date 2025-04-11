@@ -115,10 +115,18 @@ export class ProfilesComponent implements OnInit {
   selectedProfile: Profile | null = null;
   
   availableRoles = [
-    { label: 'Cleaner', value: 'cleaner' },
-    { label: 'Maintenance', value: 'maintenance' },
-    { label: 'Main Cleaner', value: 'main_cleaner' },
-    { label: 'Manager', value: 'manager' }
+    { label: 'voditelj kampa', value: 'manager' },
+    { label: 'savjetnik uprave', value: 'manager' },
+    { label: 'Voditelj recepcije', value: 'manager' },
+    { label: 'recepcija', value: 'manager' },
+    { label: 'customer service', value: 'manager' },
+    { label: 'noćni recepcioner', value: 'manager' },
+    { label: 'prodaja', value: 'manager' },
+    { label: 'voditelj domaćinstva', value: 'manager' },
+    { label: 'sobarica', value: 'cleaner' },
+    { label: 'terase', value: 'cleaner' },
+    { label: 'kućni majstor', value: 'maintenance' },
+    { label: 'održavanje', value: 'maintenance' }
   ];
 
   constructor(
