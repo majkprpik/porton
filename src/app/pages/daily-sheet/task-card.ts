@@ -175,7 +175,7 @@ export class TaskCardComponent {
 
   constructor(
     private taskService: TaskService,
-    private workGroupService: WorkGroupService
+    private workGroupService: WorkGroupService,
   ) {
     
   }

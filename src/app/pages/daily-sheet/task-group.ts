@@ -1,11 +1,10 @@
 import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskCardComponent } from './task-card';
-import { Task, TaskType, TaskProgressType, DataService } from '../service/data.service';
+import { Task, TaskType, TaskProgressType, DataService, House } from '../service/data.service';
 import { TaskState } from './task-card';
 import { PanelModule } from 'primeng/panel';
 import { BadgeModule } from 'primeng/badge';
-import { WorkGroupService } from './work-group.service';
 
 @Component({
   selector: 'app-task-group',
@@ -29,7 +28,7 @@ import { WorkGroupService } from './work-group.service';
       <div class="task-grid">
         @for (task of filteredTasks; track task.task_id) {
           <app-task-card 
-            [houseNumber]="task.house_id"
+            [houseNumber]="getHouseNumber(task.house_id)"
             [state]="getTaskState(task.task_progress_type_id)"
             [taskIcon]="getTaskIcon(task.task_type_id)"
             [task]="task"
@@ -109,6 +108,8 @@ export class TaskGroupComponent implements OnInit {
   
   progressTypes: TaskProgressType[] = [];
   workGroupTasks: { work_group_id: number; task_id: number }[] = [];
+  houses: House[] = [];
+  taskTypes: TaskType[] = [];
 
   constructor(
     private dataService: DataService,
@@ -122,6 +123,14 @@ export class TaskGroupComponent implements OnInit {
     this.dataService.workGroupTasks$.subscribe(tasks => {
       this.workGroupTasks = tasks;
     });
+
+    this.dataService.houses$.subscribe(houses => {
+      this.houses = houses;
+    });
+
+    this.dataService.taskTypes$.subscribe(taskTypes => {
+      this.taskTypes = taskTypes;
+    })
   } 
 
   get filteredTasks(): Task[] {
@@ -135,6 +144,11 @@ export class TaskGroupComponent implements OnInit {
     return ftsks;
   }
 
+  
+  getHouseNumber(houseId: number){
+    return this.houses.find(house => house.house_id == houseId)?.house_number ?? 0;
+  }
+
   getProgressTypeIdByName(progressTypeName: string){
     return this.progressTypes.find(progressType => progressType.task_progress_type_name == progressTypeName)?.task_progress_type_id
   }
@@ -145,22 +159,33 @@ export class TaskGroupComponent implements OnInit {
 
   getTaskState(progressTypeId: number): TaskState {
     switch (progressTypeId) {
-      case 151: return 'in-progress';  // "U progresu"
-      case 152: return 'completed';    // "Završeno"
-      case 149: return 'pending';      // "Nije dodijeljeno"
-      case 150: return 'pending';      // "Dodijeljeno"
-      default: return 'pending';
+      case this.progressTypes.find(tp => tp.task_progress_type_name == "U progresu")?.task_progress_type_id: 
+        return 'in-progress';  // "U progresu"
+      case this.progressTypes.find(tp => tp.task_progress_type_name == "Završeno")?.task_progress_type_id: 
+        return 'completed';    // "Završeno"
+      case this.progressTypes.find(tp => tp.task_progress_type_name == "Nije dodijeljeno")?.task_progress_type_id: 
+        return 'pending';      // "Nije dodijeljeno"
+      case this.progressTypes.find(tp => tp.task_progress_type_name == "Dodijeljeno")?.task_progress_type_id: 
+        return 'pending';      // "Dodijeljeno"
+      default: 
+        return 'pending';
     }
   }
 
   getTaskIcon(taskTypeId: number): string {
-    const iconMap: { [key: number]: string } = {
-      56: 'pi pi-home',      // Čišćenje kućice
-      57: 'pi pi-table',     // Čišćenje terase
-      59: 'pi pi-inbox',     // Mijenjanje posteljine
-      60: 'pi pi-bookmark',  // Mijenjanje ručnika
-      58: 'pi pi-wrench'     // Popravak
-    };
-    return iconMap[taskTypeId] || 'pi pi-file';
+    switch(taskTypeId){
+      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
+        return 'pi pi-home';
+      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
+        return 'pi pi-table';
+      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
+        return 'pi pi-inbox';
+      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
+        return 'pi pi-bookmark';
+      case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
+        return 'pi pi-wrench';
+      default: 
+        return 'pi pi-file';
+    }
   }
 } 

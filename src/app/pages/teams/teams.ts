@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { DataService, WorkGroup, Profile, Task, House, LockedTeam } from '../service/data.service';
-import { WorkGroupService } from '../daily-sheet/work-group.service';
+import { DataService, WorkGroup, Profile, Task, House, LockedTeam, TaskProgressType, TaskType } from '../service/data.service';
 import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
@@ -306,10 +305,11 @@ export class Teams implements OnInit {
     allProfiles: Profile[] = [];
     houses: House[] = [];
     teams: LockedTeam[] = [];
+    taskProgressTypes: TaskProgressType[] = [];
+    taskTypes: TaskType[] = [];
 
     constructor(
         private dataService: DataService,
-        private workGroupService: WorkGroupService,
         private router: Router,
         private teamsService: TeamService,
     ) {}
@@ -324,13 +324,17 @@ export class Teams implements OnInit {
             this.dataService.profiles$,
             this.dataService.houses$,
             this.teamsService.lockedTeams$,
+            this.dataService.taskProgressTypes$,
+            this.dataService.taskTypes$,
         ]).subscribe({
-            next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, teams]) => {
+            next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, teams, taskProgressTypes, taskTypes]) => {
                 this.workGroups = workGroups;
                 this.allTasks = tasks;
                 this.allProfiles = profiles;
                 this.houses = houses;
                 this.teams = teams;
+                this.taskProgressTypes = taskProgressTypes;
+                this.taskTypes = taskTypes;
                 
                 // Map work group tasks
                 this.workGroupTasks = {};
@@ -456,14 +460,20 @@ export class Teams implements OnInit {
     }
 
     getTaskTypeIcon(taskTypeId: number): string {
-        switch (taskTypeId) {
-            case 1: // Cleaning
-                return 'pi pi-home';
-            case 2: // Maintenance
-                return 'pi pi-wrench';
-            default:
-                return 'pi pi-question';
-        }
+        switch(taskTypeId){
+            case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
+              return 'pi pi-home';
+            case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
+              return 'pi pi-table';
+            case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
+              return 'pi pi-inbox';
+            case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
+              return 'pi pi-bookmark';
+            case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
+              return 'pi pi-wrench';
+            default: 
+              return 'pi pi-file';
+          }
     }
 
     getStaffFullName(staff: Profile): string {
