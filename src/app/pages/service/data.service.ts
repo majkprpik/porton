@@ -123,6 +123,7 @@ export interface HouseAvailability {
   dogs_b: number;
   color_theme: number;
   color_tint: number;
+  description?: string | null;
 }
 
 // Interface for house status task

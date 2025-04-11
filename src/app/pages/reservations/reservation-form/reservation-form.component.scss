@@ -1,11 +1,13 @@
 :host ::ng-deep {
     .p-dialog {
         .p-dialog-header {
-            padding: 1rem;
+            padding: 1rem 1.5rem;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
         }
         
         .p-dialog-content {
-            padding: 1rem;
+            padding: 1.5rem;
         }
         
         .p-dialog-footer {
@@ -13,12 +15,55 @@
         }
     }
     
+    // Simple two-column grid layout
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr; // One column by default (mobile)
+        gap: 1rem;
+        
+        @media (min-width: 768px) {
+            grid-template-columns: 1fr 1fr; // Two columns on wider screens
+        }
+    }
+    
+    // Each form column
+    .form-col {
+        padding: 0 0.5rem;
+    }
+    
     .field {
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
         
         label {
-            display: block;
+            font-weight: 500;
             margin-bottom: 0.5rem;
+            display: block;
         }
+    }
+    
+    // Full width inputs
+    .p-calendar, 
+    .p-inputnumber,
+    input[type="text"],
+    textarea {
+        width: 100%;
+    }
+    
+    textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .p-error {
+        margin-top: 0.25rem;
+        color: #dc3545;
+        font-size: 0.875rem;
+        padding: 0.5rem;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-radius: 4px;
+    }
+
+    .mt-3 {
+        margin-top: 1rem;
     }
 } 

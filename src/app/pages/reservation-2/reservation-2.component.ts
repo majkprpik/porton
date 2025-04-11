@@ -86,27 +86,27 @@ export class Reservation2Component implements OnInit, OnDestroy {
             autoRowSize: false,
             autoColumnSize: false,
             // Ensure headers are properly sized
-            renderAllRows: true,
+            renderAllRows: false,
             // Replace simple boolean with custom context menu
             contextMenu: {
                 items: {
-                    viewReservation: {
-                        name: '<i class="pi pi-eye"></i> View Reservation',
-                        callback: (key: string, selection: any[]) => {
-                            const [row, col] = [selection[0].start.row, selection[0].start.col];
-                            this.handleViewReservation(row, col);
-                        },
-                        disabled: () => {
-                            // Access hot instance via any type to bypass type checking
-                            const hot = this.hotTableComponent ? (this.hotTableComponent as any).hotInstance : null;
-                            const sel = hot?.getSelected();
-                            if (sel && sel.length > 0) {
-                                const [row, col] = [sel[0][0], sel[0][1]];
-                                return !this.hasCellReservation(row, col);
-                            }
-                            return true;
-                        }
-                    },
+                    // viewReservation: {
+                    //     name: '<i class="pi pi-eye"></i> View Reservation',
+                    //     callback: (key: string, selection: any[]) => {
+                    //         const [row, col] = [selection[0].start.row, selection[0].start.col];
+                    //         this.handleViewReservation(row, col);
+                    //     },
+                    //     disabled: () => {
+                    //         // Access hot instance via any type to bypass type checking
+                    //         const hot = this.hotTableComponent ? (this.hotTableComponent as any).hotInstance : null;
+                    //         const sel = hot?.getSelected();
+                    //         if (sel && sel.length > 0) {
+                    //             const [row, col] = [sel[0][0], sel[0][1]];
+                    //             return !this.hasCellReservation(row, col);
+                    //         }
+                    //         return true;
+                    //     }
+                    // },
                     editReservation: {
                         name: '<i class="pi pi-pencil"></i> Edit Reservation',
                         callback: (key: string, selection: any[]) => {
@@ -147,6 +147,16 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         callback: (key: string, selection: any[]) => {
                             const [row, col] = [selection[0].start.row, selection[0].start.col];
                             this.handleAddReservation(row, col);
+                        },
+                        disabled: () => {
+                            // Access hot instance via any type to bypass type checking
+                            const hot = this.hotTableComponent ? (this.hotTableComponent as any).hotInstance : null;
+                            const sel = hot?.getSelected();
+                            if (sel && sel.length > 0) {
+                                const [row, col] = [sel[0][0], sel[0][1]];
+                                return this.hasCellReservation(row, col);
+                            }
+                            return false;
                         }
                     },
                     // bulkReservation: {
@@ -267,62 +277,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
             .subscribe(houses => {
                 this.houses.set(houses);
                 this.updateGridMatrix();
-                
-                // Add test data if no availabilities are available
-                if (this.houseAvailabilities().length === 0 && houses.length > 0) {
-                    console.log('Adding test data for debugging purposes');
-                    
-                    const testAvailabilities: HouseAvailability[] = [
-                        {
-                            house_availability_id: 9999,
-                            house_id: houses[0].house_id,
-                            house_availability_type_id: 1,
-                            house_availability_start_date: '2024-05-01',
-                            house_availability_end_date: '2024-05-03',
-                            has_arrived: true,
-                            has_departed: false,
-                            last_name: 'Smith',
-                            reservation_number: 'TEST-001',
-                            reservation_length: 3,
-                            prev_connected: false,
-                            next_connected: false,
-                            adults: 2,
-                            babies: 0,
-                            cribs: 0,
-                            dogs_d: 0,
-                            dogs_s: 0,
-                            dogs_b: 0,
-                            color_theme: 1,
-                            color_tint: 0.5
-                        },
-                        {
-                            house_availability_id: 10000,
-                            house_id: houses[houses.length > 1 ? 1 : 0].house_id,
-                            house_availability_type_id: 1,
-                            house_availability_start_date: '2024-05-10',
-                            house_availability_end_date: '2024-05-15',
-                            has_arrived: false,
-                            has_departed: false,
-                            last_name: 'Johnson',
-                            reservation_number: 'TEST-002',
-                            reservation_length: 6,
-                            prev_connected: false,
-                            next_connected: false,
-                            adults: 4,
-                            babies: 1,
-                            cribs: 1,
-                            dogs_d: 1,
-                            dogs_s: 0,
-                            dogs_b: 0,
-                            color_theme: 3,
-                            color_tint: 0.7
-                        }
-                    ];
-                    
-                    const currentAvailabilities = this.houseAvailabilities();
-                    this.houseAvailabilities.set([...currentAvailabilities, ...testAvailabilities]);
-                    this.updateGridMatrix();
-                }
             });
         
         // Subscribe to house availabilities data from DataService
@@ -1444,7 +1398,14 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     wtHolder.addEventListener('wheel', (e: Event) => {
                         const wheelEvent = e as WheelEvent;
                         const delta = Math.abs(wheelEvent.deltaX);
-                        // If horizontal scroll attempt detected, prevent default behavior
+                    
+                        // SPRIJEČI "BACK SWIPE" kad si na početku skrola
+                        if (wheelEvent.deltaX < 0 && (wtHolder as HTMLElement).scrollLeft === 0) {
+                            e.preventDefault();
+                            return;
+                        }
+                    
+                        // Spriječi propagaciju horizontalnog skrola
                         if (delta > Math.abs(wheelEvent.deltaY)) {
                             e.preventDefault();
                             (wtHolder as HTMLElement).scrollLeft += wheelEvent.deltaX;
