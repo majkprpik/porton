@@ -24,18 +24,6 @@ import { WorkGroupService } from './work-group.service';
         }
 
         <app-staff-group
-          groupName="UPRAVA"
-          groupIcon="pi pi-briefcase"
-          [staffMembers]="getProfilesByRoles(managementRoles)"
-        ></app-staff-group>
-
-        <app-staff-group
-          groupName="ODJEL RECEPCIJA"
-          groupIcon="pi pi-users"
-          [staffMembers]="getProfilesByRoles(receptionRoles)"
-        ></app-staff-group>
-
-        <app-staff-group
           groupName="ODJEL DOMAĆINSTVA"
           groupIcon="pi pi-home"
           [staffMembers]="getProfilesByRoles(housekeepingRoles)"
@@ -46,14 +34,28 @@ import { WorkGroupService } from './work-group.service';
           groupIcon="pi pi-wrench"
           [staffMembers]="getProfilesByRoles(technicalRoles)"
         ></app-staff-group>
+        
+        <app-staff-group
+        groupName="ODJEL RECEPCIJA"
+        groupIcon="pi pi-users"
+        [isExpanded]="false"
+        [staffMembers]="getProfilesByRoles(receptionRoles)"
+        ></app-staff-group>
+        
+        <app-staff-group
+          groupName="UPRAVA"
+          groupIcon="pi pi-briefcase"
+          [isExpanded]="false"
+          [staffMembers]="getProfilesByRoles(managementRoles)"
+        ></app-staff-group>
 
-        @if (getProfilesByRoles(otherRoles).length > 0) {
+        <!-- @if (getProfilesByRoles(otherRoles).length > 0) {
           <app-staff-group
             groupName="OSTALO"
             groupIcon="pi pi-circle"
             [staffMembers]="getProfilesByRoles(otherRoles)"
           ></app-staff-group>
-        }
+        } -->
 
         <!-- @if (debug) {
           <div class="debug-info">

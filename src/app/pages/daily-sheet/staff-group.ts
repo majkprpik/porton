@@ -103,9 +103,9 @@ export class StaffGroup implements OnInit, OnChanges {
   @Input() groupName: string = '';
   @Input() groupIcon: string = '';
   @Input() staffMembers: Profile[] = [];
+  @Input() isExpanded: boolean = true;
   @ViewChild('cm') contextMenu!: ContextMenu;
   
-  isExpanded: boolean = true;
   selectedProfile?: Profile;
   hasActiveWorkGroup: boolean = false;
   availableStaff: Profile[] = [];
