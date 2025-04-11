@@ -475,9 +475,26 @@ export class WorkGroup implements OnInit {
 
       if(lockedTeam?.tasks){
         lockedTeam.tasks = lockedTeam.tasks.filter(task => task.task_id != taskToRemove.task_id);
-        if(taskToRemove.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id){
-          let task = this.tasks.find((task: any) => task.task_id == taskToRemove.task_id);
-          task.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id;
+        const nijeDodijeljenoType = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno");
+        if (nijeDodijeljenoType) {
+          // Directly update the task progress type to "Nije dodijeljeno"
+          this.dataService.updateTaskProgressType1(taskToRemove.task_id, nijeDodijeljenoType.task_progress_type_id)
+            .then(() => {
+              // Emit the task to parent component
+              this.taskRemoved.emit(taskToRemove);
+            })
+            .catch(error => {
+              console.error('Error updating task progress type:', error);
+            });
+          
+          // Also update local state
+          if (taskToRemove.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => 
+            taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id) {
+            let task = this.tasks.find((task: any) => task.task_id == taskToRemove.task_id);
+            if (task) {
+              task.task_progress_type_id = nijeDodijeljenoType.task_progress_type_id;
+            }
+          }
         }
         lockedTeam.isLocked = false;
         this.workGroupService.updateLockedTeam(lockedTeam);

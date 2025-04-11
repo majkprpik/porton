@@ -347,6 +347,22 @@ export class WorkGroups implements OnInit {
       const tasks = this.getAssignedTasks(this.activeGroupId);
       const updatedTasks = tasks.filter(t => t.task_id !== task.task_id);
       this.workGroupTasks[this.activeGroupId] = updatedTasks;
+
+      // Update the task progress type to "Nije dodijeljeno"
+      const nijeDodijeljenoType = this.taskProgressTypes.find(
+        (tpt: any) => tpt.task_progress_type_name === "Nije dodijeljeno"
+      );
+      
+      if (nijeDodijeljenoType && task.task_id) {
+        this.dataService.updateTaskProgressType1(
+          task.task_id, 
+          nijeDodijeljenoType.task_progress_type_id
+        ).then(() => {
+          console.log(`Task ${task.task_id} progress type updated to Nije dodijeljeno`);
+        }).catch(error => {
+          console.error('Error updating task progress type:', error);
+        });
+      }
     }
   }
 

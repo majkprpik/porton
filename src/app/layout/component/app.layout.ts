@@ -14,6 +14,9 @@ import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
 import { DataService, House, TaskType } from '../../pages/service/data.service';
 import { DebugOverlayComponent } from '../../shared/debug-overlay/debug-overlay.component';
+import { TaskService } from '../../pages/service/task.service';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
     selector: 'app-layout',
@@ -29,8 +32,10 @@ import { DebugOverlayComponent } from '../../shared/debug-overlay/debug-overlay.
         InputTextarea,
         ButtonModule,
         FormsModule,
-        DebugOverlayComponent
+        DebugOverlayComponent,
+        ToastModule
     ],
+    providers: [MessageService],
     template: `
     <div class="layout-wrapper" [ngClass]="containerClass">
         <app-topbar></app-topbar>
@@ -175,7 +180,7 @@ import { DebugOverlayComponent } from '../../shared/debug-overlay/debug-overlay.
         </p-dialog>
 
         <!-- Phone Dialog -->
-        <p-dialog 
+        <!-- <p-dialog 
             header="Phone" 
             [(visible)]="phoneDialogVisible" 
             [modal]="true"
@@ -189,7 +194,9 @@ import { DebugOverlayComponent } from '../../shared/debug-overlay/debug-overlay.
             <ng-template pTemplate="footer">
                 <button pButton label="Close" (click)="phoneDialogVisible = false"></button>
             </ng-template>
-        </p-dialog>
+        </p-dialog> -->
+
+        <p-toast></p-toast>
     </div>`,
     styles: [`
         ::ng-deep {
@@ -297,19 +304,21 @@ export class AppLayout {
                 this.extraordinaryTaskVisible = true;
             }
         },
-        {
-            icon: 'pi pi-phone',
-            command: () => {
-                this.phoneDialogVisible = true;
-            }
-        }
+        // {
+        //     icon: 'pi pi-phone',
+        //     command: () => {
+        //         this.phoneDialogVisible = true;
+        //     }
+        // }
     ];
 
     constructor(
         public layoutService: LayoutService,
         public renderer: Renderer2,
         public router: Router,
-        private dataService: DataService
+        private dataService: DataService,
+        private taskService: TaskService,
+        private messageService: MessageService
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
@@ -410,30 +419,68 @@ export class AppLayout {
     submitFaultReport() {
         if (!this.isFormValid()) return;
 
-        console.log('Submitting fault report:', {
-            house: this.selectedHouse,
-            description: this.faultDescription
+        // For repair tasks (kvar), we use "Popravak" as the task type
+        this.taskService.createTaskForHouse(
+            this.selectedHouse!.house_id.toString(),
+            this.faultDescription,
+            'Popravak',
+            false
+        ).then(result => {
+            if (result) {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Uspjeh',
+                    detail: 'Kvar je uspješno prijavljen'
+                });
+                
+                // Reset form and close dialog
+                this.selectedHouse = null;
+                this.faultDescription = '';
+                this.faultReportVisible = false;
+                
+                // Refresh tasks list
+                this.dataService.loadTasksFromDb();
+            } else {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Greška',
+                    detail: 'Došlo je do greške prilikom prijave kvara'
+                });
+            }
         });
-
-        // Reset form and close dialog
-        this.selectedHouse = null;
-        this.faultDescription = '';
-        this.faultReportVisible = false;
     }
 
     submitExtraordinaryTask() {
         if (!this.isTaskFormValid()) return;
 
-        console.log('Submitting extraordinary task:', {
-            house: this.selectedHouseForTask,
-            taskType: this.selectedTaskType,
-            description: this.taskDescription
+        this.taskService.createTaskForHouse(
+            this.selectedHouseForTask!.house_id.toString(),
+            this.taskDescription,
+            this.selectedTaskType!.task_type_name,
+            false
+        ).then(result => {
+            if (result) {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Uspjeh',
+                    detail: 'Zadatak je uspješno prijavljen'
+                });
+                
+                // Reset form and close dialog
+                this.selectedHouseForTask = null;
+                this.selectedTaskType = null;
+                this.taskDescription = '';
+                this.extraordinaryTaskVisible = false;
+                
+                // Refresh tasks list
+                this.dataService.loadTasksFromDb();
+            } else {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Greška',
+                    detail: 'Došlo je do greške prilikom prijave zadatka'
+                });
+            }
         });
-
-        // Reset form and close dialog
-        this.selectedHouseForTask = null;
-        this.selectedTaskType = null;
-        this.taskDescription = '';
-        this.extraordinaryTaskVisible = false;
     }
 }

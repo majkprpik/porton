@@ -177,7 +177,7 @@ export class StaffGroup implements OnInit, OnChanges {
 
   getProfileDisplayName(profile: Profile): string {
     if (profile.first_name && profile.last_name) {
-      return `${profile.first_name} ${profile.last_name}`;
+      return `${profile.first_name}`;
     } else if (profile.first_name) {
       return profile.first_name;
     } else if (profile.last_name) {

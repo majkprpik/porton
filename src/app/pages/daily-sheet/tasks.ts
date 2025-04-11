@@ -75,15 +75,15 @@ export class TasksComponent implements OnInit {
     this.taskService.$taskToRemove.subscribe(taskToRemove => {
       if(taskToRemove){
         let task = this.tasks.find(task => task.task_id == taskToRemove.task_id);
-        let taskProgressType = this.progressTypes.find(taksProgressType => taksProgressType.task_progress_type_name == "Nije dodijeljeno");
-        if(task && taskProgressType){
-          task.task_progress_type_id = taskProgressType.task_progress_type_id;
-  
-          this.tasks = this.tasks.map(t => 
-            t.task_id === task.task_id ? { ...t, task_progress_type_id: taskProgressType.task_progress_type_id } : t
-          );
-  
-          this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
+        
+        // First make sure we have the progress types loaded
+        if (this.progressTypes.length === 0) {
+          this.dataService.taskProgressTypes$.subscribe(types => {
+            this.progressTypes = types;
+            this.updateTaskAfterRemoval(task, taskToRemove);
+          });
+        } else {
+          this.updateTaskAfterRemoval(task, taskToRemove);
         }
       }
     });
@@ -159,5 +159,26 @@ export class TasksComponent implements OnInit {
   getAvailableTasks(): Task[] {
     const assignedTaskIds = this.workGroupTasks.map(wgt => wgt.task_id);
     return this.tasks.filter(task => !assignedTaskIds.includes(task.task_id));
+  }
+
+  // Helper method to update task progress type after task removal
+  private updateTaskAfterRemoval(task: Task | undefined, taskToRemove: any) {
+    if (task) {
+      const taskProgressType = this.progressTypes.find(progressType => 
+        progressType.task_progress_type_name === "Nije dodijeljeno");
+      
+      if (taskProgressType) {
+        // Update the local task
+        task.task_progress_type_id = taskProgressType.task_progress_type_id;
+        
+        // Update the tasks array
+        this.tasks = this.tasks.map(t => 
+          t.task_id === task.task_id ? { ...t, task_progress_type_id: taskProgressType.task_progress_type_id } : t
+        );
+        
+        // Remove from workGroupTasks
+        this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
+      }
+    }
   }
 }
