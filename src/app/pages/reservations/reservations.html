@@ -21,47 +21,33 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for (house of houses(); track houseIndex; let houseIndex = $index) {
-                    <tr>
-                        <td>{{house.house_name || 'House ' + house.house_number}}</td>
-                        @for (day of days(); track dayIndex; let dayIndex = $index) { @let cellData = gridMatrix()[houseIndex][dayIndex];
-                        <td
-                            [ngClass]="getCellClasses(cellData)"
-                            [style.background-color]="cellData.color"
-                            [class]="cellData.identifier"
-                            [pTooltip]="cellData.tooltip"
-                            [tooltipDisabled]="!cellData.isReserved"
-                            tooltipPosition="top"
-                            [tooltipStyleClass]="'reservation-tooltip'"
-                        >
-                            {{ cellData.displayText }}
-                        </td>
-                        }
-                    </tr>
-                    }
+                    <cdk-virtual-scroll-viewport
+                        [itemSize]="itemSize"
+                        [minBufferPx]="itemSize * bufferSize"
+                        [maxBufferPx]="itemSize * bufferSize * 2"
+                        class="virtual-scroll-viewport">
+                        <tr *cdkVirtualFor="let house of houses(); let houseIndex = index; trackBy: trackByHouse">
+                            <td>{{house.house_name || 'House ' + house.house_number}}</td>
+                            @for (day of days(); track dayIndex; let dayIndex = $index) { @let cellData = gridMatrix()[houseIndex][dayIndex];
+                            <td
+                                [ngClass]="getCellClasses(cellData)"
+                                [class.highlight-column]="isColumnHighlighted(dayIndex)"
+                                [style.background-color]="cellData.color"
+                                [class]="cellData.identifier"
+                                [pTooltip]="cellData.tooltip"
+                                [tooltipDisabled]="!cellData.isReserved"
+                                tooltipPosition="top"
+                                [tooltipStyleClass]="'reservation-tooltip'"
+                                (mouseenter)="highlightColumn(dayIndex)"
+                                (mouseleave)="highlightColumn(null)"
+                            >
+                                {{ cellData.displayText }}
+                            </td>
+                            }
+                        </tr>
+                    </cdk-virtual-scroll-viewport>
                 </tbody>
             </table>
         </div>
     </ng-container>
 </div>
-
-<!-- Template for cell content -->
-<ng-template #cellTemplate let-cellData="cellData">
-    <!-- <div [ngClass]="getCellClasses(cellData)"
-         [style.background-color]="cellData.color"
-         [class]="cellData.identifier"
-         [pTooltip]="cellData.tooltip"
-         [tooltipDisabled]="!cellData.isReserved"
-         tooltipPosition="top"
-         [tooltipStyleClass]="'reservation-tooltip'">
-        {{ cellData.displayText }}
-    </div> -->
-    <div
-        [ngClass]="getCellClasses(cellData)"
-        [style.background-color]="cellData.color"
-        [class]="cellData.identifier"
-        
-    >
-        {{ cellData.displayText }}
-    </div>
-</ng-template>

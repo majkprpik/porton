@@ -33,12 +33,7 @@ interface CellData {
         ScrollingModule, 
         ButtonModule, 
         TooltipModule, 
-        ProgressSpinnerModule,
-        DialogModule,
-        InputTextModule,
-        InputNumberModule,
-        CalendarModule,
-        FormsModule
+        ProgressSpinnerModule
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -49,6 +44,9 @@ export class Reservations implements OnInit, OnDestroy {
     
     // Signal for the entire grid matrix
     gridMatrix = signal<CellData[][]>([]);
+
+    // Add properties for highlighting
+    highlightedColumn = signal<number | null>(null);
 
     // Store subscriptions to unsubscribe later
     private subscriptions: Subscription[] = [];
@@ -65,6 +63,13 @@ export class Reservations implements OnInit, OnDestroy {
     private renderStartTime: number = 0;
     private updateStartTime: number = 0;
     private totalCells: number = 0;
+
+    // Add virtual scroll settings
+    itemSize = 30; // Height of each row
+    bufferSize = 10; // Increased buffer size for smoother scrolling
+
+    // Optimize highlighting with memoization
+    private highlightCache = new Map<string, boolean>();
 
     constructor(private dataService: DataService) {
         // Monitor grid matrix updates
@@ -336,5 +341,25 @@ export class Reservations implements OnInit, OnDestroy {
         
         // Update grid matrix
         this.updateGridMatrix();
+    }
+
+    // Optimize highlighting methods
+    isColumnHighlighted(columnIndex: number): boolean {
+        const cacheKey = `col-${columnIndex}`;
+        if (!this.highlightCache.has(cacheKey)) {
+            this.highlightCache.set(cacheKey, this.highlightedColumn() === columnIndex);
+        }
+        return this.highlightCache.get(cacheKey)!;
+    }
+
+    // Clear cache when highlighting changes
+    highlightColumn(columnIndex: number | null): void {
+        this.highlightCache.clear();
+        this.highlightedColumn.set(columnIndex);
+    }
+
+    // Add trackBy function for virtual scrolling
+    trackByHouse(index: number, house: House): number {
+        return house.house_id;
     }
 } 
