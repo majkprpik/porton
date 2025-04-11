@@ -33,8 +33,7 @@ import { WorkGroupService } from './work-group.service';
             [state]="getTaskState(task.task_progress_type_id)"
             [taskIcon]="getTaskIcon(task.task_type_id)"
             [task]="task"
-            [canBeAssigned]="canAssignTasks && isTaskAvailable(task)"
-            (taskClicked)="onTaskClicked(task)">
+            [canBeAssigned]="canAssignTasks && isTaskAvailable(task)">
           </app-task-card>
         }
       </div>
@@ -113,7 +112,6 @@ export class TaskGroupComponent implements OnInit {
 
   constructor(
     private dataService: DataService,
-    private workGroupService: WorkGroupService,
   ) {}
 
   ngOnInit() {
@@ -164,11 +162,5 @@ export class TaskGroupComponent implements OnInit {
       58: 'pi pi-wrench'     // Popravak
     };
     return iconMap[taskTypeId] || 'pi pi-file';
-  }
-
-  onTaskClicked(task: Task) {
-    if (this.canAssignTasks && this.isTaskAvailable(task)) {
-      this.taskAssigned.emit(task);
-    }
   }
 } 

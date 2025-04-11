@@ -8,7 +8,6 @@ import { StaffCardComponent } from './staff-card';
 import { MenuItem } from 'primeng/api';
 import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
 import { forkJoin } from 'rxjs';
-import { map, take } from 'rxjs/operators';
 import { WorkGroupService } from './work-group.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { DragDropModule } from 'primeng/dragdrop';
@@ -366,22 +365,27 @@ export class WorkGroup implements OnInit {
     })
 
     if (this.workGroup) {
-      this.taskService.$selectedTask.subscribe(selectedTask => {
-        const activeGroup = this.workGroupService.getActiveGroup();
+      const workGroup = this.workGroup;
 
-        if(activeGroup && this.workGroup?.work_group_id == activeGroup){
-          let lockedTeams = this.workGroupService.getLockedTeams();
-          let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup)
-          if(lockedTeam && !lockedTeam.tasks?.find(task => task.task_id == selectedTask.task_id)){
-            if(selectedTask.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
-              selectedTask.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
+      this.taskService.$selectedTask.subscribe(selectedTask => {
+        if(selectedTask){
+          const activeGroup = this.workGroupService.getActiveGroup();
+          
+          if(activeGroup && workGroup?.work_group_id == activeGroup){
+            workGroup.is_locked = false;
+            let lockedTeams = this.workGroupService.getLockedTeams();
+            let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup)
+            if(lockedTeam && !lockedTeam.tasks?.find(task => task.task_id == selectedTask.task_id)){
+              if(selectedTask.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
+                selectedTask.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
+              }
+              if(!lockedTeam.tasks){
+                lockedTeam.tasks = [];
+              }
+              lockedTeam.isLocked = false;
+              lockedTeam.tasks.push(selectedTask);
+              this.workGroupService.updateLockedTeam(lockedTeam);
             }
-            if(!lockedTeam.tasks){
-              lockedTeam.tasks = [];
-            }
-            lockedTeam.tasks.push(selectedTask);
-            lockedTeam.isLocked = false;
-            this.workGroupService.updateLockedTeam(lockedTeam);
           }
         }
       });
@@ -401,7 +405,6 @@ export class WorkGroup implements OnInit {
 
   onGroupClick() {
     if (this.isActive) {
-      // If the group is already active, deactivate it
       if(this.workGroup){
         this.workGroupService.updateLockedTeam({
           id: this.workGroup?.work_group_id.toString(),
@@ -448,6 +451,10 @@ export class WorkGroup implements OnInit {
 
   onRemoveTask(taskToRemove: Task) {
     if (this.workGroup?.work_group_id) {
+      if(this.workGroup.work_group_id == this.workGroupService.getActiveGroup()){
+        this.workGroup.is_locked = false;
+      }
+
       this.taskService.$taskToRemove.next(taskToRemove);
       let lockedTeams = this.workGroupService.getLockedTeams();
       let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == this.workGroup?.work_group_id)
@@ -569,30 +576,7 @@ export class WorkGroup implements OnInit {
     
     return taskElements.length;
   }
-
-  // Method to handle task assignment
-  onTaskAssigned(task: Task) {
-    if (this.workGroup?.work_group_id) {
-      const operations = [
-        this.dataService.addTaskToWorkGroup(this.workGroup.work_group_id, task.task_id),
-        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
-      ];
-
-      forkJoin(operations).subscribe({
-        next: () => {
-          if (this.workGroup) {
-            this.workGroup.is_locked = false;
-          }
-          // Refresh the tasks list
-          // this.loadAssignedTasks();
-        },
-        error: (error: any) => {
-          console.error('Error assigning task:', error);
-        }
-      });
-    }
-  }
-
+  
   // Method to handle staff assignment
   onStaffAssigned(staff: Profile) {
     if (staff.id && this.workGroup?.work_group_id) {
@@ -614,18 +598,4 @@ export class WorkGroup implements OnInit {
       });
     }
   }
-
-  // loadAssignedTasks() {
-  //   if (this.workGroup?.work_group_id) {
-  //     this.dataService.workGroupTasks$.pipe(
-  //       map(workGroupTasks => workGroupTasks
-  //         .filter(wgt => wgt.work_group_id === this.workGroup!.work_group_id)
-  //         .map(wgt => this.dataService.getTaskById(wgt.task_id))
-  //         .filter((task): task is Task => task !== undefined)
-  //       )
-  //     ).subscribe(tasks => {
-  //       this.assignedTasks = tasks;
-  //     });
-  //   }
-  // }
 } 
