@@ -52,7 +52,7 @@ import { MessageService } from 'primeng/api';
       </p-table>
     </div>
 
-    <p-dialog [(visible)]="profileDialog" [style]="{width: '450px'}" header="Edit Profile" [modal]="true">
+    <p-dialog [(visible)]="profileDialog" [style]="{width: '450px'}" header="Edit Profile" [modal]="true" [contentStyle]="{overflow: 'visible'}">
       <div class="p-field" *ngIf="selectedProfile">
         <label for="role">Role</label>
         <p-dropdown 
@@ -63,6 +63,7 @@ import { MessageService } from 'primeng/api';
           [style]="{'width':'100%'}"
           optionLabel="label"
           optionValue="value"
+          appendTo="body"
           id="role">
         </p-dropdown>
       </div>
