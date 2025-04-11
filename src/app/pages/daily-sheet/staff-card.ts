@@ -98,6 +98,6 @@ export class StaffCardComponent {
 
   getStaffName(): string {
     if (!this.staff) return 'Unknown';
-    return `${this.staff.first_name} ${this.staff.last_name}`.trim() || 'Unknown';
+    return `${this.staff.first_name}`.trim() || 'Unknown';
   }
 } 
