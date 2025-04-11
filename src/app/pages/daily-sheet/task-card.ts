@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 import { Task } from '../service/data.service';
+import { TaskService } from '../service/task.service';
+import { WorkGroupService } from './work-group.service';
 
 export type TaskState = 'pending' | 'in-progress' | 'completed';
 
@@ -126,7 +128,6 @@ export class TaskCardComponent {
   @Input() canBeAssigned: boolean = false;
   @Input() isInActiveGroup: boolean = false;
   
-  @Output() taskClicked = new EventEmitter<void>();
   @Output() removeFromGroup = new EventEmitter<void>();
   
   @ViewChild('cm') contextMenu!: ContextMenu;
@@ -172,13 +173,24 @@ export class TaskCardComponent {
     }
   ];
 
+  constructor(
+    private taskService: TaskService,
+    private workGroupService: WorkGroupService,
+  ) {
+    
+  }
+
   onClick(event: MouseEvent) {
     event.stopPropagation();
+
+    if(this.task?.task_progress_type_id == 37){
+      this.canBeAssigned = true;
+    }
     
     if (this.isInActiveGroup) {
       this.removeFromGroup.emit();
-    } else if (this.canBeAssigned) {
-      this.taskClicked.emit();
+    } else if (this.canBeAssigned && this.workGroupService.getActiveGroup()) {
+      this.taskService.$selectedTask.next(this.task);
     }
   }
 

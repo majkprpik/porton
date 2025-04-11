@@ -18,11 +18,26 @@
     table-layout: fixed;
     border-collapse: collapse;
     border-spacing: 0;
-
-    // Create a scrollable container for the table
-    display: block;
-    overflow: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
     height: 100%;
+
+    thead {
+        flex-shrink: 0;
+    }
+
+    tbody {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .virtual-scroll-viewport {
+        height: 100%;
+        width: 100%;
+        display: block;
+        overflow: auto;
+    }
 
     th, td {
         border: 1px solid var(--surface-border);
@@ -41,6 +56,8 @@
         vertical-align: middle;
         color: var(--text-color);
         background-color: var(--surface-card);
+        box-sizing: border-box;
+        position: relative;
     }
 
     // First column styling
@@ -198,24 +215,10 @@ thead th.today-column.sunday-column {
     z-index: 1;
 }
 
-// Empty cell hover effect to indicate it's clickable
-td:not(.reservation-slot):hover {
-    background-color: var(--surface-200) !important;
-    transition: background-color 0.2s;
-}
-
-// Add plus icon on hover for empty cells
-td:not(.reservation-slot) {
-    position: relative;
-
-    &:hover::after {
-        content: '+';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 1.5rem;
-        color: var(--primary-color);
-        opacity: 0.7;
-    }
+// Row and column highlighting
+.highlight-column {
+    border-left: 2px solid var(--primary-color);
+    border-right: 2px solid var(--primary-color);
+    margin-left: -1px;
+    margin-right: -1px;
 }

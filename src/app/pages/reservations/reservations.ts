@@ -34,13 +34,7 @@ interface CellData {
         ScrollingModule, 
         ButtonModule, 
         TooltipModule, 
-        ProgressSpinnerModule,
-        DialogModule,
-        InputTextModule,
-        InputNumberModule,
-        CalendarModule,
-        FormsModule,
-        ReservationFormComponent
+        ProgressSpinnerModule
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -52,12 +46,8 @@ export class Reservations implements OnInit, OnDestroy {
     // Signal for the entire grid matrix
     gridMatrix = signal<CellData[][]>([]);
 
-    // Reservation form state
-    showReservationForm = signal<boolean>(false);
-    newReservation = signal<Partial<HouseAvailability>>({});
-    selectedHouseId = signal<number>(0);
-    selectedStartDate = signal<Date>(new Date());
-    selectedEndDate = signal<Date>(new Date());
+    // Add properties for highlighting
+    highlightedColumn = signal<number | null>(null);
 
     // Store subscriptions to unsubscribe later
     private subscriptions: Subscription[] = [];
@@ -74,6 +64,13 @@ export class Reservations implements OnInit, OnDestroy {
     private renderStartTime: number = 0;
     private updateStartTime: number = 0;
     private totalCells: number = 0;
+
+    // Add virtual scroll settings
+    itemSize = 30; // Height of each row
+    bufferSize = 10; // Increased buffer size for smoother scrolling
+
+    // Optimize highlighting with memoization
+    private highlightCache = new Map<string, boolean>();
 
     constructor(private dataService: DataService) {
         // Monitor grid matrix updates
@@ -347,64 +344,23 @@ export class Reservations implements OnInit, OnDestroy {
         this.updateGridMatrix();
     }
 
-    // Handle click on an empty cell
-    onCellClick(houseIndex: number, dayIndex: number): void {
-        const cellData = this.gridMatrix()[houseIndex][dayIndex];
-        
-        // Only open form if cell is not reserved
-        if (!cellData.isReserved) {
-            const house = this.houses()[houseIndex];
-            const day = this.days()[dayIndex];
-            
-            // Set selected data for the form
-            this.selectedHouseId.set(house.house_id);
-            this.selectedStartDate.set(new Date(day));
-            this.selectedEndDate.set(new Date(day));
-            
-            // Initialize new reservation with default values
-            this.newReservation.set({
-                house_id: house.house_id,
-                house_availability_type_id: 1, // Default availability type
-                color_theme: Math.floor(Math.random() * 10), // Random color theme
-                color_tint: Math.random(), // Random tint
-                adults: 0,
-                babies: 0,
-                cribs: 0,
-                dogs_d: 0,
-                dogs_s: 0,
-                dogs_b: 0,
-                has_arrived: false,
-                has_departed: false,
-                prev_connected: false,
-                next_connected: false
-            });
-            
-            // Force update and open the form
-            setTimeout(() => {
-                this.showReservationForm.set(true);
-            }, 0);
+    // Optimize highlighting methods
+    isColumnHighlighted(columnIndex: number): boolean {
+        const cacheKey = `col-${columnIndex}`;
+        if (!this.highlightCache.has(cacheKey)) {
+            this.highlightCache.set(cacheKey, this.highlightedColumn() === columnIndex);
         }
+        return this.highlightCache.get(cacheKey)!;
     }
 
-    // Handle form submission
-    handleSaveReservation(reservation: HouseAvailability): void {
-        this.createReservation(reservation);
-        this.closeReservationForm();
+    // Clear cache when highlighting changes
+    highlightColumn(columnIndex: number | null): void {
+        this.highlightCache.clear();
+        this.highlightedColumn.set(columnIndex);
     }
 
-    // Handle form cancellation
-    handleCancelReservation(): void {
-        this.closeReservationForm();
-    }
-    
-    // Centralized method to close the form and reset state
-    private closeReservationForm(): void {
-        // First close the form
-        this.showReservationForm.set(false);
-        
-        // Then reset form data after a short delay
-        setTimeout(() => {
-            this.newReservation.set({});
-        }, 100);
+    // Add trackBy function for virtual scrolling
+    trackByHouse(index: number, house: House): number {
+        return house.house_id;
     }
 } 

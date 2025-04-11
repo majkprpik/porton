@@ -23,8 +23,7 @@ import { TaskService } from '../service/task.service';
           <app-task-group 
             [taskType]="taskType"
             [tasks]="getAvailableTasks()"
-            [canAssignTasks]="hasActiveWorkGroup"
-            (taskAssigned)="onTaskAssigned($event)">
+            [canAssignTasks]="hasActiveWorkGroup">
           </app-task-group>
         }
       </div>
@@ -160,38 +159,5 @@ export class TasksComponent implements OnInit {
   getAvailableTasks(): Task[] {
     const assignedTaskIds = this.workGroupTasks.map(wgt => wgt.task_id);
     return this.tasks.filter(task => !assignedTaskIds.includes(task.task_id));
-  }
-
-  onTaskAssigned(task: Task) {
-    if (this.activeWorkGroupId) {
-      this.taskService.$selectedTask.next(task);
-
-      const nijeDodijeljenoType = this.progressTypes.find(
-        type => type.task_progress_type_name === 'Nije dodijeljeno'
-      );
-
-      if (!nijeDodijeljenoType) {
-        console.error('Could not find progress type "Nije dodijeljeno"');
-        return;
-      }
-
-      // // Create an array of operations to perform
-      // const operations = [
-      //   // Add task to work group
-      //   this.dataService.addTaskToWorkGroup(this.activeWorkGroupId, task.task_id),
-      //   // Update task progress type to "Nije dodijeljeno"
-      //   this.dataService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id),
-      //   // Set work group to unlocked
-      //   this.dataService.updateWorkGroupLocked(this.activeWorkGroupId, false)
-      // ];
-
-      // // Execute all operations
-      // forkJoin(operations).subscribe({
-      //   next: ([workGroupTask, updatedTask]) => {
-      //     //console.log('Task assigned and updated:', { workGroupTask, updatedTask });
-      //   },
-      //   error: error => console.error('Error assigning task:', error)
-      // });
-    }
   }
 }

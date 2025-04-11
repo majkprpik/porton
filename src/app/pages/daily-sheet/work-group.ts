@@ -1,14 +1,13 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { Task, Profile, DataService } from '../service/data.service';
+import { Task, Profile, DataService, House, TaskType } from '../service/data.service';
 import { TaskCardComponent } from './task-card';
 import { TagModule } from 'primeng/tag';
 import { StaffCardComponent } from './staff-card';
 import { MenuItem } from 'primeng/api';
 import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
 import { forkJoin } from 'rxjs';
-import { map, take } from 'rxjs/operators';
 import { WorkGroupService } from './work-group.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { DragDropModule } from 'primeng/dragdrop';
@@ -70,7 +69,7 @@ import { TaskService } from '../service/task.service';
                   (onDragEnd)="onDragEnd()"
                 >
                   <app-task-card 
-                    [houseNumber]="task.house_id"
+                    [houseNumber]="getHouseNumber(task.house_id)"
                     [state]="'in-progress'"
                     [taskIcon]="getTaskIcon(task.task_type_id)"
                     [isInActiveGroup]="isActive"
@@ -345,6 +344,8 @@ export class WorkGroup implements OnInit {
   taskProgressTypes: any;
   tasks: any;
   workGroupTasks: any;
+  houses: House[] = [];
+  taskTypes: TaskType[] = [];
 
   constructor(
     private dataService: DataService,
@@ -363,31 +364,48 @@ export class WorkGroup implements OnInit {
 
     this.dataService.workGroupTasks$.subscribe(workGroupTasks => {
       this.workGroupTasks = workGroupTasks;
-    })
+    });
+
+    this.dataService.houses$.subscribe(houses => {
+      this.houses = houses;
+    });
+
+    this.dataService.taskTypes$.subscribe(taskTypes => {
+      this.taskTypes = taskTypes;
+    });
 
     if (this.workGroup) {
-      this.taskService.$selectedTask.subscribe(selectedTask => {
-        const activeGroup = this.workGroupService.getActiveGroup();
+      const workGroup = this.workGroup;
 
-        if(activeGroup && this.workGroup?.work_group_id == activeGroup){
-          let lockedTeams = this.workGroupService.getLockedTeams();
-          let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup)
-          if(lockedTeam && !lockedTeam.tasks?.find(task => task.task_id == selectedTask.task_id)){
-            if(selectedTask.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
-              selectedTask.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
+      this.taskService.$selectedTask.subscribe(selectedTask => {
+        if(selectedTask){
+          const activeGroup = this.workGroupService.getActiveGroup();
+          
+          if(activeGroup && workGroup?.work_group_id == activeGroup){
+            workGroup.is_locked = false;
+            let lockedTeams = this.workGroupService.getLockedTeams();
+            let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup)
+            if(lockedTeam && !lockedTeam.tasks?.find(task => task.task_id == selectedTask.task_id)){
+              if(selectedTask.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
+                selectedTask.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
+              }
+              if(!lockedTeam.tasks){
+                lockedTeam.tasks = [];
+              }
+              lockedTeam.isLocked = false;
+              lockedTeam.tasks.push(selectedTask);
+              this.workGroupService.updateLockedTeam(lockedTeam);
             }
-            if(!lockedTeam.tasks){
-              lockedTeam.tasks = [];
-            }
-            lockedTeam.tasks.push(selectedTask);
-            lockedTeam.isLocked = false;
-            this.workGroupService.updateLockedTeam(lockedTeam);
           }
         }
       });
 
       this.loadAssignedStaff();
     }
+  }
+
+  getHouseNumber(houseId: number){
+    return this.houses.find(house => house.house_id == houseId)?.house_number ?? 0;
   }
 
   loadAssignedStaff() {
@@ -401,7 +419,6 @@ export class WorkGroup implements OnInit {
 
   onGroupClick() {
     if (this.isActive) {
-      // If the group is already active, deactivate it
       if(this.workGroup){
         this.workGroupService.updateLockedTeam({
           id: this.workGroup?.work_group_id.toString(),
@@ -448,6 +465,10 @@ export class WorkGroup implements OnInit {
 
   onRemoveTask(taskToRemove: Task) {
     if (this.workGroup?.work_group_id) {
+      if(this.workGroup.work_group_id == this.workGroupService.getActiveGroup()){
+        this.workGroup.is_locked = false;
+      }
+
       this.taskService.$taskToRemove.next(taskToRemove);
       let lockedTeams = this.workGroupService.getLockedTeams();
       let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == this.workGroup?.work_group_id)
@@ -508,14 +529,20 @@ export class WorkGroup implements OnInit {
   }
 
   getTaskIcon(taskTypeId: number): string {
-    const iconMap: { [key: number]: string } = {
-      56: 'pi pi-home',      // Čišćenje kućice
-      57: 'pi pi-table',     // Čišćenje terase
-      59: 'pi pi-inbox',     // Mijenjanje posteljine
-      60: 'pi pi-bookmark',  // Mijenjanje ručnika
-      58: 'pi pi-wrench'     // Popravak
-    };
-    return iconMap[taskTypeId] || 'pi pi-file';
+    switch(taskTypeId){
+      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
+        return 'pi pi-home';
+      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
+        return 'pi pi-table';
+      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
+        return 'pi pi-inbox';
+      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
+        return 'pi pi-bookmark';
+      case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
+        return 'pi pi-wrench';
+      default: 
+        return 'pi pi-file';
+    }
   }
 
   onDragStart(event: any, index: number) {
@@ -570,29 +597,6 @@ export class WorkGroup implements OnInit {
     return taskElements.length;
   }
 
-  // Method to handle task assignment
-  onTaskAssigned(task: Task) {
-    if (this.workGroup?.work_group_id) {
-      const operations = [
-        this.dataService.addTaskToWorkGroup(this.workGroup.work_group_id, task.task_id),
-        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
-      ];
-
-      forkJoin(operations).subscribe({
-        next: () => {
-          if (this.workGroup) {
-            this.workGroup.is_locked = false;
-          }
-          // Refresh the tasks list
-          // this.loadAssignedTasks();
-        },
-        error: (error: any) => {
-          console.error('Error assigning task:', error);
-        }
-      });
-    }
-  }
-
   // Method to handle staff assignment
   onStaffAssigned(staff: Profile) {
     if (staff.id && this.workGroup?.work_group_id) {
@@ -614,18 +618,4 @@ export class WorkGroup implements OnInit {
       });
     }
   }
-
-  // loadAssignedTasks() {
-  //   if (this.workGroup?.work_group_id) {
-  //     this.dataService.workGroupTasks$.pipe(
-  //       map(workGroupTasks => workGroupTasks
-  //         .filter(wgt => wgt.work_group_id === this.workGroup!.work_group_id)
-  //         .map(wgt => this.dataService.getTaskById(wgt.task_id))
-  //         .filter((task): task is Task => task !== undefined)
-  //       )
-  //     ).subscribe(tasks => {
-  //       this.assignedTasks = tasks;
-  //     });
-  //   }
-  // }
 } 
