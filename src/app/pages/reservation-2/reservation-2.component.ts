@@ -340,6 +340,9 @@ export class Reservation2Component implements OnInit, OnDestroy {
             console.log(`Initial render time: ${renderTime.toFixed(2)}ms`);
             console.log(`Cells per second: ${(this.totalCells / (renderTime / 1000)).toFixed(2)}`);
         }, 0);
+        
+        // Set up scroll behavior to prevent browser navigation issues
+        this.setupScrollBehavior();
     }
     
     ngOnDestroy(): void {
@@ -710,7 +713,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         setTimeout(() => {
                             this.showReservationForm.set(true);
                         }, 100);
-                    } else {
+            } else {
                         // Normal case - just show the form
                         this.showReservationForm.set(true);
                     }
@@ -1418,5 +1421,37 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 }, 50);
             });
         }
+    }
+
+    private setupScrollBehavior(): void {
+        // Add event listeners after a short delay to ensure the table is rendered
+        setTimeout(() => {
+            const tableWrapper = document.querySelector('.handsontable-wrapper');
+            if (tableWrapper) {
+                // Add class to body when mouse is over the table
+                tableWrapper.addEventListener('mouseenter', () => {
+                    document.body.classList.add('handsontable-active');
+                });
+                
+                // Remove class when mouse leaves the table
+                tableWrapper.addEventListener('mouseleave', () => {
+                    document.body.classList.remove('handsontable-active');
+                });
+                
+                // Prevent scroll events from propagating to parent when scrolling horizontally
+                const wtHolder = tableWrapper.querySelector('.wtHolder');
+                if (wtHolder) {
+                    wtHolder.addEventListener('wheel', (e: Event) => {
+                        const wheelEvent = e as WheelEvent;
+                        const delta = Math.abs(wheelEvent.deltaX);
+                        // If horizontal scroll attempt detected, prevent default behavior
+                        if (delta > Math.abs(wheelEvent.deltaY)) {
+                            e.preventDefault();
+                            (wtHolder as HTMLElement).scrollLeft += wheelEvent.deltaX;
+                        }
+                    }, { passive: false });
+                }
+            }
+        }, 1000);
     }
 }
