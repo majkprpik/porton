@@ -73,6 +73,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             className: 'htCenter',
             // Enable proper scrolling - fix type by using string literal 
             stretchH: 'none' as 'none', // This explicit type casting fixes the issue
+            colWidths: 100,
             fixedColumnsStart: 0,
             // Fix headers in place while scrolling
             fixedRowsTop: 0,
@@ -567,6 +568,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 td.style.whiteSpace = 'nowrap';
                 td.style.overflow = 'hidden';
                 td.style.textOverflow = 'ellipsis';
+                td.style.alignContent = 'center';
                 td.title = cellData.tooltip;
                 td.innerHTML = cellData.displayText;
             } else {
