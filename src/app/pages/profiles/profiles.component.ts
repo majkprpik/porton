@@ -10,6 +10,11 @@ import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
+// Extended Profile interface to include the isDivider property
+interface ExtendedProfile extends Profile {
+  isDivider?: boolean;
+}
+
 @Component({
   selector: 'app-profiles',
   standalone: true,
@@ -35,16 +40,19 @@ import { MessageService } from 'primeng/api';
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-profile>
-          <tr>
-            <td>{{ profile.first_name }} {{ profile.last_name }}</td>
-            <td>{{ getRoleLabel(profile.role) }}</td>
-            <td>
-              <p-button 
-                icon="pi pi-pencil" 
-                styleClass="p-button-rounded p-button-success mr-2" 
-                (click)="editProfile(profile)">
-              </p-button>
-            </td>
+          <tr [ngClass]="{'divider-row': profile.isDivider}">
+            <td *ngIf="profile.isDivider" colspan="3" class="divider-cell">{{ profile.first_name }}</td>
+            <ng-container *ngIf="!profile.isDivider">
+              <td>{{ profile.first_name }} {{ profile.last_name }}</td>
+              <td>{{ getRoleLabel(profile.role || '') }}</td>
+              <td>
+                <p-button 
+                  icon="pi pi-pencil" 
+                  styleClass="p-button-rounded p-button-success mr-2" 
+                  (click)="editProfile(profile)">
+                </p-button>
+              </td>
+            </ng-container>
           </tr>
         </ng-template>
       </p-table>
@@ -104,13 +112,24 @@ import { MessageService } from 'primeng/api';
       gap: 0.5rem;
       padding-top: 1.5rem;
     }
+    
+    .divider-row {
+      background-color: var(--primary-color);
+    }
+    
+    .divider-cell {
+      font-weight: bold;
+      text-align: center;
+      padding: 0.75rem;
+      color: white;
+    }
     `
   ]
 })
 export class ProfilesComponent implements OnInit {
-  profiles: Profile[] = [];
+  profiles: ExtendedProfile[] = [];
   profileDialog: boolean = false;
-  selectedProfile: Profile | null = null;
+  selectedProfile: ExtendedProfile | null = null;
   
   availableRoles = [
     { label: 'voditelj kampa', value: 'voditelj_kampa' },
@@ -134,15 +153,84 @@ export class ProfilesComponent implements OnInit {
 
   ngOnInit() {
     this.dataService.profiles$.subscribe(profiles => {
-      this.profiles = profiles.sort((a, b) => {
-        const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
-        const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
-        return nameA.localeCompare(nameB);
-      });
+      // Group profiles by role categories
+      const managementRoles = ['voditelj_kampa', 'savjetnik_uprave'];
+      const receptionRoles = ['voditelj_recepcije', 'recepcija', 'customer_service', 'nocni_recepcioner', 'prodaja'];
+      const housekeepingRoles = ['voditelj_domacinstva', 'sobarica', 'terase'];
+      const technicalRoles = ['kucni_majstor', 'odrzavanje'];
+      
+      const sortedProfiles: ExtendedProfile[] = [];
+      
+      // Add management profiles
+      const managementProfiles = profiles
+        .filter(p => p.role && managementRoles.includes(p.role))
+        .sort(this.sortByName);
+      if (managementProfiles.length > 0) {
+        sortedProfiles.push(this.createDividerProfile('UPRAVA'));
+        sortedProfiles.push(...managementProfiles);
+      }
+      
+      // Add reception profiles
+      const receptionProfiles = profiles
+        .filter(p => p.role && receptionRoles.includes(p.role))
+        .sort(this.sortByName);
+      if (receptionProfiles.length > 0) {
+        sortedProfiles.push(this.createDividerProfile('ODJEL RECEPCIJA'));
+        sortedProfiles.push(...receptionProfiles);
+      }
+      
+      // Add housekeeping profiles
+      const housekeepingProfiles = profiles
+        .filter(p => p.role && housekeepingRoles.includes(p.role))
+        .sort(this.sortByName);
+      if (housekeepingProfiles.length > 0) {
+        sortedProfiles.push(this.createDividerProfile('ODJEL DOMAĆINSTVA'));
+        sortedProfiles.push(...housekeepingProfiles);
+      }
+      
+      // Add technical profiles
+      const technicalProfiles = profiles
+        .filter(p => p.role && technicalRoles.includes(p.role))
+        .sort(this.sortByName);
+      if (technicalProfiles.length > 0) {
+        sortedProfiles.push(this.createDividerProfile('ODJEL TEHNIKA'));
+        sortedProfiles.push(...technicalProfiles);
+      }
+      
+      // Add any other profiles that don't fit the categories
+      const otherProfiles = profiles
+        .filter(p => !p.role || 
+                    (!managementRoles.includes(p.role) && 
+                     !receptionRoles.includes(p.role) && 
+                     !housekeepingRoles.includes(p.role) && 
+                     !technicalRoles.includes(p.role)))
+        .sort(this.sortByName);
+      if (otherProfiles.length > 0) {
+        sortedProfiles.push(this.createDividerProfile('OSTALO'));
+        sortedProfiles.push(...otherProfiles);
+      }
+      
+      this.profiles = sortedProfiles;
     });
   }
 
-  editProfile(profile: Profile) {
+  sortByName(a: Profile, b: Profile): number {
+    const nameA = `${a.first_name || ''} ${a.last_name || ''}`.toLowerCase();
+    const nameB = `${b.first_name || ''} ${b.last_name || ''}`.toLowerCase();
+    return nameA.localeCompare(nameB);
+  }
+
+  createDividerProfile(title: string): ExtendedProfile {
+    return {
+      id: `divider-${title}`,
+      first_name: title,
+      last_name: '',
+      role: '',
+      isDivider: true
+    };
+  }
+
+  editProfile(profile: ExtendedProfile) {
     this.selectedProfile = {...profile};
     this.profileDialog = true;
   }
