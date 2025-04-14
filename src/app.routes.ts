@@ -12,6 +12,8 @@ import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
 import { Reservation2Component } from './app/pages/reservation-2/reservation-2.component';
 import { AuthGuard } from './app/layout/guard/auth.guard';
 import { ProfilesComponent } from './app/pages/profiles/profiles.component';
+import { TaskProgressTypesComponent } from './app/pages/task-progress-types/task-progress-types.component';
+import { HouseTypesComponent } from './app/pages/house-types/house-types.component';
 
 export const appRoutes: Routes = [
     {
@@ -28,6 +30,8 @@ export const appRoutes: Routes = [
             { path: 'daily-sheet', component: DailySheetComponent },
             { path: 'teams', component: Teams },
             { path: 'teams/:id', component: WorkGroupDetail },
+            { path: 'task-progress-types', component: TaskProgressTypesComponent },
+            { path: 'house-types', component: HouseTypesComponent },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },
             { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') }

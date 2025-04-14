@@ -351,44 +351,66 @@ export class DataService {
 
   getTaskProgressTypes(): Observable<TaskProgressType[]> {
     this.loadingSubject.next(true);
+    console.log('getTaskProgressTypes called');
 
+    // If we already have data cached in the subject, use it
     if (this.taskProgressTypesSubject.value.length > 0) {
+      console.log('Using cached task progress types data');
       this.logData('Task Progress Types (cached)', this.taskProgressTypesSubject.value);
       this.loadingSubject.next(false);
       return this.taskProgressTypes$;
     }
 
+    // Otherwise fetch from the server
+    console.log('Fetching task progress types from server');
     return from(this.supabaseService.getData('task_progress_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
+          console.log('Got task progress types from server, count:', data.length);
           this.taskProgressTypesSubject.next(data);
           this.logData('Task Progress Types (loaded)', data);
+        } else {
+          console.warn('Server returned no task progress types data');
         }
       }),
       map((data) => data || []),
-      catchError((error) => this.handleError(error)),
+      catchError((error) => {
+        console.error('Error fetching task progress types:', error);
+        return this.handleError(error);
+      }),
       tap(() => this.loadingSubject.next(false))
     );
   }
 
   getHouseTypes(): Observable<HouseType[]> {
     this.loadingSubject.next(true);
+    console.log('getHouseTypes called');
 
+    // If we already have data cached in the subject, use it
     if (this.houseTypesSubject.value.length > 0) {
+      console.log('Using cached house types data');
       this.logData('House Types (cached)', this.houseTypesSubject.value);
       this.loadingSubject.next(false);
       return this.houseTypes$;
     }
 
+    // Otherwise fetch from the server
+    console.log('Fetching house types from server');
     return from(this.supabaseService.getData('house_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
+          console.log('Got house types from server, count:', data.length);
           this.houseTypesSubject.next(data);
           this.logData('House Types (loaded)', data);
+        } else {
+          console.warn('Server returned no house types data');
         }
       }),
       map((data) => data || []),
-      catchError((error) => this.handleError(error)),
+      catchError((error) => {
+        console.error('Error fetching house types:', error);
+        return this.handleError(error);
+      }),
       tap(() => this.loadingSubject.next(false))
     );
   }
@@ -864,15 +886,13 @@ export class DataService {
     
     return from(this.supabaseService.deleteData('house_availabilities', filterCondition, this.schema)).pipe(
       tap((data) => {
-        if (data) {
-          // Remove the deleted availability from local state
-          const currentAvailabilities = this.houseAvailabilitiesSubject.value;
-          const updatedAvailabilities = currentAvailabilities.filter(
-            availability => availability.house_availability_id !== availabilityId
-          );
-          this.houseAvailabilitiesSubject.next(updatedAvailabilities);
-          this.logData('Deleted House Availability', { house_availability_id: availabilityId });
-        }
+        // Remove the deleted availability from local state
+        const currentAvailabilities = this.houseAvailabilitiesSubject.value;
+        const updatedAvailabilities = currentAvailabilities.filter(
+          availability => availability.house_availability_id !== availabilityId
+        );
+        this.houseAvailabilitiesSubject.next(updatedAvailabilities);
+        this.logData('Deleted House Availability', { house_availability_id: availabilityId });
       }),
       catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
@@ -1563,6 +1583,158 @@ export class DataService {
       }),
       map((data) => data || []),
       catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to create a new task progress type
+  createTaskProgressType(type: TaskProgressType): Observable<TaskProgressType | null> {
+    this.loadingSubject.next(true);
+    
+    return from(this.supabaseService.insertData('task_progress_types', type, this.schema)).pipe(
+      tap((data: any) => {
+        if (data) {
+          // Update the taskProgressTypes in the BehaviorSubject
+          const currentTypes = this.taskProgressTypesSubject.value;
+          const newType = data as TaskProgressType;
+          this.taskProgressTypesSubject.next([...currentTypes, newType]);
+          this.logData('Created Task Progress Type', data);
+        }
+      }),
+      map((data: any) => data as TaskProgressType || null),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to update a task progress type
+  updateTaskProgressType2(type: TaskProgressType): Observable<TaskProgressType | null> {
+    this.loadingSubject.next(true);
+    
+    return from(this.supabaseService.updateData(
+      'task_progress_types', 
+      { task_progress_type_name: type.task_progress_type_name }, 
+      type.task_progress_type_id.toString(), 
+      this.schema
+    )).pipe(
+      tap((data: any) => {
+        if (data && data.length > 0) {
+          // Update the taskProgressTypes in the BehaviorSubject
+          const currentTypes = this.taskProgressTypesSubject.value;
+          const updatedTypes = currentTypes.map(t => 
+            t.task_progress_type_id === type.task_progress_type_id ? type : t
+          );
+          this.taskProgressTypesSubject.next(updatedTypes);
+          this.logData('Updated Task Progress Type', data[0]);
+        }
+      }),
+      map((data: any) => (data && data.length > 0 ? data[0] as TaskProgressType : null)),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to delete a task progress type
+  deleteTaskProgressType(id: number): Observable<any> {
+    this.loadingSubject.next(true);
+    
+    return from(this.supabaseService.deleteData('task_progress_types', id, this.schema)).pipe(
+      tap((data) => {
+        // Update the taskProgressTypes in the BehaviorSubject
+        const currentTypes = this.taskProgressTypesSubject.value;
+        const updatedTypes = currentTypes.filter(t => t.task_progress_type_id !== id);
+        this.taskProgressTypesSubject.next(updatedTypes);
+        this.logData('Deleted Task Progress Type', { id });
+      }),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to create a new house type
+  createHouseType(type: HouseType): Observable<HouseType | null> {
+    this.loadingSubject.next(true);
+    console.log('Creating house type:', type);
+    
+    return from(this.supabaseService.insertData('house_types', type, this.schema)).pipe(
+      tap((data: any) => {
+        if (data) {
+          // Update the houseTypes in the BehaviorSubject
+          const currentTypes = this.houseTypesSubject.value;
+          const newType = data as HouseType;
+          console.log('Added new house type to subject:', newType);
+          console.log('Current types count:', currentTypes.length);
+          const updatedTypes = [...currentTypes, newType];
+          console.log('New types count:', updatedTypes.length);
+          this.houseTypesSubject.next(updatedTypes);
+          this.logData('Created House Type', data);
+        } else {
+          console.warn('No data received from create house type');
+        }
+      }),
+      map((data: any) => data as HouseType || null),
+      catchError((error) => {
+        console.error('Error in createHouseType:', error);
+        return this.handleError(error);
+      }),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to update a house type
+  updateHouseType(type: HouseType): Observable<HouseType | null> {
+    this.loadingSubject.next(true);
+    console.log('Updating house type:', type);
+    
+    return from(this.supabaseService.updateData(
+      'house_types', 
+      { house_type_name: type.house_type_name }, 
+      type.house_type_id.toString(), 
+      this.schema
+    )).pipe(
+      tap((data: any) => {
+        if (data && data.length > 0) {
+          // Update the houseTypes in the BehaviorSubject
+          const currentTypes = this.houseTypesSubject.value;
+          console.log('Current types count:', currentTypes.length);
+          const updatedTypes = currentTypes.map(t => 
+            t.house_type_id === type.house_type_id ? type : t
+          );
+          console.log('Updated house type with id:', type.house_type_id);
+          this.houseTypesSubject.next(updatedTypes);
+          this.logData('Updated House Type', data[0]);
+        } else {
+          console.warn('No data or empty array received from update house type');
+        }
+      }),
+      map((data: any) => (data && data.length > 0 ? data[0] as HouseType : null)),
+      catchError((error) => {
+        console.error('Error in updateHouseType:', error);
+        return this.handleError(error);
+      }),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  // Method to delete a house type
+  deleteHouseType(id: number): Observable<any> {
+    this.loadingSubject.next(true);
+    console.log('Deleting house type with id:', id);
+    
+    return from(this.supabaseService.deleteData('house_types', id, this.schema)).pipe(
+      tap(() => {
+        // Update the houseTypes in the BehaviorSubject
+        const currentTypes = this.houseTypesSubject.value;
+        console.log('Current types count:', currentTypes.length);
+        const updatedTypes = currentTypes.filter(t => t.house_type_id !== id);
+        console.log('New types count after deletion:', updatedTypes.length);
+        this.houseTypesSubject.next(updatedTypes);
+        this.logData('Deleted House Type', { id });
+      }),
+      catchError((error) => {
+        console.error('Error in deleteHouseType:', error);
+        return this.handleError(error);
+      }),
       tap(() => this.loadingSubject.next(false))
     );
   }
