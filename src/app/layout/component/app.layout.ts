@@ -32,7 +32,6 @@ import { ToastModule } from 'primeng/toast';
         InputTextarea,
         ButtonModule,
         FormsModule,
-        DebugOverlayComponent,
         ToastModule
     ],
     providers: [MessageService],

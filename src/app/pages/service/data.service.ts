@@ -222,6 +222,12 @@ export class DataService {
     }
   }
 
+  setHouseAvailabilites(houseAvailabilties: HouseAvailability[]){
+    if(houseAvailabilties){
+      this.houseAvailabilitiesSubject.next(houseAvailabilties);
+    }
+  }
+
   // Method to enable/disable debug mode
   setDebug(enabled: boolean): void {
     this.debug = enabled;
@@ -401,6 +407,22 @@ export class DataService {
       catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
     );
+  }
+
+  async getAllHouseAvailabilities(){
+    try{
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('house_availabilities')
+        .select('*');
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching house number:', error);
+      return [];
+    }
   }
 
   async loadTasksFromDb(){

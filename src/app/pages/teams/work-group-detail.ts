@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
-import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType, HouseAvailability } from '../service/data.service';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
-import { TeamService } from '../service/team.service';
+import { HouseService } from '../service/house.service';
 
 @Component({
     selector: 'app-work-group-detail',
@@ -64,19 +64,23 @@ import { TeamService } from '../service/team.service';
                                         </div>
                                         <div class="task-actions">
                                             @if (!isTaskCompleted(task)) {
-                                                <p-button 
-                                                    [label]="getActionButtonLabel(task)"
-                                                    [severity]="getActionButtonSeverity(task)"
-                                                    (onClick)="handleTaskAction(task)"
-                                                ></p-button>
-                                                
-                                                @if (isCleaningHouseTask(task) && isTaskInProgress(task)) {
+                                                @if(houseService.isHouseOccupied(task.house_id)){
+                                                    <span>Kućica zauzeta</span>
+                                                } @else {
                                                     <p-button 
-                                                        label="Pauza"
-                                                        severity="warn" 
-                                                        (onClick)="handleTaskPause(task)"
-                                                        [style]="{'margin-left': '0.5rem'}"
+                                                        [label]="getActionButtonLabel(task)"
+                                                        [severity]="getActionButtonSeverity(task)"
+                                                        (onClick)="handleTaskAction(task)"
                                                     ></p-button>
+                                                    
+                                                    @if (isCleaningHouseTask(task) && isTaskInProgress(task)) {
+                                                        <p-button 
+                                                            label="Pauza"
+                                                            severity="warn" 
+                                                            (onClick)="handleTaskPause(task)"
+                                                            [style]="{'margin-left': '0.5rem'}"
+                                                        ></p-button>
+                                                    }
                                                 }
                                             }
                                         </div>
@@ -257,17 +261,18 @@ export class WorkGroupDetail implements OnInit {
     team: any;
     teams: any[] = [];
     taskTypes: TaskType[] = [];
-    progressTypes: any;
+    progressTypes: TaskProgressType[] = [];
     assignedStaff: Profile[] = [];
     houses: House[] = [];
     profiles: any;
     workGroupTasks: any;
     tasks: any;
+    houseAvailabilities: HouseAvailability[] = [];
 
     constructor(
         private route: ActivatedRoute,
         private dataService: DataService,
-        private teamService: TeamService
+        public houseService: HouseService
     ) {}
 
     ngOnInit() {
@@ -287,13 +292,15 @@ export class WorkGroupDetail implements OnInit {
           this.dataService.houses$,
           this.dataService.taskTypes$,
           this.dataService.taskProgressTypes$,
+          this.dataService.houseAvailabilities$
       ]).subscribe({
-          next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, taskTypes, taskProgressTypes]) => {
+          next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, taskTypes, taskProgressTypes, houseAvailabilities]) => {
             this.workGroup = workGroups.find(wg => wg.work_group_id === workGroupId) || null;
             this.houses = houses;
             this.workGroupTasks = workGroupTasks;
             this.taskTypes = taskTypes;
             this.progressTypes = taskProgressTypes;
+            this.houseAvailabilities = houseAvailabilities;
             
             // Log progress types to debug
             console.log('Progress Types:', taskProgressTypes);
@@ -317,6 +324,12 @@ export class WorkGroupDetail implements OnInit {
             this.assignedStaff = profiles.filter(profile => groupProfileIds.includes(profile.id));
 
             this.loading = false;
+
+            if(houseAvailabilities && houseAvailabilities.length > 0 && this.assignedTasks && this.assignedTasks.length > 0){
+                this.assignedTasks.forEach(task => {
+                    this.houseService.isHouseOccupied(task.house_id);
+                });
+            }
           },
           error: (error) => {
               console.error('Error loading work group details:', error);
@@ -326,7 +339,11 @@ export class WorkGroupDetail implements OnInit {
 
       this.dataService.$workGroupTasksUpdate.subscribe(async res => {
         if(res && res.eventType == 'INSERT'){
+            let assignedTaskProgressType = this.progressTypes.find((tt: any) => tt.task_progress_type_name == "Dodijeljeno");
+
             const task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
+            task.task_progress_type_id = assignedTaskProgressType?.task_progress_type_id;
+
             if(!this.assignedTasks.some(at => at.task_id == task.task_id)){
                 this.assignedTasks = [...this.assignedTasks, task];
             }
@@ -344,17 +361,36 @@ export class WorkGroupDetail implements OnInit {
         }
       });
     
-      this.dataService.$tasksUpdate.subscribe(async res => {
+      this.dataService.$tasksUpdate.subscribe(res => {
         if(res){
-          let taskProgress = await this.dataService.getTaskProgressTypeByTaskProgressId(res.new.task_progress_type_id);
-          if(taskProgress.task_progress_type_name == 'Završeno'){
-            for (let team of this.teams) {
-              let task = team.tasks.find((task: any) => task.id == res.new.task_id);
-              if (task) {
-                task.progressType = 'Završeno';
+            let taskProgress = this.progressTypes.find(tp => tp.task_progress_type_id == res.new.task_progress_type_id);
+
+            if(taskProgress && taskProgress.task_progress_type_name == 'Završeno'){
+              for (let team of this.teams) {
+                let task = team.tasks.find((task: any) => task.id == res.new.task_id);
+                if (task) {
+                  task.progressType = 'Završeno';
+                }
               }
             }
-          }
+        }
+      });
+
+      this.dataService.$houseAvailabilitiesUpdate.subscribe(res => {
+        if(res && res.eventType == 'UPDATE') {
+            console.log(res);
+            console.log(this.assignedTasks);
+            let ha = this.houseService.getTodaysHouseAvailabilityForHouse(res.new.house_id);
+
+            if(ha){
+                const index = this.houseAvailabilities.findIndex(h => h.house_availability_id === res.new.house_availability_id);
+              
+                if (index > -1) {
+                  this.houseAvailabilities[index] = res.new;
+                } else {
+                  this.houseAvailabilities.push(res.new);
+                }
+            }
         }
       });
     }
@@ -386,12 +422,12 @@ export class WorkGroupDetail implements OnInit {
           }
     }
 
-    isTaskCompleted(task: Task): boolean {
+    isTaskCompleted(task: Task): boolean | undefined {
         const completedProgressType = this.progressTypes?.find((pt: any) => pt.task_progress_type_name === "Završeno");
         return completedProgressType && task.task_progress_type_id === completedProgressType.task_progress_type_id;
     }
 
-    isTaskInProgress(task: Task): boolean {
+    isTaskInProgress(task: Task): boolean | undefined {
         const inProgressType = this.progressTypes?.find((pt: any) => pt.task_progress_type_name === "U progresu");
         return inProgressType && task.task_progress_type_id === inProgressType.task_progress_type_id;
     }
@@ -417,14 +453,13 @@ export class WorkGroupDetail implements OnInit {
     }
 
     getActionButtonLabel(task: Task): string {
-        const isCleaningHouse = this.isCleaningHouseTask(task);
         const isPaused = this.isTaskPaused(task);
         
         if (this.isTaskInProgress(task)) {
             return 'Završi';
         } else if (isPaused) {
             return 'Nastavi';
-        }
+        } 
         
         return 'Započni';
     }
@@ -440,7 +475,7 @@ export class WorkGroupDetail implements OnInit {
         return task.task_type_id === cleaningHouseType?.task_type_id;
     }
 
-    isTaskPaused(task: Task): boolean {
+    isTaskPaused(task: Task): boolean | undefined {
         // Find "Pauza" progress type
         const pauseProgressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === "Pauza");
         return pauseProgressType && task.task_progress_type_id === pauseProgressType.task_progress_type_id;

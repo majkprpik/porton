@@ -1,25 +1,77 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, HouseStatus, HouseStatusTask } from './data.service';
+import { DataService, HouseAvailability, HouseAvailabilityType, HouseStatus, HouseStatusTask } from './data.service';
 import { Observable, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HouseService {
+  houseAvailabilityTypes: HouseAvailabilityType[] = [];
+  houseAvailabilities: HouseAvailability[] = [];
+
   constructor(
     private supabase: SupabaseService,
-    private dataService: DataService) {
+    private dataService: DataService
+  ) {
 
+    this.dataService.houseAvailabilityTypes$.subscribe(ha => {
+      this.houseAvailabilityTypes = ha;
+    });
+
+    this.dataService.houseAvailabilities$.subscribe(ha => {
+      this.houseAvailabilities = ha;
+    });
+  }
+
+  isHouseOccupied(houseId: number){
+    let houseAvailability = this.getTodaysHouseAvailabilityForHouse(houseId);
+
+    if(houseAvailability){
+      return !houseAvailability.has_departed
     }
+
+    return false;
+  }
+
+  getTodaysHouseAvailabilityForHouse(houseId: number){
+    const today = new Date(); 
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1); // Set yesterday's date
+
+    // Manually format both today's and yesterday's date to YYYY-MM-DD
+    const yesterdayString = yesterday.getFullYear() + '-' + 
+                            String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + 
+                            String(yesterday.getDate()).padStart(2, '0');
+
+    const houseAvailability = this.houseAvailabilities?.find(item => {
+      if(item.house_id == houseId){
+          const startDate = new Date(item.house_availability_start_date);
+          const endDate = new Date(item.house_availability_end_date);
+    
+          // Format endDate to YYYY-MM-DD (local time)
+          const endDateString = endDate.getFullYear() + '-' + 
+                                String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                                String(endDate.getDate()).padStart(2, '0');
+    
+          // Check if the availability end date is yesterday
+          return (today >= startDate && today <= endDate) || yesterdayString === endDateString;
+      } 
+    
+      return false;
+    });
+
+    return houseAvailability;
+  }
 
   async setHouseAvailabilityDeparted(houseAvailabilityId: number, state: boolean){
     let houseAvailability;
 
     if(state){
-      houseAvailability = await this.dataService.getHouseAvailabilityTypeByName('Free');
+      houseAvailability = this.houseAvailabilityTypes.find(ha => ha.house_availability_type_name == 'Free');
     } else{
-      houseAvailability = await this.dataService.getHouseAvailabilityTypeByName('Occupied');
+      houseAvailability = this.houseAvailabilityTypes.find(ha => ha.house_availability_type_name == 'Occupied');
     }
 
     if(!houseAvailability)
@@ -46,9 +98,9 @@ export class HouseService {
     let houseAvailability; 
 
     if(state){
-      houseAvailability = await this.dataService.getHouseAvailabilityTypeByName('Occupied');
+      houseAvailability = this.houseAvailabilityTypes.find(ha => ha.house_availability_type_name == 'Occupied');
     } else{
-      houseAvailability = await this.dataService.getHouseAvailabilityTypeByName('Free');
+      houseAvailability = this.houseAvailabilityTypes.find(ha => ha.house_availability_type_name == 'Free');
     }
     
     if(!houseAvailability)
@@ -71,6 +123,85 @@ export class HouseService {
     }
   }
 
+  async getHomesWithTodaysStartDate(){
+    try {
+      const today = new Date();
+      const specificDateStr = today.toISOString().split('T')[0];
+
+      const { data, error } = await this.supabase.getClient()
+        .schema('porton')
+        .from('house_availabilities')
+        .select('*') 
+        .eq('house_availability_start_date', specificDateStr)
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching houses for today: ', error);
+      return [];
+    }
+  }
+
+  async getHomesWithYesterdaysEndDate(){
+    try {
+      const today = new Date(); 
+      today.setHours(0, 0, 0, 0);
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      
+      const specificDateStr = yesterday.toISOString().split('T')[0];
+
+      const { data, error } = await this.supabase.getClient()
+        .schema('porton')
+        .from('house_availabilities')
+        .select('*') 
+        .eq('house_availability_end_date', specificDateStr)
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching houses for today: ', error);
+      return [];
+    }
+  }
+
+  async getHouseNumberByHouseId(houseId: number){
+    try{
+      const { data, error } = await this.supabase.getClient()
+        .schema('porton')
+        .from('houses')
+        .select('house_number')
+        .eq('house_id', houseId)
+        .single();
+
+      if (error) throw error;
+
+      return data ? data.house_number : null;
+    } catch (error) {
+      console.error('Error fetching house number:', error);
+      return null;
+    }
+  }
+
+  async getHouseIdByHouseNumber(houseNumber: string): Promise<number | null> {
+    try{
+      const { data, error } = await this.supabase.getClient()
+        .schema('porton')
+        .from('houses')
+        .select('house_id')
+        .eq('house_number', houseNumber)
+        .single();
+
+      if (error) throw error;
+
+      return data.house_id || null;
+    } catch (error) {
+      console.error('Error fetching house number:', error);
+      return null;
+    }
+  }
   
 
   // Helper method to check if a house has active tasks

@@ -1,3 +1,4 @@
+import { HeroWidget } from './../landing/components/herowidget';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseStatus, HouseStatusTask, TaskType } from '../service/data.service';
@@ -10,6 +11,8 @@ import { InputTextarea } from 'primeng/inputtextarea';
 import { MenuItem } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
+import { ArrivalsAndDeparturesComponent } from '../../layout/component/arrivals-and-departures.component';
+import { NotesComponent } from '../../layout/component/notes.component';
 
 @Component({
     selector: 'app-home',
@@ -21,7 +24,9 @@ import { signal } from '@angular/core';
         DialogModule,
         DropdownModule,
         InputTextarea,
-        FormsModule
+        FormsModule,
+        ArrivalsAndDeparturesComponent,
+        NotesComponent
     ],
     template: `
         <div class="home-container" (click)="handleContainerClick($event)">
@@ -226,10 +231,17 @@ import { signal } from '@angular/core';
                 </ng-template>
             </p-dialog>
         </div>
+
+        <div class="bottom"> 
+            <app-arrivals-and-departures></app-arrivals-and-departures>
+            <app-notes></app-notes>
+        </div>
     `,
     styles: [`
         .home-container {
-            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px
         }
         
         .header-card {
@@ -539,6 +551,13 @@ import { signal } from '@angular/core';
             label {
                 color: var(--text-color);
             }
+        }
+
+        .bottom{
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
         }
     `]
 })
