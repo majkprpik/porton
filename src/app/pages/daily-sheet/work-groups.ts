@@ -3,12 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { WorkGroup } from './work-group';
 import { DataService, Task, Profile, LockedTeam } from '../service/data.service';
-import { WorkGroupService } from './work-group.service';
 import { combineLatest, from, of } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
-import { Router } from '@angular/router';
+import { WorkGroupService } from '../service/work-group.service';
 
 @Component({
   selector: 'app-work-groups',

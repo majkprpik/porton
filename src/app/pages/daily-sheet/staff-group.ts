@@ -6,7 +6,7 @@ import { Profile, DataService } from '../service/data.service';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 import { StaffCardComponent } from './staff-card';
-import { WorkGroupService } from './work-group.service';
+import { WorkGroupService } from '../service/work-group.service';
 
 @Component({
   selector: 'app-staff-group',

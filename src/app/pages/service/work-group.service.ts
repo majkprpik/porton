@@ -1,11 +1,48 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { LockedTeam } from './data.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkGroupService {
-  constructor(private supabaseService: SupabaseService) { }
+  private activeGroupIdSubject = new BehaviorSubject<number | undefined>(undefined);
+  private lockedTeams: LockedTeam[] = [];
+  activeGroupId$ = this.activeGroupIdSubject.asObservable();
+  $workGroupToDelete = new BehaviorSubject<any>(null);
+  $newGroupWhileGroupActive = new BehaviorSubject<boolean>(false);
+
+  constructor(
+    private supabaseService: SupabaseService
+  ) {
+    
+  }
+
+  setActiveGroup(groupId: number | undefined) {
+    this.activeGroupIdSubject.next(groupId);
+  }
+
+  getActiveGroup(): number | undefined {
+    return this.activeGroupIdSubject.value;
+  }
+
+  setLockedTeams(lockedTeams: LockedTeam[]){
+    this.lockedTeams = lockedTeams;
+  }
+
+  updateLockedTeam(updatedTeam: LockedTeam){
+    const index = this.lockedTeams.findIndex(team => team.id == updatedTeam.id);
+    if (index != -1) {
+      this.lockedTeams[index] = updatedTeam;
+    } else {
+      this.lockedTeams.push(updatedTeam);
+    }
+  }
+
+  getLockedTeams(){
+    return this.lockedTeams;
+  }
 
   async createWorkGroup(): Promise<any>{
     try{

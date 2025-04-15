@@ -2,10 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { TaskGroupComponent } from './task-group';
 import { DataService, Task, TaskType, TaskProgressType } from '../service/data.service';
-import { WorkGroupService } from './work-group.service';
-import { combineLatest, forkJoin } from 'rxjs';
+import { combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TaskService } from '../service/task.service';
+import { WorkGroupService } from '../service/work-group.service';
 
 @Component({
   selector: 'app-tasks',

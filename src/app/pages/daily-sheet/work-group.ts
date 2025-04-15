@@ -12,6 +12,7 @@ import { WorkGroupService } from './work-group.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { DragDropModule } from 'primeng/dragdrop';
 import { TaskService } from '../service/task.service';
+import { WorkGroupService } from '../service/work-group.service';
 
 @Component({
   selector: 'app-work-group',

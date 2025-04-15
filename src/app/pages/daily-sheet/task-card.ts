@@ -4,7 +4,7 @@ import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 import { Task } from '../service/data.service';
 import { TaskService } from '../service/task.service';
-import { WorkGroupService } from './work-group.service';
+import { WorkGroupService } from '../service/work-group.service';
 
 export type TaskState = 'pending' | 'in-progress' | 'completed';
 

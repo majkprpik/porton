@@ -3,7 +3,7 @@ import { StaffGroup } from './staff-group';
 import { ChipModule } from 'primeng/chip';
 import { DataService, Profile } from '../service/data.service';
 import { CommonModule } from '@angular/common';
-import { WorkGroupService } from './work-group.service';
+import { WorkGroupService } from '../service/work-group.service';
 
 @Component({
   selector: 'app-staff-groups',
