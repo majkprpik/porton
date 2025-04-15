@@ -92,6 +92,7 @@ export interface Task {
   created_by: string;
   created_at: string;
   index?: number | null; 
+  is_unscheduled: boolean
 }
 
 export interface TeamTask {

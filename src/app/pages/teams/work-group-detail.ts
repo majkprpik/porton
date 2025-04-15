@@ -64,7 +64,7 @@ import { HouseService } from '../service/house.service';
                                         </div>
                                         <div class="task-actions">
                                             @if (!isTaskCompleted(task)) {
-                                                @if(houseService.isHouseOccupied(task.house_id)){
+                                                @if(houseService.isHouseOccupied(task.house_id) && !task.is_unscheduled){
                                                     <span>Kućica zauzeta</span>
                                                 } @else {
                                                     <p-button 

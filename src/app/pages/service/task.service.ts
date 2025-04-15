@@ -18,7 +18,7 @@ export class TaskService {
 
   }
 
-  async createTaskForHouse(houseId: string, description: string, taskTypeName: string, isAssigned: boolean){
+  async createTaskForHouse(houseId: string, description: string, taskTypeName: string, isAssigned: boolean, isUnscheduled: boolean = false){
     try {
       let taskTypeId = await this.dataService.getTaskTypeIdByTaskName(taskTypeName);
       let taskProgressTypeId;
@@ -39,6 +39,7 @@ export class TaskService {
           description: description,
           // created_by: this.authService.getStoredUserId(),
           created_at: this.getFormattedDateTimeNowForSupabase(),
+          is_unscheduled: isUnscheduled
         })
         .select()
         .single();
