@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable, from, throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import { Profile } from '../../pages/service/data.service';
+import { SupabaseService } from './supabase.service';
 import { WorkGroupService } from './work-group.service';
-import { SupabaseService } from '../../pages/service/supabase.service';
+import { catchError, from, Observable, throwError } from 'rxjs';
+import { Profile } from './data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -156,4 +155,4 @@ export class ProfileService {
     
     return "";
   }
-} 
+}

@@ -221,6 +221,110 @@ export class WorkGroupService {
     }
   }
 
+  async getWorkGroupByWorkGroupId(workGroupId: number): Promise<any>{
+    try{
+      const { data: existingWorkGroup, error: existingWorkGroupError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_groups')
+        .select('*')
+        .eq('work_group_id', workGroupId)
+        .single();
+
+      if(existingWorkGroupError) throw existingWorkGroupError;
+
+      return existingWorkGroup;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  async getWorkGroupProfilesByWorkGroupId(workGroupId: number): Promise<any>{
+    try{
+      const { data: existingWorkGroup, error: existingWorkGroupError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_profiles')
+        .select('*')
+        .eq('work_group_id', workGroupId);
+
+      if(existingWorkGroupError) throw existingWorkGroupError;
+
+      return existingWorkGroup;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async getWorkGroupTasksByWorkGroupId(workGroupId: number){
+    try{
+      const { data: existingWorkGroupTask, error: existingWorkGroupTaskError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_tasks')
+        .select('*')
+        .eq('work_group_id', workGroupId);
+
+      if(existingWorkGroupTaskError) throw existingWorkGroupTaskError;
+
+      return existingWorkGroupTask;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async getWorkGroupTasksByTaskId(taskId: number){
+    try{
+      const { data: existingWorkGroupTask, error: existingWorkGroupTaskError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_tasks')
+        .select('*')
+        .eq('task_id', taskId)
+        .single();
+
+      if(existingWorkGroupTaskError) throw existingWorkGroupTaskError;
+
+      return existingWorkGroupTask;
+    } catch (error) {
+      console.log(error);
+      return {};
+    }
+  }
+
+  async deleteWorkGroupProfileByProfileId(profileId: string){
+    try{
+      const { error: deleteWorkGroupProfileError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_profiles')
+        .delete()
+        .eq('profile_id', profileId);
+
+      if(deleteWorkGroupProfileError) throw deleteWorkGroupProfileError
+
+      return true;
+    } catch(error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  async deleteWorkGroupTaskByTaskId(taskId: string){
+    try{
+      const { error: deleteWorkGroupTaskError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_tasks')
+        .delete()
+        .eq('task_id', taskId);
+
+      if(deleteWorkGroupTaskError) throw deleteWorkGroupTaskError
+
+      return true;
+    } catch(error) {
+      console.log(error);
+      return false;
+    }
+  }
+
   private getFormattedDateTimeNowForSupabase(){
     const now = new Date();
     const isoString = now.toISOString(); // Example: 2025-03-14T11:26:33.350Z
