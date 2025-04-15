@@ -7,8 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { StaffCardComponent } from './staff-card';
 import { MenuItem } from 'primeng/api';
 import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
-import { forkJoin } from 'rxjs';
-import { WorkGroupService } from './work-group.service';
+import { combineLatest, forkJoin } from 'rxjs';
 import { TooltipModule } from 'primeng/tooltip';
 import { DragDropModule } from 'primeng/dragdrop';
 import { TaskService } from '../service/task.service';
@@ -355,31 +354,40 @@ export class WorkGroup implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.dataService.taskProgressTypes$.subscribe(taskProgressTypes => {
-      this.taskProgressTypes = taskProgressTypes;
+    combineLatest([
+      this.dataService.taskProgressTypes$,
+      this.dataService.tasks$,
+      this.dataService.workGroupTasks$,
+      this.dataService.houses$,
+      this.dataService.taskTypes$
+    ]).subscribe({
+      next: ([taskProgressTypes, tasks, workGroupTasks, houses, taskTypes]) => {
+        this.taskProgressTypes = taskProgressTypes;
+        this.tasks = tasks;
+        this.workGroupTasks = workGroupTasks;
+        this.houses = houses;
+        this.taskTypes = taskTypes;
+
+      },
+      error: (error) => {
+        console.log(error);
+      }
     });
 
-    this.dataService.tasks$.subscribe(tasks => {
-      this.tasks = tasks;
-    });
-
-    this.dataService.workGroupTasks$.subscribe(workGroupTasks => {
-      this.workGroupTasks = workGroupTasks;
-    });
-
-    this.dataService.houses$.subscribe(houses => {
-      this.houses = houses;
-    });
-
-    this.dataService.taskTypes$.subscribe(taskTypes => {
-      this.taskTypes = taskTypes;
+    this.workGroupService.$newGroupWhileGroupActive.subscribe(res => {
+      if(res){
+        this.onGroupClick();
+        this.workGroupService.$newGroupWhileGroupActive.next(false);
+      }
     });
 
     if (this.workGroup) {
       const workGroup = this.workGroup;
 
       this.taskService.$selectedTask.subscribe(selectedTask => {
-        if(selectedTask){
+        console.log(this.workGroupTasks);
+
+        if(selectedTask && !this.workGroupTasks.some((wgt: any) => wgt.task_id == selectedTask.task_id)){
           const activeGroup = this.workGroupService.getActiveGroup();
           
           if(activeGroup && workGroup?.work_group_id == activeGroup){

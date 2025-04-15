@@ -165,13 +165,12 @@ export class WorkGroups implements OnInit {
   workGroupStaff: { [key: number]: Profile[] } = {};
   allTasks: Task[] = [];
   lockedTeams: LockedTeam[] = [];
-  init = true;
   taskProgressTypes: any;
+  wgt: any[] = [];
 
   constructor(
     private dataService: DataService,
     private workGroupService: WorkGroupService,
-    private router: Router
   ) {}
 
   ngOnInit() {
@@ -190,6 +189,7 @@ export class WorkGroups implements OnInit {
         this.workGroups = workGroups;
         this.allTasks = tasks;
         this.taskProgressTypes = taskProgressTypes;
+        this.wgt = workGroupTasks;
         
         // Map work group tasks
         this.workGroupTasks = {};
@@ -268,20 +268,26 @@ export class WorkGroups implements OnInit {
   }
 
   createWorkGroup() {
+    if(this.activeGroupId){
+      console.log(this.activeGroupId);
+      this.workGroupService.$newGroupWhileGroupActive.next(true);
+    }
     this.dataService.createWorkGroup().subscribe({
       next: (workGroup) => {
         if (workGroup) {
           this.setActiveGroup(workGroup.work_group_id);
-          let lockedTeams = this.workGroupService.getLockedTeams();
-          lockedTeams = [...lockedTeams, {
-            homes: [],
-            id: workGroup.work_group_id.toString(),
-            isLocked: false,
-            members: [],
-            name: "Team " + workGroup.work_group_id.toString(),
-            tasks: [],
-          }];
-          this.workGroupService.setLockedTeams(lockedTeams);
+          // let lockedTeams = this.workGroupService.getLockedTeams();
+          // let ltIndex = lockedTeams.findIndex(lt => parseInt(lt.id) == workGroup.work_group_id);
+
+          // lockedTeams[ltIndex] = {
+          //   homes: [],
+          //   id: workGroup.work_group_id.toString(),
+          //   isLocked: false,
+          //   members: [],
+          //   name: "Team " + workGroup.work_group_id.toString(),
+          //   tasks: [],
+          // }
+          // this.workGroupService.setLockedTeams(lockedTeams);
         }
       },
       error: (error) => {
@@ -297,6 +303,12 @@ export class WorkGroups implements OnInit {
 
     // Get the tasks that will be removed from this work group
     const tasksToReturn = this.getAssignedTasks(workGroupId);
+    
+    if(tasksToReturn && tasksToReturn.length > 0){
+      this.wgt = this.wgt.filter(wgt => !this.workGroupTasks[workGroupId].some(wgtask => wgtask.task_id == wgt.task_id));
+      this.workGroupTasks[workGroupId] = this.workGroupTasks[workGroupId].filter(task => !tasksToReturn.some(ttr => ttr.task_id == task.task_id));
+      this.dataService.updateWorkGroupTasks(this.wgt);
+    }
     
     // Get the progress type ID for "Nije dodijeljeno"
     this.dataService.taskProgressTypes$.pipe(
