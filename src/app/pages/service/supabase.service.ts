@@ -7,11 +7,17 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 })
 export class SupabaseService {
   private supabase: SupabaseClient;
-
+  private supabaseAdmin: SupabaseClient;
+  
   constructor() {
     this.supabase = createClient(
       environment.supabaseUrl as string,
       environment.supabaseAnonKey as string
+    );
+
+    this.supabaseAdmin = createClient(
+      environment.supabaseUrl as string,
+      environment.supabaseServiceKey as string
     );
   }
 
@@ -165,5 +171,15 @@ export class SupabaseService {
     }
 
     return data;
+  }
+  
+  getAdminClient() {
+    return this.supabaseAdmin;
+  }
+
+  listenToChanges(houseNumber: string) {
+    const channel = this.supabase.channel('realtime:porton' + houseNumber);
+
+    return channel;
   }
 }

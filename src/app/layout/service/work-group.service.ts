@@ -1,6 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { Injectable } from '@angular/core';
-import { SupabaseService } from './supabase.service';
+import { SupabaseService } from '../../pages/service/supabase.service';
 
 @Injectable({
   providedIn: 'root'
