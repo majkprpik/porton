@@ -103,7 +103,7 @@ export class NotesComponent {
 
   constructor(
     private notesService: NotesService,
-    private dataService: DataService
+    private dataService: DataService,
   ) {
   }
   
@@ -115,6 +115,12 @@ export class NotesComponent {
       next: ([notes, users]) => {
         this.notes = notes;
         this.users = users;
+
+        if(notes.length > 0){
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 0);
+        }
       },
       error: (error) => {
         console.log(error);
@@ -131,12 +137,6 @@ export class NotesComponent {
         }
       }
     });
-  }
-
-  ngAfterViewChecked() {
-    if (this.messagesContainer) {
-      this.scrollToBottom();
-    }
   }
 
   findUser(profileId: string){
