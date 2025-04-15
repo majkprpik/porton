@@ -100,7 +100,7 @@ export class TasksComponent implements OnInit {
     });
 
     this.workGroupService.$workGroupToDelete.subscribe(workGroupToDelete => {
-      if(workGroupToDelete){
+      if(workGroupToDelete && this.tasks && this.tasks.length > 0){
         let workGroupTasksToDelete = this.workGroupTasks.filter(wgt => wgt.work_group_id == workGroupToDelete);
         this.tasks = this.tasks.map(task => {
           if (workGroupTasksToDelete.some(t => t.task_id === task.task_id)) {
@@ -150,6 +150,13 @@ export class TasksComponent implements OnInit {
         this.loading = false;
       }
     );
+
+    this.dataService.$tasksUpdate.subscribe(res => {
+      if(res && res.eventType == 'UPDATE'){
+        let taskIndex = this.tasks.findIndex(task => task.task_id == res.new.task_id);
+        this.tasks[taskIndex] = res.new;
+      }
+    });
   }
 
   get hasActiveWorkGroup(): boolean {
