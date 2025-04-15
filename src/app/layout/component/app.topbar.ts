@@ -6,8 +6,8 @@ import { StyleClassModule } from 'primeng/styleclass';
 import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '../service/layout.service';
 import { MenuModule } from 'primeng/menu';
-import { AuthService } from '../service/auth.service';
 import { Menu } from 'primeng/menu';
+import { AuthService } from '../../pages/service/auth.service';
 
 @Component({
     selector: 'app-topbar',
