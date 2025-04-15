@@ -8,7 +8,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 export class SupabaseService {
   private supabase: SupabaseClient;
   private supabaseAdmin: SupabaseClient;
-  
+
   constructor() {
     this.supabase = createClient(
       environment.supabaseUrl as string,
@@ -181,5 +181,13 @@ export class SupabaseService {
     const channel = this.supabase.channel('realtime:porton' + houseNumber);
 
     return channel;
+  }
+
+  public getFormattedDateTimeNowForSupabase(){
+    const now = new Date();
+    const isoString = now.toISOString(); // Example: 2025-03-14T11:26:33.350Z
+  
+    // Convert to required format: "YYYY-MM-DD HH:MM:SS.ssssss+00"
+    return isoString.replace('T', ' ').replace('Z', '+00');
   }
 }

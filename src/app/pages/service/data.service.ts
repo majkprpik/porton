@@ -152,6 +152,13 @@ export interface HouseStatus {
   housetasks: HouseStatusTask[];
 }
 
+export interface Note {
+  note_id: string,
+  profile_id: string,
+  note: string,
+  time_sent: string,
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -178,6 +185,7 @@ export class DataService {
   private housesSubject = new BehaviorSubject<House[]>([]);
   private houseStatusesSubject = new BehaviorSubject<HouseStatus[]>([]);
   private authUsersSubject = new BehaviorSubject<Profile[]>([]);
+  private notesSubject = new BehaviorSubject<Note[]>([]);
 
   // Public Observables
   loading$ = this.loadingSubject.asObservable();
@@ -195,12 +203,14 @@ export class DataService {
   houses$ = this.housesSubject.asObservable();
   houseStatuses$ = this.houseStatusesSubject.asObservable();
   authUsers$ = this.authUsersSubject.asObservable();
+  notes$ = this.notesSubject.asObservable();
   
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tasksUpdate = new BehaviorSubject<any>('');
   $workGroupTasksUpdate = new BehaviorSubject<any>('');
   $workGroupProfiles = new BehaviorSubject<any>('');
   $workGroupsUpdate = new BehaviorSubject<any>('');
+  $notesUpdate = new BehaviorSubject<any>('');
 
   constructor(private supabaseService: SupabaseService) {
     // Load all enum types when service is initialized
@@ -264,6 +274,7 @@ export class DataService {
     this.loadWorkGroupTasks().subscribe();
     this.loadProfiles().subscribe();
     this.loadHouses().subscribe();
+    this.loadNotes().subscribe();
     // this.loadAuthUsers().subscribe();
   }
 
@@ -535,6 +546,22 @@ export class DataService {
         if (data) {
           this.housesSubject.next(data);
           this.logData('Houses', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  loadNotes(): Observable<Note[]> {
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('notes', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.notesSubject.next(data);
+          this.logData('Notes', data);
         }
       }),
       map((data) => data || []),
@@ -1546,6 +1573,16 @@ export class DataService {
       async (payload: any) => {
         this.$workGroupsUpdate.next(payload);
       }
+    ).on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'porton',
+        table: 'notes'
+      },
+      async (payload: any) => {
+        this.$notesUpdate.next(payload);
+      }
     )
     .subscribe();
   }
@@ -1565,5 +1602,27 @@ export class DataService {
       catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
     );
+  }
+
+  async getAllNotesForToday(){
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+
+    try{
+      const { data: notes, error: getNotesError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('notes')
+        .select('*')
+        .gte('time_sent', startOfDay)
+        .lte('time_sent', endOfDay);
+
+      if(getNotesError) throw getNotesError;
+
+      return notes;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
   }
 }

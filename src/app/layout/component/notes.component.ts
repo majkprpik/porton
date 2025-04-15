@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NotesService } from '../../pages/service/notes.service';
+import { DataService, Note, Profile } from '../../pages/service/data.service';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-notes',
@@ -15,12 +18,12 @@ import { FormsModule } from '@angular/forms';
         <span>Notes</span>
       </div>
 
-      <div class="notes-content">
+      <div class="notes-content" #messagesContainer>
         @if(!notes.length){
           <span>No notes for today</span>
         } @else {
-          @for(note of notes; track note){
-            <span>{{note}}</span>
+          @for(note of notes; track $index){
+            <span>{{findUser(note.profile_id)?.first_name}} - {{note.time_sent | date: 'HH:mm'}}: {{note.note}}</span>
           }
         }
       </div>
@@ -62,11 +65,14 @@ import { FormsModule } from '@angular/forms';
       }
 
       .notes-content{
-        flex: 1;
+        height: calc(100% - 100px);
         box-sizing: border-box;
         padding: 10px;
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+        word-wrap: break-word;
       }
 
       .notes-footer{
@@ -89,29 +95,73 @@ import { FormsModule } from '@angular/forms';
   `
 })
 export class NotesComponent {
-  note: string = '';
-  notes: string[] = [];
+  @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
-  constructor() {
-        
+  note: string = '';
+  notes: Note[] = [];
+  users: Profile[] = [];
+
+  constructor(
+    private notesService: NotesService,
+    private dataService: DataService
+  ) {
+  }
+  
+  ngOnInit(){
+    combineLatest([
+      this.dataService.notes$,
+      this.dataService.profiles$,
+    ]).subscribe({
+      next: ([notes, users]) => {
+        this.notes = notes;
+        this.users = users;
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    });
+
+    this.dataService.$notesUpdate.subscribe(res => {
+      if(res && res.eventType == 'INSERT'){
+        console.log(res);
+        let existingNote = this.notes.find(note => note.note_id == res.new.id);
+
+        if(!existingNote){
+          this.notes = [...this.notes, res.new];
+        }
+      }
+    });
   }
 
-  addNote(event: any){
+  ngAfterViewChecked() {
+    if (this.messagesContainer) {
+      this.scrollToBottom();
+    }
+  }
+
+  findUser(profileId: string){
+    let foundUser = this.users.find(user => user.id == profileId);
+    if(foundUser && !foundUser?.first_name){
+      foundUser.first_name = foundUser?.role + ' ' + 'user'
+    }
+    return foundUser
+  }
+
+  gethhmmFromSupabaseTimeString(time: string){
+    return time.slice(0, 5);
+  }
+
+  async addNote(event: any){
     event.preventDefault();
     this.note = this.note.trim();
-
     if(this.note){
-      this.notes.push(this.getCurrentTime() + ': ' + this.note);
+      this.notesService.createNote(this.note);
       this.note = '';
     }
   }
 
-  getCurrentTime(){
-    const now = new Date();
-    return now.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
+  private scrollToBottom(): void {
+    const container = this.messagesContainer.nativeElement;
+    container.scrollTop = container.scrollHeight;
   }
 }
