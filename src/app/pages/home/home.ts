@@ -118,7 +118,7 @@ import { NotesComponent } from '../../layout/component/notes.component';
                     </div>
                     
                     <div class="field mt-4">
-                        <label for="description" class="font-bold block mb-2">Opis*</label>
+                        <label for="description" class="font-bold block mb-2">Opis</label>
                         <textarea
                             id="description"
                             pInputTextarea
@@ -184,7 +184,7 @@ import { NotesComponent } from '../../layout/component/notes.component';
                     </div>
 
                     <div class="field mt-4">
-                        <label for="taskDescription" class="font-bold block mb-2">Opis*</label>
+                        <label for="taskDescription" class="font-bold block mb-2">Opis</label>
                         <textarea
                             id="taskDescription"
                             pInputTextarea
@@ -969,7 +969,7 @@ export class Home implements OnInit, OnDestroy {
     }
 
     isFormValid(): boolean {
-        return !!this.selectedHouse && !!this.faultDescription.trim();
+        return !!this.selectedHouse;
     }
 
     submitFaultReport() {
@@ -991,8 +991,7 @@ export class Home implements OnInit, OnDestroy {
 
     isTaskFormValid(): boolean {
         return !!this.selectedHouseForTask && 
-               !!this.selectedTaskType && 
-               !!this.taskDescription.trim();
+               !!this.selectedTaskType;
     }
 
     submitExtraordinaryTask() {

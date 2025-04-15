@@ -82,7 +82,7 @@ import { ToastModule } from 'primeng/toast';
                 </div>
                 
                 <div class="field mt-4">
-                    <label for="description" class="font-bold block mb-2">Opis*</label>
+                    <label for="description" class="font-bold block mb-2">Opis</label>
                     <textarea
                         id="description"
                         pInputTextarea
@@ -148,7 +148,7 @@ import { ToastModule } from 'primeng/toast';
                 </div>
 
                 <div class="field mt-4">
-                    <label for="taskDescription" class="font-bold block mb-2">Opis*</label>
+                    <label for="taskDescription" class="font-bold block mb-2">Opis</label>
                     <textarea
                         id="taskDescription"
                         pInputTextarea
@@ -406,13 +406,12 @@ export class AppLayout {
     }
 
     isFormValid(): boolean {
-        return !!this.selectedHouse && !!this.faultDescription.trim();
+        return !!this.selectedHouse;
     }
 
     isTaskFormValid(): boolean {
         return !!this.selectedHouseForTask && 
-               !!this.selectedTaskType && 
-               !!this.taskDescription.trim();
+               !!this.selectedTaskType;
     }
 
     submitFaultReport() {
@@ -456,7 +455,8 @@ export class AppLayout {
             this.selectedHouseForTask!.house_id.toString(),
             this.taskDescription,
             this.selectedTaskType!.task_type_name,
-            false
+            false,
+            true
         ).then(result => {
             if (result) {
                 this.messageService.add({
