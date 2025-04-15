@@ -5,6 +5,7 @@ import { Task, TaskType, TaskProgressType, DataService, House } from '../service
 import { TaskState } from './task-card';
 import { PanelModule } from 'primeng/panel';
 import { BadgeModule } from 'primeng/badge';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-task-group',
@@ -116,21 +117,19 @@ export class TaskGroupComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.dataService.taskProgressTypes$.subscribe(types => {
-      this.progressTypes = types;
+    combineLatest([
+      this.dataService.taskProgressTypes$,
+      this.dataService.workGroupTasks$,
+      this.dataService.houses$,
+      this.dataService.taskTypes$
+    ]).subscribe({
+      next: ([types, tasks, houses, taskTypes]) => {
+        this.progressTypes = types;
+        this.workGroupTasks = tasks;
+        this.houses = houses;
+        this.taskTypes = taskTypes;
+      }
     });
-
-    this.dataService.workGroupTasks$.subscribe(tasks => {
-      this.workGroupTasks = tasks;
-    });
-
-    this.dataService.houses$.subscribe(houses => {
-      this.houses = houses;
-    });
-
-    this.dataService.taskTypes$.subscribe(taskTypes => {
-      this.taskTypes = taskTypes;
-    })
   } 
 
   get filteredTasks(): Task[] {
