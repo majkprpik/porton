@@ -1,12 +1,23 @@
 import { Component } from '@angular/core';
-import { combineLatest, interval, Subscription } from 'rxjs';
+import { combineLatest, Subscription } from 'rxjs';
 import { HouseService } from '../../pages/service/house.service';
 import { DataService, House, HouseAvailability } from '../../pages/service/data.service';
+import { CheckboxModule } from 'primeng/checkbox';
+import { FormsModule } from '@angular/forms';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-arrivals-and-departures',
   standalone: true,
-  imports: [],
+  imports: [
+    CheckboxModule,
+    FormsModule,
+    ConfirmDialogModule,
+    ToastModule
+  ],
+  providers: [ConfirmationService],
   template: `
     <div class="arrivals-and-departures-container">
       <div class="departures-container">
@@ -19,18 +30,21 @@ import { DataService, House, HouseAvailability } from '../../pages/service/data.
           } @else{
             @for(departure of departures; track departure.house_availability_id){
               <div class="departures-data">
-                <input 
-                    id="departure-checkbox-{{ departure.house_number }}" 
-                    type="checkbox" 
-                    (change)="submitDepartures($event, departure.house_availability_id)"
-                    [checked]="departure.has_departed"
-                >
+                <p-checkbox 
+                  inputId="departure-checkbox-{{ departure.house_number }}" 
+                  (click)="submitDepartures($event, departure)"
+                  binary="true"
+                  [(ngModel)]="departure.has_departed"
+                />
                 <label for="departure-checkbox-{{ departure.house_number }}">House: {{ departure.house_number }} at: {{ getTimeFromDate(departure.house_availability_start_date) }}</label>
               </div>
             }
           }
         </div>
       </div>
+
+      <p-confirmDialog></p-confirmDialog>
+      <p-toast></p-toast>
 
       <div class="arrivals-container">
         <div class="arrivals-header">
@@ -42,12 +56,12 @@ import { DataService, House, HouseAvailability } from '../../pages/service/data.
           } @else{
             @for(arrival of arrivals; track arrival.house_availability_id){
               <div class="arrivals-data">
-                <input 
-                    id="arrival-checkbox-{{ arrival.house_number }}" 
-                    type="checkbox" 
-                    (change)="submitArrivals($event, arrival.house_availability_id)"
-                    [checked]="arrival.has_arrived"
-                >
+                <p-checkbox 
+                  inputId="arrival-checkbox-{{ arrival.house_number }}" 
+                  (click)="submitArrivals($event, arrival)"
+                  binary="true"
+                  [(ngModel)]="arrival.has_arrived"
+                />
                 <label for="arrival-checkbox-{{ arrival.house_number }}">House: {{ arrival.house_number }} at: {{ getTimeFromDate(arrival.house_availability_start_date) }}</label>
               </div>
             }
@@ -95,7 +109,7 @@ import { DataService, House, HouseAvailability } from '../../pages/service/data.
           width: 100%;
           box-sizing: border-box;
           padding: 15px;
-          gap: 10px;
+          gap: 15px;
           overflow-y: auto;
 
           .arrivals-data, .departures-data{
@@ -103,6 +117,13 @@ import { DataService, House, HouseAvailability } from '../../pages/service/data.
             display: flex; 
             flex-direction: row;
             gap: 10px;
+            // height: 30px;
+            // align-items: center;
+
+            //ne radi align-items: center ne znam zasto
+            label{
+              padding-top: 2px
+            }
           }
         }
       }
@@ -112,11 +133,6 @@ import { DataService, House, HouseAvailability } from '../../pages/service/data.
 
         .arrivals-header{
           border-radius: 0 10px 0 0;
-        }
-
-        .arrivals-content{
-          display: flex; 
-          flex-direction: column;
         }
       }
 
@@ -142,8 +158,11 @@ export class ArrivalsAndDeparturesComponent {
 
   constructor(
     private houseService: HouseService,
-    private dataService: DataService
+    private dataService: DataService,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {    
+    
   }
   
   async ngOnInit(){
@@ -219,15 +238,86 @@ export class ArrivalsAndDeparturesComponent {
     }
   }
 
-  async submitDepartures(event: any, houseAvailabilityId: number){
-    if(houseAvailabilityId){
-      await this.houseService.setHouseAvailabilityDeparted(houseAvailabilityId, event.target.checked);
+  async submitDepartures(event: any, departure: any) {
+    if (!event.target.checked) {
+      event.preventDefault();
+  
+      this.confirmationService.confirm({
+        target: event.target,
+        message: `Are you sure you want to mark <b>House ${departure.house_number}</b> as NOT departed?`, // Use HTML to make the house number bold
+        header: 'Confirm Departure Uncheck',
+        icon: 'pi pi-exclamation-triangle',
+        rejectLabel: 'Cancel',
+        rejectButtonProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          outlined: true,
+        },
+        acceptButtonProps: {
+          label: 'Confirm',
+          severity: 'danger',
+        },
+        accept: async () => {
+          let hasDeparted = await this.houseService.setHouseAvailabilityDeparted(departure.house_availability_id, false);
+          if (hasDeparted) {
+            departure.has_departed = false;
+            this.messageService.add({ severity: 'info', summary: 'Updated', detail: 'Departure unchecked' });
+          }
+        },
+        reject: () => {
+          event.target.checked = true;
+          this.messageService.add({ severity: 'warn', summary: 'Cancelled', detail: 'Change was cancelled' });
+        }
+      });
+    } else {
+      if (departure.house_availability_id) {
+        let hasDeparted = await this.houseService.setHouseAvailabilityDeparted(departure.house_availability_id, event.target.checked);
+        if (hasDeparted) {
+          departure.has_departed = true;
+        }
+      }
     }
   }
 
-  async submitArrivals(event: any, houseAvailabilityId: number){
-    if(houseAvailabilityId){
-      await this.houseService.setHouseAvailabilityArrived(houseAvailabilityId, event.target.checked);
+  async submitArrivals(event: any, arrival: any) {
+    if (!event.target.checked) {
+      event.preventDefault();
+  
+      this.confirmationService.confirm({
+        target: event.target,
+        message: `Are you sure you want to mark <b>House ${arrival.house_number}</b> as NOT arrived?`,
+        header: 'Confirm Uncheck',
+        icon: 'pi pi-exclamation-triangle',
+        rejectLabel: 'Cancel',
+        rejectButtonProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          outlined: true,
+        },
+        acceptButtonProps: {
+          label: 'Confirm',
+          severity: 'danger',
+        },
+        accept: async () => {
+          let hasArrived = await this.houseService.setHouseAvailabilityArrived(arrival.house_availability_id, false);
+          if (hasArrived) {
+            arrival.has_arrived = false;
+            this.messageService.add({ severity: 'info', summary: 'Updated', detail: 'Arrival unchecked' });
+          }
+        },
+        reject: () => {
+          event.target.checked = true; 
+          this.messageService.add({ severity: 'warn', summary: 'Cancelled', detail: 'Change was cancelled' });
+        }
+      });
+    } else {
+      if (arrival.house_availability_id) {
+        let hasArrived = await this.houseService.setHouseAvailabilityArrived(arrival.house_availability_id, true);
+        if (hasArrived) {
+          arrival.has_arrived = true;
+          this.messageService.add({ severity: 'success', summary: 'Arrival confirmed' });
+        }
+      }
     }
   }
 }
