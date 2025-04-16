@@ -29,39 +29,39 @@
         height: 100%;
     }
     
-    .handsontable {
-        font-size: 14px;
+    // .handsontable {
+    //     font-size: 14px;
         
-        th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            text-align: center;
-            height: 30px !important;
-        }
+    //     th {
+    //         background-color: #f8f9fa;
+    //         font-weight: 600;
+    //         text-align: center;
+    //         height: 30px !important;
+    //     }
         
-        td {
-            vertical-align: middle;
-        }
+    //     td {
+    //         vertical-align: middle;
+    //     }
         
-        // Special column styling
-        .today-column {
-            background-color: rgba(255, 251, 230, 0.2) !important;
-        }
+    //     // Special column styling
+    //     .today-column {
+    //         background-color: rgba(255, 251, 230, 0.2) !important;
+    //     }
         
-        .saturday-column {
-            background-color: rgba(240, 240, 240, 0.35) !important;
-        }
+    //     .saturday-column {
+    //         background-color: rgba(240, 240, 240, 0.35) !important;
+    //     }
         
-        .sunday-column {
-            background-color: rgba(240, 240, 240, 0.7) !important;
-        }
+    //     .sunday-column {
+    //         background-color: rgba(240, 240, 240, 0.7) !important;
+    //     }
         
-        // House name column styling
-        .house-name-cell {
-            background-color: #f8f9fa !important;
-            font-weight: 600;
-        }
-    }
+    //     // House name column styling
+    //     .house-name-cell {
+    //         background-color: #f8f9fa !important;
+    //         font-weight: 600;
+    //     }
+    // }
     
     // Center Handsontable cells
     .htCenter {
@@ -75,20 +75,20 @@
 }
 
 // Transparent grid borders - with !important tags and higher specificity
-body .handsontable .htCore td, 
-body .handsontable .htCore th {
-    border-right: 1px solid rgba(180, 180, 180, 0.15) !important;
-    border-bottom: 1px solid rgba(180, 180, 180, 0.15) !important;
-}
+// body .handsontable .htCore td, 
+// body .handsontable .htCore th {
+//     border-right: 1px solid rgba(180, 180, 180, 0.15) !important;
+//     border-bottom: 1px solid rgba(180, 180, 180, 0.15) !important;
+// }
 
-body .handsontable .htCore thead th {
-    border-bottom: 1px solid rgba(180, 180, 180, 0.25) !important;
-}
+// body .handsontable .htCore thead th {
+//     border-bottom: 1px solid rgba(180, 180, 180, 0.25) !important;
+// }
 
-body .handsontable .ht_clone_left th, 
-body .handsontable .ht_clone_left td {
-    border-right: 1px solid rgba(180, 180, 180, 0.25) !important;
-}
+// body .handsontable .ht_clone_left th, 
+// body .handsontable .ht_clone_left td {
+//     border-right: 1px solid rgba(180, 180, 180, 0.25) !important;
+// }
 
 // Apply transparent borders to table itself
 body .handsontable {
@@ -108,22 +108,22 @@ body .handsontable .wtBorder {
 
 // Force consistent cell height and prevent expansion
 .handsontable td {
-    height: 30px !important;
-    min-height: 30px !important;
-    max-height: 30px !important;
-    line-height: 22px !important;
+    // height: 30px !important;
+    // min-height: 30px !important;
+    // max-height: 30px !important;
+    // line-height: 22px !important;
 
-    width: 80px !important;
-    min-width: 80px !important;
-    max-width: 80px !important;
+    // width: 80px !important;
+    // min-width: 80px !important;
+    // max-width: 80px !important;
 
-    overflow: hidden;
-    white-space: nowrap !important; /* Change from pre-line to nowrap */
-    text-overflow: ellipsis;
-    text-align: center;
-    vertical-align: middle;
-    padding: 4px;
-    font-size: 0.85rem;
+    // overflow: hidden;
+    // white-space: nowrap !important; /* Change from pre-line to nowrap */
+    // text-overflow: ellipsis;
+    // text-align: center;
+    // vertical-align: middle;
+    // padding: 4px;
+    // font-size: 0.85rem;
 }
 
 // Target row headers specifically
@@ -167,36 +167,34 @@ body .handsontable .wtBorder {
 }
 
 // Force row heights in left pane (headers)
-.handsontable .ht_clone_left .htCore tr,
-.handsontable .ht_clone_left tbody tr {
-    height: 30px !important;
-    min-height: 30px !important;
-    max-height: 30px !important;
-}
+// .handsontable .ht_clone_left .htCore tr,
+// .handsontable .ht_clone_left tbody tr {
+//     height: 30px !important;
+// }
 
 // Extra selector to target empty rows
-.handsontable .htCore tr:empty {
-    height: 30px !important;
-}
+// .handsontable .htCore tr:empty {
+//     height: 30px !important;
+// }
 
-// Target column headers too
-.handsontable .ht_clone_top th {
-    height: 30px !important;
-    min-height: 30px !important;
-    max-height: 30px !important;
-    line-height: 22px !important;
-}
+// // Target column headers too
+// .handsontable .ht_clone_top th {
+//     height: 30px !important;
+//     min-height: 30px !important;
+//     max-height: 30px !important;
+//     line-height: 22px !important;
+// }
 
 // Override any inline styles added by Handsontable
-.handsontable td.htDimmed,
-.handsontable th.htDimmed,
-.handsontable .htCore td,
-.handsontable .htCore th,
-.handsontable .ht_clone_left td,
-.handsontable .ht_clone_top th,
-.handsontable .ht_clone_left th {
-    height: 30px !important;
-}
+// .handsontable td.htDimmed,
+// .handsontable th.htDimmed,
+// .handsontable .htCore td,
+// .handsontable .htCore th,
+// .handsontable .ht_clone_left td,
+// .handsontable .ht_clone_top th,
+// .handsontable .ht_clone_left th {
+//     height: 30px !important;
+// }
 
 // Custom styles for context menu items
 .htContextMenu .htItemWrapper {
@@ -318,6 +316,30 @@ body .handsontable .wtBorder {
             }
         }
     }
+    
+    // Add smooth scrolling to the Handsontable
+    .handsontable-wrapper {
+        .handsontable {
+            .htCore {
+                scroll-behavior: smooth;
+            }
+            
+            .wtHolder {
+                scroll-behavior: smooth;
+                scrollbar-width: thin;
+            }
+            
+            .wtHolder::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+            
+            .wtHolder::-webkit-scrollbar-thumb {
+                background-color: rgba(0, 0, 0, 0.2);
+                border-radius: 4px;
+            }
+        }
+    }
 }
 
 // Additional fix for touch devices and all clones
@@ -330,4 +352,46 @@ body .handsontable .wtBorder {
 // Prevent body scrolling when interacting with the table
 body.handsontable-active {
     overflow: hidden;
+}
+
+// Filter controls container updated style
+.filter-controls {
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+// New styles for the house type tabs
+.house-type-tabs {
+    display: flex;
+    gap: 0;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+}
+
+.tab {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-right: 1px solid #dee2e6;
+    color: #495057;
+    
+    &:hover {
+        background-color: #e9ecef;
+    }
+    
+    &.active {
+        background-color: #6366F1;
+        color: white;
+        
+        &:hover {
+            background-color: #4F46E5;
+        }
+    }
 }

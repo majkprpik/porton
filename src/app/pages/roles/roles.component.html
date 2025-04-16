@@ -1,0 +1,84 @@
+<!-- 
+This file serves as a reference for the template used in the RolesComponent.
+The actual template is defined inline in the component class file.
+-->
+
+<div class="card">
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h1>Upravljanje ulogama</h1>
+    <button 
+      class="add-button p-button-success"
+      (click)="openNew()">
+      <i class="pi pi-plus mr-2"></i> Dodaj novu ulogu
+    </button>
+  </div>
+  
+  <p-table [value]="roles" [tableStyle]="{'min-width': '50rem'}"
+           [paginator]="true" [rows]="10"
+           [rowHover]="true" dataKey="role_id">
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="text-left">Identifikator uloge</th>
+        <th class="text-left">Naziv uloge</th>
+        <th class="w-2 text-center">Akcije</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-role>
+      <tr>
+        <td>{{ role.role_id }}</td>
+        <td>{{ role.role_name }}</td>
+        <td>
+          <div class="flex justify-content-center gap-2">
+            <button 
+              class="p-button-rounded p-button-success action-button" 
+              (click)="editRole(role)">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button 
+              class="p-button-rounded p-button-danger action-button" 
+              (click)="deleteRole(role)">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="3" class="text-center">Nema dostupnih uloga.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog [(visible)]="roleDialog" [style]="{width: '450px'}" 
+         [header]="editMode ? 'Uredi ulogu' : 'Dodaj novu ulogu'" 
+         [modal]="true" 
+         [contentStyle]="{overflow: 'visible'}"
+         [draggable]="false" [resizable]="false">
+  <div class="p-field mb-4" *ngIf="selectedRole">
+    <label for="id" class="font-medium mb-2 block">Identifikator uloge*</label>
+    <input type="text" pInputText id="id" [(ngModel)]="selectedRole.role_id" 
+           required autofocus class="w-full" 
+           placeholder="Unesite identifikator uloge" 
+           [disabled]="editMode" />
+    <small *ngIf="submitted && !selectedRole.role_id" class="p-error">Identifikator uloge je obavezan.</small>
+  </div>
+  <div class="p-field mb-4" *ngIf="selectedRole">
+    <label for="name" class="font-medium mb-2 block">Naziv uloge*</label>
+    <input type="text" pInputText id="name" [(ngModel)]="selectedRole.role_name" 
+           required class="w-full" 
+           placeholder="Unesite naziv uloge" />
+    <small *ngIf="submitted && !selectedRole.role_name" class="p-error">Naziv uloge je obavezan.</small>
+  </div>
+  <div class="flex justify-content-end mt-4">
+    <p-button label="Odustani" icon="pi pi-times" (click)="hideDialog()" 
+             styleClass="p-button-text"></p-button>
+    <p-button label="Spremi" icon="pi pi-check" (click)="saveRole()" 
+             [disabled]="!selectedRole?.role_id || !selectedRole?.role_name"></p-button>
+  </div>
+</p-dialog>
+
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<p-toast></p-toast> 

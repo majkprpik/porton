@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService, House, HouseAvailability } from '../service/data.service';
+import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
 import { Subscription, Subject, takeUntil } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { HotTableModule, HotTableComponent } from '@handsontable/angular';
@@ -36,6 +36,11 @@ export class Reservation2Component implements OnInit, OnDestroy {
     houseAvailabilities = signal<HouseAvailability[]>([]);
     days = signal<Date[]>(this.generateDays());
     
+    // Add signals for house type filtering
+    houseTypes = signal<HouseType[]>([]);
+    selectedHouseTypeId = signal<number | null>(null);
+    filteredHouses = computed(() => this.filterHousesByType());
+    
     // Signal for the entire grid matrix (from original component)
     gridMatrix = signal<CellData[][]>([]);
     
@@ -58,9 +63,13 @@ export class Reservation2Component implements OnInit, OnDestroy {
     // Add observer for calendar
     private calendarObserver?: MutationObserver;
     
+    // Track previous house type ID to detect changes
+    private _previousHouseTypeId: number | null = null;
+    
     // Handsontable settings
     hotSettings = computed(() => {
-        const houses = this.houses();
+        // Use filteredHouses instead of houses directly
+        const houses = this.filteredHouses();
         const days = this.days();
         
         return {
@@ -81,7 +90,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             rowHeights: 30,
             // Set manual column widths - all day columns at 80px
             manualColumnWidths: Array(days.length).fill(80),
-            // Set manual row heights for all rows
+            // Set manual row heights for all rows - adjust count based on filtered houses
             manualRowHeights: Array(houses.length).fill(30),
             // Ensure consistent row and column sizes
             autoRowSize: false,
@@ -273,6 +282,12 @@ export class Reservation2Component implements OnInit, OnDestroy {
         // Load house availabilities data if not already loaded
         this.dataService.loadHouseAvailabilities().pipe(takeUntil(this.destroy$)).subscribe();
         
+        // Load house types data
+        this.dataService.getHouseTypes().pipe(takeUntil(this.destroy$)).subscribe(types => {
+            this.houseTypes.set(types);
+            console.log('House types loaded:', types);
+        });
+        
         // Subscribe to houses data from DataService
         this.dataService.houses$
             .pipe(takeUntil(this.destroy$))
@@ -298,7 +313,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
         }, 0);
         
         // Set up scroll behavior to prevent browser navigation issues
-        this.setupScrollBehavior();
+        // this.setupScrollBehavior();
     }
     
     ngOnDestroy(): void {
@@ -327,7 +342,8 @@ export class Reservation2Component implements OnInit, OnDestroy {
     private updateGridMatrix(): void {
         this.updateStartTime = performance.now();
         
-        const houses = this.houses();
+        // Use filteredHouses instead of houses directly
+        const houses = this.filteredHouses();
         const days = this.days();
         const availabilities = this.houseAvailabilities();
 
@@ -386,6 +402,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
         }
 
         this.gridMatrix.set(grid);
+
+        // Verify the grid dimensions match filtered houses
+        const selectedTypeId = this.selectedHouseTypeId();
+        console.log(`Grid has ${grid.length} rows, filtered houses: ${houses.length}, filter: ${selectedTypeId === null ? 'none' : selectedTypeId}`);
 
         // Count reserved cells to verify data
         let reservedCellCount = 0;
@@ -516,7 +536,8 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     // Generate table data for Handsontable
     private generateTableData(): any[] {
-        const houses = this.houses();
+        // Use filteredHouses instead of houses directly
+        const houses = this.filteredHouses();
         const days = this.days();
         const grid = this.gridMatrix();
         
@@ -558,7 +579,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             if (cellData.isReserved) {
                 // For debugging - log a few reserved cells
                 if (Math.random() < 0.01) {  // Only log ~1% of reserved cells to avoid console spam
-                    console.log(`Rendering reserved cell: row=${row}, dayIndex=${dayIndex}, color=${cellData.color}, text=${cellData.displayText}`);
+                    // console.log(`Rendering reserved cell: row=${row}, dayIndex=${dayIndex}, color=${cellData.color}, text=${cellData.displayText}`);
                 }
                 
                 td.style.backgroundColor = cellData.color;
@@ -611,21 +632,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
         }
     }
 
-    // Handler methods for context menu actions
-    private handleViewReservation(row: number, col: number): void {
-        const grid = this.gridMatrix();
-        if (grid.length > row && grid[row].length > col) {
-            const cellData = grid[row][col];
-            if (cellData.isReserved) {
-                // In a real application, you would show a modal with reservation details
-                console.log('View reservation:', cellData);
-                // // alert(`Viewing reservation: ${cellData.tooltip}`);
-            } else {
-                // // alert('No reservation at this location');
-            }
-        }
-    }
-
     private handleEditReservation(row: number, col: number): void {
         const grid = this.gridMatrix();
         if (grid.length > row && grid[row].length > col) {
@@ -670,7 +676,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         setTimeout(() => {
                             this.showReservationForm.set(true);
                         }, 100);
-            } else {
+                    } else {
                         // Normal case - just show the form
                         this.showReservationForm.set(true);
                     }
@@ -1301,30 +1307,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return null;
     }
 
-    // New methods for additional context menu options
-    private handleBulkReservation(): void {
-        // In a real application, this would open a modal for creating multiple reservations
-        // alert('Opening bulk reservation interface (not implemented in this demo)');
-    }
-
-    private handleExportData(): void {
-        // In a real application, this would export the visible data to CSV/Excel
-        // alert('Exporting current view to file (not implemented in this demo)');
-    }
-
-    private handleFilterReservations(): void {
-        // In a real application, this would open a filter dialog
-        const filterType = prompt('Enter filter type (e.g., "confirmed", "pending", "all")', 'all');
-        if (filterType) {
-            // alert(`Filtering reservations by type: ${filterType} (not implemented in this demo)`);
-        }
-    }
-
-    private handlePrintView(): void {
-        // In a real application, this would create a print-friendly view
-        // alert('Opening print-friendly view (not implemented in this demo)');
-    }
-
     // Check if a cell has a reservation
     private hasCellReservation(row: number, col: number): boolean {
         const grid = this.gridMatrix();
@@ -1335,87 +1317,73 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return false;
     }
 
-    // Set up event listeners for month navigation buttons
-    private setupMonthNavigationListeners(): void {
-        // Find next/previous month buttons
-        const nextMonthButton = document.querySelector('.p-datepicker-next');
-        const prevMonthButton = document.querySelector('.p-datepicker-prev');
+    // Add method to filter houses by type
+    private filterHousesByType(): House[] {
+        const houses = this.houses();
+        const selectedTypeId = this.selectedHouseTypeId();
         
-        if (nextMonthButton) {
-            // Remove any existing listener to avoid duplicates
-            const newNextButton = nextMonthButton.cloneNode(true);
-            if (nextMonthButton.parentNode) {
-                nextMonthButton.parentNode.replaceChild(newNextButton, nextMonthButton);
-            }
-            
-            // Add listener to the next month button
-            newNextButton.addEventListener('click', () => {
-                console.log('Next month button clicked');
-                // Give time for the calendar to update
-                setTimeout(() => {
-                    this.restrictEndDateCalendar();
-                    // We need to re-attach listeners after changing months
-                    this.setupMonthNavigationListeners();
-                }, 50);
-            });
+        // If no type is selected, return all houses
+        if (selectedTypeId === null) {
+            return houses;
         }
         
-        if (prevMonthButton) {
-            // Remove any existing listener to avoid duplicates
-            const newPrevButton = prevMonthButton.cloneNode(true);
-            if (prevMonthButton.parentNode) {
-                prevMonthButton.parentNode.replaceChild(newPrevButton, prevMonthButton);
-            }
+        // Filter houses by the selected type
+        return houses.filter(house => house.house_type_id === selectedTypeId);
+    }
+    
+    // Method to set the selected house type
+    setSelectedHouseType(typeId: number | null): void {
+        if (this._previousHouseTypeId !== typeId) {
+            console.log(`Changing house type filter from ${this._previousHouseTypeId} to ${typeId}`);
+            this._previousHouseTypeId = typeId;
+            this.selectedHouseTypeId.set(typeId);
             
-            // Add listener to the previous month button
-            newPrevButton.addEventListener('click', () => {
-                console.log('Previous month button clicked');
-                // Give time for the calendar to update
-                setTimeout(() => {
-                    this.restrictEndDateCalendar();
-                    // We need to re-attach listeners after changing months
-                    this.setupMonthNavigationListeners();
-                }, 50);
-            });
+            // First update the grid matrix with new filtered data
+            this.updateGridMatrix();
+            
+            // Force a rebuild of the table with new data
+            setTimeout(() => {
+                if (this.hotTableComponent) {
+                    const hot = (this.hotTableComponent as any).hotInstance;
+                    if (hot) {
+                        console.log('Updating table after filter change');
+                        
+                        // Update with new data and dimensions
+                        const filteredHouses = this.filteredHouses();
+                        
+                        hot.updateSettings({
+                            data: this.generateTableData(),
+                            rowHeaders: filteredHouses.map(house => house.house_number?.toString() || ''),
+                            manualRowHeights: Array(filteredHouses.length).fill(30),
+                        });
+                        
+                        // Explicitly set the number of rows to match filtered houses
+                        if (filteredHouses.length !== hot.countRows()) {
+                            if (filteredHouses.length > hot.countRows()) {
+                                hot.alter('insert_row', hot.countRows(), filteredHouses.length - hot.countRows());
+                            } else if (filteredHouses.length < hot.countRows()) {
+                                hot.alter('remove_row', filteredHouses.length, hot.countRows() - filteredHouses.length);
+                            }
+                        }
+                        
+                        // Force rendering
+                        hot.render();
+                    }
+                }
+            }, 10);
         }
     }
-
-    private setupScrollBehavior(): void {
-        // Add event listeners after a short delay to ensure the table is rendered
-        setTimeout(() => {
-            const tableWrapper = document.querySelector('.handsontable-wrapper');
-            if (tableWrapper) {
-                // Add class to body when mouse is over the table
-                tableWrapper.addEventListener('mouseenter', () => {
-                    document.body.classList.add('handsontable-active');
-                });
-                
-                // Remove class when mouse leaves the table
-                tableWrapper.addEventListener('mouseleave', () => {
-                    document.body.classList.remove('handsontable-active');
-                });
-                
-                // Prevent scroll events from propagating to parent when scrolling horizontally
-                const wtHolder = tableWrapper.querySelector('.wtHolder');
-                if (wtHolder) {
-                    wtHolder.addEventListener('wheel', (e: Event) => {
-                        const wheelEvent = e as WheelEvent;
-                        const delta = Math.abs(wheelEvent.deltaX);
-                    
-                        // SPRIJEČI "BACK SWIPE" kad si na početku skrola
-                        if (wheelEvent.deltaX < 0 && (wtHolder as HTMLElement).scrollLeft === 0) {
-                            e.preventDefault();
-                            return;
-                        }
-                    
-                        // Spriječi propagaciju horizontalnog skrola
-                        if (delta > Math.abs(wheelEvent.deltaY)) {
-                            e.preventDefault();
-                            (wtHolder as HTMLElement).scrollLeft += wheelEvent.deltaX;
-                        }
-                    }, { passive: false });
-                }
-            }
-        }, 1000);
+    
+    // Method to clear filters
+    clearHouseTypeFilter(): void {
+        this.setSelectedHouseType(null);
+    }
+    
+    // Method to get the house type name
+    getHouseTypeName(typeId: number | null): string {
+        if (typeId === null) return 'All';
+        
+        const houseType = this.houseTypes().find((type: HouseType) => type.house_type_id === typeId);
+        return houseType?.house_type_name || 'Unknown';
     }
 }
