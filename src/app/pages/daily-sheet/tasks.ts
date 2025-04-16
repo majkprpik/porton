@@ -185,6 +185,7 @@ export class TasksComponent implements OnInit {
         
         // Remove from workGroupTasks
         this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
+        this.dataService.setWorkGroupTasks(this.workGroupTasks);
       }
     }
   }

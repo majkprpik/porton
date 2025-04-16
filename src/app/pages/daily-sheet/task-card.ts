@@ -6,7 +6,7 @@ import { Task } from '../service/data.service';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
 
-export type TaskState = 'pending' | 'in-progress' | 'completed';
+export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed';
 
 @Component({
   selector: 'app-task-card',
@@ -15,7 +15,8 @@ export type TaskState = 'pending' | 'in-progress' | 'completed';
   template: `
     <div 
       class="task-card" 
-      [class.pending]="state === 'pending'"
+      [class.assigned]="state === 'assigned'"
+      [class.not-assigned]="state === 'not-assigned'"
       [class.in-progress]="state === 'in-progress'"
       [class.completed]="state === 'completed'"
       [class.assignable]="canBeAssigned"
@@ -53,17 +54,22 @@ export type TaskState = 'pending' | 'in-progress' | 'completed';
         color: var(--p-surface-0);
       }
 
-      &.pending {
-        background: var(--p-yellow-500);
+      &.completed{
+        background: var(--p-red-400);
         color: var(--p-surface-0);
       }
 
       &.in-progress {
+        background: var(--p-yellow-500);
+        color: var(--p-surface-0);
+      }
+
+      &.assigned {
         background: var(--p-blue-500);
         color: var(--p-surface-0);
       }
 
-      &.completed {
+      &.not-assigned {
         background: var(--p-green-500);
         color: var(--p-surface-0);
       }
@@ -121,7 +127,7 @@ export type TaskState = 'pending' | 'in-progress' | 'completed';
   `
 })
 export class TaskCardComponent {
-  @Input() state: TaskState = 'pending';
+  @Input() state: TaskState = 'not-assigned';
   @Input() houseNumber: number = 0;
   @Input() taskIcon: string = 'pi-home';
   @Input() task?: Task;
@@ -140,7 +146,7 @@ export class TaskCardComponent {
         {
           label: 'Pending',
           icon: 'pi pi-clock',
-          command: () => this.updateStatus('pending')
+          command: () => this.updateStatus('not-assigned')
         },
         {
           label: 'In Progress',
@@ -151,6 +157,11 @@ export class TaskCardComponent {
           label: 'Completed',
           icon: 'pi pi-check',
           command: () => this.updateStatus('completed')
+        },
+        {
+          label: 'Assigned',
+          icon: 'pi pi-check',
+          command: () => this.updateStatus('assigned')
         }
       ]
     },
@@ -201,8 +212,7 @@ export class TaskCardComponent {
   }
 
   updateStatus(newState: TaskState) {
-    //console.log('Update status to:', newState);
-    // Implement status update logic
+    this.state = newState;
   }
 
   viewDetails() {

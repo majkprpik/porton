@@ -389,6 +389,7 @@ export class WorkGroups implements OnInit {
   async publishWorkGroups() {
     let lockedWorkGroups = this.workGroupService.getLockedTeams();
     let assignedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Dodijeljeno");
+    let completedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Završeno');
     let unlockedWorkGroupsCount = lockedWorkGroups.filter(lwg => !lwg.isLocked).length;
 
     for(let lockedWorkGroup of lockedWorkGroups){
@@ -405,7 +406,9 @@ export class WorkGroups implements OnInit {
         }
 
         for (const task of lockedWorkGroup.tasks){
-          await this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
+          if(task.task_progress_type_id != completedTaskProgressType.task_progress_type_id){
+            await this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
+          }
         }
       }
     }
