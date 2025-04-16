@@ -213,6 +213,8 @@ export class DataService {
   $workGroupsUpdate = new BehaviorSubject<any>('');
   $notesUpdate = new BehaviorSubject<any>('');
 
+  $areNotesLoaded = new BehaviorSubject<boolean>(false);
+
   constructor(private supabaseService: SupabaseService) {
     // Load all enum types when service is initialized
     this.loadAllEnumTypes();
@@ -577,7 +579,7 @@ export class DataService {
     );
   }
 
-  loadNotes(): Observable<Note[]> {
+  loadNotes(): Observable<Note[]> { 
     this.loadingSubject.next(true);
 
     return from(this.supabaseService.getData('notes', this.schema)).pipe(
@@ -585,6 +587,7 @@ export class DataService {
         if (data) {
           this.notesSubject.next(data);
           this.logData('Notes', data);
+          this.$areNotesLoaded.next(true);
         }
       }),
       map((data) => data || []),
