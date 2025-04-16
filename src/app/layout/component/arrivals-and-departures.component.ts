@@ -135,7 +135,6 @@ export class ArrivalsAndDeparturesComponent {
   arrivals: any[] = [];
   departures: any[] = [];
   private subscription: Subscription | undefined;
-  currentDateTime: Date = new Date();
   checkedDepartureHouseIds: number[] = [];
   checkedArrivalHouseIds: number[] = [];
   houseAvailabilities: HouseAvailability[] = [];
@@ -148,9 +147,6 @@ export class ArrivalsAndDeparturesComponent {
   }
   
   async ngOnInit(){
-    this.subscription = interval(1000).subscribe(() => {
-    this.currentDateTime = new Date();
-
     combineLatest([
       this.dataService.houses$,
       this.dataService.houseAvailabilities$,
@@ -168,13 +164,6 @@ export class ArrivalsAndDeparturesComponent {
         console.log(error);
       }
     })
-
-    this.dataService.houses$.subscribe(houses => {
-    });
-  
-    this.dataService.houseAvailabilities$.subscribe(houseAvailabilities => {
-    });
-    });
   }
 
   getTodaysArrivals(){
