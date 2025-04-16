@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, ViewChild, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
 import { Subscription, Subject, takeUntil } from 'rxjs';
@@ -28,7 +28,8 @@ interface CellData {
     styleUrls: ['./reservation-2.component.scss'],
     standalone: true,
     imports: [CommonModule, ProgressSpinnerModule, HotTableModule, ReservationFormComponent],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    // encapsulation: ViewEncapsulation.None
 })
 export class Reservation2Component implements OnInit, OnDestroy {
     // Convert to signals for reactive state management
@@ -199,26 +200,26 @@ export class Reservation2Component implements OnInit, OnDestroy {
             },
             // Make sure all cells maintain their dimensions
             afterInit: () => {
-                console.log('Handsontable initialized with fixed cell dimensions: 80x30');
+                //console.log('Handsontable initialized with fixed cell dimensions: 80x30');
                 
                 // Directly modify border styles
-                setTimeout(() => {
-                    const tableContainer = document.querySelector('.handsontable-wrapper');
-                    if (tableContainer) {
-                        const style = document.createElement('style');
-                        style.textContent = `
-                            .handsontable .htCore td, 
-                            .handsontable .htCore th {
-                                border-right: 1px solid rgba(180, 180, 180, 0.15) !important;
-                                border-bottom: 1px solid rgba(180, 180, 180, 0.15) !important;
-                            }
-                        `;
-                        tableContainer.appendChild(style);
-                    }
+                // setTimeout(() => {
+                //     const tableContainer = document.querySelector('.handsontable-wrapper');
+                //     if (tableContainer) {
+                //         const style = document.createElement('style');
+                //         style.textContent = `
+                //             .handsontable .htCore td, 
+                //             .handsontable .htCore th {
+                //                 border-right: 1px solid rgba(180, 180, 180, 0.15) !important;
+                //                 border-bottom: 1px solid rgba(180, 180, 180, 0.15) !important;
+                //             }
+                //         `;
+                //         tableContainer.appendChild(style);
+                //     }
                     
-                    // Fix any scrolling issues
-                    window.dispatchEvent(new Event('resize'));
-                }, 100);
+                //     // Fix any scrolling issues
+                //     window.dispatchEvent(new Event('resize'));
+                // }, 100);
             },
             // Simpler afterColumnResize that makes sure we don't go below 80px
             afterColumnResize: (column: number, width: number) => {
@@ -267,8 +268,8 @@ export class Reservation2Component implements OnInit, OnDestroy {
             const grid = this.gridMatrix();
             if (grid.length > 0) {
                 this.totalCells = grid.length * grid[0].length;
-                console.log(`Grid updated: ${this.totalCells} total cells`);
-                console.log(`Grid dimensions: ${grid.length} rows × ${grid[0].length} columns`);
+                //console.log(`Grid updated: ${this.totalCells} total cells`);
+                //console.log(`Grid dimensions: ${grid.length} rows × ${grid[0].length} columns`);
             }
         });
     }
@@ -285,7 +286,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
         // Load house types data
         this.dataService.getHouseTypes().pipe(takeUntil(this.destroy$)).subscribe(types => {
             this.houseTypes.set(types);
-            console.log('House types loaded:', types);
+            //console.log('House types loaded:', types);
         });
         
         // Subscribe to houses data from DataService
@@ -302,14 +303,14 @@ export class Reservation2Component implements OnInit, OnDestroy {
             .subscribe(availabilities => {
                 this.houseAvailabilities.set(availabilities);
                 this.updateGridMatrix();
-                console.log('House availabilities loaded:', availabilities.length);
+                //console.log('House availabilities loaded:', availabilities.length);
             });
             
         // Monitor initial render
         setTimeout(() => {
             const renderTime = performance.now() - this.renderStartTime;
-            console.log(`Initial render time: ${renderTime.toFixed(2)}ms`);
-            console.log(`Cells per second: ${(this.totalCells / (renderTime / 1000)).toFixed(2)}`);
+            //console.log(`Initial render time: ${renderTime.toFixed(2)}ms`);
+            //console.log(`Cells per second: ${(this.totalCells / (renderTime / 1000)).toFixed(2)}`);
         }, 0);
         
         // Set up scroll behavior to prevent browser navigation issues
@@ -347,10 +348,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
         const days = this.days();
         const availabilities = this.houseAvailabilities();
 
-        console.log(`updateGridMatrix: ${houses.length} houses, ${days.length} days, ${availabilities.length} availabilities`);
+        //console.log(`updateGridMatrix: ${houses.length} houses, ${days.length} days, ${availabilities.length} availabilities`);
         
         if (availabilities.length > 0) {
-            console.log('Sample availability:', availabilities[0]);
+            //console.log('Sample availability:', availabilities[0]);
         }
 
         // Clear and rebuild maps
@@ -375,7 +376,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             
             // Log a few reservations for debugging
             if (this.reservationMap.size < 3) {
-                console.log(`Adding reservation: house_id=${availability.house_id}, startDate=${startDate.toISOString()}, endDate=${endDate.toISOString()}`);
+                //console.log(`Adding reservation: house_id=${availability.house_id}, startDate=${startDate.toISOString()}, endDate=${endDate.toISOString()}`);
             }
             
             for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -384,7 +385,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             }
         });
         
-        console.log(`Built reservation map with ${this.reservationMap.size} entries`);
+        //console.log(`Built reservation map with ${this.reservationMap.size} entries`);
 
         // Generate grid data
         const grid: CellData[][] = [];
@@ -405,7 +406,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
         // Verify the grid dimensions match filtered houses
         const selectedTypeId = this.selectedHouseTypeId();
-        console.log(`Grid has ${grid.length} rows, filtered houses: ${houses.length}, filter: ${selectedTypeId === null ? 'none' : selectedTypeId}`);
+        //console.log(`Grid has ${grid.length} rows, filtered houses: ${houses.length}, filter: ${selectedTypeId === null ? 'none' : selectedTypeId}`);
 
         // Count reserved cells to verify data
         let reservedCellCount = 0;
@@ -414,13 +415,13 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 if (cell.isReserved) reservedCellCount++;
             });
         });
-        console.log(`Grid contains ${reservedCellCount} reserved cells`);
+        //console.log(`Grid contains ${reservedCellCount} reserved cells`);
 
         // Log update performance
         setTimeout(() => {
             const updateTime = performance.now() - this.updateStartTime;
-            console.log(`Grid update time: ${updateTime.toFixed(2)}ms`);
-            console.log(`Update rate: ${(this.totalCells / (updateTime / 1000)).toFixed(2)} cells/second`);
+            //console.log(`Grid update time: ${updateTime.toFixed(2)}ms`);
+            //console.log(`Update rate: ${(this.totalCells / (updateTime / 1000)).toFixed(2)} cells/second`);
         }, 0);
     }
 
@@ -501,7 +502,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
         const startDate = new Date(currentYear, 2, 31); // March 31st (month is 0-based)
         const endDate = new Date(currentYear, 10, 15);  // November 15th (month is 0-based)
         
-        console.log(`Generating days from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+        //console.log(`Generating days from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
         
         // Set hours to 0 to avoid timezone issues
         startDate.setHours(0, 0, 0, 0);
@@ -514,7 +515,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             currentDate.setDate(currentDate.getDate() + 1);
         }
         
-        console.log(`Generated ${days.length} days`);
+        //console.log(`Generated ${days.length} days`);
         return days;
     }
 
@@ -579,7 +580,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             if (cellData.isReserved) {
                 // For debugging - log a few reserved cells
                 if (Math.random() < 0.01) {  // Only log ~1% of reserved cells to avoid console spam
-                    // console.log(`Rendering reserved cell: row=${row}, dayIndex=${dayIndex}, color=${cellData.color}, text=${cellData.displayText}`);
+                    // //console.log(`Rendering reserved cell: row=${row}, dayIndex=${dayIndex}, color=${cellData.color}, text=${cellData.displayText}`);
                 }
                 
                 td.style.backgroundColor = cellData.color;
@@ -642,12 +643,12 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 const reservation = this.reservationMap.get(key);
                 
                 if (!reservation) {
-                    console.error('Could not find reservation data for cell');
+                    //console.error('Could not find reservation data for cell');
                     // alert('Error: Could not find reservation data.');
                     return;
                 }
                 
-                console.log('Editing reservation:', reservation);
+                //console.log('Editing reservation:', reservation);
                 
                 // Set the form state to edit this reservation
                 this.selectedHouseId.set(reservation.house_id);
@@ -681,7 +682,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         this.showReservationForm.set(true);
                     }
                     
-                    console.log('Form is now visible with reservation data for editing');
+                    //console.log('Form is now visible with reservation data for editing');
                     
                     // Set up calendar date restrictions
                     setTimeout(() => {
@@ -704,7 +705,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 const reservation = this.reservationMap.get(key);
                 
                 if (!reservation) {
-                    console.error('Could not find reservation data for cell');
+                    //console.error('Could not find reservation data for cell');
                     // alert('Error: Could not find reservation data.');
                     return;
                 }
@@ -725,7 +726,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 const confirmDelete = confirm(confirmMessage);
                 
                 if (confirmDelete) {
-                    console.log('Deleting reservation:', reservation);
+                    //console.log('Deleting reservation:', reservation);
                     
                     // Show loading indicator if needed
                     // this.isLoading.set(true);
@@ -741,14 +742,14 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     // Delete from backend
                     this.dataService.deleteHouseAvailability(reservation.house_availability_id).subscribe({
                         next: (result) => {
-                            console.log('Reservation deleted successfully:', result);
+                            //console.log('Reservation deleted successfully:', result);
                             // Update was already done optimistically above
                             
                             // Show success message
                             // alert(`Reservation for ${lastName} has been deleted successfully.`);
                         },
                         error: (error: any) => {
-                            console.error('Error deleting reservation:', error);
+                            //console.error('Error deleting reservation:', error);
                             
                             // Revert the optimistic update
                             this.houseAvailabilities.set(currentAvailabilities);
@@ -776,7 +777,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
         if (houses.length > row && days.length > col) {
             const house = houses[row];
             const day = days[col];
-            console.log('Opening form to add reservation for house:', house, 'on day:', day);
+            //console.log('Opening form to add reservation for house:', house, 'on day:', day);
             
             // First make sure we reset any previous state
             this.editingReservation.set({});
@@ -808,7 +809,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     adjustedEndDate.setDate(adjustedEndDate.getDate() - 1);
                     this.selectedEndDate.set(adjustedEndDate);
                     
-                    console.log(`Adjusted end date to ${adjustedEndDate.toLocaleDateString()} to avoid overlap with next reservation`);
+                    //console.log(`Adjusted end date to ${adjustedEndDate.toLocaleDateString()} to avoid overlap with next reservation`);
                 }
             }
             
@@ -817,13 +818,13 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 // Get the correct house availability type ID for "Occupied"
                 this.dataService.getHouseAvailabilityTypeByName("Occupied").then(occupiedType => {
                     if (!occupiedType || !occupiedType.house_availability_type_id) {
-                        console.error('Could not find "Occupied" house availability type');
+                        //console.error('Could not find "Occupied" house availability type');
                         // alert('Error: Could not find appropriate reservation type. Please try again later.');
                         return;
                     }
                     
                     const availabilityTypeId = occupiedType.house_availability_type_id;
-                    console.log(`Found "Occupied" house availability type with ID: ${availabilityTypeId}`);
+                    //console.log(`Found "Occupied" house availability type with ID: ${availabilityTypeId}`);
                     
                     // Now set the full reservation data with the correct type ID
                     this.editingReservation.set({
@@ -851,9 +852,9 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         this.showReservationForm.set(true);
                     }
                     
-                    console.log('Form should now be visible with new data');
+                    //console.log('Form should now be visible with new data');
                 }).catch(error => {
-                    console.error('Error retrieving house availability type:', error);
+                    //console.error('Error retrieving house availability type:', error);
                     // alert('Failed to get required availability type information. Please try again later.');
                 });
             }, 0); // Use timeout of 0 to defer execution to next event cycle
@@ -869,13 +870,13 @@ export class Reservation2Component implements OnInit, OnDestroy {
     }
 
     handleReservationSave(reservation: HouseAvailability): void {
-        console.log('Preparing to save reservation from form:', reservation);
+        //console.log('Preparing to save reservation from form:', reservation);
         
         // Extract dates directly from the reservation object (these come from the form)
         let startDateStr = reservation.house_availability_start_date;
         let endDateStr = reservation.house_availability_end_date;
         
-        console.log('Raw dates from form:', { startDateStr, endDateStr });
+        //console.log('Raw dates from form:', { startDateStr, endDateStr });
         
         // Convert to Date objects for validation
         const startDate = new Date(startDateStr);
@@ -918,28 +919,28 @@ export class Reservation2Component implements OnInit, OnDestroy {
         const formattedEndDate = this.formatDateToYYYYMMDD(endDate);
         
         // Log the actual dates from the form
-        console.log('Reservation dates from form:', {
-            rawStartDate: startDateStr,
-            rawEndDate: endDateStr,
-            formattedStartDate,
-            formattedEndDate,
-            length: this.calculateDaysBetween(startDate, endDate) + 1
-        });
+        //console.log('Reservation dates from form:', {
+        //     rawStartDate: startDateStr,
+        //     rawEndDate: endDateStr,
+        //     formattedStartDate,
+        //     formattedEndDate,
+        //     length: this.calculateDaysBetween(startDate, endDate) + 1
+        // });
         
         // First, get the correct house availability type ID for "Occupied"
         this.dataService.getHouseAvailabilityTypeByName("Occupied").then(occupiedType => {
             if (!occupiedType || !occupiedType.house_availability_type_id) {
-                console.error('Could not find "Occupied" house availability type');
+                //console.error('Could not find "Occupied" house availability type');
                 // alert('Error: Could not find appropriate reservation type. Please try again later.');
                 return;
             }
             
             const availabilityTypeId = occupiedType.house_availability_type_id;
-            console.log(`Found "Occupied" house availability type with ID: ${availabilityTypeId}`);
+            //console.log(`Found "Occupied" house availability type with ID: ${availabilityTypeId}`);
             
             if (isEditing) {
                 // We're updating an existing reservation
-                console.log('Updating existing reservation with ID:', reservation.house_availability_id);
+                //console.log('Updating existing reservation with ID:', reservation.house_availability_id);
                 
                 // Create an updated reservation with the new values
                 const updatedReservation: HouseAvailability = {
@@ -967,10 +968,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.dataService.updateHouseAvailability(updatedReservation).subscribe({
                     next: (savedReservation: HouseAvailability | null) => {
                         if (savedReservation) {
-                            console.log('Reservation updated successfully:', savedReservation);
+                            //console.log('Reservation updated successfully:', savedReservation);
                             // Update already done optimistically above
                         } else {
-                            console.error('Failed to update reservation - received null response');
+                            //console.error('Failed to update reservation - received null response');
                             // Show error to user
                             // alert('Failed to update reservation on server. Please try again.');
                             
@@ -980,7 +981,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         }
                     },
                     error: (error: any) => {
-                        console.error('Error updating reservation:', error);
+                        //console.error('Error updating reservation:', error);
                         // Show error to user
                         // alert('An error occurred while updating the reservation: ' + (error.message || 'Unknown error'));
                         
@@ -1029,7 +1030,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.dataService.saveHouseAvailability(newReservation).subscribe({
                     next: (savedReservation: HouseAvailability | null) => {
                         if (savedReservation) {
-                            console.log('Reservation saved successfully:', savedReservation);
+                            //console.log('Reservation saved successfully:', savedReservation);
                             
                             // Update the local data with the saved reservation (which now has a real ID)
                             const updatedAvailabilities = this.houseAvailabilities().map(avail => 
@@ -1039,26 +1040,26 @@ export class Reservation2Component implements OnInit, OnDestroy {
                             this.houseAvailabilities.set(updatedAvailabilities);
                             this.updateGridMatrix();
                         } else {
-                            console.error('Failed to save reservation - received null response');
+                            //console.error('Failed to save reservation - received null response');
                             // Show error to user
                             // alert('Failed to save reservation to server. Please try again.');
                         }
                     },
                     error: (error: any) => {
-                        console.error('Error saving reservation:', error);
+                        //console.error('Error saving reservation:', error);
                         // Show error to user
                         // alert('An error occurred while saving the reservation: ' + (error.message || 'Unknown error'));
                     }
                 });
             }
         }).catch(error => {
-            console.error('Error retrieving house availability type:', error);
+            //console.error('Error retrieving house availability type:', error);
             // alert('Failed to get required availability type information. Please try again later.');
         });
     }
     
     handleReservationCancel(): void {
-        console.log('Reservation form cancelled');
+        //console.log('Reservation form cancelled');
         
         // First set the form to not visible
         this.showReservationForm.set(false);
@@ -1067,13 +1068,13 @@ export class Reservation2Component implements OnInit, OnDestroy {
         setTimeout(() => {
             // Use timeout to ensure the form is fully closed before resetting state
             this.editingReservation.set({});
-            console.log('Form state has been reset after closing');
+            //console.log('Form state has been reset after closing');
         }, 100);
     }
     
     // Handle visibility changes from the form
     handleVisibilityChange(isVisible: boolean): void {
-        console.log('Form visibility changed:', isVisible);
+        //console.log('Form visibility changed:', isVisible);
         
         // Update the visibility signal
         this.showReservationForm.set(isVisible);
@@ -1084,7 +1085,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             setTimeout(() => {
                 this.editingReservation.set({});
                 this.nextReservationDate.set(null); // Also reset next reservation date
-                console.log('Form state has been reset after visibility change');
+                //console.log('Form state has been reset after visibility change');
             }, 100);
         } else if (isVisible) {
             // If form is being shown, check if we need to update for next reservation
@@ -1100,7 +1101,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
     
     // Set up calendar date restrictions with MutationObserver to avoid event listener errors
     private setupCalendarDateRestrictions(): void {
-        console.log('Setting up calendar date restrictions with MutationObserver');
+        //console.log('Setting up calendar date restrictions with MutationObserver');
         
         // Use MutationObserver to detect when calendar panel is added to DOM
         const observer = new MutationObserver((mutations) => {
@@ -1109,7 +1110,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     // Check if calendar panel has been added to DOM
                     const panel = document.querySelector('.p-datepicker:not(.p-datepicker-inline)');
                     if (panel) {
-                        console.log('Calendar panel detected');
+                        //console.log('Calendar panel detected');
                         
                         // Apply initial date restrictions
                         this.restrictEndDateCalendar();
@@ -1130,7 +1131,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                                 if (!document.querySelector('.p-datepicker:not(.p-datepicker-inline)')) {
                                     navObserver.disconnect();
                                     clearInterval(checkInterval);
-                                    console.log('Calendar closed, observers disconnected');
+                                    //console.log('Calendar closed, observers disconnected');
                                 }
                             }, 500);
                         }, 100);
@@ -1150,16 +1151,16 @@ export class Reservation2Component implements OnInit, OnDestroy {
     private restrictEndDateCalendar(): void {
         const nextDate = this.nextReservationDate();
         if (!nextDate) {
-            console.log('No next reservation date, no need to restrict calendar');
+            //console.log('No next reservation date, no need to restrict calendar');
             return;
         }
         
-        console.log(`Restricting end date calendar to dates before ${nextDate.toLocaleDateString()}`);
+        //console.log(`Restricting end date calendar to dates before ${nextDate.toLocaleDateString()}`);
         
         // Find all calendar day cells
         const calendarCells = document.querySelectorAll('.p-datepicker-calendar td:not(.p-datepicker-other-month)');
         if (!calendarCells || calendarCells.length === 0) {
-            console.error('Could not find calendar day cells');
+            //console.error('Could not find calendar day cells');
             return;
         }
         
@@ -1213,7 +1214,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     // Handle start date changes in the form
     handleStartDateChange(newDate: Date): void {
-        console.log('Start date changed:', newDate);
+        //console.log('Start date changed:', newDate);
         this.selectedStartDate.set(newDate);
         
         // When the start date changes, we need to check if there's a next reservation
@@ -1223,7 +1224,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
     
     // Handle end date changes in the form
     handleEndDateChange(newDate: Date): void {
-        console.log('End date changed:', newDate);
+        //console.log('End date changed:', newDate);
         this.selectedEndDate.set(newDate);
         
         // Check if the new end date overlaps with the next reservation
@@ -1248,11 +1249,11 @@ export class Reservation2Component implements OnInit, OnDestroy {
         if (nextReservation) {
             // If we found a next reservation, update the signal with its start date
             const nextDate = new Date(nextReservation.house_availability_start_date);
-            console.log(`Found next reservation for house ${houseId} starting on ${nextDate.toLocaleDateString()}`);
+            //console.log(`Found next reservation for house ${houseId} starting on ${nextDate.toLocaleDateString()}`);
             this.nextReservationDate.set(nextDate);
         } else {
             // No next reservation found
-            console.log(`No future reservations found for house ${houseId} after ${startDate.toLocaleDateString()}`);
+            //console.log(`No future reservations found for house ${houseId} after ${startDate.toLocaleDateString()}`);
             this.nextReservationDate.set(null);
         }
     }
@@ -1334,7 +1335,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
     // Method to set the selected house type
     setSelectedHouseType(typeId: number | null): void {
         if (this._previousHouseTypeId !== typeId) {
-            console.log(`Changing house type filter from ${this._previousHouseTypeId} to ${typeId}`);
+            //console.log(`Changing house type filter from ${this._previousHouseTypeId} to ${typeId}`);
             this._previousHouseTypeId = typeId;
             this.selectedHouseTypeId.set(typeId);
             
@@ -1346,7 +1347,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 if (this.hotTableComponent) {
                     const hot = (this.hotTableComponent as any).hotInstance;
                     if (hot) {
-                        console.log('Updating table after filter change');
+                        //console.log('Updating table after filter change');
                         
                         // Update with new data and dimensions
                         const filteredHouses = this.filteredHouses();
