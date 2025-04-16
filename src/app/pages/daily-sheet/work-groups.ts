@@ -246,6 +246,17 @@ export class WorkGroups implements OnInit {
         this.loading = false;
       }
     });
+
+    this.dataService.$tasksUpdate.subscribe(res => {
+      if(res && res.eventType == 'UPDATE'){
+        let lockedTeam = this.lockedTeams.find(lt => lt.tasks?.some(task => task.task_id == res.new.task_id));
+        let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id);
+
+        if(taskIndex && lockedTeam?.tasks){
+          lockedTeam.tasks = [...lockedTeam.tasks.slice(0, taskIndex), res.new, ...lockedTeam.tasks.slice(taskIndex + 1)];
+        }
+      }
+    });
   }
 
   getAssignedTasks(workGroupId: number): Task[] {

@@ -15,10 +15,10 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
   template: `
     <div 
       class="task-card" 
-      [class.assigned]="state === 'assigned'"
-      [class.not-assigned]="state === 'not-assigned'"
-      [class.in-progress]="state === 'in-progress'"
-      [class.completed]="state === 'completed'"
+      [class.assigned]="taskService.isTaskAssigned(task)"
+      [class.not-assigned]="taskService.isTaskNotAssigned(task)"
+      [class.in-progress]="taskService.isTaskInProgress(task)"
+      [class.completed]="taskService.isTaskCompleted(task)"
       [class.assignable]="canBeAssigned"
       [class.in-active-group]="isInActiveGroup"
       (click)="onClick($event)"
@@ -185,7 +185,7 @@ export class TaskCardComponent {
   ];
 
   constructor(
-    private taskService: TaskService,
+    public taskService: TaskService,
     private workGroupService: WorkGroupService,
   ) {
     
@@ -212,7 +212,7 @@ export class TaskCardComponent {
   }
 
   updateStatus(newState: TaskState) {
-    this.state = newState;
+    // this.state = newState;
   }
 
   viewDetails() {
