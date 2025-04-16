@@ -1,6 +1,5 @@
 @import 'handsontable/dist/handsontable.full.css';
 
-
 .full-page-calendar {
     position: absolute;
     top: 0;
@@ -13,350 +12,35 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    // overscroll-behavior: none;
     
     .handsontable-wrapper {
-        // flex: 1;
-        // position: relative;
-        // overflow: hidden;
         width: 100%;
         height: 100%;
     }
     
-    // .handsontable {
-    //     font-size: 14px;
-        
-    //     th {
-    //         background-color: #f8f9fa;
-    //         font-weight: 600;
-    //         text-align: center;
-    //         height: 30px !important;
-    //     }
-        
-    //     td {
-    //         vertical-align: middle;
-    //     }
-        
-    //     // Special column styling
-    //     .today-column {
-    //         background-color: rgba(255, 251, 230, 0.2) !important;
-    //     }
-        
-    //     .saturday-column {
-    //         background-color: rgba(240, 240, 240, 0.35) !important;
-    //     }
-        
-    //     .sunday-column {
-    //         background-color: rgba(240, 240, 240, 0.7) !important;
-    //     }
-        
-    //     // House name column styling
-    //     .house-name-cell {
-    //         background-color: #f8f9fa !important;
-    //         font-weight: 600;
-    //     }
-    // }
-    
-    // Center Handsontable cells
     .htCenter {
         text-align: center;
     }
-} 
+}
 
-// Styles for the old container - keep for compatibility
 .reservation-2-container {
-    display: none; // Hide this since we're now using full-page-calendar
+    display: none;
 }
 
-// Transparent grid borders - with !important tags and higher specificity
-// body .handsontable .htCore td, 
-// body .handsontable .htCore th {
-//     border-right: 1px solid rgba(180, 180, 180, 0.15) !important;
-//     border-bottom: 1px solid rgba(180, 180, 180, 0.15) !important;
-// }
-
-// body .handsontable .htCore thead th {
-//     border-bottom: 1px solid rgba(180, 180, 180, 0.25) !important;
-// }
-
-// body .handsontable .ht_clone_left th, 
-// body .handsontable .ht_clone_left td {
-//     border-right: 1px solid rgba(180, 180, 180, 0.25) !important;
-// }
-
-// Apply transparent borders to table itself
-body .handsontable {
-    // border: none !important;
-}
-
-body .handsontable .wtBorder {
-    // opacity: 0.2 !important;
-}
-
-// Fix for proper scrolling behavior
-// .handsontable-wrapper .ht_master .wtHolder {
-//     overflow: auto !important;
-//     overscroll-behavior-x: contain !important;
-//     -webkit-overflow-scrolling: touch;
-// }
-
-// Force consistent cell height and prevent expansion
 .handsontable td {
-    // height: 30px !important;
-    // min-height: 30px !important;
-    // max-height: 30px !important;
-    // line-height: 22px !important;
-
-    // width: 80px !important;
-    // min-width: 80px !important;
-    // max-width: 80px !important;
-
-    // overflow: hidden;
-    // white-space: nowrap !important; /* Change from pre-line to nowrap */
-    // text-overflow: ellipsis;
-    // text-align: center;
-    // vertical-align: middle;
-    // padding: 4px;
-    // font-size: 0.85rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+    vertical-align: middle;
 }
 
-// Target row headers specifically
-// .handsontable .ht_clone_left span.rowHeader {
-//     display: flex;
-//     align-items: center;
-//     justify-content: center;
-//     height: 30px !important;
-//     min-height: 30px !important;
-//     max-height: 30px !important;
-// }
-
-// // Target the row header cells
-// .handsontable .ht_clone_left td,
-// .handsontable .ht_clone_left th {
-//     height: 30px !important;
-//     min-height: 30px !important;
-//     max-height: 30px !important;
-//     line-height: 22px !important;
-//     box-sizing: border-box;
-// }
-
-// // Fix for alignment issues
-// .handsontable .htDimmed {
-//     height: 30px !important;
-//     line-height: 22px !important;
-// }
-
-// // Prevent row height changes
-// .handsontable .htCore tr,
-// .handsontable tbody tr,
-// .handsontable thead tr {
-//     height: 30px !important;
-//     min-height: 30px !important;
-//     max-height: 30px !important;
-// }
-
-// // Add tooltip for truncated content
-// .handsontable td[title] {
-//     cursor: help;
-// }
-
-// Force row heights in left pane (headers)
-// .handsontable .ht_clone_left .htCore tr,
-// .handsontable .ht_clone_left tbody tr {
-//     height: 30px !important;
-// }
-
-// Extra selector to target empty rows
-// .handsontable .htCore tr:empty {
-//     height: 30px !important;
-// }
-
-// // Target column headers too
-// .handsontable .ht_clone_top th {
-//     height: 30px !important;
-//     min-height: 30px !important;
-//     max-height: 30px !important;
-//     line-height: 22px !important;
-// }
-
-// Override any inline styles added by Handsontable
-// .handsontable td.htDimmed,
-// .handsontable th.htDimmed,
-// .handsontable .htCore td,
-// .handsontable .htCore th,
-// .handsontable .ht_clone_left td,
-// .handsontable .ht_clone_top th,
-// .handsontable .ht_clone_left th {
-//     height: 30px !important;
-// }
-
-// Custom styles for context menu items
-// .htContextMenu .htItemWrapper {
-//     display: flex;
-//     align-items: center;
-//     padding: 4px 8px;
-    
-//     i.pi {
-//         margin-right: 6px;
-//         font-size: 14px;
-//     }
-// }
-
-// // Add some hover effects to the context menu
-// .htContextMenu tbody tr td:hover {
-//     background-color: #f0f7ff !important;
-// }
-
-// // Add a little padding to the context menu
-// .htContextMenu {
-//     padding: 4px 0;
-// }
-
-// // Style the context menu to match PrimeNG theme
-// .htContextMenu {
-//     border-radius: 4px;
-//     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    
-//     .htSeparator {
-//         height: 1px;
-//         background-color: #e9e9e9;
-//     }
-    
-//     .htDisabled {
-//         opacity: 0.5;
-//         cursor: not-allowed;
-//     }
-// }
-
-// Add styling for the reservation warning
-// .reservation-warning {
-//     position: fixed;
-//     bottom: 20px;
-//     right: 20px;
-//     z-index: 1000;
-//     background-color: #fff3cd;
-//     border: 1px solid #ffeeba;
-//     border-left: 4px solid #ffc107;
-//     color: #856404;
-//     padding: 12px 20px;
-//     border-radius: 4px;
-//     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-//     max-width: 350px;
-//     font-size: 0.9rem;
-    
-//     p {
-//         margin: 0 0 8px 0;
-        
-//         &:last-child {
-//             margin-bottom: 0;
-//         }
-//     }
-// }
-
-// Add styling for disabled calendar dates and improving calendar appearance
-// :host ::ng-deep {
-//     // Custom styling for calendar cells that are disabled due to overlapping reservations
-//     .p-datepicker-calendar td.p-disabled[title="This date overlaps with another reservation"] {
-//         position: relative;
-//         background-color: #f8d7da !important;
-        
-//         // Add a visual indicator
-//         span {
-//             color: #721c24 !important;
-//             text-decoration: line-through;
-//         }
-        
-//         // Add a small diagonal line to indicate unavailability
-//         &::after {
-//             content: '';
-//             position: absolute;
-//             top: 0;
-//             right: 0;
-//             width: 0;
-//             height: 0;
-//             border-style: solid;
-//             border-width: 0 8px 8px 0;
-//             border-color: transparent #dc3545 transparent transparent;
-//         }
-//     }
-    
-//     // Make the calendar larger and more readable
-//     .p-datepicker {
-//         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-        
-//         .p-datepicker-header {
-//             padding: 0.75rem;
-//             background-color: #f8f9fa;
-//             border-bottom: 1px solid #dee2e6;
-//         }
-        
-//         .p-datepicker-calendar {
-//             th {
-//                 padding: 0.5rem;
-//                 font-weight: 600;
-//             }
-            
-//             td {
-//                 padding: 0.25rem;
-                
-//                 &:not(.p-disabled) span:hover {
-//                     background-color: #e9ecef !important;
-//                 }
-                
-//                 &.p-highlight span {
-//                     background-color: #3f51b5 !important;
-//                     color: #ffffff !important;
-//                 }
-//             }
-//         }
-//     }
-    
-//     // Add smooth scrolling to the Handsontable
-//     // .handsontable-wrapper {
-//     //     .handsontable {
-//     //         .htCore {
-//     //             scroll-behavior: smooth;
-//     //         }
-            
-//     //         .wtHolder {
-//     //             scroll-behavior: smooth;
-//     //             scrollbar-width: thin;
-//     //         }
-            
-//     //         .wtHolder::-webkit-scrollbar {
-//     //             width: 8px;
-//     //             height: 8px;
-//     //         }
-            
-//     //         .wtHolder::-webkit-scrollbar-thumb {
-//     //             background-color: rgba(0, 0, 0, 0.2);
-//     //             border-radius: 4px;
-//     //         }
-//     //     }
-//     // }
-// }
-
-// // Additional fix for touch devices and all clones
-// .ht_clone_top .wtHolder,
-// .ht_clone_left .wtHolder,
-// .ht_clone_corner .wtHolder {
-//     // overscroll-behavior: contain !important;
-// }
-
-// Prevent body scrolling when interacting with the table
-// body.handsontable-active {
-//     overflow: hidden;
-// }
-
-// Filter controls container updated style
 .filter-controls {
-    // margin-bottom: 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border-radius: 4px;
     overflow: hidden;
 }
 
-// New styles for the house type tabs
 .house-type-tabs {
     display: flex;
     gap: 0;
@@ -386,6 +70,30 @@ body .handsontable .wtBorder {
         
         &:hover {
             background-color: #4F46E5;
+        }
+    }
+}
+
+.reservation-warning {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-left: 4px solid #ffc107;
+    color: #856404;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    max-width: 350px;
+    font-size: 0.9rem;
+    
+    p {
+        margin: 0 0 8px 0;
+        
+        &:last-child {
+            margin-bottom: 0;
         }
     }
 }
