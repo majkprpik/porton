@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { combineLatest, interval, Subscription } from 'rxjs';
 import { HouseService } from '../../pages/service/house.service';
 import { DataService, House, HouseAvailability } from '../../pages/service/data.service';
+import { MatDialog } from '@angular/material/dialog';
+import { UncheckArrivalDepartureModalComponent } from './uncheck-arrival-departure-modal.component';
 
 @Component({
   selector: 'app-arrivals-and-departures',
@@ -22,7 +24,7 @@ import { DataService, House, HouseAvailability } from '../../pages/service/data.
                 <input 
                     id="departure-checkbox-{{ departure.house_number }}" 
                     type="checkbox" 
-                    (change)="submitDepartures($event, departure.house_availability_id)"
+                    (click)="submitDepartures($event, departure)"
                     [checked]="departure.has_departed"
                 >
                 <label for="departure-checkbox-{{ departure.house_number }}">House: {{ departure.house_number }} at: {{ getTimeFromDate(departure.house_availability_start_date) }}</label>
@@ -45,7 +47,7 @@ import { DataService, House, HouseAvailability } from '../../pages/service/data.
                 <input 
                     id="arrival-checkbox-{{ arrival.house_number }}" 
                     type="checkbox" 
-                    (change)="submitArrivals($event, arrival.house_availability_id)"
+                    (click)="submitArrivals($event, arrival)"
                     [checked]="arrival.has_arrived"
                 >
                 <label for="arrival-checkbox-{{ arrival.house_number }}">House: {{ arrival.house_number }} at: {{ getTimeFromDate(arrival.house_availability_start_date) }}</label>
@@ -142,7 +144,8 @@ export class ArrivalsAndDeparturesComponent {
 
   constructor(
     private houseService: HouseService,
-    private dataService: DataService
+    private dataService: DataService,
+    private dialog: MatDialog,
   ) {    
   }
   
@@ -219,15 +222,65 @@ export class ArrivalsAndDeparturesComponent {
     }
   }
 
-  async submitDepartures(event: any, houseAvailabilityId: number){
-    if(houseAvailabilityId){
-      await this.houseService.setHouseAvailabilityDeparted(houseAvailabilityId, event.target.checked);
+  async submitDepartures(event: any, departure: any){
+    if(!event.target.checked){
+      event.preventDefault();
+
+      let dialogRef = this.dialog.open(UncheckArrivalDepartureModalComponent, {
+        height: '180px',
+        width: '400px',
+        data: { 
+          houseNumber: departure.house_number,
+          arrivalOrDeparture: 'departure',
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(async result => {
+        if(result){
+          let hasDeparted = await this.houseService.setHouseAvailabilityDeparted(departure.house_availability_id, false);
+          if(hasDeparted){
+            departure.has_departed = false;
+          }
+        }
+      });
+    } else {
+      if(departure.house_availability_id){
+        let hasDeparted = await this.houseService.setHouseAvailabilityDeparted(departure.house_availability_id, event.target.checked);
+        if(hasDeparted){
+          departure.has_departed = true;
+        }
+      }
     }
   }
 
-  async submitArrivals(event: any, houseAvailabilityId: number){
-    if(houseAvailabilityId){
-      await this.houseService.setHouseAvailabilityArrived(houseAvailabilityId, event.target.checked);
+  async submitArrivals(event: any, arrival: any){
+    if(!event.target.checked){
+      event.preventDefault();
+
+      let dialogRef = this.dialog.open(UncheckArrivalDepartureModalComponent, {
+        height: '180px',
+        width: '400px',
+        data: { 
+          houseNumber: arrival.house_number,
+          arrivalOrDeparture: 'arrival',
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(async result => {
+        if(result){
+          let hasArrived = await this.houseService.setHouseAvailabilityArrived(arrival.house_availability_id, false);
+          if(hasArrived){
+            arrival.has_arrived = false;
+          }
+        }
+      });
+    } else {
+      if(arrival.house_availability_id){
+        let hasArrived = await this.houseService.setHouseAvailabilityArrived(arrival.house_availability_id, event.target.checked);
+        if(hasArrived){
+          arrival.has_arrived = true;
+        }
+      }
     }
   }
 }

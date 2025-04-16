@@ -75,7 +75,7 @@ export class HouseService {
     }
 
     if(!houseAvailability)
-      return;
+      return false;
 
     try {
       const { data, error } = await this.supabase.getClient()
@@ -88,9 +88,11 @@ export class HouseService {
         .eq('house_availability_id', houseAvailabilityId);
 
       if (error) throw error;
-      
+
+      return true;
     } catch (error) {
       console.error('Error updating house availability:', error);
+      return false;
     }
   }
 
@@ -104,7 +106,7 @@ export class HouseService {
     }
     
     if(!houseAvailability)
-      return;
+      return false;
 
     try {
       const { data, error } = await this.supabase.getClient()
@@ -117,9 +119,12 @@ export class HouseService {
         .eq('house_availability_id', houseAvailabilityId);
 
       if (error) throw error;
+
+      return true;
     }
     catch (error) {
       console.error('Error updating house availability:', error);
+      return false;
     }
   }
 
