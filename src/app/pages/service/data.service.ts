@@ -604,11 +604,11 @@ export class DataService {
       tap((data) => {
         if (data) {
           const currentWorkGroups = this.workGroupsSubject.value;
-          this.workGroupsSubject.next([...currentWorkGroups, data[0]]);
-          this.logData('Created Work Group', data[0]);
+          this.workGroupsSubject.next([...currentWorkGroups, data]);
+          this.logData('Created Work Group', data);
         }
       }),
-      map((data) => (data ? data[0] : null)),
+      map((data) => (data ? data : null)),
       catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
     );

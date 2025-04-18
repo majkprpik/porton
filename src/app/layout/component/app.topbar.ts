@@ -64,11 +64,12 @@ import { AuthService } from '../../pages/service/auth.service';
             <div class="relative">
                 <button
                     class="layout-topbar-action"
-                    (click)="menu.toggle($event)"
+
+                    (click)="authService.logout()"
                 >
-                    <i class="pi pi-user"></i>
+                    LOGOUT
                 </button>
-                <p-menu #menu [popup]="true" [model]="userMenuItems"></p-menu>
+                
             </div>
         </div>
     </div>`
@@ -77,11 +78,11 @@ export class AppTopbar {
     @ViewChild('menu') menu!: Menu;
     items!: MenuItem[];
     userMenuItems: MenuItem[] = [
-        {
-            label: 'Profile',
-            icon: 'pi pi-user',
-            routerLink: ['/profile']
-        },
+        // {
+        //     label: 'Profile',
+        //     icon: 'pi pi-user',
+        //     routerLink: ['/profile']
+        // },
         {
             label: 'Logout',
             icon: 'pi pi-sign-out',
@@ -93,7 +94,7 @@ export class AppTopbar {
 
     constructor(
         public layoutService: LayoutService,
-        private authService: AuthService
+        public authService: AuthService
     ) {}
 
     toggleDarkMode() {

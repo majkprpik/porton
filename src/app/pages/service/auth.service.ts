@@ -44,6 +44,9 @@ export class AuthService {
         localStorage.setItem('profileId', data.user.id)
         this.usernameSubject.next(email);
         this.userProfile.next(await this.profileService.fetchProfileById(data.user.id));
+        // save to local storage
+        localStorage.setItem('userProfile', JSON.stringify(this.userProfile.value));
+        console.log('userProfile', this.userProfile.value);
         // Wait for navigation to complete
         // TODO VEDRAN: if user without home than go to tasks(?)
         await this.router.navigate(['/home']);
@@ -63,11 +66,11 @@ export class AuthService {
       this.usernameSubject.next(null);
       this.userProfile.next(null);
       // Wait for navigation to complete
-      await this.router.navigate(['/login']);
+      await this.router.navigate(['/auth/login']);
     } catch (error) {
       console.error('Logout error:', error);
       // Force navigation to login even if signOut fails
-      await this.router.navigate(['/login']);
+      await this.router.navigate(['/auth/login']);
     }
   }
 

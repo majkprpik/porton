@@ -21,23 +21,6 @@ import { TeamService } from '../service/team.service';
             </div>
         } @else {
             <div class="teams-container">
-                <div class="teams-header">
-                    <h2>Timovi</h2>
-                    <div class="header-actions">
-                        <p-button 
-                            label="Novi Tim" 
-                            icon="pi pi-plus"
-                            severity="secondary"
-                            (onClick)="createWorkGroup()"
-                        ></p-button>
-                        <p-button 
-                            label="OBJAVI" 
-                            icon="pi pi-check"
-                            (onClick)="publishWorkGroups()"
-                        ></p-button>
-                    </div>
-                </div>
-
                 <div class="teams-list">
                     @if (workGroups.length === 0) {
                         <div class="empty-state">
@@ -92,13 +75,13 @@ import { TeamService } from '../service/team.service';
                                             }
                                         </div>
                                     </div>
-                                    <div class="team-actions">
+                                    <!-- <div class="team-actions">
                                         <p-button 
                                             icon="pi pi-trash" 
                                             severity="danger"
                                             (onClick)="deleteWorkGroup(group.work_group_id)"
                                         ></p-button>
-                                    </div>
+                                    </div> -->
                                 </div>
                             }
                         </div>

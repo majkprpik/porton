@@ -11,6 +11,7 @@ import { Teams } from './app/pages/teams/teams';
 import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
 import { Reservation2Component } from './app/pages/reservation-2/reservation-2.component';
 import { AuthGuard } from './app/layout/guard/auth.guard';
+import { RoleGuard } from './app/layout/guard/role.guard';
 import { ProfilesComponent } from './app/pages/profiles/profiles.component';
 import { TaskProgressTypesComponent } from './app/pages/task-progress-types/task-progress-types.component';
 import { HouseTypesComponent } from './app/pages/house-types/house-types.component';
@@ -19,7 +20,7 @@ export const appRoutes: Routes = [
     {
         path: '',
         component: AppLayout,
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuard, RoleGuard],
         children: [
             { path: '', component: Home }, // Default route
             { path: 'home', component: Home },

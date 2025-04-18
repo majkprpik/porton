@@ -12,6 +12,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { DragDropModule } from 'primeng/dragdrop';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-work-group',
@@ -24,8 +26,10 @@ import { WorkGroupService } from '../service/work-group.service';
     StaffCardComponent, 
     ContextMenuModule,
     TooltipModule,
-    DragDropModule
+    DragDropModule,
+    ConfirmDialogModule
   ],
+  providers: [ConfirmationService],
   template: `
     <div class="work-group-container" [class.active]="isActive" [style.background-color]="isActive ? getGroupColor() : null" [style.border-color]="isActive ? getGroupBorderColor() : null">
       <div class="active-border" [style.background-image]="isActive ? 'linear-gradient(to right, ' + getGroupBorderColor() + ' 50%, transparent 50%), linear-gradient(to bottom, ' + getGroupBorderColor() + ' 50%, transparent 50%), linear-gradient(to left, ' + getGroupBorderColor() + ' 50%, transparent 50%), linear-gradient(to top, ' + getGroupBorderColor() + ' 50%, transparent 50%)' : null"></div>
@@ -101,6 +105,7 @@ import { WorkGroupService } from '../service/work-group.service';
     </div>
 
     <p-contextMenu #staffContextMenu [model]="staffMenuItems"></p-contextMenu>
+    <p-confirmDialog header="Potvrda" icon="pi pi-exclamation-triangle"></p-confirmDialog>
   `,
   styles: `
     @keyframes borderDance {
@@ -352,6 +357,7 @@ export class WorkGroup implements OnInit {
     private dataService: DataService,
     private workGroupService: WorkGroupService,
     private taskService: TaskService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit() {
@@ -469,7 +475,12 @@ export class WorkGroup implements OnInit {
 
   onDeleteClick(event: Event) {
     event.stopPropagation();
-    this.deleteClicked.emit();
+    this.confirmationService.confirm({
+      message: `Jeste li sigurni da želite obrisati ovu radnu grupu? <br> <b>Završeni zadaci bit će arhivirani, a nezavršeni vraćeni u status "Nije dodijeljeno".</b>`,
+      accept: () => {
+        this.deleteClicked.emit();
+      }
+    });
   }
 
   onStaffContextMenu(event: MouseEvent, staff: Profile) {
