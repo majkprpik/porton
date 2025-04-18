@@ -425,4 +425,36 @@ export class HouseService {
     }
   }
 
+  /**
+   * Updates arrival_time or departure_time for a house availability
+   * @param houseAvailabilityId The ID of the house availability to update
+   * @param timeField The field to update ('arrival_time' or 'departure_time')
+   * @param timeValue The time value in 'HH:MM' format
+   * @returns Promise that resolves to true when successful, false otherwise
+   */
+  async updateHouseAvailabilityTime(houseAvailabilityId: number, timeField: 'arrival_time' | 'departure_time', timeValue: string): Promise<boolean> {
+    try {
+      if (!houseAvailabilityId || !timeField || !timeValue) {
+        console.error('Missing required parameters for updateHouseAvailabilityTime');
+        return false;
+      }
+
+      const updateData: any = {};
+      updateData[timeField] = timeValue;
+
+      const { data, error } = await this.supabase.getClient()
+        .schema('porton')
+        .from('house_availabilities')
+        .update(updateData)
+        .eq('house_availability_id', houseAvailabilityId);
+
+      if (error) throw error;
+
+      return true;
+    } catch (error) {
+      console.error(`Error updating ${timeField} for house availability ${houseAvailabilityId}:`, error);
+      return false;
+    }
+  }
+
 }

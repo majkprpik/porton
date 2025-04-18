@@ -126,6 +126,8 @@ export interface HouseAvailability {
   color_theme: number;
   color_tint: number;
   description?: string | null;
+  arrival_time?: string | null;
+  departure_time?: string | null;
 }
 
 // Interface for house status task
