@@ -9,10 +9,13 @@ import { DropdownModule } from 'primeng/dropdown';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { AuthService } from '../service/auth.service';
 
 // Extended Profile interface to include the isDivider property
 interface ExtendedProfile extends Profile {
   isDivider?: boolean;
+  password?: string;
+  email?: string;
 }
 
 @Component({
@@ -36,15 +39,19 @@ interface ExtendedProfile extends Profile {
           <tr>
             <th>Ime</th>
             <th>Pozicija</th>
+            <th>Email</th>
+            <th>Lozinka</th>
             <th>Akcije</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-profile>
           <tr [ngClass]="{'divider-row': profile.isDivider}">
-            <td *ngIf="profile.isDivider" colspan="3" class="divider-cell">{{ profile.first_name }}</td>
+            <td *ngIf="profile.isDivider" colspan="5" class="divider-cell">{{ profile.first_name }}</td>
             <ng-container *ngIf="!profile.isDivider">
               <td>{{ profile.first_name }} {{ profile.last_name }}</td>
               <td>{{ getRoleLabel(profile.role || '') }}</td>
+              <td>{{ getDisplayEmail(profile.email) }}</td>
+              <td>{{ profile.password || '' }}</td>
               <td>
                 <p-button 
                   icon="pi pi-pencil" 
@@ -130,6 +137,7 @@ export class ProfilesComponent implements OnInit {
   profiles: ExtendedProfile[] = [];
   profileDialog: boolean = false;
   selectedProfile: ExtendedProfile | null = null;
+  userPasswordMap: { [name: string]: string } = {};
   
   availableRoles = [
     { label: 'voditelj kampa', value: 'voditelj_kampa' },
@@ -148,8 +156,46 @@ export class ProfilesComponent implements OnInit {
 
   constructor(
     private dataService: DataService,
-    private messageService: MessageService
-  ) {}
+    private messageService: MessageService,
+    private authService: AuthService
+  ) {
+    // Create a map of user names to passwords from the auth service
+    this.initializePasswordMap();
+  }
+
+  initializePasswordMap() {
+    const users = [
+      { name: 'Matej Adrić', password: 'NzW3dj' },
+      { name: 'Marko Sovulj', password: 'uNgVn1' },
+      { name: 'Mirela Dronjić', password: '2Az84E' }, 
+      { name: 'Elena Rudan', password: 't3Wd6N' },
+      { name: 'Simona Gjeorgievska', password: 'u2Xe7P' },
+      { name: 'Mia Lukić', password: 'v1Yf8Q' },
+      { name: 'Mila Malivuk', password: 'aYqv9A' },
+      { name: 'Ana Perak', password: 'p9Xm2K' },
+      { name: 'Mina Cvejić', password: 'k8DN4U' },
+      { name: 'Mauro Boljunčić', password: 'f2Ip8A' },
+      { name: 'Damir Zaharija', password: 'r7Yb5L' },
+      { name: 'Ivica Nagel', password: 's4Vc8M' },
+      { name: 'Liudmyla Babii', password: 'w5Zg9R' },
+      { name: 'Iryna Kara', password: 'x4Ah0S' },
+      { name: 'Tetiana Leonenko', password: 'y3Bi1T' },
+      { name: 'Iuliia Myronova', password: 'z2Cj2U' },
+      { name: 'Jasenka Savković Cvet', password: 'a1Dk3V' },
+      { name: 'Nataliia Vladimyrova', password: 'b6El4W' },
+      { name: 'Slavica Petković', password: 'c5Fm5X' },
+      { name: 'Jelena Kaluđer', password: 'd4Gn6Y' },
+      { name: 'Sandi Maružin', password: 'e3Ho7Z' },
+      { name: 'Đani Guštin', password: 'g1Jq9B' },
+      { name: 'Dražen Pendeš', password: 'h5Kr0C' },
+      { name: 'Ivo Pranjić', password: 'i4Ls1D' },
+      { name: 'Daniel Begzić', password: 'j3Mt2E' },
+    ];
+
+    users.forEach(user => {
+      this.userPasswordMap[user.name] = user.password;
+    });
+  }
 
   ngOnInit() {
     this.dataService.profiles$.subscribe(profiles => {
@@ -167,7 +213,7 @@ export class ProfilesComponent implements OnInit {
         .sort(this.sortByName);
       if (managementProfiles.length > 0) {
         sortedProfiles.push(this.createDividerProfile('UPRAVA'));
-        sortedProfiles.push(...managementProfiles);
+        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(managementProfiles));
       }
       
       // Add reception profiles
@@ -176,7 +222,7 @@ export class ProfilesComponent implements OnInit {
         .sort(this.sortByName);
       if (receptionProfiles.length > 0) {
         sortedProfiles.push(this.createDividerProfile('ODJEL RECEPCIJA'));
-        sortedProfiles.push(...receptionProfiles);
+        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(receptionProfiles));
       }
       
       // Add housekeeping profiles
@@ -185,7 +231,7 @@ export class ProfilesComponent implements OnInit {
         .sort(this.sortByName);
       if (housekeepingProfiles.length > 0) {
         sortedProfiles.push(this.createDividerProfile('ODJEL DOMAĆINSTVA'));
-        sortedProfiles.push(...housekeepingProfiles);
+        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(housekeepingProfiles));
       }
       
       // Add technical profiles
@@ -194,7 +240,7 @@ export class ProfilesComponent implements OnInit {
         .sort(this.sortByName);
       if (technicalProfiles.length > 0) {
         sortedProfiles.push(this.createDividerProfile('ODJEL TEHNIKA'));
-        sortedProfiles.push(...technicalProfiles);
+        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(technicalProfiles));
       }
       
       // Add any other profiles that don't fit the categories
@@ -207,11 +253,35 @@ export class ProfilesComponent implements OnInit {
         .sort(this.sortByName);
       if (otherProfiles.length > 0) {
         sortedProfiles.push(this.createDividerProfile('OSTALO'));
-        sortedProfiles.push(...otherProfiles);
+        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(otherProfiles));
       }
       
       this.profiles = sortedProfiles;
     });
+  }
+
+  addPasswordsAndEmailsToProfiles(profiles: Profile[]): ExtendedProfile[] {
+    return profiles.map(profile => {
+      const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+      const extendedProfile: ExtendedProfile = {...profile};
+      
+      // Find the password for this profile
+      extendedProfile.password = this.userPasswordMap[fullName] || '';
+      
+      // Generate email using the same format as in auth.service
+      extendedProfile.email = this.normalizeEmail(fullName);
+      
+      return extendedProfile;
+    });
+  }
+
+  normalizeEmail(name: string): string {
+    return name.toLowerCase().replace(/[^a-z0-9]/g, '').concat('@porton.com');
+  }
+
+  getDisplayEmail(email: string | undefined): string {
+    if (!email) return '';
+    return email.replace('@porton.com', '');
   }
 
   sortByName(a: Profile, b: Profile): number {
