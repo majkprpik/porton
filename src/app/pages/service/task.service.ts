@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, HouseStatus, HouseStatusTask } from './data.service';
+import { DataService, HouseStatus, HouseStatusTask, Task, TaskProgressType } from './data.service';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
@@ -10,12 +10,15 @@ export class TaskService {
   mobileHomes: HouseStatus[] = [];
   $selectedTask = new BehaviorSubject<any>(null);
   $taskToRemove = new BehaviorSubject<any>(null);
+  taskProgressTypes: TaskProgressType[] = [];
 
   constructor(
     private supabase: SupabaseService,
     private dataService: DataService,
   ) {
-
+    this.dataService.taskProgressTypes$.subscribe(res => {
+      this.taskProgressTypes = res;
+    });
   }
 
   async createTaskForHouse(houseId: string, description: string, taskTypeName: string, isAssigned: boolean, isUnscheduled: boolean = false){
@@ -139,5 +142,28 @@ export class TaskService {
   
     // Convert to required format: "YYYY-MM-DD HH:MM:SS.ssssss+00"
     return isoString.replace('T', ' ').replace('Z', '+00');
+  }
+
+  isTaskAssigned(task: any){
+    let assignedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Dodijeljeno');
+    return assignedTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
+  }
+
+  isTaskNotAssigned(task: any){
+    let assignedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Nije dodijeljeno');
+    return assignedTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
+  }
+
+  isTaskInProgress(task: any){
+    let inProgressTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'U progresu');
+    return inProgressTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
+  }
+
+  isTaskCompleted(task: any){
+    if(task.task_id == 613){
+      console.log(task);
+    }
+    let completedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
+    return completedTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
   }
 }

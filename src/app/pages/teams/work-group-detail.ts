@@ -82,6 +82,8 @@ import { HouseService } from '../service/house.service';
                                                         ></p-button>
                                                     }
                                                 }
+                                            } @else {
+                                                <span>Zadatak završen</span>
                                             }
                                         </div>
                                     </div>

@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { Task, Profile, DataService, House, TaskType } from '../service/data.service';
+import { Task, Profile, DataService, House, TaskType, TaskProgressType } from '../service/data.service';
 import { TaskCardComponent } from './task-card';
 import { TagModule } from 'primeng/tag';
 import { StaffCardComponent } from './staff-card';
@@ -70,7 +70,8 @@ import { WorkGroupService } from '../service/work-group.service';
                 >
                   <app-task-card 
                     [houseNumber]="getHouseNumber(task.house_id)"
-                    [state]="'in-progress'"
+                    [task]="task"
+                    [state]="isTaskCompleted(task) ? 'completed' : 'assigned'"
                     [taskIcon]="getTaskIcon(task.task_type_id)"
                     [isInActiveGroup]="isActive"
                     (removeFromGroup)="onRemoveTask(task)">
@@ -340,7 +341,7 @@ export class WorkGroup implements OnInit {
     const index = (this.workGroup.work_group_id - 1) % 12;
     return this.groupColorNames[index];
   }
-
+  
   taskProgressTypes: any;
   tasks: any;
   workGroupTasks: any;
@@ -394,6 +395,7 @@ export class WorkGroup implements OnInit {
             workGroup.is_locked = false;
             let lockedTeams = this.workGroupService.getLockedTeams();
             let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup)
+
             if(lockedTeam && !lockedTeam.tasks?.find(task => task.task_id == selectedTask.task_id)){
               if(selectedTask.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
                 selectedTask.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
@@ -424,6 +426,11 @@ export class WorkGroup implements OnInit {
           this.assignedStaff = staff;
         });
     }
+  }
+
+  isTaskCompleted(task: Task){
+    let completedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Završeno');
+    return completedTaskProgressType.task_progress_type_id == task.task_progress_type_id;
   }
 
   onGroupClick() {
@@ -473,6 +480,16 @@ export class WorkGroup implements OnInit {
   }
 
   onRemoveTask(taskToRemove: Task) {
+    let completedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Završeno');
+    let inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'U progresu');
+
+    if(
+      taskToRemove.task_progress_type_id == completedTaskProgressType.task_progress_type_id || 
+      taskToRemove.task_progress_type_id == inProgressTaskProgressType.task_progress_type_id
+    ) {
+      return;
+    }
+
     if (this.workGroup?.work_group_id) {
       if(this.workGroup.work_group_id == this.workGroupService.getActiveGroup()){
         this.workGroup.is_locked = false;
@@ -485,8 +502,9 @@ export class WorkGroup implements OnInit {
       if(lockedTeam?.tasks){
         lockedTeam.tasks = lockedTeam.tasks.filter(task => task.task_id != taskToRemove.task_id);
         const nijeDodijeljenoType = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno");
-        if (nijeDodijeljenoType) {
-          // Directly update the task progress type to "Nije dodijeljeno"
+        const completedTaskType = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == 'Završeno');
+
+        if (nijeDodijeljenoType && completedTaskType) {
           this.dataService.updateTaskProgressType1(taskToRemove.task_id, nijeDodijeljenoType.task_progress_type_id)
             .then(() => {
               // Emit the task to parent component

@@ -163,11 +163,11 @@ export class TaskGroupComponent implements OnInit {
       case this.progressTypes.find(tp => tp.task_progress_type_name == "Završeno")?.task_progress_type_id: 
         return 'completed';    // "Završeno"
       case this.progressTypes.find(tp => tp.task_progress_type_name == "Nije dodijeljeno")?.task_progress_type_id: 
-        return 'pending';      // "Nije dodijeljeno"
+        return 'not-assigned';      // "Nije dodijeljeno"
       case this.progressTypes.find(tp => tp.task_progress_type_name == "Dodijeljeno")?.task_progress_type_id: 
-        return 'pending';      // "Dodijeljeno"
+        return 'assigned';      // "Dodijeljeno"
       default: 
-        return 'pending';
+        return 'not-assigned';
     }
   }
 
