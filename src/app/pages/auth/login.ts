@@ -98,7 +98,7 @@ export class Login implements OnInit {
             this.errorMessage = '';
 
             try {
-                const success = await this.authService.login(this.email.trim(), this.password.trim());
+                const success = await this.authService.login(this.email.trim() + '@porton.com', this.password.trim());
                 if (!success) {
                     this.errorMessage = 'Invalid email or password';
                 }
