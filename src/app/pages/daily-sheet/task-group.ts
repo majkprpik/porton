@@ -137,7 +137,7 @@ export class TaskGroupComponent implements OnInit {
 
     ftsks = this.tasks.filter(task => 
       task.task_type_id == this.taskType?.task_type_id && 
-      task.task_progress_type_id != this.getProgressTypeIdByName("Dodijeljeno") // Filter out tasks that are already assigned
+      task.task_progress_type_id == this.getProgressTypeIdByName("Nije dodijeljeno")
     );
 
     return ftsks;

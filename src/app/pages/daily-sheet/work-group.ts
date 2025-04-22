@@ -475,6 +475,24 @@ export class WorkGroup implements OnInit {
 
   onDeleteClick(event: Event) {
     event.stopPropagation();
+
+    if(this.assignedTasks && this.assignedTasks.length > 0){
+      const inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "U progresu");
+      const pausedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Pauzirano");
+
+      if(this.assignedTasks.find(task => task.task_progress_type_id == inProgressTaskProgressType.task_progress_type_id || task.task_progress_type_id == pausedTaskProgressType.task_progress_type_id)){
+        this.confirmationService.confirm({
+          message: `Jedan od zadataka je u tijeku. Greška prilikom brisanja grupe.`,
+          header: 'Upozorenje',
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: 'OK',
+          rejectVisible: false,
+        });
+
+        return; 
+      }
+    }
+
     this.confirmationService.confirm({
       message: `Jeste li sigurni da želite obrisati ovu radnu grupu? <br> <b>Završeni zadaci bit će arhivirani, a nezavršeni vraćeni u status "Nije dodijeljeno".</b>`,
       accept: () => {
