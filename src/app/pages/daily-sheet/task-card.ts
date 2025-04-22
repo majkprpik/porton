@@ -18,6 +18,7 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       [class.assigned]="taskService.isTaskAssigned(task)"
       [class.not-assigned]="taskService.isTaskNotAssigned(task)"
       [class.in-progress]="taskService.isTaskInProgress(task)"
+      [class.in-progress]="taskService.isTaskPaused(task)"
       [class.completed]="taskService.isTaskCompleted(task)"
       [class.assignable]="canBeAssigned"
       [class.in-active-group]="isInActiveGroup"
