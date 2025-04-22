@@ -7,6 +7,7 @@ import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 import { StaffCardComponent } from './staff-card';
 import { WorkGroupService } from '../service/work-group.service';
+import { ProfileService } from '../service/profile.service';
 
 @Component({
   selector: 'app-staff-group',
@@ -131,7 +132,8 @@ export class StaffGroup implements OnInit, OnChanges {
 
   constructor(
     private workGroupService: WorkGroupService,
-    private dataService: DataService
+    private dataService: DataService,
+    private profileService: ProfileService
   ) {
     this.workGroupService.activeGroupId$.subscribe(
       groupId => {
@@ -196,15 +198,8 @@ export class StaffGroup implements OnInit, OnChanges {
   onStaffClicked(staff: Profile) {
     const activeGroupId = this.workGroupService.getActiveGroup();
     if (activeGroupId !== undefined && staff.id) {
-      this.dataService.assignStaffToWorkGroup(staff.id, activeGroupId).subscribe({
-        next: () => {
-          //console.log('Staff assigned successfully');
-          this.updateAvailableStaff(activeGroupId);
-        },
-        error: (error) => {
-          console.error('Error assigning staff:', error);
-        }
-      });
+      this.profileService.$staffToAdd.next(staff);
+      this.updateAvailableStaff(activeGroupId);
     }
   }
 

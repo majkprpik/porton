@@ -425,6 +425,14 @@ export class WorkGroups implements OnInit {
             await this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
           }
         }
+
+        if(!lockedWorkGroup.members){
+          lockedWorkGroup.members = [];
+        }
+
+        for (const member of lockedWorkGroup.members){
+          await this.workGroupService.createWorkGroupProfile(parseInt(lockedWorkGroup.id), member.id);
+        }
       }
     }
 
