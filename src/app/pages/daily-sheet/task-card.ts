@@ -202,6 +202,8 @@ export class TaskCardComponent {
       this.removeFromGroup.emit();
     } else if (this.canBeAssigned && this.workGroupService.getActiveGroup()) {
       this.taskService.$selectedTask.next(this.task);
+    } else {
+      this.taskService.$taskModalData.next(this.task);
     }
   }
 

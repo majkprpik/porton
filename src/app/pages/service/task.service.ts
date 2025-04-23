@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { DataService, HouseStatus, HouseStatusTask, Task, TaskProgressType } from './data.service';
 import { BehaviorSubject } from 'rxjs';
+import imageCompression from 'browser-image-compression';
 
 @Injectable({
   providedIn: 'root'
@@ -10,10 +11,11 @@ export class TaskService {
   mobileHomes: HouseStatus[] = [];
   $selectedTask = new BehaviorSubject<any>(null);
   $taskToRemove = new BehaviorSubject<any>(null);
+  $taskModalData = new BehaviorSubject<any>(null);
   taskProgressTypes: TaskProgressType[] = [];
 
   constructor(
-    private supabase: SupabaseService,
+    private supabaseService: SupabaseService,
     private dataService: DataService,
   ) {
     this.dataService.taskProgressTypes$.subscribe(res => {
@@ -32,7 +34,7 @@ export class TaskService {
         taskProgressTypeId = await this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('Nije dodijeljeno');
       }
 
-      const { data, error } = await this.supabase.getClient()
+      const { data, error } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .insert({
@@ -58,7 +60,7 @@ export class TaskService {
 
   async uploadCommentForTask(taskId: number, comment: string){
     try{
-      const { error: commentUploadError } = await this.supabase.getClient()
+      const { error: commentUploadError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .update({ description: comment })
@@ -75,7 +77,7 @@ export class TaskService {
 
   async updateTask(task: HouseStatusTask){
     try{
-      const { error: updateTaskError } = await this.supabase.getClient()
+      const { error: updateTaskError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .update({
@@ -101,7 +103,7 @@ export class TaskService {
     try{
       const taskProgressTypeId = await this.dataService.getTaskProgressTypeIdByTaskProgressTypeName(taskProgress);
 
-      const { error: taskTypeIdError } = await this.supabase.getClient()
+      const { error: taskTypeIdError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .update({ 
@@ -121,7 +123,7 @@ export class TaskService {
 
   async deleteTaskForHouse(taskId: number){
     try{
-      const { error: updateTaskError } = await this.supabase.getClient()
+      const { error: updateTaskError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .delete()
@@ -142,6 +144,67 @@ export class TaskService {
   
     // Convert to required format: "YYYY-MM-DD HH:MM:SS.ssssss+00"
     return isoString.replace('T', ' ').replace('Z', '+00');
+  }
+
+  async storeImagesForTask(images: any[], taskId: number) {
+    try {
+      const compressedImages = await Promise.all(
+        images.map(image => this.compressImage(image, 1))
+      );
+  
+      const uploadPromises = compressedImages.map(async (compressedImage) => {
+        const filePath = `task-${taskId}/${compressedImage.name}`;
+  
+        const { data, error: storeImageError } = await this.supabaseService.getClient()
+          .storage
+          .from('damage-reports-images')
+          .upload(filePath, compressedImage);
+  
+        if (storeImageError) throw storeImageError;
+  
+        const publicUrl = this.supabaseService.getClient()
+          .storage
+          .from('damage-reports-images')
+          .getPublicUrl(data.path).data.publicUrl;
+  
+        return { path: data.path, url: publicUrl };
+      });
+  
+      const uploadResults = await Promise.all(uploadPromises);
+  
+      return uploadResults;
+    } catch (error: any) {
+      console.error('Error storing images:', error);
+      return { error: error.message || "Error storing images in Supabase" };
+    }
+  }
+
+  async deleteStoredImageForTask(imagePath: string){
+    try {
+      const { data: data, error: deleteError } = await this.supabaseService.getClient()
+        .storage
+        .from('damage-reports-images')
+        .remove([imagePath]);
+
+      if (deleteError) throw deleteError;
+
+      return true;
+    } catch(error) {
+      console.log('Error fetching images: ' + error)
+      return false;
+    }
+  }
+
+  private async compressImage(image: File, targetMegaBytes: number){
+    const options = {
+      maxSizeMB: targetMegaBytes, 
+      maxWidthOrHeight: 1920, 
+      useWebWorker: true,
+    };
+
+    const compressedImage = await imageCompression(image, options);
+
+    return compressedImage;
   }
 
   isTaskAssigned(task: any){
