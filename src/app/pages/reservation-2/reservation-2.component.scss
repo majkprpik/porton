@@ -183,7 +183,7 @@
         font-weight: bold;
         position: sticky;
         top: 0;
-        z-index: 2;
+        z-index: 5;
     }
     
     .row-header {
@@ -191,7 +191,7 @@
         font-weight: bold;
         position: sticky;
         left: 0;
-        z-index: 1;
+        z-index: 5;
     }
     
     .today-column {
@@ -219,16 +219,90 @@
         overflow: hidden;
         text-overflow: ellipsis;
         font-weight: bold;
-        cursor: pointer;
+        cursor: not-allowed;
         width: 120px;
         max-width: 120px;
         
         padding: 5px 2px;
         box-sizing: border-box;
         
+        &:hover {
+            box-shadow: inset 0 0 0 1px rgba(255, 0, 0, 0.2);
+        }
+        
         &.saturday-column, &.sunday-column, &.today-column {
             background-color: inherit;
         }
+        
+        // Identify connected reservations (same reservation spanning multiple cells)
+        &.reservation-start {
+            position: relative;
+            z-index: 2;
+        }
+        
+        &.reservation-middle {
+            position: relative;
+            z-index: 2;
+        }
+        
+        &.reservation-end {
+            position: relative;
+            z-index: 2;
+        }
+    }
+
+    /* Reservation hover effects */
+    td.reservation-connected-hover {
+        position: relative;
+    }
+
+    /* Hover effect with a pseudo-element */
+    td.reservation-connected-hover:hover::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    /* Start of reservation styling */
+    td.reservation-connected-hover.reservation-start:hover::after {
+        left: -2px;
+        border-left: 2px solid #ff6b6b;
+        border-top: 2px solid #ff6b6b;
+        border-bottom: 2px solid #ff6b6b;
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+        box-shadow: -1px 0 5px rgba(255, 107, 107, 0.3);
+    }
+
+    /* Middle of reservation styling */
+    td.reservation-connected-hover.reservation-middle:hover::after {
+        border-top: 2px solid #ff6b6b;
+        border-bottom: 2px solid #ff6b6b;
+    }
+
+    /* End of reservation styling */
+    td.reservation-connected-hover.reservation-end:hover::after {
+        right: -2px;
+        border-right: 2px solid #ff6b6b;
+        border-top: 2px solid #ff6b6b;
+        border-bottom: 2px solid #ff6b6b;
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+        box-shadow: 1px 0 5px rgba(255, 107, 107, 0.3);
+    }
+
+    /* Single cell reservation (both start and end) */
+    td.reservation-connected-hover.reservation-start.reservation-end:hover::after {
+        left: -2px;
+        right: -2px;
+        border: 2px solid #ff6b6b;
+        border-radius: 4px;
+        box-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
     }
 
     // Add a style for the table to disable text selection during drag
@@ -346,4 +420,93 @@
         border-color: rgba(0, 123, 255, 1);
         background-color: rgba(0, 123, 255, 0.05);
     }
+}
+
+// Style for dates in the past
+.past-date {
+    // background-color: rgba(0, 0, 0, 0.05) !important;
+    // color: #999 !important;
+    // cursor: not-allowed !important;
+    // position: relative;
+    
+    // // Add a subtle diagonal strikethrough pattern
+    // &::after {
+    //     content: '';
+    //     position: absolute;
+    //     top: 0;
+    //     left: 0;
+    //     right: 0;
+    //     bottom: 0;
+    //     background-image: repeating-linear-gradient(
+    //         45deg,
+    //         transparent,
+    //         transparent 5px,
+    //         rgba(0, 0, 0, 0.05) 5px,
+    //         rgba(0, 0, 0, 0.05) 10px
+    //     );
+    //     pointer-events: none; // Allow clicks to pass through
+    // }
+    
+    // // Ensure text is still somewhat visible but clearly disabled
+    // &:not(.reserved-cell) {
+    //     &:hover {
+    //         background-color: rgba(0, 0, 0, 0.07) !important;
+    //     }
+    // }
+    
+    // // Special handling for reserved cells in the past
+    // &.reserved-cell {
+    //     opacity: 0.7;
+        
+    //     &:hover {
+    //         box-shadow: none; // Remove hover effect for reserved cells in the past
+    //     }
+    // }
+}
+
+/* New reservation hover styling for connected cells */
+.hovered-reservation {
+    position: relative;
+    z-index: 10;
+}
+
+/* Base style for all cells in the reservation */
+.hovered-reservation::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    pointer-events: none;
+    border-top: 2px solid #ff6b6b;
+    border-bottom: 2px solid #ff6b6b;
+}
+
+/* Starting cell of the reservation */
+.hovered-start::after {
+    left: -2px;
+    border-left: 2px solid #ff6b6b;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    box-shadow: -1px 0 3px rgba(255, 107, 107, 0.3);
+}
+
+/* Ending cell of the reservation */
+.hovered-end::after {
+    right: -2px;
+    border-right: 2px solid #ff6b6b;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    box-shadow: 1px 0 3px rgba(255, 107, 107, 0.3);
+}
+
+/* Single cell reservation (both start and end) */
+.hovered-start.hovered-end::after {
+    left: -2px;
+    right: -2px;
+    border: 2px solid #ff6b6b;
+    border-radius: 4px;
+    box-shadow: 0 0 4px rgba(255, 107, 107, 0.4);
 }

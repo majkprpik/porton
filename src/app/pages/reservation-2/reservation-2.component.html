@@ -48,14 +48,24 @@
                                         (mousedown)="onCellMouseDown($event, i, j)"
                                         (mousemove)="onCellMouseMove($event, i, j)"
                                         (click)="onCellClick($event, i, j)"
+                                        (mouseenter)="gridMatrix()[i]?.[j]?.isReserved ? onReservationCellMouseEnter(i, j) : null"
+                                        (mouseleave)="gridMatrix()[i]?.[j]?.isReserved ? onReservationCellMouseLeave() : null"
                                         [ngClass]="{
-                                           
                                             'reserved-cell': gridMatrix()[i]?.[j]?.isReserved,
                                             'reserved-weekend': (isSaturday(day) || isSunday(day)) && gridMatrix()[i]?.[j]?.isReserved,
                                             'reserved-today': isToday(day) && gridMatrix()[i]?.[j]?.isReserved,
                                             'selected-cell': isCellSelected(i, j),
                                             'selection-start': i === selectedCellRowIndex() && j === getStartColIndex(),
-                                            'selection-end': i === selectedCellRowIndex() && j === getEndColIndex()
+                                            'selection-end': i === selectedCellRowIndex() && j === getEndColIndex(),
+                                            'past-date': isCellInPast(j),
+                                            'reservation-connected-hover': gridMatrix()[i]?.[j]?.isReserved,
+                                            'reservation-start': gridMatrix()[i]?.[j]?.isReservationStart,
+                                            'reservation-middle': gridMatrix()[i]?.[j]?.isReservationMiddle,
+                                            'reservation-end': gridMatrix()[i]?.[j]?.isReservationEnd,
+                                            'hovered-reservation': isCellInHoveredReservation(i, j),
+                                            'hovered-start': isCellInHoveredReservation(i, j) && gridMatrix()[i]?.[j]?.isReservationStart,
+                                            'hovered-middle': isCellInHoveredReservation(i, j) && gridMatrix()[i]?.[j]?.isReservationMiddle,
+                                            'hovered-end': isCellInHoveredReservation(i, j) && gridMatrix()[i]?.[j]?.isReservationEnd
                                         }"
                                         [style.background-color]="gridMatrix()[i]?.[j]?.color"
                                         [title]="gridMatrix()[i]?.[j]?.tooltip">

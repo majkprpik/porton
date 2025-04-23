@@ -14,6 +14,9 @@ interface CellData {
     isToday: boolean;
     isSaturday: boolean;
     isSunday: boolean;
+    isReservationStart: boolean;
+    isReservationMiddle: boolean;
+    isReservationEnd: boolean;
 }
 
 @Component({
@@ -83,6 +86,9 @@ export class Reservation2Component implements OnInit, OnDestroy {
     selectedStartColIndex = signal<number>(-1);
     selectedEndColIndex = signal<number>(-1);
     isSelecting = signal<boolean>(false);
+
+    // Add a signal to track the ID of the currently hovered reservation
+    hoveredReservationId = signal<number | null>(null);
 
     constructor(private dataService: DataService) {
         // Monitor grid matrix updates
@@ -239,7 +245,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
             identifier: '',
             isToday: this.isToday(day),
             isSaturday: this.isSaturday(day),
-            isSunday: this.isSunday(day)
+            isSunday: this.isSunday(day),
+            isReservationStart: false,
+            isReservationMiddle: false,
+            isReservationEnd: false
         };
 
         if (reservation) {
@@ -261,12 +270,23 @@ export class Reservation2Component implements OnInit, OnDestroy {
             // Calculate display text - ensure single line
             const startDate = new Date(reservation.house_availability_start_date);
             startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(reservation.house_availability_end_date);
+            endDate.setHours(0, 0, 0, 0);
             const checkDate = new Date(day);
             checkDate.setHours(0, 0, 0, 0);
+            
+            // Determine if this cell is the start, middle, or end of a reservation
+            cellData.isReservationStart = checkDate.getTime() === startDate.getTime();
+            cellData.isReservationEnd = checkDate.getTime() === endDate.getTime();
+            cellData.isReservationMiddle = checkDate > startDate && checkDate < endDate;
             
             if (reservation.house_availability_start_date === reservation.house_availability_end_date) {
                 // Put everything on one line for single-day reservations
                 cellData.displayText = `${reservation.last_name} ${reservation.reservation_number}`;
+                // Single day reservation is both start and end
+                cellData.isReservationStart = true;
+                cellData.isReservationEnd = true;
+                cellData.isReservationMiddle = false;
             } else if (startDate.getTime() === checkDate.getTime()) {
                 cellData.displayText = reservation.last_name || '';
             } else {
@@ -502,9 +522,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
         if (houses.length > row && days.length > col) {
             const house = houses[row];
             
-            // First make sure we reset any previous state
-            this.editingReservation.set({});
-            
             // Check if we have a multi-cell selection in this row
             let startDate: Date;
             let endDate: Date;
@@ -518,87 +535,15 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 const endCol = Math.max(this.selectedStartColIndex(), this.selectedEndColIndex());
                 
                 startDate = new Date(days[startCol]);
-                // For end date, we want the next day after the selected range
                 endDate = new Date(days[endCol]);
-                endDate.setDate(endDate.getDate() + 1);
             } else {
                 // Single cell selection - use default behavior
-                // Create new Date objects for start and end dates to avoid reference issues
                 startDate = new Date(days[col]);
-                
-                // Calculate end date as the next day by default for better UX
                 endDate = new Date(days[col]);
-                endDate.setDate(endDate.getDate() + 1); // Add one day to the end date
             }
             
-            // Set basic form data while we wait for the availability type to load
-            this.selectedHouseId.set(house.house_id);
-            this.selectedStartDate.set(startDate);
-            this.selectedEndDate.set(endDate);
-            
-            // Check for next reservation to limit end date
-            this.updateNextReservationDate();
-            
-            // Check if there's a upcoming reservation that would limit the end date
-            const nextReservation = this.findNextReservation(house.house_id, startDate);
-            if (nextReservation) {
-                const nextStartDate = new Date(nextReservation.house_availability_start_date);
-                
-                // If the default end date would overlap, adjust it
-                if (endDate >= nextStartDate) {
-                    // Set end date to the day before the next reservation
-                    const adjustedEndDate = new Date(nextStartDate);
-                    adjustedEndDate.setDate(adjustedEndDate.getDate() - 1);
-                    this.selectedEndDate.set(adjustedEndDate);
-                }
-            }
-            
-            // Use setTimeout to help avoid event listener errors with the calendar component
-            setTimeout(() => {
-                // Get the correct house availability type ID for "Occupied"
-                this.dataService.getHouseAvailabilityTypeByName("Occupied").then(occupiedType => {
-                    if (!occupiedType || !occupiedType.house_availability_type_id) {
-                        return;
-                    }
-                    
-                    const availabilityTypeId = occupiedType.house_availability_type_id;
-                    
-                    // Now set the full reservation data with the correct type ID
-                    this.editingReservation.set({
-                        house_id: house.house_id,
-                        house_availability_type_id: availabilityTypeId, // Use the correct type ID
-                        color_theme: Math.floor(Math.random() * 10), // Random color theme
-                        color_tint: 0.5, // Default tint
-                        adults: 2, // Default values
-                        babies: 0,
-                        has_arrived: false,
-                        has_departed: false,
-                        prev_connected: false,
-                        next_connected: false
-                    });
-                    
-                    // Important: Make sure to reset visibility state first
-                    if (this.showReservationForm()) {
-                        // If somehow the form is still showing, reset it first
-                        this.showReservationForm.set(false);
-                        setTimeout(() => {
-                            this.showReservationForm.set(true);
-                        }, 100);
-                    } else {
-                        // Normal case - just show the form
-                        this.showReservationForm.set(true);
-                    }
-                }).catch(error => {
-                });
-            }, 0); // Use timeout of 0 to defer execution to next event cycle
-            
-            // Clear selection after using it
-            if (this.selectedStartColIndex() !== this.selectedEndColIndex()) {
-                // Reset selection
-                this.selectedCellRowIndex.set(-1);
-                this.selectedStartColIndex.set(-1);
-                this.selectedEndColIndex.set(-1);
-            }
+            // Open the reservation form with the selected dates
+            this.openReservationForm(house, startDate, endDate);
         }
     }
 
@@ -871,13 +816,22 @@ export class Reservation2Component implements OnInit, OnDestroy {
     }
 
     // Check if a cell has a reservation
-    private hasCellReservation(row: number, col: number): boolean {
+    hasCellReservation(row: number, col: number): boolean {
+        // Make sure we don't go out of bounds
+        if (row < 0 || col < 0) return false;
+        
+        // Check if the grid matrix is initialized
         const grid = this.gridMatrix();
-        if (grid.length > row && grid[row].length > col) {
-            const cellData = grid[row][col];
-            return cellData.isReserved;
-        }
-        return false;
+        if (!grid || grid.length === 0) return false;
+        
+        // Make sure row and column are within grid bounds
+        if (row >= grid.length) return false;
+        
+        const rowData = grid[row];
+        if (!rowData || col >= rowData.length) return false;
+        
+        // Now we can safely check if the cell has a reservation
+        return rowData[col]?.isReserved === true;
     }
 
     // Add method to filter houses by type
@@ -945,23 +899,37 @@ export class Reservation2Component implements OnInit, OnDestroy {
         }
     }
 
-    // Handle cell click to select a cell
-    onCellClick(event: MouseEvent, row: number, col: number): void {
-        // Set the selected cell coordinates
-        this.selectedCellRowIndex.set(row);
-        this.selectedCellColIndex.set(col);
+    // Check if a date is before today (in the past)
+    isDateInPast(date: Date): boolean {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset hours to get just the date
         
-        // Start a new selection
-        this.selectedStartColIndex.set(col);
-        this.selectedEndColIndex.set(col);
-        this.isSelecting.set(true);
+        const checkDate = new Date(date);
+        checkDate.setHours(0, 0, 0, 0); // Reset hours for fair comparison
         
-        // Prevent event bubbling if needed
-        event.stopPropagation();
+        return checkDate < today;
+    }
+
+    // Check if a cell's date is in the past
+    isCellInPast(col: number): boolean {
+        const days = this.days();
+        if (col < 0 || col >= days.length) return false;
+        
+        return this.isDateInPast(days[col]);
     }
 
     // Handle mouse down on a cell to start selection
     onCellMouseDown(event: MouseEvent, row: number, col: number): void {
+        // Only allow selection on cells that don't have reservations
+        if (this.hasCellReservation(row, col)) {
+            return;
+        }
+        
+        // Don't allow selecting dates in the past
+        if (this.isCellInPast(col)) {
+            return;
+        }
+        
         // Set the selected cell coordinates and start selection
         this.selectedCellRowIndex.set(row);
         this.selectedStartColIndex.set(col);
@@ -976,8 +944,78 @@ export class Reservation2Component implements OnInit, OnDestroy {
     onCellMouseMove(event: MouseEvent, row: number, col: number): void {
         // Only update if we're actively selecting and in the same row
         if (this.isSelecting() && row === this.selectedCellRowIndex()) {
+            // Check if the current cell has a reservation
+            if (this.hasCellReservation(row, col)) {
+                // If so, don't extend the selection to include it
+                return;
+            }
+            
+            // Don't allow extending selection to dates in the past
+            if (this.isCellInPast(col)) {
+                return;
+            }
+            
+            // Check if there are any reservations between the start and this cell
+            const startCol = this.selectedStartColIndex();
+            const minCol = Math.min(startCol, col);
+            const maxCol = Math.max(startCol, col);
+            
+            // Check if any cells in the potential range have reservations or are in the past
+            for (let checkCol = minCol; checkCol <= maxCol; checkCol++) {
+                if (this.hasCellReservation(row, checkCol) || this.isCellInPast(checkCol)) {
+                    // If a reservation or past date is found in the range, limit the selection
+                    if (col > startCol) {
+                        // Moving right - limit to the column before the reservation/past date
+                        let lastValidCol = startCol;
+                        for (let c = startCol + 1; c < checkCol; c++) {
+                            if (!this.hasCellReservation(row, c) && !this.isCellInPast(c)) {
+                                lastValidCol = c;
+                            }
+                        }
+                        this.selectedEndColIndex.set(lastValidCol);
+                    } else {
+                        // Moving left - limit to the column after the reservation/past date
+                        let lastValidCol = startCol;
+                        for (let c = startCol - 1; c > checkCol; c--) {
+                            if (!this.hasCellReservation(row, c) && !this.isCellInPast(c)) {
+                                lastValidCol = c;
+                            }
+                        }
+                        this.selectedEndColIndex.set(lastValidCol);
+                    }
+                    return;
+                }
+            }
+            
+            // If no issues found in the range, update normally
             this.selectedEndColIndex.set(col);
         }
+    }
+
+    // Handle regular cell click
+    onCellClick(event: MouseEvent, row: number, col: number): void {
+        // If the cell has a reservation, don't allow selection
+        if (this.hasCellReservation(row, col)) {
+            // Maybe do something different for reserved cells, like showing details
+            return;
+        }
+        
+        // Don't allow selecting dates in the past
+        if (this.isCellInPast(col)) {
+            return;
+        }
+        
+        // Set the selected cell coordinates
+        this.selectedCellRowIndex.set(row);
+        this.selectedCellColIndex.set(col);
+        
+        // Start a new selection
+        this.selectedStartColIndex.set(col);
+        this.selectedEndColIndex.set(col);
+        this.isSelecting.set(true);
+        
+        // Prevent event bubbling if needed
+        event.stopPropagation();
     }
 
     // Handle mouse up to end selection
@@ -985,7 +1023,98 @@ export class Reservation2Component implements OnInit, OnDestroy {
     onDocumentMouseUp(): void {
         if (this.isSelecting()) {
             this.isSelecting.set(false);
+            
+            // Check if we have a valid date range selected
+            const dateRange = this.getSelectedDateRange();
+            if (dateRange && this.selectedCellRowIndex() >= 0) {
+                // Get the house for the selected row
+                const houses = this.filteredHouses();
+                const row = this.selectedCellRowIndex();
+                
+                if (houses.length > row) {
+                    const house = houses[row];
+                    
+                    // Open the reservation form with the selected date range
+                    this.openReservationForm(house, dateRange.startDate, dateRange.endDate);
+                }
+            }
         }
+    }
+
+    // Helper method to open the reservation form with given dates
+    private openReservationForm(house: House, startDate: Date, endDate: Date): void {
+        // First make sure we reset any previous state
+        this.editingReservation.set({});
+        
+        // Set form data
+        this.selectedHouseId.set(house.house_id);
+        this.selectedStartDate.set(startDate);
+        
+        // For endDate, we want it to be the day after the last selected day 
+        // (to match how reservations work - end date is exclusive)
+        const formEndDate = new Date(endDate);
+        formEndDate.setDate(formEndDate.getDate() + 1);
+        this.selectedEndDate.set(formEndDate);
+        
+        // Check for next reservation to limit end date
+        this.updateNextReservationDate();
+        
+        // Check if there's a upcoming reservation that would limit the end date
+        const nextReservation = this.findNextReservation(house.house_id, startDate);
+        if (nextReservation) {
+            const nextStartDate = new Date(nextReservation.house_availability_start_date);
+            
+            // If the default end date would overlap, adjust it
+            if (formEndDate >= nextStartDate) {
+                // Set end date to the day before the next reservation
+                const adjustedEndDate = new Date(nextStartDate);
+                adjustedEndDate.setDate(adjustedEndDate.getDate() - 1);
+                this.selectedEndDate.set(adjustedEndDate);
+            }
+        }
+        
+        // Use setTimeout to help avoid event listener errors with the calendar component
+        setTimeout(() => {
+            // Get the correct house availability type ID for "Occupied"
+            this.dataService.getHouseAvailabilityTypeByName("Occupied").then(occupiedType => {
+                if (!occupiedType || !occupiedType.house_availability_type_id) {
+                    return;
+                }
+                
+                const availabilityTypeId = occupiedType.house_availability_type_id;
+                
+                // Now set the full reservation data with the correct type ID
+                this.editingReservation.set({
+                    house_id: house.house_id,
+                    house_availability_type_id: availabilityTypeId,
+                    color_theme: Math.floor(Math.random() * 10), // Random color theme
+                    color_tint: 0.5, // Default tint
+                    adults: 2, // Default values
+                    babies: 0,
+                    has_arrived: false,
+                    has_departed: false,
+                    prev_connected: false,
+                    next_connected: false
+                });
+                
+                // Show the form
+                if (this.showReservationForm()) {
+                    // If somehow the form is still showing, reset it first
+                    this.showReservationForm.set(false);
+                    setTimeout(() => {
+                        this.showReservationForm.set(true);
+                    }, 100);
+                } else {
+                    // Normal case - just show the form
+                    this.showReservationForm.set(true);
+                }
+            }).catch(error => {
+                console.error("Error getting availability type:", error);
+            });
+        }, 0);
+        
+        // Clear selection after using it
+        this.clearSelection();
     }
 
     // Check if a cell is selected (either single or in range)
@@ -1039,5 +1168,70 @@ export class Reservation2Component implements OnInit, OnDestroy {
             this.selectedStartColIndex.set(-1);
             this.selectedEndColIndex.set(-1);
         }
+    }
+
+    // Clear selection
+    private clearSelection(): void {
+        this.selectedCellRowIndex.set(-1);
+        this.selectedStartColIndex.set(-1);
+        this.selectedEndColIndex.set(-1);
+    }
+
+    // Handle mouse enter for reservation cells - highlight all related cells
+    onReservationCellMouseEnter(row: number, col: number): void {
+        const grid = this.gridMatrix();
+        if (!grid || grid.length <= row || !grid[row] || grid[row].length <= col) {
+            return;
+        }
+        
+        const cellData = grid[row][col];
+        if (!cellData.isReserved) {
+            return;
+        }
+        
+        // Find the current reservation in the map to get its ID
+        const houses = this.filteredHouses();
+        const days = this.days();
+        
+        if (houses.length > row && days.length > col) {
+            const house = houses[row];
+            const day = days[col];
+            
+            const key = this.getReservationKey(house.house_id, day);
+            const reservation = this.reservationMap.get(key);
+            
+            if (reservation) {
+                // Set the hovered reservation ID to highlight all cells of this reservation
+                this.hoveredReservationId.set(reservation.house_availability_id);
+            }
+        }
+    }
+
+    // Handle mouse leave for reservation cells - remove highlight
+    onReservationCellMouseLeave(): void {
+        this.hoveredReservationId.set(null);
+    }
+
+    // Check if a cell is part of the currently hovered reservation
+    isCellInHoveredReservation(row: number, col: number): boolean {
+        const hoveredId = this.hoveredReservationId();
+        if (hoveredId === null) {
+            return false;
+        }
+        
+        const houses = this.filteredHouses();
+        const days = this.days();
+        
+        if (houses.length > row && days.length > col) {
+            const house = houses[row];
+            const day = days[col];
+            
+            const key = this.getReservationKey(house.house_id, day);
+            const reservation = this.reservationMap.get(key);
+            
+            return reservation?.house_availability_id === hoveredId;
+        }
+        
+        return false;
     }
 }
