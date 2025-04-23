@@ -18,6 +18,12 @@ import { TaskService } from '../../pages/service/task.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
+// Define a special location interface for Zgrada and Parcela options
+interface SpecialLocation {
+    name: string;
+    type: string;
+}
+
 @Component({
     selector: 'app-layout',
     standalone: true,
@@ -37,7 +43,7 @@ import { ToastModule } from 'primeng/toast';
     providers: [MessageService],
     template: `
     <div class="layout-wrapper" [ngClass]="containerClass">
-        <app-topbar></app-topbar>
+        <!-- <app-topbar></app-topbar> -->
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">
             <div class="layout-main">
@@ -71,14 +77,19 @@ import { ToastModule } from 'primeng/toast';
                     <label for="location" class="font-bold block mb-2">Lokacija*</label>
                     <p-dropdown
                         id="location"
-                        [options]="houses"
-                        [(ngModel)]="selectedHouse"
-                        optionLabel="house_number"
-                        [filter]="true"
-                        filterBy="house_number"
-                        placeholder="Odaberi kuću"
+                        [options]="locationOptions"
+                        [(ngModel)]="selectedLocation"
+                        placeholder="Odaberi lokaciju"
                         [style]="{ width: '100%' }"
-                    ></p-dropdown>
+                        (onChange)="onLocationChange($event)"
+                    >
+                        <ng-template let-item pTemplate="item">
+                            <span>{{ item.name || item.house_number }}</span>
+                        </ng-template>
+                        <ng-template let-item pTemplate="selectedItem">
+                            <span>{{ item.name || item.house_number }}</span>
+                        </ng-template>
+                    </p-dropdown>
                 </div>
                 
                 <div class="field mt-4">
@@ -125,14 +136,19 @@ import { ToastModule } from 'primeng/toast';
                     <label for="location" class="font-bold block mb-2">Lokacija*</label>
                     <p-dropdown
                         id="location"
-                        [options]="houses"
-                        [(ngModel)]="selectedHouseForTask"
-                        optionLabel="house_number"
-                        [filter]="true"
-                        filterBy="house_number"
-                        placeholder="Odaberi kuću"
+                        [options]="locationOptions"
+                        [(ngModel)]="selectedLocationForTask"
+                        placeholder="Odaberi lokaciju"
                         [style]="{ width: '100%' }"
-                    ></p-dropdown>
+                        (onChange)="onLocationChangeForTask($event)"
+                    >
+                        <ng-template let-item pTemplate="item">
+                            <span>{{ item.name || item.house_number }}</span>
+                        </ng-template>
+                        <ng-template let-item pTemplate="selectedItem">
+                            <span>{{ item.name || item.house_number }}</span>
+                        </ng-template>
+                    </p-dropdown>
                 </div>
                 
                 <div class="field mt-4">
@@ -273,17 +289,30 @@ export class AppLayout {
     @ViewChild(AppSidebar) appSidebar!: AppSidebar;
     @ViewChild(AppTopbar) appTopBar!: AppTopbar;
 
+    // Special locations
+    specialLocations: SpecialLocation[] = [
+        { name: 'Zgrada', type: 'building' },
+        { name: 'Parcela', type: 'parcel' }
+    ];
+    
+    // Combined location options
+    locationOptions: (House | SpecialLocation)[] = [];
+
     // Dialog visibility flags
     faultReportVisible: boolean = false;
     extraordinaryTaskVisible: boolean = false;
     phoneDialogVisible: boolean = false;
 
     // Form fields
+    selectedLocation: House | SpecialLocation | null = null;
     selectedHouse: House | null = null;
     faultDescription: string = '';
+    locationType: string = 'house';
 
     // Form fields for extraordinary task
+    selectedLocationForTask: House | SpecialLocation | null = null;
     selectedHouseForTask: House | null = null;
+    locationTypeForTask: string = 'house';
     selectedTaskType: TaskType | null = null;
     taskDescription: string = '';
 
@@ -340,6 +369,8 @@ export class AppLayout {
         // Subscribe to houses data
         this.dataService.houses$.subscribe(houses => {
             this.houses = houses;
+            // Update location options when houses change
+            this.updateLocationOptions();
         });
 
         // Subscribe to task types
@@ -350,6 +381,42 @@ export class AppLayout {
         // Load initial data
         this.dataService.loadHouses().subscribe();
         this.dataService.getTaskTypes().subscribe();
+    }
+
+    // Handle location change in fault report dialog
+    onLocationChange(event: any) {
+        const selection = event.value;
+        if (selection && ('type' in selection)) {
+            // This is a special location
+            this.locationType = selection.type;
+            this.selectedHouse = null;
+        } else {
+            // This is a house
+            this.locationType = 'house';
+            this.selectedHouse = selection;
+        }
+    }
+
+    // Handle location change in extraordinary task dialog
+    onLocationChangeForTask(event: any) {
+        const selection = event.value;
+        if (selection && ('type' in selection)) {
+            // This is a special location
+            this.locationTypeForTask = selection.type;
+            this.selectedHouseForTask = null;
+        } else {
+            // This is a house
+            this.locationTypeForTask = 'house';
+            this.selectedHouseForTask = selection;
+        }
+    }
+
+    // Update location options method
+    updateLocationOptions() {
+        this.locationOptions = [
+            ...this.specialLocations, 
+            ...this.houses
+        ];
     }
 
     isOutsideClicked(event: MouseEvent) {
@@ -406,80 +473,249 @@ export class AppLayout {
     }
 
     isFormValid(): boolean {
-        return !!this.selectedHouse;
+        return !!this.selectedLocation;
     }
 
     isTaskFormValid(): boolean {
-        return !!this.selectedHouseForTask && 
+        return !!this.selectedLocationForTask && 
                !!this.selectedTaskType;
     }
 
     submitFaultReport() {
         if (!this.isFormValid()) return;
 
-        // For repair tasks (kvar), we use "Popravak" as the task type
-        this.taskService.createTaskForHouse(
-            this.selectedHouse!.house_id.toString(),
-            this.faultDescription,
-            'Popravak',
-            false
-        ).then(result => {
-            if (result) {
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Uspjeh',
-                    detail: 'Kvar je uspješno prijavljen'
-                });
+        if (this.locationType === 'house' && this.selectedHouse) {
+            // For house locations, use the existing method
+            this.taskService.createTaskForHouse(
+                this.selectedHouse.house_id.toString(),
+                this.faultDescription,
+                'Popravak',
+                false
+            ).then(result => {
+                if (result) {
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Uspjeh',
+                        detail: 'Kvar je uspješno prijavljen'
+                    });
+                    
+                    // Reset form and close dialog
+                    this.selectedLocation = null;
+                    this.selectedHouse = null;
+                    this.locationType = 'house';
+                    this.faultDescription = '';
+                    this.faultReportVisible = false;
+                    
+                    // Refresh tasks list
+                    this.dataService.loadTasksFromDb();
+                } else {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Greška',
+                        detail: 'Došlo je do greške prilikom prijave kvara'
+                    });
+                }
+            });
+        } else if (this.selectedLocation && ('type' in this.selectedLocation)) {
+            // For special locations (building or parcel)
+            const locationName = this.selectedLocation.name;
+            const locationType = this.selectedLocation.type;
+            
+            // Add the location to the description rather than using a separate field
+            const enhancedDescription = `[${locationName}] ${this.faultDescription}`;
+            
+            // Create a task with location_type field
+            const taskData: any = {
+                description: enhancedDescription,
+                location_type: locationType,
+                is_unscheduled: false
+            };
+            
+            // Get the task type ID for "Popravak" (repair)
+            this.dataService.getTaskTypeIdByTaskName("Popravak").then(taskTypeId => {
+                if (!taskTypeId) {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Greška',
+                        detail: 'Nije moguće pronaći tip zadatka "Popravak"'
+                    });
+                    return;
+                }
                 
-                // Reset form and close dialog
-                this.selectedHouse = null;
-                this.faultDescription = '';
-                this.faultReportVisible = false;
-                
-                // Refresh tasks list
-                this.dataService.loadTasksFromDb();
-            } else {
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Greška',
-                    detail: 'Došlo je do greške prilikom prijave kvara'
+                // Get the "Nije dodijeljeno" (not assigned) task progress type
+                this.dataService.getTaskProgressTypeIdByTaskProgressTypeName("Nije dodijeljeno").then(progressTypeId => {
+                    if (!progressTypeId) {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Greška',
+                            detail: 'Nije moguće pronaći status zadatka "Nije dodijeljeno"'
+                        });
+                        return;
+                    }
+                    
+                    // Complete the task data
+                    taskData.task_type_id = taskTypeId;
+                    taskData.task_progress_type_id = progressTypeId;
+                    taskData.created_by = 'user'; // Replace with actual user ID if available
+                    taskData.created_at = new Date().toISOString();
+                    
+                    // Create the task
+                    this.dataService.createTask(taskData).subscribe(
+                        result => {
+                            if (result) {
+                                this.messageService.add({
+                                    severity: 'success',
+                                    summary: 'Uspjeh',
+                                    detail: `Kvar na lokaciji "${locationName}" je uspješno prijavljen`
+                                });
+                                
+                                // Reset form and close dialog
+                                this.selectedLocation = null;
+                                this.selectedHouse = null;
+                                this.locationType = 'house';
+                                this.faultDescription = '';
+                                this.faultReportVisible = false;
+                                
+                                // Refresh tasks list
+                                this.dataService.loadTasksFromDb();
+                            } else {
+                                this.messageService.add({
+                                    severity: 'error',
+                                    summary: 'Greška',
+                                    detail: 'Došlo je do greške prilikom prijave kvara'
+                                });
+                            }
+                        },
+                        error => {
+                            this.messageService.add({
+                                severity: 'error',
+                                summary: 'Greška',
+                                detail: 'Došlo je do greške prilikom prijave kvara'
+                            });
+                            console.error('Error creating task:', error);
+                        }
+                    );
                 });
-            }
-        });
+            });
+        }
     }
 
     submitExtraordinaryTask() {
         if (!this.isTaskFormValid()) return;
 
-        this.taskService.createTaskForHouse(
-            this.selectedHouseForTask!.house_id.toString(),
-            this.taskDescription,
-            this.selectedTaskType!.task_type_name,
-            false,
-            true
-        ).then(result => {
-            if (result) {
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Uspjeh',
-                    detail: 'Zadatak je uspješno prijavljen'
-                });
-                
-                // Reset form and close dialog
-                this.selectedHouseForTask = null;
-                this.selectedTaskType = null;
-                this.taskDescription = '';
-                this.extraordinaryTaskVisible = false;
-                
-                // Refresh tasks list
-                this.dataService.loadTasksFromDb();
-            } else {
+        if (this.locationTypeForTask === 'house' && this.selectedHouseForTask) {
+            // For house locations, use the existing method
+            this.taskService.createTaskForHouse(
+                this.selectedHouseForTask.house_id.toString(),
+                this.taskDescription,
+                this.selectedTaskType!.task_type_name,
+                false,
+                true
+            ).then(result => {
+                if (result) {
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Uspjeh',
+                        detail: 'Zadatak je uspješno prijavljen'
+                    });
+                    
+                    // Reset form and close dialog
+                    this.selectedLocationForTask = null;
+                    this.selectedHouseForTask = null;
+                    this.locationTypeForTask = 'house';
+                    this.selectedTaskType = null;
+                    this.taskDescription = '';
+                    this.extraordinaryTaskVisible = false;
+                    
+                    // Refresh tasks list
+                    this.dataService.loadTasksFromDb();
+                } else {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Greška',
+                        detail: 'Došlo je do greške prilikom prijave zadatka'
+                    });
+                }
+            });
+        } else if (this.selectedLocationForTask && ('type' in this.selectedLocationForTask)) {
+            // For special locations (building or parcel)
+            const locationName = this.selectedLocationForTask.name;
+            const locationType = this.selectedLocationForTask.type;
+            
+            if (!this.selectedTaskType) {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Greška',
-                    detail: 'Došlo je do greške prilikom prijave zadatka'
+                    detail: 'Molimo odaberite vrstu zadatka'
                 });
+                return;
             }
-        });
+            
+            // Add the location to the description rather than using a separate field
+            const enhancedDescription = `[${locationName}] ${this.taskDescription}`;
+            
+            // Create a task with location_type field
+            const taskData: any = {
+                description: enhancedDescription,
+                location_type: locationType,
+                task_type_id: this.selectedTaskType.task_type_id,
+                is_unscheduled: true
+            };
+            
+            // Get the "Nije dodijeljeno" (not assigned) task progress type
+            this.dataService.getTaskProgressTypeIdByTaskProgressTypeName("Nije dodijeljeno").then(progressTypeId => {
+                if (!progressTypeId) {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Greška',
+                        detail: 'Nije moguće pronaći status zadatka "Nije dodijeljeno"'
+                    });
+                    return;
+                }
+                
+                // Complete the task data
+                taskData.task_progress_type_id = progressTypeId;
+                taskData.created_by = 'user'; // Replace with actual user ID if available
+                taskData.created_at = new Date().toISOString();
+                
+                // Create the task
+                this.dataService.createTask(taskData).subscribe(
+                    result => {
+                        if (result) {
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Uspjeh',
+                                detail: `Zadatak za lokaciju "${locationName}" je uspješno prijavljen`
+                            });
+                            
+                            // Reset form and close dialog
+                            this.selectedLocationForTask = null;
+                            this.selectedHouseForTask = null;
+                            this.locationTypeForTask = 'house';
+                            this.selectedTaskType = null;
+                            this.taskDescription = '';
+                            this.extraordinaryTaskVisible = false;
+                            
+                            // Refresh tasks list
+                            this.dataService.loadTasksFromDb();
+                        } else {
+                            this.messageService.add({
+                                severity: 'error',
+                                summary: 'Greška',
+                                detail: 'Došlo je do greške prilikom prijave zadatka'
+                            });
+                        }
+                    },
+                    error => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Greška',
+                            detail: 'Došlo je do greške prilikom prijave zadatka'
+                        });
+                        console.error('Error creating task:', error);
+                    }
+                );
+            });
+        }
     }
 }

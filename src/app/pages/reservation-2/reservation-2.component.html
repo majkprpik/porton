@@ -1,42 +1,98 @@
-<div class="full-page-calendar">
-    @if (houses().length != 0 && houseAvailabilities().length != 0) {
-        <div class="filter-controls">
-            <div class="house-type-tabs">
-                <div class="tab" [class.active]="selectedHouseTypeId() === null" (click)="clearHouseTypeFilter()">
-                    All Houses
+<div class="container-fluid">
+    <div class="row">
+        <!-- House Type Filter -->
+        <div class="col-12 mb-3">
+            <div class="house-type-filter">
+                <span class="filter-label">House Type: </span>
+                <div class="btn-group" role="group">
+                    @for (type of houseTypes(); track type.house_type_id) {
+                        <button type="button" class="btn" 
+                                [ngClass]="{'btn-primary': selectedHouseTypeId() === type.house_type_id, 'btn-outline-primary': selectedHouseTypeId() !== type.house_type_id}"
+                                (click)="setSelectedHouseType(type.house_type_id)">
+                            {{ type.house_type_name }}
+                        </button>
+                    }
                 </div>
-                @for (type of houseTypes(); track type.house_type_id) {
-                    <div class="tab" 
-                         [class.active]="selectedHouseTypeId() === type.house_type_id" 
-                         (click)="setSelectedHouseType(type.house_type_id)">
-                        {{ type.house_type_name }}
-                    </div>
-                }
             </div>
         </div>
-        
-        <div class="handsontable-wrapper">
-            <hot-table #hotTable [settings]="hotSettings()"></hot-table>
-        </div>
-    }
-</div> 
-
-<!-- Reservation form -->
-<app-reservation-form 
-    [visible]="showReservationForm()" 
-    [reservation]="editingReservation()" 
-    [houseId]="selectedHouseId()" 
-    [startDate]="selectedStartDate()" 
-    [endDate]="selectedEndDate()" 
-    (visibleChange)="handleVisibilityChange($event)" 
-    (save)="handleReservationSave($event)" 
-    (cancel)="handleReservationCancel()">
-</app-reservation-form>
-
-<!-- Warning message for upcoming reservation -->
-@if (showReservationForm() && nextReservationDate()) {
-    <div class="reservation-warning">
-        <p>Note: There is another reservation in this house starting on {{ nextReservationDate()?.toLocaleDateString() }}.</p>
-        <p>Your end date must be before this date.</p>
     </div>
-} 
+
+    <!-- Reservation Grid -->
+    <div class="row">
+        <div class="col-12">
+            <div class="table-container">
+                <table class="reservation-table">
+                    <thead>
+                        <tr>
+                            <th class="house-header">House</th>
+                            @for (day of days(); track day.getTime()) {
+                                <th class="day-header" 
+                                    [ngClass]="{
+                                        'today-column': isToday(day),
+                                        'saturday-column': isSaturday(day),
+                                        'sunday-column': isSunday(day)
+                                    }"
+                                    [title]="day.toLocaleDateString()">
+                                    {{ formatDate(day) }}
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (house of filteredHouses(); track house.house_id; let i = $index) {
+                            <tr>
+                                <th class="row-header">{{ house.house_number }}</th>
+                                @for (day of days(); track day.getTime(); let j = $index) {
+                                    <td (contextmenu)="onCellRightClick($event, i, j)"
+                                        (dblclick)="onCellDoubleClick($event, i, j)"
+                                        (mousedown)="onCellMouseDown($event, i, j)"
+                                        (mousemove)="onCellMouseMove($event, i, j)"
+                                        (click)="onCellClick($event, i, j)"
+                                        [ngClass]="{
+                                           
+                                            'reserved-cell': gridMatrix()[i]?.[j]?.isReserved,
+                                            'reserved-weekend': (isSaturday(day) || isSunday(day)) && gridMatrix()[i]?.[j]?.isReserved,
+                                            'reserved-today': isToday(day) && gridMatrix()[i]?.[j]?.isReserved,
+                                            'selected-cell': isCellSelected(i, j),
+                                            'selection-start': i === selectedCellRowIndex() && j === getStartColIndex(),
+                                            'selection-end': i === selectedCellRowIndex() && j === getEndColIndex()
+                                        }"
+                                        [style.background-color]="gridMatrix()[i]?.[j]?.color"
+                                        [title]="gridMatrix()[i]?.[j]?.tooltip">
+                                        {{ gridMatrix()[i]?.[j]?.displayText }}
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Context Menu -->
+    <div class="custom-context-menu" *ngIf="showContextMenu()" [style.left.px]="contextMenuX()" [style.top.px]="contextMenuY()">
+        <div class="context-menu-item" *ngIf="selectedCellHasReservation()" (click)="handleEditReservation(selectedRow(), selectedCol())">
+            <i class="pi pi-pencil"></i> Edit Reservation
+        </div>
+        <div class="context-menu-item" *ngIf="selectedCellHasReservation()" (click)="handleDeleteReservation(selectedRow(), selectedCol())">
+            <i class="pi pi-trash"></i> Delete Reservation
+        </div>
+        <div class="context-menu-item" *ngIf="!selectedCellHasReservation()" (click)="handleAddReservation(selectedRow(), selectedCol())">
+            <i class="pi pi-plus"></i> Add New Reservation
+        </div>
+    </div>
+
+    <!-- Reservation Form -->
+    <app-reservation-form 
+        *ngIf="showReservationForm()"
+        [houseId]="selectedHouseId()"
+        [startDate]="selectedStartDate()"
+        [endDate]="selectedEndDate()"
+        [reservation]="editingReservation()"
+        [visible]="showReservationForm()"
+        (save)="handleReservationSave($event)"
+        (cancel)="handleReservationCancel()"
+        (visibleChange)="handleVisibilityChange($event)">
+    </app-reservation-form>
+</div> 

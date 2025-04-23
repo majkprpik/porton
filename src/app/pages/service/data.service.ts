@@ -1133,8 +1133,30 @@ export class DataService {
   // Method to create a new task
   createTask(task: Omit<Task, 'task_id' | 'created_at'>): Observable<Task | null> {
     this.loadingSubject.next(true);
+    
+    // Create a clean task object with properly set fields
+    const taskToCreate = { ...task } as any; // Use any to bypass TypeScript checks for now
+    
+    // Handle location types
+    if (taskToCreate.location_type === 'house' && taskToCreate.house_id) {
+      // House type - need both house_id and house_number
+      // Make sure house_number is set based on house_id if it isn't already
+      if (!taskToCreate.house_number) {
+        // Find the house number from the houses array
+        const house = this.housesSubject.value.find(h => h.house_id === taskToCreate.house_id);
+        if (house) {
+          taskToCreate.house_number = house.house_number;
+        }
+      }
+      // For house type, remove location_name as it's not needed
+      delete taskToCreate.location_name;
+    } else if (['building', 'parcel'].includes(taskToCreate.location_type || '')) {
+      // For building or parcel, house_id and house_number should be null
+      taskToCreate.house_id = null;
+      taskToCreate.house_number = null;
+    }
 
-    return from(this.supabaseService.insertData('tasks', task, this.schema)).pipe(
+    return from(this.supabaseService.insertData('tasks', taskToCreate, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentTasks = this.tasksSubject.value;

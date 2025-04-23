@@ -106,7 +106,7 @@ export class AppMenu implements OnInit, OnDestroy {
         
         // Conditionally add Rezervacije 2
         if (this.isRoleAllowedForRezervacije2(userRole)) {
-            menuItems.push({ label: 'Rezervacije 2', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/reservations-2'] });
+            menuItems.push({ label: 'Rezervacije', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/reservations-2'] });
         }
         
         // Conditionally add Timovi and Dnevni list

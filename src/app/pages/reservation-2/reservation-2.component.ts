@@ -1,15 +1,9 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
 import { Subject, takeUntil } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { HotTableModule, HotTableComponent } from '@handsontable/angular';
-import { registerAllModules } from 'handsontable/registry';
-import Handsontable from 'handsontable';
 import { ReservationFormComponent } from '../reservations/reservation-form/reservation-form.component';
-
-// Register all Handsontable modules
-registerAllModules();
 
 interface CellData {
     isReserved: boolean;
@@ -27,9 +21,9 @@ interface CellData {
     templateUrl: './reservation-2.component.html',
     styleUrls: ['./reservation-2.component.scss'],
     standalone: true,
-    imports: [CommonModule, ProgressSpinnerModule, HotTableModule, ReservationFormComponent],
+    imports: [CommonModule, ProgressSpinnerModule, ReservationFormComponent],
     changeDetection: ChangeDetectionStrategy.OnPush
-})
+}) 
 export class Reservation2Component implements OnInit, OnDestroy {
     // Convert to signals for reactive state management
     houses = signal<House[]>([]);
@@ -38,7 +32,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
     
     // Add signals for house type filtering
     houseTypes = signal<HouseType[]>([]);
-    selectedHouseTypeId = signal<number | null>(null);
+    selectedHouseTypeId = signal<number>(0);
     filteredHouses = computed(() => this.filterHousesByType());
     
     // Signal for the entire grid matrix (from original component)
@@ -57,137 +51,11 @@ export class Reservation2Component implements OnInit, OnDestroy {
     private updateStartTime: number = 0;
     private totalCells: number = 0;
     
-    // Add reference to the hot table component
-    @ViewChild('hotTable') private hotTableComponent?: HotTableComponent;
-    
     // Add observer for calendar
     private calendarObserver?: MutationObserver;
     
     // Track previous house type ID to detect changes
-    private _previousHouseTypeId: number | null = null;
-    
-    // Handsontable settings
-    hotSettings = computed(() => {
-        // Use filteredHouses instead of houses directly
-        const houses = this.filteredHouses();
-        const days = this.days();
-        
-        return {
-            data: this.generateTableData(),
-            colHeaders: days.map(day => this.formatDate(day)),
-            rowHeaders: houses.map(house => house.house_number?.toString() || ''),
-            // width: '100%',
-            // height: '100%',
-            licenseKey: 'non-commercial-and-evaluation',
-            // className: 'htCenter',
-            // Enable proper scrolling - fix type by using string literal 
-            // stretchH: 'none' as 'none', // This explicit type casting fixes the issue
-            // colWidths: 100,
-            // fixedColumnsStart: 0,
-            // Fix headers in place while scrolling
-            // fixedRowsTop: 0,
-            // Force all rows to be exactly 30px high
-            // rowHeights: 30,
-            // Set manual column widths - all day columns at 80px
-            // manualColumnWidths: Array(days.length).fill(80),
-            // Set manual row heights for all rows - adjust count based on filtered houses
-            // manualRowHeights: Array(houses.length).fill(30),
-            // Ensure consistent row and column sizes
-            // autoRowSize: false,
-            // autoColumnSize: false,
-            // Ensure headers are properly sized
-            // renderAllRows: true,
-            // renderAllColumns: true,
-            // Replace simple boolean with custom context menu
-            contextMenu: {
-                items: {
-                    editReservation: {
-                        name: '<i class="pi pi-pencil"></i> Edit Reservation',
-                        callback: (key: string, selection: any[]) => {
-                            const [row, col] = [selection[0].start.row, selection[0].start.col];
-                            this.handleEditReservation(row, col);
-                        },
-                        disabled: () => {
-                            // Access hot instance via any type to bypass type checking
-                            const hot = this.hotTableComponent ? (this.hotTableComponent as any).hotInstance : null;
-                            const sel = hot?.getSelected();
-                            if (sel && sel.length > 0) {
-                                const [row, col] = [sel[0][0], sel[0][1]];
-                                return !this.hasCellReservation(row, col);
-                            }
-                            return true;
-                        }
-                    },
-                    deleteReservation: {
-                        name: '<i class="pi pi-trash"></i> Delete Reservation',
-                        callback: (key: string, selection: any[]) => {
-                            const [row, col] = [selection[0].start.row, selection[0].start.col];
-                            this.handleDeleteReservation(row, col);
-                        },
-                        disabled: () => {
-                            // Access hot instance via any type to bypass type checking
-                            const hot = this.hotTableComponent ? (this.hotTableComponent as any).hotInstance : null;
-                            const sel = hot?.getSelected();
-                            if (sel && sel.length > 0) {
-                                const [row, col] = [sel[0][0], sel[0][1]];
-                                return !this.hasCellReservation(row, col);
-                            }
-                            return true;
-                        }
-                    },
-                    sep1: { name: '---------' },
-                    addReservation: {
-                        name: '<i class="pi pi-plus"></i> Add New Reservation',
-                        callback: (key: string, selection: any[]) => {
-                            const [row, col] = [selection[0].start.row, selection[0].start.col];
-                            this.handleAddReservation(row, col);
-                        },
-                        disabled: () => {
-                            // Access hot instance via any type to bypass type checking
-                            const hot = this.hotTableComponent ? (this.hotTableComponent as any).hotInstance : null;
-                            const sel = hot?.getSelected();
-                            if (sel && sel.length > 0) {
-                                const [row, col] = [sel[0][0], sel[0][1]];
-                                return this.hasCellReservation(row, col);
-                            }
-                            return false;
-                        }
-                    },
-                }
-            },
-            // Make sure all cells maintain their dimensions
-            // afterInit: () => {
-            // },
-            // Simpler afterColumnResize that makes sure we don't go below 80px
-            // afterColumnResize: (column: number, width: number) => {
-            //     if (width < 80) {
-            //         setTimeout(() => this.enforceMinColumnWidth(column, 80), 0);
-            //     }
-            // },
-            columns: days.map((day, index) => ({
-                data: `day${index}`,
-                // readOnly: true,
-                renderer: (instance: any, td: HTMLTableCellElement, row: number, col: number, prop: string | number, value: any, cellProperties: any) => {
-                    this.cellRenderer(instance, td, row, col, prop, value, cellProperties);
-                }
-            })),
-            // afterChange: () => {
-            //     // Force update when data changes
-            //     this.hotSettings();
-            // },
-            cells: (row: number, col: number) => {
-                // Handle special day columns
-                const day = this.days()[col];
-                let className = '';
-                
-                if (this.isToday(day)) className += ' today-column';
-                if (this.isSaturday(day)) className += ' saturday-column';
-                if (this.isSunday(day)) className += ' sunday-column';
-                
-                return { className };
-            }
-        };
-    });
+    private _previousHouseTypeId: number = 0;
 
     // Add signals for reservation form
     showReservationForm = signal<boolean>(false);
@@ -198,6 +66,23 @@ export class Reservation2Component implements OnInit, OnDestroy {
     
     // Add a signal for the next reservation date (if any) to pass to the form
     nextReservationDate = signal<Date | null>(null);
+
+    // Add context menu signals and properties
+    showContextMenu = signal<boolean>(false);
+    contextMenuX = signal<number>(0);
+    contextMenuY = signal<number>(0);
+    selectedRow = signal<number>(-1);
+    selectedCol = signal<number>(-1);
+    selectedCellHasReservation = signal<boolean>(false);
+
+    // Add signals for tracking the currently selected cell
+    selectedCellRowIndex = signal<number>(-1);
+    selectedCellColIndex = signal<number>(-1);
+
+    // Add signals for tracking cell selection range in a single row
+    selectedStartColIndex = signal<number>(-1);
+    selectedEndColIndex = signal<number>(-1);
+    isSelecting = signal<boolean>(false);
 
     constructor(private dataService: DataService) {
         // Monitor grid matrix updates
@@ -221,6 +106,11 @@ export class Reservation2Component implements OnInit, OnDestroy {
         // Load house types data
         this.dataService.getHouseTypes().pipe(takeUntil(this.destroy$)).subscribe(types => {
             this.houseTypes.set(types);
+            
+            // Always select the first house type by default if there are any
+            if (types && types.length > 0) {
+                this.setSelectedHouseType(types[0].house_type_id);
+            }
         });
         
         // Subscribe to houses data from DataService
@@ -443,75 +333,8 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return date.getDay() === 0;
     }
 
-    // Generate table data for Handsontable
-    private generateTableData(): any[] {
-        // Use filteredHouses instead of houses directly
-        const houses = this.filteredHouses();
-        const days = this.days();
-        const grid = this.gridMatrix();
-        
-        // Use the gridMatrix data to create the table data
-        return houses.map((house, houseIndex) => {
-            const rowData: any = {};
-            
-            // If grid matrix has been generated
-            if (grid.length > houseIndex) {
-                const rowCells = grid[houseIndex];
-                
-                days.forEach((_, dayIndex) => {
-                    if (rowCells.length > dayIndex) {
-                        const cellData = rowCells[dayIndex];
-                        rowData[`day${dayIndex}`] = cellData.displayText || '';
-                    } else {
-                        rowData[`day${dayIndex}`] = '';
-                    }
-                });
-            } else {
-                // Fallback if grid matrix hasn't been generated yet
-                days.forEach((_, dayIndex) => {
-                    rowData[`day${dayIndex}`] = '';
-                });
-            }
-            
-            return rowData;
-        });
-    }
-
-    // Custom cell renderer for Handsontable
-    private cellRenderer(instance: any, td: HTMLTableCellElement, row: number, dayIndex: number, prop: string | number, value: any, cellProperties: any): void {
-        const grid = this.gridMatrix();
-        
-        // Make sure the grid and row exist
-        if (grid.length > row && grid[row].length > dayIndex) {
-            const cellData = grid[row][dayIndex];
-            
-            if (cellData.isReserved) {
-                td.style.backgroundColor = cellData.color;
-                td.style.color = '#000';
-                td.style.textAlign = 'center';
-                td.style.whiteSpace = 'nowrap';
-                td.style.overflow = 'hidden';
-                td.style.textOverflow = 'ellipsis';
-                td.style.alignContent = 'center';
-                td.title = cellData.tooltip;
-                td.innerHTML = cellData.displayText;
-            } else {
-                td.style.backgroundColor = 'transparent';
-                td.innerHTML = '';
-                
-                // Apply day-specific styling
-                if (cellData.isToday) td.classList.add('today-column');
-                if (cellData.isSaturday) td.classList.add('saturday-column');
-                if (cellData.isSunday) td.classList.add('sunday-column');
-            }
-        } else {
-            td.style.backgroundColor = 'transparent';
-            td.innerHTML = '';
-        }
-    }
-
-    // Format date for column headers
-    private formatDate(date: Date): string {
+    // Format date for column headers (make it public to use in template)
+    formatDate(date: Date): string {
         // Croatian short date format: day.month (without leading zeros)
         const day = date.getDate();
         const month = date.getMonth() + 1; // getMonth() is 0-based
@@ -522,132 +345,191 @@ export class Reservation2Component implements OnInit, OnDestroy {
     private enforceMinColumnWidth(column: number, minWidth: number): void {
     }
 
-    private handleEditReservation(row: number, col: number): void {
-        const grid = this.gridMatrix();
-        if (grid.length > row && grid[row].length > col) {
-            const cellData = grid[row][col];
-            if (cellData.isReserved) {
-                // Find the actual reservation object
-                const key = this.getReservationKey(this.houses()[row].house_id, this.days()[col]);
-                const reservation = this.reservationMap.get(key);
-                
-                if (!reservation) {
-                    return;
-                }
-                
-                // Set the form state to edit this reservation
-                this.selectedHouseId.set(reservation.house_id);
-                
-                // Create new Date objects from strings to avoid reference issues
-                const startDate = new Date(reservation.house_availability_start_date);
-                const endDate = new Date(reservation.house_availability_end_date);
-                
-                this.selectedStartDate.set(startDate);
-                this.selectedEndDate.set(endDate);
-                
-                // Set the full reservation data for editing
-                this.editingReservation.set({
-                    ...reservation // Copy all fields from the existing reservation
-                });
-                
-                // Check for next reservation to limit end date
-                this.updateNextReservationDate();
-                
-                // Use setTimeout to help avoid event listener errors with the calendar component
-                setTimeout(() => {
-                    // Important: Make sure to reset visibility state first
-                    if (this.showReservationForm()) {
-                        // If somehow the form is still showing, reset it first
-                        this.showReservationForm.set(false);
-                        setTimeout(() => {
-                            this.showReservationForm.set(true);
-                        }, 100);
-                    } else {
-                        // Normal case - just show the form
-                        this.showReservationForm.set(true);
-                    }
-                    
-                    // Set up calendar date restrictions
-                    setTimeout(() => {
-                        this.setupCalendarDateRestrictions();
-                    }, 300);
-                }, 0);
-            }
-        }
+    // Add context menu handler
+    onCellRightClick(event: MouseEvent, row: number, col: number): void {
+        // Prevent default context menu
+        event.preventDefault();
+        
+        // Set the selected cell
+        this.selectedRow.set(row);
+        this.selectedCol.set(col);
+        
+        // Check if the cell has a reservation
+        this.selectedCellHasReservation.set(this.hasCellReservation(row, col));
+        
+        // Show context menu at click position
+        this.contextMenuX.set(event.clientX);
+        this.contextMenuY.set(event.clientY);
+        this.showContextMenu.set(true);
     }
-
-    private handleDeleteReservation(row: number, col: number): void {
-        const grid = this.gridMatrix();
-        if (grid.length > row && grid[row].length > col) {
-            const cellData = grid[row][col];
-            if (cellData.isReserved) {
-                // Find the actual reservation object
-                const key = this.getReservationKey(this.houses()[row].house_id, this.days()[col]);
-                const reservation = this.reservationMap.get(key);
-                
-                if (!reservation) {
-                    return;
-                }
-                
-                // Show confirmation dialog with reservation details
-                const lastName = reservation.last_name || 'Unknown';
-                const refNumber = reservation.reservation_number || 'No reference';
-                const startDate = new Date(reservation.house_availability_start_date).toLocaleDateString();
-                const endDate = new Date(reservation.house_availability_end_date).toLocaleDateString();
-                
-                const confirmMessage = 
-                    `Are you sure you want to delete this reservation?\n\n` +
-                    `Guest: ${lastName}\n` +
-                    `Reference: ${refNumber}\n` +
-                    `Period: ${startDate} to ${endDate}\n\n` +
-                    `This action cannot be undone.`;
-                
-                const confirmDelete = confirm(confirmMessage);
-                
-                if (confirmDelete) {
-                    // First update UI for immediate feedback
-                    const currentAvailabilities = this.houseAvailabilities();
-                    const filteredAvailabilities = currentAvailabilities.filter(
-                        avail => avail.house_availability_id !== reservation.house_availability_id
-                    );
-                    this.houseAvailabilities.set(filteredAvailabilities);
-                    this.updateGridMatrix();
-                    
-                    // Delete from backend
-                    this.dataService.deleteHouseAvailability(reservation.house_availability_id).subscribe({
-                        next: (result) => {
-                            // Update was already done optimistically above
-                        },
-                        error: (error: any) => {
-                            // Revert the optimistic update
-                            this.houseAvailabilities.set(currentAvailabilities);
-                            this.updateGridMatrix();
-                        },
-                        complete: () => {
-                        }
-                    });
-                }
-            }
-        }
+    
+    // Hide context menu when clicking elsewhere
+    @HostListener('document:click')
+    hideContextMenu(): void {
+        this.showContextMenu.set(false);
     }
-
-    private handleAddReservation(row: number, col: number): void {
-        const houses = this.houses();
+    
+    // Make these methods public to use in template
+    handleEditReservation(row: number, col: number): void {
+        // Hide context menu first
+        this.showContextMenu.set(false);
+        
+        // Get the actual house based on the filtered list
+        const houses = this.filteredHouses();
         const days = this.days();
         
         if (houses.length > row && days.length > col) {
             const house = houses[row];
             const day = days[col];
             
+            // Use actual house ID and date to find the reservation
+            const key = this.getReservationKey(house.house_id, day);
+            const reservation = this.reservationMap.get(key);
+            
+            if (!reservation) {
+                return;
+            }
+            
+            // Set the form state to edit this reservation
+            this.selectedHouseId.set(reservation.house_id);
+            
+            // Create new Date objects from strings to avoid reference issues
+            const startDate = new Date(reservation.house_availability_start_date);
+            const endDate = new Date(reservation.house_availability_end_date);
+            
+            this.selectedStartDate.set(startDate);
+            this.selectedEndDate.set(endDate);
+            
+            // Set the full reservation data for editing
+            this.editingReservation.set({
+                ...reservation // Copy all fields from the existing reservation
+            });
+            
+            // Check for next reservation to limit end date
+            this.updateNextReservationDate();
+            
+            // Use setTimeout to help avoid event listener errors with the calendar component
+            setTimeout(() => {
+                // Important: Make sure to reset visibility state first
+                if (this.showReservationForm()) {
+                    // If somehow the form is still showing, reset it first
+                    this.showReservationForm.set(false);
+                    setTimeout(() => {
+                        this.showReservationForm.set(true);
+                    }, 100);
+                } else {
+                    // Normal case - just show the form
+                    this.showReservationForm.set(true);
+                }
+                
+                // Set up calendar date restrictions
+                setTimeout(() => {
+                    this.setupCalendarDateRestrictions();
+                }, 300);
+            }, 0);
+        }
+    }
+
+    handleDeleteReservation(row: number, col: number): void {
+        // Hide context menu first
+        this.showContextMenu.set(false);
+        
+        // Get the actual house based on the filtered list
+        const houses = this.filteredHouses();
+        const days = this.days();
+        
+        if (houses.length > row && days.length > col) {
+            const house = houses[row];
+            const day = days[col];
+            
+            // Use actual house ID and date to find the reservation
+            const key = this.getReservationKey(house.house_id, day);
+            const reservation = this.reservationMap.get(key);
+            
+            if (!reservation) {
+                return;
+            }
+            
+            // Show confirmation dialog with reservation details
+            const lastName = reservation.last_name || 'Unknown';
+            const refNumber = reservation.reservation_number || 'No reference';
+            const startDate = new Date(reservation.house_availability_start_date).toLocaleDateString();
+            const endDate = new Date(reservation.house_availability_end_date).toLocaleDateString();
+            
+            const confirmMessage = 
+                `Are you sure you want to delete this reservation?\n\n` +
+                `Guest: ${lastName}\n` +
+                `Reference: ${refNumber}\n` +
+                `Period: ${startDate} to ${endDate}\n\n` +
+                `This action cannot be undone.`;
+            
+            const confirmDelete = confirm(confirmMessage);
+            
+            if (confirmDelete) {
+                // First update UI for immediate feedback
+                const currentAvailabilities = this.houseAvailabilities();
+                const filteredAvailabilities = currentAvailabilities.filter(
+                    avail => avail.house_availability_id !== reservation.house_availability_id
+                );
+                this.houseAvailabilities.set(filteredAvailabilities);
+                this.updateGridMatrix();
+                
+                // Delete from backend
+                this.dataService.deleteHouseAvailability(reservation.house_availability_id).subscribe({
+                    next: (result) => {
+                        // Update was already done optimistically above
+                    },
+                    error: (error: any) => {
+                        // Revert the optimistic update
+                        this.houseAvailabilities.set(currentAvailabilities);
+                        this.updateGridMatrix();
+                    },
+                    complete: () => {
+                    }
+                });
+            }
+        }
+    }
+
+    handleAddReservation(row: number, col: number): void {
+        // Hide context menu first
+        this.showContextMenu.set(false);
+        
+        // Get the actual house based on the filtered list
+        const houses = this.filteredHouses();
+        const days = this.days();
+        
+        if (houses.length > row && days.length > col) {
+            const house = houses[row];
+            
             // First make sure we reset any previous state
             this.editingReservation.set({});
             
-            // Create new Date objects for start and end dates to avoid reference issues
-            const startDate = new Date(day);
+            // Check if we have a multi-cell selection in this row
+            let startDate: Date;
+            let endDate: Date;
             
-            // Calculate end date as the next day by default for better UX
-            const endDate = new Date(day);
-            endDate.setDate(endDate.getDate() + 1); // Add one day to the end date
+            if (this.selectedCellRowIndex() === row && 
+                this.selectedStartColIndex() >= 0 && 
+                this.selectedEndColIndex() >= 0 && 
+                this.selectedStartColIndex() !== this.selectedEndColIndex()) {
+                // We have a range selection - use that for the dates
+                const startCol = Math.min(this.selectedStartColIndex(), this.selectedEndColIndex());
+                const endCol = Math.max(this.selectedStartColIndex(), this.selectedEndColIndex());
+                
+                startDate = new Date(days[startCol]);
+                // For end date, we want the next day after the selected range
+                endDate = new Date(days[endCol]);
+                endDate.setDate(endDate.getDate() + 1);
+            } else {
+                // Single cell selection - use default behavior
+                // Create new Date objects for start and end dates to avoid reference issues
+                startDate = new Date(days[col]);
+                
+                // Calculate end date as the next day by default for better UX
+                endDate = new Date(days[col]);
+                endDate.setDate(endDate.getDate() + 1); // Add one day to the end date
+            }
             
             // Set basic form data while we wait for the availability type to load
             this.selectedHouseId.set(house.house_id);
@@ -709,6 +591,14 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 }).catch(error => {
                 });
             }, 0); // Use timeout of 0 to defer execution to next event cycle
+            
+            // Clear selection after using it
+            if (this.selectedStartColIndex() !== this.selectedEndColIndex()) {
+                // Reset selection
+                this.selectedCellRowIndex.set(-1);
+                this.selectedStartColIndex.set(-1);
+                this.selectedEndColIndex.set(-1);
+            }
         }
     }
 
@@ -995,65 +885,159 @@ export class Reservation2Component implements OnInit, OnDestroy {
         const houses = this.houses();
         const selectedTypeId = this.selectedHouseTypeId();
         
-        // If no type is selected, return all houses
-        if (selectedTypeId === null) {
-            return houses;
+        // Filter houses by the selected type
+        const filteredHouses = houses.filter(house => house.house_type_id === selectedTypeId);
+        
+        // Add empty rows
+        for (let i = 0; i < 20; i++) {
+            // Create an empty house object with an ID that won't conflict with real houses
+            // Using negative IDs to ensure they won't match real house IDs
+            filteredHouses.push({
+                house_id: -1000 - i,
+                house_number: 0,
+                house_type_id: selectedTypeId || 0, // Use 0 as fallback
+                house_name: ''
+            } as House);
         }
         
-        // Filter houses by the selected type
-        return houses.filter(house => house.house_type_id === selectedTypeId);
+        return filteredHouses;
     }
     
     // Method to set the selected house type
-    setSelectedHouseType(typeId: number | null): void {
-        if (this._previousHouseTypeId !== typeId) {
+    setSelectedHouseType(typeId: number): void {
+        if (this._previousHouseTypeId !== typeId && typeId !== null) {
             this._previousHouseTypeId = typeId;
             this.selectedHouseTypeId.set(typeId);
             
-            // First update the grid matrix with new filtered data
+            // Update the grid matrix with new filtered data
             this.updateGridMatrix();
-            
-            // Force a rebuild of the table with new data
-            setTimeout(() => {
-                if (this.hotTableComponent) {
-                    const hot = (this.hotTableComponent as any).hotInstance;
-                    if (hot) {
-                        // Update with new data and dimensions
-                        const filteredHouses = this.filteredHouses();
-                        
-                        hot.updateSettings({
-                            data: this.generateTableData(),
-                            rowHeaders: filteredHouses.map(house => house.house_number?.toString() || ''),
-                            manualRowHeights: Array(filteredHouses.length).fill(30),
-                        });
-                        
-                        // Explicitly set the number of rows to match filtered houses
-                        if (filteredHouses.length !== hot.countRows()) {
-                            if (filteredHouses.length > hot.countRows()) {
-                                hot.alter('insert_row', hot.countRows(), filteredHouses.length - hot.countRows());
-                            } else if (filteredHouses.length < hot.countRows()) {
-                                hot.alter('remove_row', filteredHouses.length, hot.countRows() - filteredHouses.length);
-                            }
-                        }
-                        
-                        // Force rendering
-                        hot.render();
-                    }
-                }
-            }, 10);
         }
     }
     
-    // Method to clear filters
-    clearHouseTypeFilter(): void {
-        this.setSelectedHouseType(null);
-    }
-    
     // Method to get the house type name
-    getHouseTypeName(typeId: number | null): string {
-        if (typeId === null) return 'All';
-        
+    getHouseTypeName(typeId: number): string {
         const houseType = this.houseTypes().find((type: HouseType) => type.house_type_id === typeId);
         return houseType?.house_type_name || 'Unknown';
+    }
+
+    // Simplified table settings that don't rely on Handsontable
+    updateTableSettings(): void {
+        // We'll update the grid matrix instead
+        this.updateGridMatrix();
+    }
+
+    // Add a method to handle double-clicks on cells
+    onCellDoubleClick(event: MouseEvent, row: number, col: number): void {
+        // Get the actual house based on the filtered list
+        const houses = this.filteredHouses();
+        const days = this.days();
+        
+        if (houses.length > row && days.length > col) {
+            const isReserved = this.hasCellReservation(row, col);
+            
+            if (isReserved) {
+                // If there's a reservation, edit it
+                this.handleEditReservation(row, col);
+            } else {
+                // If there's no reservation, add a new one
+                this.handleAddReservation(row, col);
+            }
+        }
+    }
+
+    // Handle cell click to select a cell
+    onCellClick(event: MouseEvent, row: number, col: number): void {
+        // Set the selected cell coordinates
+        this.selectedCellRowIndex.set(row);
+        this.selectedCellColIndex.set(col);
+        
+        // Start a new selection
+        this.selectedStartColIndex.set(col);
+        this.selectedEndColIndex.set(col);
+        this.isSelecting.set(true);
+        
+        // Prevent event bubbling if needed
+        event.stopPropagation();
+    }
+
+    // Handle mouse down on a cell to start selection
+    onCellMouseDown(event: MouseEvent, row: number, col: number): void {
+        // Set the selected cell coordinates and start selection
+        this.selectedCellRowIndex.set(row);
+        this.selectedStartColIndex.set(col);
+        this.selectedEndColIndex.set(col);
+        this.isSelecting.set(true);
+        
+        // Prevent text selection during drag
+        event.preventDefault();
+    }
+
+    // Handle mouse move to update selection range
+    onCellMouseMove(event: MouseEvent, row: number, col: number): void {
+        // Only update if we're actively selecting and in the same row
+        if (this.isSelecting() && row === this.selectedCellRowIndex()) {
+            this.selectedEndColIndex.set(col);
+        }
+    }
+
+    // Handle mouse up to end selection
+    @HostListener('document:mouseup')
+    onDocumentMouseUp(): void {
+        if (this.isSelecting()) {
+            this.isSelecting.set(false);
+        }
+    }
+
+    // Check if a cell is selected (either single or in range)
+    isCellSelected(row: number, col: number): boolean {
+        if (row !== this.selectedCellRowIndex()) return false;
+        
+        const startCol = Math.min(this.selectedStartColIndex(), this.selectedEndColIndex());
+        const endCol = Math.max(this.selectedStartColIndex(), this.selectedEndColIndex());
+        
+        return col >= startCol && col <= endCol;
+    }
+
+    // Helper methods to get the start and end columns of the current selection
+    getStartColIndex(): number {
+        if (this.selectedStartColIndex() < 0 || this.selectedEndColIndex() < 0) return -1;
+        return Math.min(this.selectedStartColIndex(), this.selectedEndColIndex());
+    }
+
+    getEndColIndex(): number {
+        if (this.selectedStartColIndex() < 0 || this.selectedEndColIndex() < 0) return -1;
+        return Math.max(this.selectedStartColIndex(), this.selectedEndColIndex());
+    }
+
+    // Get the selected date range (useful for creating new reservations)
+    getSelectedDateRange(): { startDate: Date, endDate: Date } | null {
+        const row = this.selectedCellRowIndex();
+        if (row < 0) return null;
+        
+        const startCol = Math.min(this.selectedStartColIndex(), this.selectedEndColIndex());
+        const endCol = Math.max(this.selectedStartColIndex(), this.selectedEndColIndex());
+        
+        if (startCol < 0 || endCol < 0) return null;
+        
+        const days = this.days();
+        if (startCol >= days.length || endCol >= days.length) return null;
+        
+        return {
+            startDate: new Date(days[startCol]),
+            endDate: new Date(days[endCol])
+        };
+    }
+
+    // Clear cell selection when clicking elsewhere
+    @HostListener('document:click', ['$event'])
+    clearSelectionOnOutsideClick(event: MouseEvent): void {
+        // Check if the click was outside the table
+        const tableElement = (event.target as HTMLElement).closest('.reservation-table');
+        if (!tableElement) {
+            // Clear selection
+            this.selectedCellRowIndex.set(-1);
+            this.selectedStartColIndex.set(-1);
+            this.selectedEndColIndex.set(-1);
+        }
     }
 }

@@ -14,6 +14,12 @@ import { signal } from '@angular/core';
 import { ArrivalsAndDeparturesComponent } from '../../layout/component/arrivals-and-departures.component';
 import { NotesComponent } from '../../layout/component/notes.component';
 
+// Define the special location option interface
+interface SpecialLocation {
+    name: string;
+    type: string;
+}
+
 @Component({
     selector: 'app-home',
     standalone: true,
@@ -94,142 +100,6 @@ import { NotesComponent } from '../../layout/component/notes.component';
                 }
             </div>
 
-            <!-- Fault Report Dialog -->
-            <p-dialog 
-                header="Prijava kvara" 
-                [(visible)]="faultReportVisible" 
-                [modal]="true"
-                [style]="{ width: '30rem' }"
-                [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
-            >
-                <div class="fault-report-form">
-                    <div class="field">
-                        <label for="location" class="font-bold block mb-2">Lokacija*</label>
-                        <p-dropdown
-                            id="location"
-                            [options]="houses()"
-                            [(ngModel)]="selectedHouse"
-                            optionLabel="house_number"
-                            [filter]="true"
-                            filterBy="house_number"
-                            placeholder="Odaberi kuću"
-                            [style]="{ width: '100%' }"
-                        ></p-dropdown>
-                    </div>
-                    
-                    <div class="field mt-4">
-                        <label for="description" class="font-bold block mb-2">Opis</label>
-                        <textarea
-                            id="description"
-                            pInputTextarea
-                            [(ngModel)]="faultDescription"
-                            [rows]="5"
-                            [style]="{ width: '100%' }"
-                            placeholder="Unesite opis kvara"
-                        ></textarea>
-                    </div>
-                </div>
-
-                <ng-template pTemplate="footer">
-                    <div class="flex justify-content-end gap-2">
-                        <button 
-                            pButton 
-                            label="Odustani" 
-                            class="p-button-text" 
-                            (click)="faultReportVisible = false"
-                        ></button>
-                        <button 
-                            pButton 
-                            label="Prijavi" 
-                            (click)="submitFaultReport()"
-                            [disabled]="!isFormValid()"
-                        ></button>
-                    </div>
-                </ng-template>
-            </p-dialog>
-
-            <!-- Extraordinary Task Dialog -->
-            <p-dialog 
-                header="Prijava izvanrednog zadatka" 
-                [(visible)]="extraordinaryTaskVisible" 
-                [modal]="true"
-                [style]="{ width: '30rem' }"
-                [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
-            >
-                <div class="task-form">
-                    <div class="field">
-                        <label for="location" class="font-bold block mb-2">Lokacija*</label>
-                        <p-dropdown
-                            id="location"
-                            [options]="houses()"
-                            [(ngModel)]="selectedHouseForTask"
-                            optionLabel="house_number"
-                            [filter]="true"
-                            filterBy="house_number"
-                            placeholder="Odaberi kuću"
-                            [style]="{ width: '100%' }"
-                        ></p-dropdown>
-                    </div>
-                    
-                    <div class="field mt-4">
-                        <label for="taskType" class="font-bold block mb-2">Vrsta zadatka*</label>
-                        <p-dropdown
-                            id="taskType"
-                            [options]="taskTypes()"
-                            [(ngModel)]="selectedTaskType"
-                            optionLabel="task_type_name"
-                            placeholder="Odaberi vrstu zadatka"
-                            [style]="{ width: '100%' }"
-                        ></p-dropdown>
-                    </div>
-
-                    <div class="field mt-4">
-                        <label for="taskDescription" class="font-bold block mb-2">Opis</label>
-                        <textarea
-                            id="taskDescription"
-                            pInputTextarea
-                            [(ngModel)]="taskDescription"
-                            [rows]="5"
-                            [style]="{ width: '100%' }"
-                            placeholder="Unesite opis zadatka"
-                        ></textarea>
-                    </div>
-                </div>
-
-                <ng-template pTemplate="footer">
-                    <div class="flex justify-content-end gap-2">
-                        <button 
-                            pButton 
-                            label="Odustani" 
-                            class="p-button-text" 
-                            (click)="extraordinaryTaskVisible = false"
-                        ></button>
-                        <button 
-                            pButton 
-                            label="Prijavi zadatak" 
-                            (click)="submitExtraordinaryTask()"
-                            [disabled]="!isTaskFormValid()"
-                        ></button>
-                    </div>
-                </ng-template>
-            </p-dialog>
-
-            <!-- Phone Dialog -->
-            <p-dialog 
-                header="Phone" 
-                [(visible)]="phoneDialogVisible" 
-                [modal]="true"
-                [style]="{ width: '50vw' }"
-                [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
-            >
-                <div class="p-4">
-                    <h3>Phone Content</h3>
-                    <p>This is a placeholder for the phone functionality.</p>
-                </div>
-                <ng-template pTemplate="footer">
-                    <button pButton label="Close" (click)="phoneDialogVisible = false"></button>
-                </ng-template>
-            </p-dialog>
         </div>
 
         <div class="bottom"> 
@@ -569,17 +439,30 @@ export class Home implements OnInit, OnDestroy {
     expandedHouseId: number | null = null;
     currentReservationIndex = new Map<number, number>();
 
+    // Special locations
+    specialLocations: SpecialLocation[] = [
+        { name: 'Zgrada', type: 'building' },
+        { name: 'Parcela', type: 'parcel' }
+    ];
+    
+    // Combined location options
+    locationOptions: (House | SpecialLocation)[] = [];
+
     // Dialog visibility flags
     faultReportVisible: boolean = false;
     extraordinaryTaskVisible: boolean = false;
     phoneDialogVisible: boolean = false;
 
     // Form fields
+    selectedLocation: House | SpecialLocation | null = null;
     selectedHouse: House | null = null;
     faultDescription: string = '';
+    locationType: string = 'house';
 
     // Form fields for extraordinary task
+    selectedLocationForTask: House | SpecialLocation | null = null;
     selectedHouseForTask: House | null = null;
+    locationTypeForTask: string = 'house';
     selectedTaskType: TaskType | null = null;
     taskDescription: string = '';
     taskTypes = signal<TaskType[]>([]);
@@ -633,6 +516,34 @@ export class Home implements OnInit, OnDestroy {
         if (this.expandedHouseId === houseId) {
             // Initialize or reset the current reservation index when expanding
             this.currentReservationIndex.set(houseId, this.getCurrentReservationIndex(houseId));
+        }
+    }
+
+    // Handle location change in fault report dialog
+    onLocationChange(event: any) {
+        const selection = event.value;
+        if (selection && ('type' in selection)) {
+            // This is a special location
+            this.locationType = selection.type;
+            this.selectedHouse = null;
+        } else {
+            // This is a house
+            this.locationType = 'house';
+            this.selectedHouse = selection;
+        }
+    }
+
+    // Handle location change in extraordinary task dialog
+    onLocationChangeForTask(event: any) {
+        const selection = event.value;
+        if (selection && ('type' in selection)) {
+            // This is a special location
+            this.locationTypeForTask = selection.type;
+            this.selectedHouseForTask = null;
+        } else {
+            // This is a house
+            this.locationTypeForTask = 'house';
+            this.selectedHouseForTask = selection;
         }
     }
 
@@ -919,6 +830,8 @@ export class Home implements OnInit, OnDestroy {
         // Subscribe to houses data from DataService
         const housesSubscription = this.dataService.houses$.subscribe(houses => {
             this.houses.set(houses);
+            // Update location options when houses change
+            this.updateLocationOptions();
         });
 
         // Subscribe to house availabilities data from DataService
@@ -946,6 +859,131 @@ export class Home implements OnInit, OnDestroy {
         this.dataService.getTaskTypes().subscribe();
     }
 
+    // Update location options method
+    updateLocationOptions() {
+        this.locationOptions = [
+            ...this.specialLocations, 
+            ...this.houses()
+        ];
+    }
+
+    isFormValid(): boolean {
+        return !!this.selectedLocation;
+    }
+
+    submitFaultReport() {
+        if (!this.isFormValid()) return;
+
+        // Get fault report task type (assuming it's "Popravak")
+        this.dataService.getTaskTypeIdByTaskName("Popravak").then(taskTypeId => {
+            if (!taskTypeId) {
+                console.error('Failed to get task type ID for "Popravak"');
+                return;
+            }
+
+            // Get "U tijeku" (In Progress) task progress type
+            this.dataService.getTaskProgressTypeIdByTaskProgressTypeName("U tijeku").then(progressTypeId => {
+                if (!progressTypeId) {
+                    console.error('Failed to get task progress type ID for "U tijeku"');
+                    return;
+                }
+
+                // Create task object based on location type
+                const taskData: any = {
+                    task_type_id: taskTypeId,
+                    task_progress_type_id: progressTypeId,
+                    description: this.faultDescription,
+                    created_by: 'user', // Replace with actual user ID
+                    is_unscheduled: true,
+                    location_type: this.locationType
+                };
+
+                // Add appropriate location fields based on location type
+                if (this.locationType === 'house' && this.selectedHouse) {
+                    taskData.house_id = this.selectedHouse.house_id;
+                    taskData.house_number = this.selectedHouse.house_number;
+                } else {
+                    // For buildings and parcels, add the location name
+                    if (this.selectedLocation && 'name' in this.selectedLocation) {
+                        taskData.location_name = this.selectedLocation.name;
+                    }
+                }
+
+                // Create task
+                this.dataService.createTask(taskData).subscribe(
+                    result => {
+                        console.log('Fault report created:', result);
+                        
+                        // Reset form and close dialog
+                        this.selectedLocation = null;
+                        this.selectedHouse = null;
+                        this.locationType = 'house';
+                        this.faultDescription = '';
+                        this.faultReportVisible = false;
+                    },
+                    error => console.error('Error creating fault report:', error)
+                );
+            });
+        });
+    }
+
+    isTaskFormValid(): boolean {
+        return !!this.selectedLocationForTask && 
+               !!this.selectedTaskType;
+    }
+
+    submitExtraordinaryTask() {
+        if (!this.isTaskFormValid()) return;
+
+        // Ensure we have selected a task type
+        if (!this.selectedTaskType) return;
+
+        // Get "U tijeku" (In Progress) task progress type
+        this.dataService.getTaskProgressTypeIdByTaskProgressTypeName("U tijeku").then(progressTypeId => {
+            if (!progressTypeId) {
+                console.error('Failed to get task progress type ID for "U tijeku"');
+                return;
+            }
+
+            // Create task object based on location type
+            const taskData: any = {
+                task_type_id: this.selectedTaskType!.task_type_id,
+                task_progress_type_id: progressTypeId,
+                description: this.taskDescription,
+                created_by: 'user', // Replace with actual user ID
+                is_unscheduled: true,
+                location_type: this.locationTypeForTask
+            };
+
+            // Add appropriate location fields based on location type
+            if (this.locationTypeForTask === 'house' && this.selectedHouseForTask) {
+                taskData.house_id = this.selectedHouseForTask.house_id;
+                taskData.house_number = this.selectedHouseForTask.house_number;
+            } else {
+                // For buildings and parcels, add the location name
+                if (this.selectedLocationForTask && 'name' in this.selectedLocationForTask) {
+                    taskData.location_name = this.selectedLocationForTask.name;
+                }
+            }
+
+            // Create task
+            this.dataService.createTask(taskData).subscribe(
+                result => {
+                    console.log('Extraordinary task created:', result);
+                    
+                    // Reset form and close dialog
+                    this.selectedLocationForTask = null;
+                    this.selectedHouseForTask = null;
+                    this.locationTypeForTask = 'house';
+                    this.selectedTaskType = null;
+                    this.taskDescription = '';
+                    this.extraordinaryTaskVisible = false;
+                },
+                error => console.error('Error creating extraordinary task:', error)
+            );
+        });
+    }
+
     isHouseOccupied(houseId: number): boolean {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -966,50 +1004,5 @@ export class Home implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         // Unsubscribe from all subscriptions to prevent memory leaks
         this.subscriptions.forEach(sub => sub.unsubscribe());
-    }
-
-    isFormValid(): boolean {
-        return !!this.selectedHouse;
-    }
-
-    submitFaultReport() {
-        if (!this.isFormValid()) return;
-
-        console.log('Submitting fault report:', {
-            house: this.selectedHouse,
-            description: this.faultDescription
-        });
-
-        // Here you would typically call a service method to save the fault report
-        // For example: this.dataService.submitFaultReport(this.selectedHouse.house_id, this.faultDescription).subscribe();
-
-        // Reset form and close dialog
-        this.selectedHouse = null;
-        this.faultDescription = '';
-        this.faultReportVisible = false;
-    }
-
-    isTaskFormValid(): boolean {
-        return !!this.selectedHouseForTask && 
-               !!this.selectedTaskType;
-    }
-
-    submitExtraordinaryTask() {
-        if (!this.isTaskFormValid()) return;
-
-        console.log('Submitting extraordinary task:', {
-            house: this.selectedHouseForTask,
-            taskType: this.selectedTaskType,
-            description: this.taskDescription
-        });
-
-        // Here you would typically call a service method to save the task
-        // For example: this.dataService.createTask({...}).subscribe();
-
-        // Reset form and close dialog
-        this.selectedHouseForTask = null;
-        this.selectedTaskType = null;
-        this.taskDescription = '';
-        this.extraordinaryTaskVisible = false;
     }
 } 
