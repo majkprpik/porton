@@ -14,6 +14,7 @@ import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
+import { ProfileService } from '../service/profile.service';
 
 @Component({
   selector: 'app-work-group',
@@ -350,6 +351,7 @@ export class WorkGroup implements OnInit {
   taskProgressTypes: any;
   tasks: any;
   workGroupTasks: any;
+  workGroupProfiles: any;
   houses: House[] = [];
   taskTypes: TaskType[] = [];
 
@@ -357,7 +359,8 @@ export class WorkGroup implements OnInit {
     private dataService: DataService,
     private workGroupService: WorkGroupService,
     private taskService: TaskService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private profileService: ProfileService
   ) {}
 
   ngOnInit() {
@@ -366,18 +369,20 @@ export class WorkGroup implements OnInit {
       this.dataService.tasks$,
       this.dataService.workGroupTasks$,
       this.dataService.houses$,
-      this.dataService.taskTypes$
+      this.dataService.taskTypes$,
+      this.dataService.workGroupProfiles$
     ]).subscribe({
-      next: ([taskProgressTypes, tasks, workGroupTasks, houses, taskTypes]) => {
+      next: ([taskProgressTypes, tasks, workGroupTasks, houses, taskTypes, workGroupProfiles]) => {
         this.taskProgressTypes = taskProgressTypes;
         this.tasks = tasks;
         this.workGroupTasks = workGroupTasks;
         this.houses = houses;
         this.taskTypes = taskTypes;
+        this.workGroupProfiles = workGroupProfiles;
 
       },
       error: (error) => {
-        console.log(error);
+        console.error(error);
       }
     });
 
@@ -392,8 +397,6 @@ export class WorkGroup implements OnInit {
       const workGroup = this.workGroup;
 
       this.taskService.$selectedTask.subscribe(selectedTask => {
-        console.log(this.workGroupTasks);
-
         if(selectedTask && !this.workGroupTasks.some((wgt: any) => wgt.task_id == selectedTask.task_id)){
           const activeGroup = this.workGroupService.getActiveGroup();
           
@@ -409,15 +412,55 @@ export class WorkGroup implements OnInit {
               if(!lockedTeam.tasks){
                 lockedTeam.tasks = [];
               }
+
+              this.workGroupTasks = [...this.workGroupTasks, {
+                work_group_id: activeGroup,
+                task_id: selectedTask.task_id,
+                index: undefined,
+              }];
+
               lockedTeam.isLocked = false;
               lockedTeam.tasks.push(selectedTask);
               this.workGroupService.updateLockedTeam(lockedTeam);
+              this.dataService.setWorkGroupTasks(this.workGroupTasks);
             }
           }
         }
       });
 
       this.loadAssignedStaff();
+    }
+
+    if (this.workGroup){
+      const workGroup = this.workGroup;
+
+      this.profileService.$staffToAdd.subscribe(staffToAdd => {
+        if(staffToAdd){
+          const activeGroup = this.workGroupService.getActiveGroup();
+
+          if(activeGroup && workGroup.work_group_id == activeGroup){
+            workGroup.is_locked = false;
+            let lockedTeams = this.workGroupService.getLockedTeams();
+            let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup);
+
+            if(lockedTeam && !lockedTeam.members?.find(member => member.id == staffToAdd.id)){
+              if(!lockedTeam?.members){
+                lockedTeam.members = [];
+              }
+
+              this.workGroupProfiles = [...this.workGroupProfiles, {
+                work_group_id: parseInt(lockedTeam.id),
+                profile_id: staffToAdd.id,
+              }];
+
+              lockedTeam.isLocked = false;
+              lockedTeam.members.push(staffToAdd);
+              this.workGroupService.updateLockedTeam(lockedTeam);
+              this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+            }
+          }
+        }
+      });
     }
   }
 
@@ -475,8 +518,29 @@ export class WorkGroup implements OnInit {
 
   onDeleteClick(event: Event) {
     event.stopPropagation();
+
+    if(this.assignedTasks && this.assignedTasks.length > 0){
+      const inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "U progresu");
+      const pausedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Pauzirano");
+
+      if(this.assignedTasks.find(task => task.task_progress_type_id == inProgressTaskProgressType.task_progress_type_id || task.task_progress_type_id == pausedTaskProgressType.task_progress_type_id)){
+        this.confirmationService.confirm({
+          message: `Jedan od zadataka je u tijeku. Greška prilikom brisanja grupe.`,
+          header: 'Upozorenje',
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: 'OK',
+          rejectVisible: false,
+        });
+
+        return; 
+      }
+    }
+
     this.confirmationService.confirm({
       message: `Jeste li sigurni da želite obrisati ovu radnu grupu? <br> <b>Završeni zadaci bit će arhivirani, a nezavršeni vraćeni u status "Nije dodijeljeno".</b>`,
+      header: 'Upozorenje',
+      acceptLabel: 'Da',
+      rejectLabel: 'Ne',
       accept: () => {
         this.deleteClicked.emit();
       }

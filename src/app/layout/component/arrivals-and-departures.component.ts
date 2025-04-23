@@ -11,6 +11,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-arrivals-and-departures',
@@ -23,7 +24,8 @@ import { InputTextModule } from 'primeng/inputtext';
     CalendarModule,
     CardModule,
     DividerModule,
-    InputTextModule
+    InputTextModule,
+    CommonModule
   ],
   providers: [ConfirmationService],
   template: `

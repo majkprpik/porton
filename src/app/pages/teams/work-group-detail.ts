@@ -7,6 +7,7 @@ import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressTyp
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { HouseService } from '../service/house.service';
+import { TaskService } from '../service/task.service';
 
 @Component({
     selector: 'app-work-group-detail',
@@ -51,7 +52,7 @@ import { HouseService } from '../service/house.service';
                                 <p class="empty-section">Nema dodijeljenih zadataka</p>
                             } @else {
                                 @for (task of assignedTasks; track task.task_id) {
-                                    <div class="task-card" [class.completed]="isTaskCompleted(task)">
+                                    <div class="task-card" [class.completed]="taskService.isTaskCompleted(task)">
                                         <div class="task-info">
                                             <div class="house-info">
                                                 <span class="house-number">{{getHouseNumber(task.house_id)}}</span>
@@ -63,7 +64,7 @@ import { HouseService } from '../service/house.service';
                                             </div>
                                         </div>
                                         <div class="task-actions">
-                                            @if (!isTaskCompleted(task)) {
+                                            @if (!taskService.isTaskCompleted(task)) {
                                                 @if(houseService.isHouseOccupied(task.house_id) && !task.is_unscheduled){
                                                     <span>Kućica zauzeta</span>
                                                 } @else {
@@ -73,7 +74,7 @@ import { HouseService } from '../service/house.service';
                                                         (onClick)="handleTaskAction(task)"
                                                     ></p-button>
                                                     
-                                                    @if (isCleaningHouseTask(task) && isTaskInProgress(task)) {
+                                                    @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
                                                         <p-button 
                                                             label="Pauza"
                                                             severity="warn" 
@@ -274,7 +275,8 @@ export class WorkGroupDetail implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private dataService: DataService,
-        public houseService: HouseService
+        public houseService: HouseService,
+        public taskService: TaskService
     ) {}
 
     ngOnInit() {
@@ -424,19 +426,9 @@ export class WorkGroupDetail implements OnInit {
           }
     }
 
-    isTaskCompleted(task: Task): boolean | undefined {
-        const completedProgressType = this.progressTypes?.find((pt: any) => pt.task_progress_type_name === "Završeno");
-        return completedProgressType && task.task_progress_type_id === completedProgressType.task_progress_type_id;
-    }
-
-    isTaskInProgress(task: Task): boolean | undefined {
-        const inProgressType = this.progressTypes?.find((pt: any) => pt.task_progress_type_name === "U progresu");
-        return inProgressType && task.task_progress_type_id === inProgressType.task_progress_type_id;
-    }
-
     getTaskStatusIcon(task: Task): string {
-        if (this.isTaskCompleted(task)) return 'pi pi-check-circle';
-        if (this.isTaskInProgress(task)) return 'pi pi-clock';
+        if (this.taskService.isTaskCompleted(task)) return 'pi pi-check-circle';
+        if (this.taskService.isTaskInProgress(task)) return 'pi pi-clock';
         return 'pi pi-circle';
     }
 
@@ -448,16 +440,16 @@ export class WorkGroupDetail implements OnInit {
         }
         
         // Fallback
-        if (this.isTaskCompleted(task)) return 'Završeno';
-        if (this.isTaskInProgress(task)) return 'U progresu';
-        if (this.isTaskPaused(task)) return 'Pauza';
+        if (this.taskService.isTaskCompleted(task)) return 'Završeno';
+        if (this.taskService.isTaskInProgress(task)) return 'U progresu';
+        if (this.taskService.isTaskPaused(task)) return 'Pauzirano';
         return 'Nije dodijeljeno';
     }
 
     getActionButtonLabel(task: Task): string {
-        const isPaused = this.isTaskPaused(task);
+        const isPaused = this.taskService.isTaskPaused(task);
         
-        if (this.isTaskInProgress(task)) {
+        if (this.taskService.isTaskInProgress(task)) {
             return 'Završi';
         } else if (isPaused) {
             return 'Nastavi';
@@ -467,8 +459,8 @@ export class WorkGroupDetail implements OnInit {
     }
 
     getActionButtonSeverity(task: Task): 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' {
-        if (this.isTaskInProgress(task)) return 'success';
-        if (this.isTaskPaused(task)) return 'warn';
+        if (this.taskService.isTaskInProgress(task)) return 'success';
+        if (this.taskService.isTaskPaused(task)) return 'warn';
         return 'primary';
     }
 
@@ -477,24 +469,14 @@ export class WorkGroupDetail implements OnInit {
         return task.task_type_id === cleaningHouseType?.task_type_id;
     }
 
-    isTaskPaused(task: Task): boolean | undefined {
-        // Find "Pauza" progress type
-        const pauseProgressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === "Pauza");
-        return pauseProgressType && task.task_progress_type_id === pauseProgressType.task_progress_type_id;
-    }
-
     handleTaskAction(task: Task) {
-        const isCleaningHouse = this.isCleaningHouseTask(task);
         let newProgressTypeName: string;
         
-        if (this.isTaskInProgress(task)) {
-            // For any task type, when in progress, "Završi" goes to "Završeno"
+        if (this.taskService.isTaskInProgress(task)) {
             newProgressTypeName = "Završeno";
-        } else if (this.isTaskPaused(task)) {
-            // If paused, resume task (go back to "U progresu")
+        } else if (this.taskService.isTaskPaused(task)) {
             newProgressTypeName = "U progresu";
         } else {
-            // Starting a task
             newProgressTypeName = "U progresu";
         }
         
@@ -523,7 +505,7 @@ export class WorkGroupDetail implements OnInit {
     
     handleTaskPause(task: Task) {
         // Find Pauza progress type
-        const pauseProgressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === "Pauza");
+        const pauseProgressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === "Pauzirano");
         if (!pauseProgressType) {
             console.error("Pause progress type not found");
             return;

@@ -160,10 +160,12 @@ export class TaskService {
   }
 
   isTaskCompleted(task: any){
-    if(task.task_id == 613){
-      console.log(task);
-    }
     let completedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
     return completedTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
+  }
+
+  isTaskPaused(task: any){
+    let pausedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Pauzirano');
+    return pausedTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
   }
 }

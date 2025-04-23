@@ -237,6 +237,12 @@ export class DataService {
     }
   }
 
+  setWorkGroupProfiles(workGroupProfiles: WorkGroupProfile[]){
+    if(workGroupProfiles){
+      this.workGroupProfilesSubject.next(workGroupProfiles);
+    }
+  }
+
   setHouseAvailabilites(houseAvailabilties: HouseAvailability[]){
     if(houseAvailabilties){
       this.houseAvailabilitiesSubject.next(houseAvailabilties);

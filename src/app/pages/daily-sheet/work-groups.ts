@@ -312,6 +312,8 @@ export class WorkGroups implements OnInit {
       this.workGroupService.setActiveGroup(undefined);
     }
 
+    const assignedTaskType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Dodijeljeno')
+
     // Get the tasks that will be removed from this work group
     const tasksToReturn = this.getAssignedTasks(workGroupId);
     
@@ -331,9 +333,11 @@ export class WorkGroups implements OnInit {
         return;
       }
 
-      let updateObservables = tasksToReturn.map(task => 
-        from(this.dataService.updateTaskProgressType1(task.task_id, nijeDodijeljenoType.task_progress_type_id))
-      );
+      let updateObservables = tasksToReturn
+        .filter(task => task.task_progress_type_id === assignedTaskType.task_progress_type_id)
+        .map(task => 
+          from(this.dataService.updateTaskProgressType1(task.task_id, nijeDodijeljenoType.task_progress_type_id))
+        );
       
       forkJoin(updateObservables.length > 0 ? updateObservables : [of(null)]).pipe(
         switchMap(() => this.dataService.deleteWorkGroup(workGroupId)),
@@ -420,6 +424,14 @@ export class WorkGroups implements OnInit {
           if(task.task_progress_type_id != completedTaskProgressType.task_progress_type_id){
             await this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
           }
+        }
+
+        if(!lockedWorkGroup.members){
+          lockedWorkGroup.members = [];
+        }
+
+        for (const member of lockedWorkGroup.members){
+          await this.workGroupService.createWorkGroupProfile(parseInt(lockedWorkGroup.id), member.id);
         }
       }
     }

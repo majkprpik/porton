@@ -1,13 +1,16 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { WorkGroupService } from './work-group.service';
-import { catchError, from, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, from, Observable, throwError } from 'rxjs';
 import { Profile } from './data.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
+  $staffToAdd = new BehaviorSubject<any>(null);
+  $staffToRemove = new BehaviorSubject<any>(null);
+
   constructor(
     private supabase: SupabaseService,
     private workGroupService: WorkGroupService
