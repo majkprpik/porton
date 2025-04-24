@@ -144,6 +144,7 @@ interface SpecialLocation {
                               <button 
                                   pButton
                                   label="Odbaci"
+                                  class="p-button-text" 
                                   (click)="discardImage()">
                               </button>
                     
@@ -157,23 +158,26 @@ interface SpecialLocation {
                     </div>
                 }
             </div>
-
+  
             <ng-template pTemplate="footer">
-                <div class="flex justify-content-end gap-2">
-                    <button 
-                        pButton 
-                        label="Odustani" 
-                        class="p-button-text" 
-                        (click)="faultReportVisible = false"
-                    ></button>
-                    <button 
-                        pButton 
-                        label="Prijavi" 
-                        (click)="submitFaultReport()"
-                        [disabled]="!isFormValid()"
-                    ></button>
-                </div>
+                @if(!capturedImage){
+                    <div class="flex justify-content-end gap-2">
+                        <button 
+                            pButton 
+                            label="Odustani" 
+                            class="p-button-text" 
+                            (click)="faultReportVisible = false"
+                        ></button>
+                        <button 
+                            pButton 
+                            label="Prijavi" 
+                            (click)="submitFaultReport()"
+                            [disabled]="!isFormValid()"
+                        ></button>
+                    </div>
+                }
             </ng-template>
+            
         </p-dialog>
 
         <!-- Extraordinary Task Dialog -->
