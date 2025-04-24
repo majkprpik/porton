@@ -932,6 +932,9 @@ export class AppLayout {
     }
 
     resetForm(){
+        this.selectedLocation = null;
+        this.faultDescription = '';
+        this.capturedImage = '';
         this.taskImages = [];
         this.taskService.$taskModalData.next(null);
     }
