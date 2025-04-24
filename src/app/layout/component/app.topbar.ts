@@ -8,11 +8,19 @@ import { LayoutService } from '../service/layout.service';
 import { MenuModule } from 'primeng/menu';
 import { Menu } from 'primeng/menu';
 import { AuthService } from '../../pages/service/auth.service';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, StyleClassModule, AppConfigurator, MenuModule],
+    imports: [
+        RouterModule, 
+        CommonModule, 
+        StyleClassModule, 
+        AppConfigurator, 
+        MenuModule,
+        ButtonModule
+    ],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
             <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
@@ -60,16 +68,17 @@ import { AuthService } from '../../pages/service/auth.service';
                     <app-configurator />
                 </div>
             </div>
-
+            
             <div class="relative">
                 <button
-                    class="layout-topbar-action"
-
+                    pButton
+                    label="Odjava"
+                    icon="pi pi-sign-out"
+                    iconPos="right"
+                    class="p-button-secondary"
                     (click)="authService.logout()"
                 >
-                    LOGOUT
                 </button>
-                
             </div>
         </div>
     </div>`
