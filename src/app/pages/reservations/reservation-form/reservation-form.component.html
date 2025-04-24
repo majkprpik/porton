@@ -54,7 +54,16 @@
         </div>
     </div>
     <ng-template pTemplate="footer">
-        <p-button label="Cancel" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
-        <p-button label="Save" icon="pi pi-check" (click)="onSave()" [disabled]="!!dateConflictError" styleClass="p-button-text"></p-button>
+        <div class="form-footer">
+            <div class="left-buttons">
+                <p-button *ngIf="isEditMode" label="Delete" icon="pi pi-trash" 
+                          (click)="onDelete()" 
+                          styleClass="p-button-danger p-button-text"></p-button>
+            </div>
+            <div class="right-buttons">
+                <p-button label="Cancel" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
+                <p-button label="Save" icon="pi pi-check" (click)="onSave()" [disabled]="!!dateConflictError" styleClass="p-button-text"></p-button>
+            </div>
+        </div>
     </ng-template>
 </p-dialog> 

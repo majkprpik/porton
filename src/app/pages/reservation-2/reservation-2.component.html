@@ -2,17 +2,14 @@
     <div class="row">
         <!-- House Type Filter -->
         <div class="col-12 mb-3">
-            <div class="house-type-filter">
-                <span class="filter-label">House Type: </span>
-                <div class="btn-group" role="group">
-                    @for (type of houseTypes(); track type.house_type_id) {
-                        <button type="button" class="btn" 
-                                [ngClass]="{'btn-primary': selectedHouseTypeId() === type.house_type_id, 'btn-outline-primary': selectedHouseTypeId() !== type.house_type_id}"
-                                (click)="setSelectedHouseType(type.house_type_id)">
-                            {{ type.house_type_name }}
-                        </button>
-                    }
-                </div>
+            <div class="house-type-tabs">
+                @for (type of houseTypes(); track type.house_type_id) {
+                    <div class="house-type-tab" 
+                         [ngClass]="{'active': selectedHouseTypeId() === type.house_type_id}"
+                         (click)="setSelectedHouseType(type.house_type_id)">
+                        {{ type.house_type_name }}
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -24,7 +21,7 @@
                 <table class="reservation-table">
                     <thead>
                         <tr>
-                            <th class="house-header">House</th>
+                            <th class="house-header corner-header">House</th>
                             @for (day of days(); track day.getTime()) {
                                 <th class="day-header" 
                                     [ngClass]="{
@@ -33,7 +30,8 @@
                                         'sunday-column': isSunday(day)
                                     }"
                                     [title]="day.toLocaleDateString()">
-                                    {{ formatDate(day) }}
+                                    <div>{{ formatDate(day) }}</div>
+                                    <!-- <div *ngIf="isToday(day)" class="today-indicator">TODAY</div> -->
                                 </th>
                             }
                         </tr>
@@ -41,35 +39,36 @@
                     <tbody>
                         @for (house of filteredHouses(); track house.house_id; let i = $index) {
                             <tr>
-                                <th class="row-header">{{ house.house_number }}</th>
+                                <th class="row-header" [ngClass]="{'active-row': selectedCellRowIndex() === i}">{{ house.house_number }}</th>
                                 @for (day of days(); track day.getTime(); let j = $index) {
-                                    <td (contextmenu)="onCellRightClick($event, i, j)"
-                                        (dblclick)="onCellDoubleClick($event, i, j)"
+                                    <td (dblclick)="onCellDoubleClick($event, i, j)"
                                         (mousedown)="onCellMouseDown($event, i, j)"
                                         (mousemove)="onCellMouseMove($event, i, j)"
-                                        (click)="onCellClick($event, i, j)"
-                                        (mouseenter)="gridMatrix()[i]?.[j]?.isReserved ? onReservationCellMouseEnter(i, j) : null"
-                                        (mouseleave)="gridMatrix()[i]?.[j]?.isReserved ? onReservationCellMouseLeave() : null"
+                                        (click)="gridMatrix()[i]?.[j]?.isReserved ? onReservationCellClick($event, i, j) : onCellClick($event, i, j)"
                                         [ngClass]="{
                                             'reserved-cell': gridMatrix()[i]?.[j]?.isReserved,
-                                            'reserved-weekend': (isSaturday(day) || isSunday(day)) && gridMatrix()[i]?.[j]?.isReserved,
-                                            'reserved-today': isToday(day) && gridMatrix()[i]?.[j]?.isReserved,
                                             'selected-cell': isCellSelected(i, j),
                                             'selection-start': i === selectedCellRowIndex() && j === getStartColIndex(),
                                             'selection-end': i === selectedCellRowIndex() && j === getEndColIndex(),
                                             'past-date': isCellInPast(j),
-                                            'reservation-connected-hover': gridMatrix()[i]?.[j]?.isReserved,
+                                            'today-column': isToday(days()[j]),
+                                            'saturday-column': isSaturday(days()[j]),
+                                            'sunday-column': isSunday(days()[j]),
                                             'reservation-start': gridMatrix()[i]?.[j]?.isReservationStart,
                                             'reservation-middle': gridMatrix()[i]?.[j]?.isReservationMiddle,
-                                            'reservation-end': gridMatrix()[i]?.[j]?.isReservationEnd,
-                                            'hovered-reservation': isCellInHoveredReservation(i, j),
-                                            'hovered-start': isCellInHoveredReservation(i, j) && gridMatrix()[i]?.[j]?.isReservationStart,
-                                            'hovered-middle': isCellInHoveredReservation(i, j) && gridMatrix()[i]?.[j]?.isReservationMiddle,
-                                            'hovered-end': isCellInHoveredReservation(i, j) && gridMatrix()[i]?.[j]?.isReservationEnd
+                                            'reservation-end': gridMatrix()[i]?.[j]?.isReservationEnd
                                         }"
                                         [style.background-color]="gridMatrix()[i]?.[j]?.color"
                                         [title]="gridMatrix()[i]?.[j]?.tooltip">
-                                        {{ gridMatrix()[i]?.[j]?.displayText }}
+                                        <!-- Simple reservation cell without drag functionality -->
+                                        @if (gridMatrix()[i]?.[j]?.isReserved && gridMatrix()[i]?.[j]?.isReservationStart) {
+                                            <div class="reservation-item">
+                                                <span class="handle-icon">&#9776;</span>
+                                                {{ gridMatrix()[i]?.[j]?.displayText }}
+                                            </div>
+                                        } @else {
+                                            {{ gridMatrix()[i]?.[j]?.displayText }}
+                                        }
                                     </td>
                                 }
                             </tr>
@@ -77,19 +76,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-
-    <!-- Custom Context Menu -->
-    <div class="custom-context-menu" *ngIf="showContextMenu()" [style.left.px]="contextMenuX()" [style.top.px]="contextMenuY()">
-        <div class="context-menu-item" *ngIf="selectedCellHasReservation()" (click)="handleEditReservation(selectedRow(), selectedCol())">
-            <i class="pi pi-pencil"></i> Edit Reservation
-        </div>
-        <div class="context-menu-item" *ngIf="selectedCellHasReservation()" (click)="handleDeleteReservation(selectedRow(), selectedCol())">
-            <i class="pi pi-trash"></i> Delete Reservation
-        </div>
-        <div class="context-menu-item" *ngIf="!selectedCellHasReservation()" (click)="handleAddReservation(selectedRow(), selectedCol())">
-            <i class="pi pi-plus"></i> Add New Reservation
         </div>
     </div>
 
@@ -102,6 +88,7 @@
         [reservation]="editingReservation()"
         [visible]="showReservationForm()"
         (save)="handleReservationSave($event)"
+        (delete)="handleDeleteReservation($event)"
         (cancel)="handleReservationCancel()"
         (visibleChange)="handleVisibilityChange($event)">
     </app-reservation-form>

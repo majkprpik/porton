@@ -43,7 +43,7 @@ interface SpecialLocation {
     providers: [MessageService],
     template: `
     <div class="layout-wrapper" [ngClass]="containerClass">
-        <!-- <app-topbar></app-topbar> -->
+        <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">
             <div class="layout-main">
@@ -265,7 +265,7 @@ interface SpecialLocation {
             }
 
             .layout-main-container {
-                padding-bottom: 6rem; /* Add space at bottom to prevent SpeedDial from covering content */
+                // padding-bottom: 6rem; /* Add space at bottom to prevent SpeedDial from covering content */
             }
         }
 

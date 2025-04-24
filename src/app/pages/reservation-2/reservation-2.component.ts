@@ -70,14 +70,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
     // Add a signal for the next reservation date (if any) to pass to the form
     nextReservationDate = signal<Date | null>(null);
 
-    // Add context menu signals and properties
-    showContextMenu = signal<boolean>(false);
-    contextMenuX = signal<number>(0);
-    contextMenuY = signal<number>(0);
-    selectedRow = signal<number>(-1);
-    selectedCol = signal<number>(-1);
-    selectedCellHasReservation = signal<boolean>(false);
-
     // Add signals for tracking the currently selected cell
     selectedCellRowIndex = signal<number>(-1);
     selectedCellColIndex = signal<number>(-1);
@@ -87,9 +79,12 @@ export class Reservation2Component implements OnInit, OnDestroy {
     selectedEndColIndex = signal<number>(-1);
     isSelecting = signal<boolean>(false);
 
-    // Add a signal to track the ID of the currently hovered reservation
-    hoveredReservationId = signal<number | null>(null);
+    // Add a signal to track the currently selected reservation ID
+    selectedReservationId = signal<number | null>(null);
 
+    // Add a flag to track whether the page has been loaded for the first time
+    private isFirstLoad = true;
+    
     constructor(private dataService: DataService) {
         // Monitor grid matrix updates
         effect(() => {
@@ -125,6 +120,11 @@ export class Reservation2Component implements OnInit, OnDestroy {
             .subscribe(houses => {
                 this.houses.set(houses);
                 this.updateGridMatrix();
+                
+                // Only scroll to today on first load
+                if (this.isFirstLoad && houses.length > 0) {
+                    this.scrollToToday();
+                }
             });
         
         // Subscribe to house availabilities data from DataService
@@ -134,11 +134,25 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.houseAvailabilities.set(availabilities);
                 this.updateGridMatrix();
             });
+        
+        // Subscribe to house availabilities updates from real-time database changes
+        this.dataService.$houseAvailabilitiesUpdate
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+                // When we receive a notification that reservations have changed, reload them
+                this.dataService.loadHouseAvailabilities().pipe(takeUntil(this.destroy$)).subscribe();
+            });
             
         // Monitor initial render
         setTimeout(() => {
             const renderTime = performance.now() - this.renderStartTime;
-        }, 0);
+            
+            // Scroll to today after the initial render if it's the first load
+            if (this.isFirstLoad) {
+                this.scrollToToday();
+                this.isFirstLoad = false;
+            }
+        }, 300); // Longer delay for initial render
     }
     
     ngOnDestroy(): void {
@@ -365,34 +379,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
     private enforceMinColumnWidth(column: number, minWidth: number): void {
     }
 
-    // Add context menu handler
-    onCellRightClick(event: MouseEvent, row: number, col: number): void {
-        // Prevent default context menu
-        event.preventDefault();
-        
-        // Set the selected cell
-        this.selectedRow.set(row);
-        this.selectedCol.set(col);
-        
-        // Check if the cell has a reservation
-        this.selectedCellHasReservation.set(this.hasCellReservation(row, col));
-        
-        // Show context menu at click position
-        this.contextMenuX.set(event.clientX);
-        this.contextMenuY.set(event.clientY);
-        this.showContextMenu.set(true);
-    }
-    
-    // Hide context menu when clicking elsewhere
-    @HostListener('document:click')
-    hideContextMenu(): void {
-        this.showContextMenu.set(false);
-    }
-    
     // Make these methods public to use in template
     handleEditReservation(row: number, col: number): void {
         // Hide context menu first
-        this.showContextMenu.set(false);
+        this.showReservationForm.set(false);
         
         // Get the actual house based on the filtered list
         const houses = this.filteredHouses();
@@ -450,9 +440,41 @@ export class Reservation2Component implements OnInit, OnDestroy {
         }
     }
 
-    handleDeleteReservation(row: number, col: number): void {
+    // New version of handleDeleteReservation that takes a reservationId directly
+    handleDeleteReservation(reservationId: number): void {
+        // Find the reservation by ID
+        const reservation = this.houseAvailabilities().find(
+            avail => avail.house_availability_id === reservationId
+        );
+        
+        if (!reservation) return;
+        
+        // First update UI optimistically
+        const currentAvailabilities = this.houseAvailabilities();
+        const filteredAvailabilities = currentAvailabilities.filter(
+            avail => avail.house_availability_id !== reservationId
+        );
+        this.houseAvailabilities.set(filteredAvailabilities);
+        this.updateGridMatrix();
+        
+        // Delete from backend
+        this.dataService.deleteHouseAvailability(reservationId).subscribe({
+            next: (result) => {
+                // Update was already done optimistically above
+            },
+            error: (error: any) => {
+                console.error("Error deleting reservation:", error);
+                // Revert the optimistic update
+                this.houseAvailabilities.set(currentAvailabilities);
+                this.updateGridMatrix();
+            }
+        });
+    }
+
+    // Legacy version that takes row and column (can be removed or kept for backward compatibility)
+    private _handleDeleteReservationByCell(row: number, col: number): void {
         // Hide context menu first
-        this.showContextMenu.set(false);
+        this.showReservationForm.set(false);
         
         // Get the actual house based on the filtered list
         const houses = this.filteredHouses();
@@ -470,50 +492,14 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 return;
             }
             
-            // Show confirmation dialog with reservation details
-            const lastName = reservation.last_name || 'Unknown';
-            const refNumber = reservation.reservation_number || 'No reference';
-            const startDate = new Date(reservation.house_availability_start_date).toLocaleDateString();
-            const endDate = new Date(reservation.house_availability_end_date).toLocaleDateString();
-            
-            const confirmMessage = 
-                `Are you sure you want to delete this reservation?\n\n` +
-                `Guest: ${lastName}\n` +
-                `Reference: ${refNumber}\n` +
-                `Period: ${startDate} to ${endDate}\n\n` +
-                `This action cannot be undone.`;
-            
-            const confirmDelete = confirm(confirmMessage);
-            
-            if (confirmDelete) {
-                // First update UI for immediate feedback
-                const currentAvailabilities = this.houseAvailabilities();
-                const filteredAvailabilities = currentAvailabilities.filter(
-                    avail => avail.house_availability_id !== reservation.house_availability_id
-                );
-                this.houseAvailabilities.set(filteredAvailabilities);
-                this.updateGridMatrix();
-                
-                // Delete from backend
-                this.dataService.deleteHouseAvailability(reservation.house_availability_id).subscribe({
-                    next: (result) => {
-                        // Update was already done optimistically above
-                    },
-                    error: (error: any) => {
-                        // Revert the optimistic update
-                        this.houseAvailabilities.set(currentAvailabilities);
-                        this.updateGridMatrix();
-                    },
-                    complete: () => {
-                    }
-                });
-            }
+            // Delete the reservation by ID
+            this.handleDeleteReservation(reservation.house_availability_id);
         }
     }
 
     handleAddReservation(row: number, col: number): void {
         // Hide context menu first
-        this.showContextMenu.set(false);
+        this.showReservationForm.set(false);
         
         // Get the actual house based on the filtered list
         const houses = this.filteredHouses();
@@ -618,35 +604,29 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     reservation_length: this.calculateDaysBetween(startDate, endDate) + 1 // Include both start and end date
                 };
                 
-                // First update UI for immediate feedback
-                const currentAvailabilities = this.houseAvailabilities();
-                const updatedAvailabilities = currentAvailabilities.map(avail => 
-                    avail.house_availability_id === updatedReservation.house_availability_id ? 
-                    updatedReservation : avail
-                );
-                this.houseAvailabilities.set(updatedAvailabilities);
-                this.updateGridMatrix();
-                
                 // Hide the form immediately for better UX
                 this.showReservationForm.set(false);
                 
                 // Then send to backend using the updateHouseAvailability method
                 this.dataService.updateHouseAvailability(updatedReservation).subscribe({
                     next: (savedReservation: HouseAvailability | null) => {
-                        if (!savedReservation) {
-                            // Revert the optimistic update
-                            this.houseAvailabilities.set(currentAvailabilities);
+                        // Force a complete reload of all availabilities to ensure we have the latest data
+                        this.dataService.loadHouseAvailabilities().subscribe(freshData => {
+                            this.houseAvailabilities.set(freshData);
                             this.updateGridMatrix();
-                        }
+                        });
                     },
                     error: (error: any) => {
-                        // Revert the optimistic update
-                        this.houseAvailabilities.set(currentAvailabilities);
-                        this.updateGridMatrix();
+                        console.error("Error updating reservation:", error);
+                        // Force a reload anyway to ensure we have consistent data
+                        this.dataService.loadHouseAvailabilities().subscribe(freshData => {
+                            this.houseAvailabilities.set(freshData);
+                            this.updateGridMatrix();
+                        });
                     }
                 });
             } else {
-                // We're creating a new reservation (existing code path)
+                // We're creating a new reservation
                 
                 // Create a new reservation using the dates directly from the form
                 const newReservation: HouseAvailability = {
@@ -673,32 +653,38 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 if (!newReservation.dogs_s) newReservation.dogs_s = 0;
                 if (!newReservation.dogs_b) newReservation.dogs_b = 0;
                 
-                // First update UI for immediate feedback
-                const currentAvailabilities = this.houseAvailabilities();
-                this.houseAvailabilities.set([...currentAvailabilities, newReservation]);
-                this.updateGridMatrix();
-                
                 // Hide the form immediately for better UX
                 this.showReservationForm.set(false);
                 
                 // Then send to backend using the DataService method
                 this.dataService.saveHouseAvailability(newReservation).subscribe({
                     next: (savedReservation: HouseAvailability | null) => {
-                        if (savedReservation) {
-                            // Update the local data with the saved reservation (which now has a real ID)
-                            const updatedAvailabilities = this.houseAvailabilities().map(avail => 
-                                avail.house_availability_id === newReservation.house_availability_id ? 
-                                savedReservation : avail
-                            );
-                            this.houseAvailabilities.set(updatedAvailabilities);
+                        console.log("Reservation saved successfully:", savedReservation);
+                        
+                        // Force a complete reload of all availabilities to ensure we have the latest data
+                        this.dataService.loadHouseAvailabilities().subscribe(freshData => {
+                            console.log("Reloaded availabilities after save:", freshData.length);
+                            this.houseAvailabilities.set(freshData);
                             this.updateGridMatrix();
-                        }
+                            
+                            // Do another update after a short delay to ensure the UI is completely refreshed
+                            setTimeout(() => {
+                                this.updateGridMatrix();
+                            }, 300);
+                        });
                     },
                     error: (error: any) => {
+                        console.error("Error saving reservation:", error);
+                        // Force a reload anyway to ensure we have consistent data
+                        this.dataService.loadHouseAvailabilities().subscribe(freshData => {
+                            this.houseAvailabilities.set(freshData);
+                            this.updateGridMatrix();
+                        });
                     }
                 });
             }
         }).catch(error => {
+            console.error("Error getting availability type:", error);
         });
     }
     
@@ -857,7 +843,46 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return filteredHouses;
     }
     
-    // Method to set the selected house type
+    // Method to scroll to today's date in the table
+    scrollToToday(): void {
+        console.log("Scrolling to today's date");
+        setTimeout(() => {
+            // Find the column that represents today
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Find today's column index
+            const todayIndex = this.days().findIndex(day => {
+                const d = new Date(day);
+                d.setHours(0, 0, 0, 0);
+                return d.getTime() === today.getTime();
+            });
+            
+            if (todayIndex >= 0) {
+                // Get all day header cells
+                const dayHeaders = document.querySelectorAll('.day-header');
+                if (dayHeaders.length > todayIndex) {
+                    const todayHeader = dayHeaders[todayIndex] as HTMLElement;
+                    
+                    // Calculate the position to scroll to (center the column)
+                    const tableContainer = document.querySelector('.table-container');
+                    if (tableContainer) {
+                        const containerWidth = tableContainer.clientWidth;
+                        const columnPosition = todayHeader.offsetLeft;
+                        const columnWidth = todayHeader.offsetWidth;
+                        
+                        // Scroll to position the today column in the middle
+                        const scrollLeft = columnPosition - (containerWidth / 2) + (columnWidth / 2);
+                        tableContainer.scrollLeft = scrollLeft > 0 ? scrollLeft : 0;
+                        
+                        console.log(`Scrolled to today (column ${todayIndex})`);
+                    }
+                }
+            }
+        }, 100); // Small delay to ensure the DOM is fully rendered
+    }
+    
+    // Updated method for setting house type that doesn't trigger scrolling to today
     setSelectedHouseType(typeId: number): void {
         if (this._previousHouseTypeId !== typeId && typeId !== null) {
             this._previousHouseTypeId = typeId;
@@ -865,6 +890,12 @@ export class Reservation2Component implements OnInit, OnDestroy {
             
             // Update the grid matrix with new filtered data
             this.updateGridMatrix();
+            
+            // Only scroll to today if this is the first load
+            if (this.isFirstLoad) {
+                this.scrollToToday();
+                this.isFirstLoad = false;
+            }
         }
     }
     
@@ -1043,26 +1074,54 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     // Helper method to open the reservation form with given dates
     private openReservationForm(house: House, startDate: Date, endDate: Date): void {
+        console.log("Opening reservation form with dates:", startDate, endDate);
+        
         // First make sure we reset any previous state
         this.editingReservation.set({});
         
-        // Set form data
-        this.selectedHouseId.set(house.house_id);
-        this.selectedStartDate.set(startDate);
-        
-        // For endDate, we want it to be the day after the last selected day 
-        // (to match how reservations work - end date is exclusive)
+        // Create new date objects to avoid reference issues
+        const formStartDate = new Date(startDate);
         const formEndDate = new Date(endDate);
-        formEndDate.setDate(formEndDate.getDate() + 1);
+        
+        // Reset the time components to avoid timezone issues
+        formStartDate.setHours(0, 0, 0, 0);
+        formEndDate.setHours(0, 0, 0, 0);
+        
+        console.log("Form dates after processing:", formStartDate, formEndDate);
+        
+        // Additional validation for start date being today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (formStartDate.getTime() === today.getTime()) {
+            console.log("Start date is today, ensuring valid date object");
+            // Double check that we have a valid today's date
+            const todayCopy = new Date();
+            todayCopy.setHours(0, 0, 0, 0);
+            this.selectedStartDate.set(todayCopy);
+        } else {
+            // Normal case
+            this.selectedStartDate.set(formStartDate);
+        }
+        
+        // Set other form data
+        this.selectedHouseId.set(house.house_id);
         this.selectedEndDate.set(formEndDate);
         
         // Check for next reservation to limit end date
         this.updateNextReservationDate();
         
+        // Convert dates to string format for the reservation object
+        const startDateString = this.formatDateToYYYYMMDD(formStartDate);
+        const endDateString = this.formatDateToYYYYMMDD(formEndDate);
+        
+        console.log("Date strings for reservation:", startDateString, endDateString);
+        
         // Check if there's a upcoming reservation that would limit the end date
-        const nextReservation = this.findNextReservation(house.house_id, startDate);
+        const nextReservation = this.findNextReservation(house.house_id, formStartDate);
         if (nextReservation) {
             const nextStartDate = new Date(nextReservation.house_availability_start_date);
+            nextStartDate.setHours(0, 0, 0, 0);
             
             // If the default end date would overlap, adjust it
             if (formEndDate >= nextStartDate) {
@@ -1087,6 +1146,8 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.editingReservation.set({
                     house_id: house.house_id,
                     house_availability_type_id: availabilityTypeId,
+                    house_availability_start_date: startDateString, // Use the string version
+                    house_availability_end_date: endDateString, // Use the string version
                     color_theme: Math.floor(Math.random() * 10), // Random color theme
                     color_tint: 0.5, // Default tint
                     adults: 2, // Default values
@@ -1177,19 +1238,23 @@ export class Reservation2Component implements OnInit, OnDestroy {
         this.selectedEndColIndex.set(-1);
     }
 
-    // Handle mouse enter for reservation cells - highlight all related cells
-    onReservationCellMouseEnter(row: number, col: number): void {
+    // Handle click on a reservation cell
+    onReservationCellClick(event: MouseEvent, row: number, col: number): void {
+        // Stop propagation to prevent other click handlers
+        event.stopPropagation();
+        
+        // Check if the cell is actually a reservation
         const grid = this.gridMatrix();
         if (!grid || grid.length <= row || !grid[row] || grid[row].length <= col) {
             return;
         }
         
         const cellData = grid[row][col];
-        if (!cellData.isReserved) {
+        if (!cellData || !cellData.isReserved) {
             return;
         }
         
-        // Find the current reservation in the map to get its ID
+        // Find the reservation for this cell
         const houses = this.filteredHouses();
         const days = this.days();
         
@@ -1201,21 +1266,34 @@ export class Reservation2Component implements OnInit, OnDestroy {
             const reservation = this.reservationMap.get(key);
             
             if (reservation) {
-                // Set the hovered reservation ID to highlight all cells of this reservation
-                this.hoveredReservationId.set(reservation.house_availability_id);
+                // Set or clear selected reservation highlight
+                if (this.selectedReservationId() === reservation.house_availability_id) {
+                    this.selectedReservationId.set(null);
+                } else {
+                    this.selectedReservationId.set(reservation.house_availability_id);
+                }
+                
+                // Now also open the edit form for this reservation
+                this.handleEditReservation(row, col);
             }
         }
     }
 
-    // Handle mouse leave for reservation cells - remove highlight
-    onReservationCellMouseLeave(): void {
-        this.hoveredReservationId.set(null);
-    }
-
-    // Check if a cell is part of the currently hovered reservation
-    isCellInHoveredReservation(row: number, col: number): boolean {
-        const hoveredId = this.hoveredReservationId();
-        if (hoveredId === null) {
+    // Check if a cell is part of the currently selected reservation
+    isCellInSelectedReservation(row: number, col: number): boolean {
+        const selectedId = this.selectedReservationId();
+        if (selectedId === null) {
+            return false;
+        }
+        
+        const grid = this.gridMatrix();
+        // If we don't have grid data yet, return false
+        if (!grid || grid.length <= row || !grid[row] || grid[row].length <= col) {
+            return false;
+        }
+        
+        // First, check if this cell is reserved at all
+        if (!grid[row][col].isReserved) {
             return false;
         }
         
@@ -1229,9 +1307,27 @@ export class Reservation2Component implements OnInit, OnDestroy {
             const key = this.getReservationKey(house.house_id, day);
             const reservation = this.reservationMap.get(key);
             
-            return reservation?.house_availability_id === hoveredId;
+            return reservation?.house_availability_id === selectedId;
         }
         
         return false;
+    }
+
+    // Add a method to manually refresh the data
+    manualRefresh(): void {
+        console.log("Manual refresh requested");
+        // Show loading indicator or toast message here if desired
+        
+        // Reload house availabilities from the database
+        this.dataService.loadHouseAvailabilities().subscribe({
+            next: (freshData) => {
+                console.log("Manually reloaded availabilities:", freshData.length);
+                this.houseAvailabilities.set(freshData);
+                this.updateGridMatrix();
+            },
+            error: (error) => {
+                console.error("Error reloading availabilities:", error);
+            }
+        });
     }
 }
