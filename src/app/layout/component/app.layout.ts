@@ -1,3 +1,5 @@
+import { ColorPickerModule } from 'primeng/colorpicker';
+import { transition } from '@angular/animations';
 import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -16,6 +18,9 @@ import { DataService, House, TaskType } from '../../pages/service/data.service';
 import { TaskService } from '../../pages/service/task.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { NotesComponent } from './notes.component';
+import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
+import { ArrivalsAndDeparturesComponent } from './arrivals-and-departures.component';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -37,7 +42,11 @@ interface SpecialLocation {
         InputTextarea,
         ButtonModule,
         FormsModule,
-        ToastModule
+        ToastModule,
+        NotesComponent,
+        ArrivalsAndDeparturesComponent,
+        CdkDrag, 
+        CdkDragHandle
     ],
     providers: [MessageService],
     template: `
@@ -47,6 +56,40 @@ interface SpecialLocation {
         <div class="layout-main-container">
             <div class="layout-main">
                 <router-outlet></router-outlet>
+
+                @if(isNotesWindowVisible){
+                    <div class="notes-window" cdkDrag>
+                        <app-notes></app-notes>
+
+                        <div class="example-handle" cdkDragHandle>
+                            <svg width="24px" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
+                            <path d="M0 0h24v24H0z" fill="none"></path>
+                            </svg>
+                        </div>
+
+                        <div (click)="closeNotesWindow()" class="close-notes-window">
+                            <i class="pi pi-times"></i>
+                        </div>
+                    </div>
+                }
+
+                @if(isArrivalsAndDeparturesWindowVisible){
+                    <div class="arrivals-and-departures-window" cdkDrag>
+                        <app-arrivals-and-departures></app-arrivals-and-departures>
+
+                        <div class="example-handle" cdkDragHandle>
+                            <svg width="24px" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
+                            <path d="M0 0h24v24H0z" fill="none"></path>
+                            </svg>
+                        </div>
+
+                        <div (click)="closeArrivalsAndDeparturesWindow()" class="close-arrivals-and-departures-window">
+                            <i class="pi pi-times"></i>
+                        </div>	
+                    </div>
+                }
             </div>
         </div>
         <div class="layout-mask animate-fadein"></div>
@@ -54,13 +97,14 @@ interface SpecialLocation {
 
         <p-speedDial 
             [model]="menuItems" 
-            direction="up"
+            [radius]="120" 
+            type="quarter-circle"
+            direction="up-left"
             buttonClassName="p-button-primary"
             [buttonProps]="{ size: 'large', raised: true }"
-            showIcon="pi pi-plus"
+            showIcon="pi pi-list"
             hideIcon="pi pi-times"
             [transitionDelay]="80"
-            [radius]="80"
         ></p-speedDial>
 
         <!-- Fault Report Dialog -->
@@ -251,23 +295,6 @@ interface SpecialLocation {
             </ng-template>
         </p-dialog>
 
-        <!-- Phone Dialog -->
-        <!-- <p-dialog 
-            header="Phone" 
-            [(visible)]="phoneDialogVisible" 
-            [modal]="true"
-            [style]="{ width: '50vw' }"
-            [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
-        >
-            <div class="p-4">
-                <h3>Phone Content</h3>
-                <p>This is a placeholder for the phone functionality.</p>
-            </div>
-            <ng-template pTemplate="footer">
-                <button pButton label="Close" (click)="phoneDialogVisible = false"></button>
-            </ng-template>
-        </p-dialog> -->
-
         <p-toast></p-toast>
     </div>`,
     styles: [`
@@ -284,14 +311,14 @@ interface SpecialLocation {
                     z-index: inherit !important;
                     background: var(--primary-color) !important;
                     border-color: var(--primary-color) !important;
+                    transition: transform 0.3s ease;
                     
                     .p-button-icon {
                         font-size: 1.8rem;
                     }
 
                     &:hover {
-                        background: var(--primary-600) !important;
-                        border-color: var(--primary-600) !important;
+                        transform: scale(1.1);
                     }
                 }
 
@@ -303,9 +330,9 @@ interface SpecialLocation {
                     border: 1px solid var(--surface-border);
                     margin-bottom: 0.5rem;
                     z-index: inherit !important;
+                    transition: transform 0.3s ease;
 
                     &:hover {
-                        background: var(--surface-hover);
                         transform: scale(1.1);
                     }
 
@@ -427,6 +454,122 @@ interface SpecialLocation {
                 }
             }
         }
+
+        .notes-window {
+            position: fixed !important;
+            top: 100px;
+            left: 100px;
+            z-index: 99999 !important;
+            width: 500px;
+            height: 300px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: solid 1px #ccc;
+            color: rgba(0, 0, 0, 0.87);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: #fff;
+            border-radius: 10px;
+            position: relative;
+            transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
+            box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
+                        0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                        0 1px 5px 0 rgba(0, 0, 0, 0.12);
+
+            .example-handle {
+                position: absolute;
+                top: 12px;
+                left: 15px;
+                color: #ccc;
+                cursor: move;
+                width: 24px;
+                height: 24px;
+            } 
+
+            .close-notes-window {
+                position: absolute;
+                top: 8px;
+                right: 12px;
+                color: #ccc;
+                cursor: pointer;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 5px;
+            
+                &:hover {
+                    background-color: red;
+                    cursor: pointer;
+                
+                    i{
+                        color: white;
+                    }
+                }
+            }
+        }
+
+
+        .arrivals-and-departures-window {
+            position: fixed !important;
+            top: 100px;
+            left: 100px;
+            z-index: 99999 !important;
+            width: 480px;
+            height: 340px;
+            box-sizing: border-box;
+            border: solid 1px #ccc;
+            color: rgba(0, 0, 0, 0.87);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: #fff;
+            border-radius: 10px;
+            position: relative;
+            transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
+            box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
+                        0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                        0 1px 5px 0 rgba(0, 0, 0, 0.12);
+
+            .example-handle {
+                position: absolute;
+                top: 8px;
+                left: 15px;
+                color: #ccc;
+                cursor: move;
+                width: 24px;
+                height: 24px;
+            } 
+            
+            .close-arrivals-and-departures-window {
+                position: absolute;
+                top: 4px;
+                right: 12px;
+                color: #ccc;
+                cursor: pointer;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 5px;
+            
+                &:hover {
+                    background-color: red;
+                    cursor: pointer;
+            
+                    i{
+                        color: white;
+                    }
+                }
+            }
+        }
+
+
     `]
 })
 export class AppLayout {
@@ -449,7 +592,8 @@ export class AppLayout {
     // Dialog visibility flags
     faultReportVisible: boolean = false;
     extraordinaryTaskVisible: boolean = false;
-    phoneDialogVisible: boolean = false;
+    isNotesWindowVisible: boolean = false;
+    isArrivalsAndDeparturesWindowVisible: boolean = false;
 
     // Form fields
     selectedLocation: House | SpecialLocation | null = null;
@@ -475,23 +619,29 @@ export class AppLayout {
 
     menuItems: MenuItem[] = [
         {
-            icon: 'pi pi-exclamation-circle',
+            icon: 'pi pi-wrench',
             command: () => {
                 this.faultReportVisible = true;
             }
         },
         {
-            icon: 'pi pi-plus-circle',
+            icon: 'pi pi-file-edit',
             command: () => {
                 this.extraordinaryTaskVisible = true;
             }
         },
-        // {
-        //     icon: 'pi pi-phone',
-        //     command: () => {
-        //         this.phoneDialogVisible = true;
-        //     }
-        // }
+        {
+            icon: 'pi pi-clipboard',
+            command: () => {
+                this.isNotesWindowVisible = true;
+            }
+        },
+        {
+            icon: 'pi pi-arrow-right-arrow-left',
+            command: () => {
+                this.isArrivalsAndDeparturesWindowVisible = true;
+            }
+        },
     ];
 
     constructor(
@@ -946,5 +1096,13 @@ export class AppLayout {
     removeImage(imageToRemove: any){
         this.taskImages = this.taskImages.filter(ti => ti.file != imageToRemove.file);
         this.imagesToUpload = this.imagesToUpload.filter(itu => itu != imageToRemove.file);
+    }
+
+    closeNotesWindow(){
+        this.isNotesWindowVisible = false;
+    }
+
+    closeArrivalsAndDeparturesWindow(){
+        this.isArrivalsAndDeparturesWindowVisible = false;
     }
 }

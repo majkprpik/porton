@@ -1,4 +1,3 @@
-import { HeroWidget } from './../landing/components/herowidget';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseStatus, HouseStatusTask, TaskType } from '../service/data.service';
@@ -7,12 +6,9 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { InputTextarea } from 'primeng/inputtextarea';
 import { MenuItem } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
-import { ArrivalsAndDeparturesComponent } from '../../layout/component/arrivals-and-departures.component';
-import { NotesComponent } from '../../layout/component/notes.component';
 
 // Define the special location option interface
 interface SpecialLocation {
@@ -29,14 +25,10 @@ interface SpecialLocation {
         ButtonModule, 
         DialogModule,
         DropdownModule,
-        InputTextarea,
         FormsModule,
-        ArrivalsAndDeparturesComponent,
-        NotesComponent
     ],
     template: `
-        <div class="home-container" (click)="handleContainerClick($event)">
-            
+        <div class="home-container" (click)="handleContainerClick($event)">         
             <div class="house-grid">
                 @for (house of houses(); track house.house_id) {
                     <div class="house-card" 
@@ -99,12 +91,6 @@ interface SpecialLocation {
                     </div>
                 }
             </div>
-
-        </div>
-
-        <div class="bottom"> 
-            <app-arrivals-and-departures></app-arrivals-and-departures>
-            <app-notes></app-notes>
         </div>
     `,
     styles: [`
@@ -421,13 +407,6 @@ interface SpecialLocation {
             label {
                 color: var(--text-color);
             }
-        }
-
-        .bottom{
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
         }
     `]
 })
