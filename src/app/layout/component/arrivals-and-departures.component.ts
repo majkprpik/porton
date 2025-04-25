@@ -126,7 +126,6 @@ import { CommonModule } from '@angular/common';
     </div>
 
     <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
-    <p-toast></p-toast>
   `,
   styles: `
     .arrivals-departures-container {

@@ -1546,7 +1546,7 @@ export class DataService {
           // Parse the housetasks JSON string into actual objects
           const processedData = data.map(status => ({
             ...status,
-            housetasks: status.housetasks ? JSON.parse(status.housetasks) : []
+            housetasks: typeof status.housetasks === 'string' ? JSON.parse(status.housetasks) : (status.housetasks || [])
           }));
           this.houseStatusesSubject.next(processedData);
           this.logData('House Statuses', processedData);
@@ -1556,7 +1556,7 @@ export class DataService {
         if (data) {
           return data.map(status => ({
             ...status,
-            housetasks: status.housetasks ? JSON.parse(status.housetasks) : []
+            housetasks: typeof status.housetasks === 'string' ? JSON.parse(status.housetasks) : (status.housetasks || [])
           }));
         }
         return [];

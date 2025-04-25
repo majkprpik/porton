@@ -1,5 +1,3 @@
-import { ColorPickerModule } from 'primeng/colorpicker';
-import { transition } from '@angular/animations';
 import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -14,7 +12,7 @@ import { InputTextarea } from 'primeng/inputtextarea';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
-import { DataService, House, TaskType } from '../../pages/service/data.service';
+import { DataService, House, Task, TaskProgressType, TaskType } from '../../pages/service/data.service';
 import { TaskService } from '../../pages/service/task.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
@@ -90,6 +88,41 @@ interface SpecialLocation {
                         </div>	
                     </div>
                 }
+
+                <p-dialog
+                    header="Detalji zadatka:" 
+                    [(visible)]="isTaskDetailsWindowVisible"
+                    [modal]="true"
+                    [style]="{ width: '30rem' }"
+                    [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
+                    (onHide)="resetDialog()"
+                >
+                    <div class="details">
+                        <div>
+                            <span><b>Kućica:</b> {{getHouseForTask(task)?.house_number}}</span>
+                        </div>
+                
+                        <div>
+                            <span><b>Tip:</b> {{getTaskTypeName(task)}}</span>
+                        </div>
+                
+                        <div>
+                            <span><b>Status:</b> {{getTaskProgressTypeName(task)}}</span>
+                        </div>
+                
+                        <div>
+                            <span><b>Opis:</b> {{task?.description}}</span>
+                        </div>
+
+                        @if(getTaskTypeName(task) == 'Popravak' && taskImages.length > 0){
+                            <div class="task-images">
+                            @for(image of taskImages; track image.name){
+                                <img [src]="image.url" [alt]="image.name">
+                            }
+                            </div>
+                        }
+                    </div>
+                </p-dialog>
             </div>
         </div>
         <div class="layout-mask animate-fadein"></div>
@@ -570,6 +603,21 @@ interface SpecialLocation {
         }
 
 
+        p-dialog{
+            .details{
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+            
+              .task-images{
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                overflow-x: auto;
+              }
+            }
+        }
     `]
 })
 export class AppLayout {
@@ -594,6 +642,7 @@ export class AppLayout {
     extraordinaryTaskVisible: boolean = false;
     isNotesWindowVisible: boolean = false;
     isArrivalsAndDeparturesWindowVisible: boolean = false;
+    isTaskDetailsWindowVisible: boolean = false;
 
     // Form fields
     selectedLocation: House | SpecialLocation | null = null;
@@ -610,6 +659,9 @@ export class AppLayout {
 
     houses: House[] = [];
     taskTypes: TaskType[] = [];
+    taskProgressTypes: TaskProgressType[] = [];
+    task: any;
+    tasks: Task[] = [];
 
     imageToUpload: any;
     imagesToUpload: any[] = [];
@@ -682,9 +734,60 @@ export class AppLayout {
             this.taskTypes = types;
         });
 
+        this.dataService.taskProgressTypes$.subscribe(taskProgressTypes => {
+            this.taskProgressTypes = taskProgressTypes;
+        });
+
+        this.dataService.tasks$.subscribe(tasks => {
+            this.tasks = tasks;
+        })
+
         // Load initial data
         this.dataService.loadHouses().subscribe();
         this.dataService.getTaskTypes().subscribe();
+    }
+
+    ngOnInit(){
+        this.taskService.$taskModalData.subscribe(res => {
+            if(res){
+                if(res.taskId) {
+                    this.task = this.tasks.find(task => task.task_id == res.taskId);
+                } else {
+                    this.task = res;
+                }
+            
+                this.isTaskDetailsWindowVisible = true;
+
+                if(this.getTaskTypeName(this.task) == 'Popravak'){
+                    this.getStoredImagesForTask(this.task);
+                } else {
+                    this.taskImages = [];
+                }
+            } else {
+              this.isTaskDetailsWindowVisible = false;
+            }
+        });
+    }
+    
+    async getStoredImagesForTask(task: Task) {
+      try {
+        const fetchedImages = await this.dataService.getStoredImagesForTask(task.task_id);
+
+        if (!fetchedImages || fetchedImages.length === 0) {
+          console.warn('No images found.');
+          this.taskImages = [];
+          return;
+        }
+
+        this.taskImages = await Promise.all(fetchedImages.map(async (image: any) => {
+          const url = await this.dataService.getPublicUrlForImage(`task-${task.task_id}/${image.name}`);
+          return { name: image.name, url };
+        }));
+
+        this.taskImages;
+      } catch (error) {
+        console.error('Error fetching images:', error);
+      }
     }
 
     // Handle location change in fault report dialog
@@ -1104,5 +1207,30 @@ export class AppLayout {
 
     closeArrivalsAndDeparturesWindow(){
         this.isArrivalsAndDeparturesWindowVisible = false;
+    }
+
+    resetDialog(){
+      this.taskService.$taskModalData.next(null);
+    }
+    
+    getHouseForTask(task: any){
+      if(task){
+        return this.houses.find(house => house.house_id == task.house_id);
+      }
+      return;
+    }
+    
+    getTaskTypeName(task: any){
+      if(task){
+        return this.taskTypes.find(tt => tt.task_type_id == task.task_type_id || tt.task_type_id == task.taskTypeId)?.task_type_name;
+      }
+      return;
+    }
+    
+    getTaskProgressTypeName(task: any){
+      if(task){
+        return this.taskProgressTypes.find(tpt => tpt.task_progress_type_id == task.task_progress_type_id || tpt.task_progress_type_id == task.taskProgressTypeId)?.task_progress_type_name;
+      }
+      return;
     }
 }
