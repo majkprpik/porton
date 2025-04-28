@@ -423,6 +423,7 @@ export class WorkGroup implements OnInit {
               lockedTeam.tasks.push(selectedTask);
               this.workGroupService.updateLockedTeam(lockedTeam);
               this.dataService.setWorkGroupTasks(this.workGroupTasks);
+              this.taskService.$selectedTask.next(null);
             }
           }
         }
@@ -457,6 +458,7 @@ export class WorkGroup implements OnInit {
               lockedTeam.members.push(staffToAdd);
               this.workGroupService.updateLockedTeam(lockedTeam);
               this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+              this.profileService.$staffToAdd.next(null);
             }
           }
         }
