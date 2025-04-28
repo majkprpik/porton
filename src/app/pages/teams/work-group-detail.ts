@@ -12,7 +12,12 @@ import { TaskService } from '../service/task.service';
 @Component({
     selector: 'app-work-group-detail',
     standalone: true,
-    imports: [CommonModule, ButtonModule, ProgressSpinnerModule, CardModule],
+    imports: [
+        CommonModule, 
+        ButtonModule, 
+        ProgressSpinnerModule, 
+        CardModule,
+    ],
     template: `
         @if (loading) {
             <div class="loading-container">
@@ -305,10 +310,6 @@ export class WorkGroupDetail implements OnInit {
             this.taskTypes = taskTypes;
             this.progressTypes = taskProgressTypes;
             this.houseAvailabilities = houseAvailabilities;
-            
-            // Log progress types to debug
-            console.log('Progress Types:', taskProgressTypes);
-            
             this.tasks = tasks;
             this.profiles = profiles;
 
@@ -317,9 +318,6 @@ export class WorkGroupDetail implements OnInit {
                 .filter(wgt => wgt.work_group_id === workGroupId)
                 .map(wgt => wgt.task_id);
             this.assignedTasks = tasks.filter(task => groupTaskIds.includes(task.task_id));
-            
-            // Log tasks with their progress types
-            console.log('Assigned Tasks:', this.assignedTasks);
 
             // Get staff for this work group
             const groupProfileIds = workGroupProfiles
@@ -334,6 +332,8 @@ export class WorkGroupDetail implements OnInit {
                     this.houseService.isHouseOccupied(task.house_id);
                 });
             }
+
+
           },
           error: (error) => {
               console.error('Error loading work group details:', error);
@@ -343,25 +343,37 @@ export class WorkGroupDetail implements OnInit {
 
       this.dataService.$workGroupTasksUpdate.subscribe(async res => {
         if(res && res.eventType == 'INSERT'){
-            let assignedTaskProgressType = this.progressTypes.find((tt: any) => tt.task_progress_type_name == "Dodijeljeno");
-
-            const task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
-            task.task_progress_type_id = assignedTaskProgressType?.task_progress_type_id;
-
-            if(!this.assignedTasks.some(at => at.task_id == task.task_id)){
-                this.assignedTasks = [...this.assignedTasks, task];
+            if(this.workGroup?.work_group_id == res.new.work_group_id){
+                const task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
+                
+                if(this.taskService.isTaskNotAssigned(task)){
+                    let assignedTaskProgressType = this.progressTypes.find((tt: any) => tt.task_progress_type_name == "Dodijeljeno");
+                    task.task_progress_type_id = assignedTaskProgressType?.task_progress_type_id;
+                }
+    
+                if(!this.assignedTasks.some(at => at.task_id == task.task_id)){
+                    this.assignedTasks = [...this.assignedTasks, task];
+                }
             }
         } else if(res && res.eventType == 'DELETE'){
-            this.assignedTasks = this.assignedTasks.filter(task => task.task_id != res.old.task_id);
+            if(this.workGroup?.work_group_id == res.old.work_group_id){
+                this.assignedTasks = this.assignedTasks.filter(task => task.task_id != res.old.task_id);
+                this.workGroupTasks = this.workGroupTasks.filter((task: any) => task.task_id != res.old.task_id);
+                this.dataService.setWorkGroupTasks(this.workGroupTasks);
+            }
         }
       });
     
       this.dataService.$workGroupProfiles.subscribe(res => {
         if(res && res.eventType == 'INSERT'){
-            const profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
-            this.assignedStaff = [...this.assignedStaff, profile];
+            if(this.workGroup?.work_group_id == res.new.work_group_id){
+                const profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
+                this.assignedStaff = [...this.assignedStaff, profile];
+            }
         } else if(res && res.eventType == 'DELETE'){
-            this.assignedStaff = this.assignedStaff.filter(profile => profile.id != res.old.profile_id);
+            if(this.workGroup?.work_group_id == res.new.work_group_id){
+                this.assignedStaff = this.assignedStaff.filter(profile => profile.id != res.old.profile_id);
+            }
         }
       });
     
@@ -382,8 +394,6 @@ export class WorkGroupDetail implements OnInit {
 
       this.dataService.$houseAvailabilitiesUpdate.subscribe(res => {
         if(res && res.eventType == 'UPDATE') {
-            console.log(res);
-            console.log(this.assignedTasks);
             let ha = this.houseService.getTodaysHouseAvailabilityForHouse(res.new.house_id);
 
             if(ha){
@@ -489,8 +499,6 @@ export class WorkGroupDetail implements OnInit {
         
         this.dataService.updateTaskProgressType(task.task_id, progressType.task_progress_type_id).subscribe({
             next: () => {
-                console.log('Task progress updated:', { taskId: task.task_id, progressType: newProgressTypeName });
-                
                 // Update the task in the UI to reflect the new status
                 const updatedTask = this.assignedTasks.find(t => t.task_id === task.task_id);
                 if (updatedTask) {
@@ -513,8 +521,6 @@ export class WorkGroupDetail implements OnInit {
         
         this.dataService.updateTaskProgressType(task.task_id, pauseProgressType.task_progress_type_id).subscribe({
             next: () => {
-                console.log('Task paused:', { taskId: task.task_id });
-                
                 // Update the task in the UI to reflect the new status
                 const updatedTask = this.assignedTasks.find(t => t.task_id === task.task_id);
                 if (updatedTask) {
