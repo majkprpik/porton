@@ -373,22 +373,18 @@ export class DataService {
 
   getTaskProgressTypes(): Observable<TaskProgressType[]> {
     this.loadingSubject.next(true);
-    console.log('getTaskProgressTypes called');
 
     // If we already have data cached in the subject, use it
     if (this.taskProgressTypesSubject.value.length > 0) {
-      console.log('Using cached task progress types data');
       this.logData('Task Progress Types (cached)', this.taskProgressTypesSubject.value);
       this.loadingSubject.next(false);
       return this.taskProgressTypes$;
     }
 
     // Otherwise fetch from the server
-    console.log('Fetching task progress types from server');
     return from(this.supabaseService.getData('task_progress_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          console.log('Got task progress types from server, count:', data.length);
           this.taskProgressTypesSubject.next(data);
           this.logData('Task Progress Types (loaded)', data);
         } else {
@@ -406,7 +402,6 @@ export class DataService {
 
   getHouseTypes(): Observable<HouseType[]> {
     this.loadingSubject.next(true);
-    console.log('getHouseTypes called');
 
     // If we already have data cached in the subject, use it
     if (this.houseTypesSubject.value.length > 0) {
@@ -417,11 +412,9 @@ export class DataService {
     }
 
     // Otherwise fetch from the server
-    console.log('Fetching house types from server');
     return from(this.supabaseService.getData('house_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          console.log('Got house types from server, count:', data.length);
           this.houseTypesSubject.next(data);
           this.logData('House Types (loaded)', data);
         } else {
