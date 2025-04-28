@@ -280,25 +280,12 @@ export class WorkGroups implements OnInit {
 
   createWorkGroup() {
     if(this.activeGroupId){
-      console.log(this.activeGroupId);
       this.workGroupService.$newGroupWhileGroupActive.next(true);
     }
     this.dataService.createWorkGroup().subscribe({
       next: (workGroup) => {
         if (workGroup) {
           this.setActiveGroup(workGroup.work_group_id);
-          // let lockedTeams = this.workGroupService.getLockedTeams();
-          // let ltIndex = lockedTeams.findIndex(lt => parseInt(lt.id) == workGroup.work_group_id);
-
-          // lockedTeams[ltIndex] = {
-          //   homes: [],
-          //   id: workGroup.work_group_id.toString(),
-          //   isLocked: false,
-          //   members: [],
-          //   name: "Team " + workGroup.work_group_id.toString(),
-          //   tasks: [],
-          // }
-          // this.workGroupService.setLockedTeams(lockedTeams);
         }
       },
       error: (error) => {
@@ -343,7 +330,7 @@ export class WorkGroups implements OnInit {
         switchMap(() => this.dataService.deleteWorkGroup(workGroupId)),
         tap(() => this.workGroupService.$workGroupToDelete.next(workGroupId)),
         catchError((err) => {
-          console.log("Error:", err);
+          console.error("Error:", err);
           throw new Error("Error deleting work group!");
         })
       ).subscribe();
