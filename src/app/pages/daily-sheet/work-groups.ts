@@ -8,6 +8,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { WorkGroupService } from '../service/work-group.service';
+import { TaskService } from '../service/task.service';
 
 @Component({
   selector: 'app-work-groups',
@@ -159,7 +160,7 @@ import { WorkGroupService } from '../service/work-group.service';
 })
 export class WorkGroups implements OnInit {
   loading = true;
-  workGroups: { work_group_id: number; is_locked: boolean }[] = [];
+  workGroups: any[] = [];
   activeGroupId?: number;
   workGroupTasks: { [key: number]: Task[] } = {};
   workGroupStaff: { [key: number]: Profile[] } = {};
@@ -171,6 +172,7 @@ export class WorkGroups implements OnInit {
   constructor(
     private dataService: DataService,
     private workGroupService: WorkGroupService,
+    private taskService: TaskService,
   ) {}
 
   ngOnInit() {
@@ -250,11 +252,30 @@ export class WorkGroups implements OnInit {
     this.dataService.$tasksUpdate.subscribe(res => {
       if(res && res.eventType == 'UPDATE'){
         let lockedTeam = this.lockedTeams.find(lt => lt.tasks?.some(task => task.task_id == res.new.task_id));
-        let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id);
+        let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id) ?? -1;
 
-        if(taskIndex && lockedTeam?.tasks){
+        if(taskIndex != -1 && lockedTeam?.tasks){
           lockedTeam.tasks = [...lockedTeam.tasks.slice(0, taskIndex), res.new, ...lockedTeam.tasks.slice(taskIndex + 1)];
         }
+
+        if(lockedTeam?.tasks && lockedTeam?.tasks.every(task => this.taskService.isTaskCompleted(task))){
+          this.workGroupService.deleteWorkGroup(lockedTeam.id);
+          this.workGroups = this.workGroups.filter(wg => wg.work_group_id != parseInt(lockedTeam.id));
+          this.lockedTeams = this.lockedTeams.filter(lt => lt.id != lockedTeam.id);
+        }
+
+        this.dataService.updateWorkGroups(this.workGroups);
+        this.workGroupService.setLockedTeams(this.lockedTeams);
+      }
+    });
+
+    this.dataService.$workGroupsUpdate.subscribe(res => {
+      if(res && res.eventType == 'DELETE'){
+        this.workGroups = this.workGroups.filter(wg => wg.work_group_id != res.old.work_group_id);
+        this.lockedTeams = this.lockedTeams.filter(lt => lt.id != res.old.work_group_id);
+
+        this.dataService.updateWorkGroups(this.workGroups);
+        this.workGroupService.setLockedTeams(this.lockedTeams);
       }
     });
   }
