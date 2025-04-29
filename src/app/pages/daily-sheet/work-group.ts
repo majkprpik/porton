@@ -15,6 +15,8 @@ import { WorkGroupService } from '../service/work-group.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { ProfileService } from '../service/profile.service';
+import { DialogModule } from 'primeng/dialog';
+import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-work-group',
@@ -28,7 +30,10 @@ import { ProfileService } from '../service/profile.service';
     ContextMenuModule,
     TooltipModule,
     DragDropModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    DialogModule,
+    CdkDropList, 
+    CdkDrag
   ],
   providers: [ConfirmationService],
   template: `
@@ -77,12 +82,17 @@ import { ProfileService } from '../service/profile.service';
                     [houseNumber]="getHouseNumber(task.house_id)"
                     [task]="task"
                     [state]="isTaskCompleted(task) ? 'completed' : 'assigned'"
-                    [taskIcon]="getTaskIcon(task.task_type_id)"
+                    [taskIcon]="taskService.getTaskIcon(task.task_type_id)"
                     [isInActiveGroup]="isActive"
                     (removeFromGroup)="onRemoveTask(task)">
                   </app-task-card>
                 </div>
               }
+            </div>
+          }
+          @if(isActive){
+            <div (click)="openSortDialog()" class="tasks-sort-icon">
+              <i class="pi pi-sort-alt"></i>
             </div>
           }
         </div>
@@ -104,6 +114,41 @@ import { ProfileService } from '../service/profile.service';
         </div>
       </div>
     </div>
+
+    <p-dialog 
+      header="Poredaj zadatke" 
+      [modal]="true" 
+      [(visible)]="isSortDialogVisible" 
+      [style]="{ width: '25rem' }"
+      [draggable]="false"
+    >
+      <div cdkDropList class="sorted-tasks-list" (cdkDropListDropped)="drop($event)">
+        @for (task of assignedTasks; track task;) {
+          <div class="task-box-container">
+            <div class="task-index">
+              ({{$index + 1}})
+            </div>
+  
+            <div 
+              class="task-box" 
+              cdkDrag
+              [class.assigned]="taskService.isTaskAssigned(task)"
+              [class.not-assigned]="taskService.isTaskNotAssigned(task)"
+              [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
+              [class.completed]="taskService.isTaskCompleted(task)"
+            >
+              <div class="house-number">
+                {{getHouseNumber(task.house_id)}}
+              </div>
+  
+              <div class="task-icon">
+                <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </p-dialog>
 
     <p-contextMenu #staffContextMenu [model]="staffMenuItems"></p-contextMenu>
     <p-confirmDialog header="Potvrda" icon="pi pi-exclamation-triangle"></p-confirmDialog>
@@ -209,6 +254,26 @@ import { ProfileService } from '../service/profile.service';
       border-radius: 4px;
       background: var(--surface-ground);
       padding: 0.5rem;
+      position: relative;
+
+      .tasks-sort-icon{
+        position: absolute;
+        height: 30px;
+        width: 30px;
+        bottom: 10px;
+        right: 10px;
+        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+
+        &:hover{
+          cursor: pointer;
+          background-color: lightgray;
+        }
+      }
     }
 
     .drop-area {
@@ -253,6 +318,96 @@ import { ProfileService } from '../service/profile.service';
         transform: scale(0.98);
       }
     }
+
+    .sorted-tasks-list {
+      width: 500px;
+      max-width: 100%;
+      min-height: 60px;
+      display: block;
+      background: white;
+      border-radius: 4px;
+      overflow: hidden;
+
+      .task-box-container{
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+        width: 100%;
+
+        .task-index{
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+    }
+
+    .task-box {
+      width: 100%;
+      padding: 20px 10px;
+      border-bottom: solid 1px #ccc;
+      color: rgba(0, 0, 0, 0.87);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      box-sizing: border-box;
+      cursor: move;
+      background: white;
+      font-size: 14px;
+      border-radius: 5px;
+      margin-bottom: 5px;
+
+      .house-number{
+        font-weight: 600;
+      }
+
+      &.completed{
+        background: var(--p-red-400);
+        color: var(--p-surface-0);
+      }
+
+      &.in-progress {
+        background: var(--p-yellow-500);
+        color: var(--p-surface-0);
+      }
+
+      &.assigned {
+        background: var(--p-blue-500);
+        color: var(--p-surface-0);
+      }
+
+      &.not-assigned {
+        background: var(--p-green-500);
+        color: var(--p-surface-0);
+      }
+    }
+
+    .cdk-drag-preview {
+      border: none;
+      box-sizing: border-box;
+      border-radius: 4px;
+      box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+                  0 8px 10px 1px rgba(0, 0, 0, 0.14),
+                  0 3px 14px 2px rgba(0, 0, 0, 0.12);
+    }
+
+    .cdk-drag-placeholder {
+      opacity: 0;
+    }
+
+    .cdk-drag-animating {
+      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+    }
+
+    .task-box:last-child {
+      border: none;
+    }
+
+    .sorted-tasks-list.cdk-drop-list-dragging .task-box:not(.cdk-drag-placeholder) {
+      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+    }
   `
 })
 export class WorkGroup implements OnInit {
@@ -278,6 +433,7 @@ export class WorkGroup implements OnInit {
   ];
 
   draggedTaskIndex: number = -1;
+  isSortDialogVisible = false;
   
   // Array of 12 distinct colors for work groups
   private groupColors = [
@@ -358,9 +514,9 @@ export class WorkGroup implements OnInit {
   constructor(
     private dataService: DataService,
     private workGroupService: WorkGroupService,
-    private taskService: TaskService,
+    public taskService: TaskService,
     private confirmationService: ConfirmationService,
-    private profileService: ProfileService
+    private profileService: ProfileService,
   ) {}
 
   ngOnInit() {
@@ -649,23 +805,6 @@ export class WorkGroup implements OnInit {
     }
   }
 
-  getTaskIcon(taskTypeId: number): string {
-    switch(taskTypeId){
-      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
-        return 'pi pi-home';
-      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
-        return 'pi pi-table';
-      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
-        return 'pi pi-inbox';
-      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
-        return 'pi pi-bookmark';
-      case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
-        return 'pi pi-wrench';
-      default: 
-        return 'pi pi-file';
-    }
-  }
-
   onDragStart(event: any, index: number) {
     this.draggedTaskIndex = index;
     event.currentTarget.classList.add('dragging');
@@ -738,5 +877,16 @@ export class WorkGroup implements OnInit {
         }
       });
     }
+  }
+
+  openSortDialog(){
+    this.isSortDialogVisible = true;
+  }
+
+  drop(event: any) {
+    if(this.workGroup){
+      this.workGroup.is_locked = false;
+    }
+    moveItemInArray(this.assignedTasks, event.previousIndex, event.currentIndex);
   }
 } 

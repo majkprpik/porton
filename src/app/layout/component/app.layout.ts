@@ -917,7 +917,8 @@ export class AppLayout {
                         this.faultReportVisible = false;
                         
                         // Refresh tasks list
-                        this.dataService.loadTasksFromDb();
+                        this.tasks = [...this.tasks, result];
+                        this.dataService.setTasks(this.tasks);
                     }
                     catch(imagesSaveError){
                         console.error("Error saving images: ", imagesSaveError);

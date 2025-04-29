@@ -1583,7 +1583,7 @@ export class DataService {
     .on(
       'postgres_changes',
       { 
-        event: 'UPDATE',
+        event: '*',
         schema: 'porton',
         table: 'tasks'
       },

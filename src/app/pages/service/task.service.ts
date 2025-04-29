@@ -300,4 +300,21 @@ export class TaskService {
       this.towelChangeTaskType?.task_type_id == task.taskTypeId
     );
   }
+
+  getTaskIcon(taskTypeId: number): string {
+    switch(taskTypeId){
+      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
+        return 'pi pi-home';
+      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
+        return 'pi pi-table';
+      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
+        return 'pi pi-inbox';
+      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
+        return 'pi pi-bookmark';
+      case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
+        return 'pi pi-wrench';
+      default: 
+        return 'pi pi-file';
+    }
+  }
 }
