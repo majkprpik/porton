@@ -17,7 +17,7 @@ import { TaskService } from '../../pages/service/task.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { NotesComponent } from './notes.component';
-import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragEnd, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { ArrivalsAndDeparturesComponent } from './arrivals-and-departures.component';
 
 // Define a special location interface for Zgrada and Parcela options
@@ -56,7 +56,12 @@ interface SpecialLocation {
                 <router-outlet></router-outlet>
 
                 @if(isNotesWindowVisible){
-                    <div class="notes-window" cdkDrag>
+                    <div 
+                        class="notes-window" 
+                        cdkDrag
+                        (cdkDragEnded)="onDragEnd('notes', $event)"
+                        [cdkDragFreeDragPosition]="positions['notes'] || {x: 0, y: 0}"
+                    >
                         <app-notes></app-notes>
 
                         <div class="example-handle" cdkDragHandle>
@@ -73,7 +78,12 @@ interface SpecialLocation {
                 }
 
                 @if(isArrivalsAndDeparturesWindowVisible){
-                    <div class="arrivals-and-departures-window" cdkDrag>
+                    <div 
+                        class="arrivals-and-departures-window" 
+                        cdkDrag
+                        (cdkDragEnded)="onDragEnd('arrivals', $event)"
+                        [cdkDragFreeDragPosition]="positions['arrivals'] || {x: 0, y: 0}"
+                    >
                         <app-arrivals-and-departures></app-arrivals-and-departures>
 
                         <div class="example-handle" cdkDragHandle>
@@ -668,6 +678,7 @@ export class AppLayout {
     capturedImage: any;
     taskImages: any[] = [];
     openImage: any;
+    positions: { [key: string]: { x: number; y: number } } = {};
 
     menuItems: MenuItem[] = [
         {
@@ -686,12 +697,16 @@ export class AppLayout {
             icon: 'pi pi-clipboard',
             command: () => {
                 this.isNotesWindowVisible = true;
+                this.positions['notes'] = { x: 0, y: 0 };
+                localStorage.setItem('windowPositions', JSON.stringify(this.positions));
             }
         },
         {
             icon: 'pi pi-arrow-right-arrow-left',
             command: () => {
                 this.isArrivalsAndDeparturesWindowVisible = true;
+                this.positions['arrivals'] = { x: 0, y: 0 };
+                localStorage.setItem('windowPositions', JSON.stringify(this.positions));
             }
         },
     ];
@@ -767,6 +782,20 @@ export class AppLayout {
               this.isTaskDetailsWindowVisible = false;
             }
         });
+
+        const saved = localStorage.getItem('windowPositions');
+
+        if (saved) {
+          this.positions = JSON.parse(saved);
+
+          if(this.positions['notes']){
+            this.isNotesWindowVisible = true;
+          }
+
+          if(this.positions['arrivals']){
+            this.isArrivalsAndDeparturesWindowVisible = true;
+          }
+        } 
     }
     
     async getStoredImagesForTask(task: Task) {
@@ -1204,10 +1233,24 @@ export class AppLayout {
 
     closeNotesWindow(){
         this.isNotesWindowVisible = false;
+        
+        const stored = localStorage.getItem('windowPositions');
+        if (stored) {
+          const positions = JSON.parse(stored);
+          delete positions['notes'];
+          localStorage.setItem('windowPositions', JSON.stringify(positions));
+        }
     }
 
     closeArrivalsAndDeparturesWindow(){
         this.isArrivalsAndDeparturesWindowVisible = false;
+
+        const stored = localStorage.getItem('windowPositions');
+        if (stored) {
+          const positions = JSON.parse(stored);
+          delete positions['arrivals'];
+          localStorage.setItem('windowPositions', JSON.stringify(positions));
+        }
     }
 
     resetDialog(){
@@ -1233,5 +1276,16 @@ export class AppLayout {
         return this.taskProgressTypes.find(tpt => tpt.task_progress_type_id == task.task_progress_type_id || tpt.task_progress_type_id == task.taskProgressTypeId)?.task_progress_type_name;
       }
       return;
+    }
+
+    onDragEnd(windowKey: string, event: CdkDragEnd) {
+      const pos = event.source.getFreeDragPosition();
+      this.positions[windowKey] = { x: pos.x, y: pos.y };
+      localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+    }
+
+    getWindowPosition(windowKey: string): { [key: string]: string } {
+        const pos = this.positions[windowKey];
+        return pos ? { transform: `translate(${pos.x}px, ${pos.y}px)` } : {};
     }
 }
