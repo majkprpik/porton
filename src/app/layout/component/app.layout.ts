@@ -1235,23 +1235,21 @@ export class AppLayout {
 
     closeNotesWindow(){
         this.isNotesWindowVisible = false;
-        
         const stored = localStorage.getItem('windowPositions');
+
         if (stored) {
-          const positions = JSON.parse(stored);
-          delete positions['notes'];
-          localStorage.setItem('windowPositions', JSON.stringify(positions));
+          delete this.positions['notes'];
+          localStorage.setItem('windowPositions', JSON.stringify(this.positions));
         }
     }
 
     closeArrivalsAndDeparturesWindow(){
         this.isArrivalsAndDeparturesWindowVisible = false;
-
         const stored = localStorage.getItem('windowPositions');
+        
         if (stored) {
-          const positions = JSON.parse(stored);
-          delete positions['arrivals'];
-          localStorage.setItem('windowPositions', JSON.stringify(positions));
+          delete this.positions['arrivals'];
+          localStorage.setItem('windowPositions', JSON.stringify(this.positions));
         }
     }
 
