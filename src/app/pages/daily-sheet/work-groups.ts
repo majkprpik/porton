@@ -419,6 +419,7 @@ export class WorkGroups implements OnInit {
       if(!lockedWorkGroup.isLocked){
         await this.workGroupService.lockWorkGroup(parseInt(lockedWorkGroup.id));
         await this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(parseInt(lockedWorkGroup.id));
+        await this.workGroupService.deleteAllWorkGroupProfilesByWorkGroupId(parseInt(lockedWorkGroup.id));
 
         if(!lockedWorkGroup.tasks){
           lockedWorkGroup.tasks = [];

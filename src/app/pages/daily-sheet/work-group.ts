@@ -764,22 +764,9 @@ export class WorkGroup implements OnInit {
 
   onRemoveStaff(staff: Profile) {
     if (staff.id && this.workGroup?.work_group_id) {
-      const operations = [
-        this.dataService.removeStaffFromWorkGroup(staff.id, this.workGroup.work_group_id),
-        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
-      ];
-
-      forkJoin(operations).subscribe({
-        next: () => {
-          if (this.workGroup) {
-            this.workGroup.is_locked = false;
-          }
-          this.staffRemoved.emit(staff);
-        },
-        error: (error: any) => {
-          console.error('Error removing staff:', error);
-        }
-      });
+      this.workGroupProfiles = this.workGroupProfiles.filter((wgp: any) => !(wgp.profile_id == staff.id && wgp.work_group_id == this.workGroup?.work_group_id));
+      this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+      this.workGroup.is_locked = false;
     }
   }
 

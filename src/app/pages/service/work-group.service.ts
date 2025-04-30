@@ -195,6 +195,23 @@ export class WorkGroupService {
     }
   }
 
+  async deleteAllWorkGroupProfilesByWorkGroupId(workGroupId: number){
+    try{
+      const { error: deleteWorkGroupProfilesError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_profiles')
+        .delete()
+        .eq('work_group_id', workGroupId);
+
+      if(deleteWorkGroupProfilesError) throw deleteWorkGroupProfilesError
+
+      return true;
+    } catch(error) {
+      console.log(error);
+      return false;
+    }
+  }
+
   async submitTechnicianForRepairTask(workGroupId: number, profileId: string){
     try{
       const { data: newTechnicianForRepairTask, error: newTechnicianForRepairTaskError } = await this.supabaseService.getClient()
