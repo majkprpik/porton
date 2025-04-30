@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
-import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType, HouseAvailability } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType, HouseAvailability, WorkGroupProfile } from '../service/data.service';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { HouseService } from '../service/house.service';
@@ -292,6 +292,7 @@ export class WorkGroupDetail implements OnInit {
     workGroupTasks: any;
     tasks: any;
     houseAvailabilities: HouseAvailability[] = [];
+    workGroupProfiles: WorkGroupProfile[] = [];
 
     constructor(
         private route: ActivatedRoute,
@@ -328,6 +329,7 @@ export class WorkGroupDetail implements OnInit {
             this.houseAvailabilities = houseAvailabilities;
             this.tasks = tasks;
             this.profiles = profiles;
+            this.workGroupProfiles = workGroupProfiles;
 
             // Get tasks for this work group
             const groupTaskIds = workGroupTasks
@@ -397,11 +399,17 @@ export class WorkGroupDetail implements OnInit {
         if(res && res.eventType == 'INSERT'){
             if(this.workGroup?.work_group_id == res.new.work_group_id){
                 const profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
-                this.assignedStaff = [...this.assignedStaff, profile];
+                if(!this.assignedStaff.find(as => as.id == profile.id)){
+                    this.assignedStaff = [...this.assignedStaff, profile];
+                    this.workGroupProfiles = [...this.workGroupProfiles, res.new];
+                    this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+                }
             }
         } else if(res && res.eventType == 'DELETE'){
-            if(this.workGroup?.work_group_id == res.new.work_group_id){
+            if(this.workGroup?.work_group_id == res.old.work_group_id){
                 this.assignedStaff = this.assignedStaff.filter(profile => profile.id != res.old.profile_id);
+                this.workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id != res.old.profile_id);
+                this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
             }
         }
       });
