@@ -48,7 +48,7 @@ interface SpecialLocation {
     ],
     providers: [MessageService],
     template: `
-    <div class="layout-wrapper" [ngClass]="containerClass">
+    <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">
@@ -60,6 +60,7 @@ interface SpecialLocation {
                         class="notes-window" 
                         cdkDrag
                         (cdkDragEnded)="onDragEnd('notes', $event)"
+                        [cdkDragBoundary]="dragBoundary"
                         [cdkDragFreeDragPosition]="positions['notes'] || {x: 0, y: 0}"
                     >
                         <app-notes></app-notes>
@@ -82,6 +83,7 @@ interface SpecialLocation {
                         class="arrivals-and-departures-window" 
                         cdkDrag
                         (cdkDragEnded)="onDragEnd('arrivals', $event)"
+                        [cdkDragBoundary]="dragBoundary"
                         [cdkDragFreeDragPosition]="positions['arrivals'] || {x: 0, y: 0}"
                     >
                         <app-arrivals-and-departures></app-arrivals-and-departures>
