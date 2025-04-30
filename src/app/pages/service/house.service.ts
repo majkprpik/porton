@@ -27,8 +27,18 @@ export class HouseService {
   isHouseOccupied(houseId: number){
     let houseAvailability = this.getTodaysHouseAvailabilityForHouse(houseId);
 
-    if(houseAvailability){
-      return !houseAvailability.has_departed
+    if(houseAvailability.length == 1){
+      return !houseAvailability[0].has_departed;
+    } else if(houseAvailability.length == 2){
+      if(houseAvailability[0].has_departed && houseAvailability[1].has_arrived){
+        return true;
+      } else if(houseAvailability[0].has_departed && !houseAvailability[1].has_arrived){
+        return false;
+      } else if(!houseAvailability[0].has_departed && !houseAvailability[1].has_arrived){
+        return true;
+      } else if(!houseAvailability[0].has_departed && houseAvailability[1].has_arrived){
+        return true;
+      }
     }
 
     return false;
@@ -45,24 +55,24 @@ export class HouseService {
                             String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + 
                             String(yesterday.getDate()).padStart(2, '0');
 
-    const houseAvailability = this.houseAvailabilities?.find(item => {
+    const houseAvailabilties = this.houseAvailabilities?.filter(item => {
       if(item.house_id == houseId){
-          const startDate = new Date(item.house_availability_start_date);
-          const endDate = new Date(item.house_availability_end_date);
+        const startDate = new Date(item.house_availability_start_date);
+        const endDate = new Date(item.house_availability_end_date);
     
-          // Format endDate to YYYY-MM-DD (local time)
-          const endDateString = endDate.getFullYear() + '-' + 
-                                String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                                String(endDate.getDate()).padStart(2, '0');
+        // Format endDate to YYYY-MM-DD (local time)
+        const endDateString = endDate.getFullYear() + '-' + 
+                              String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                              String(endDate.getDate()).padStart(2, '0');
     
-          // Check if the availability end date is yesterday
-          return (today >= startDate && today <= endDate) || yesterdayString === endDateString;
+        // Check if the availability end date is yesterday
+        return (today >= startDate && today <= endDate) || yesterdayString === endDateString;
       } 
     
       return false;
     });
 
-    return houseAvailability;
+    return houseAvailabilties;
   }
 
   async setHouseAvailabilityDeparted(houseAvailabilityId: number, state: boolean){
