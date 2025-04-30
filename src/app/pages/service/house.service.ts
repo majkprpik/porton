@@ -72,7 +72,9 @@ export class HouseService {
       return false;
     });
 
-    return houseAvailabilties;
+    return houseAvailabilties.sort((a, b) => 
+      new Date(a.house_availability_start_date).getTime() - new Date(b.house_availability_start_date).getTime()
+    );
   }
 
   async setHouseAvailabilityDeparted(houseAvailabilityId: number, state: boolean){
