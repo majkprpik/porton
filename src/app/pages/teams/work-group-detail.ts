@@ -371,20 +371,23 @@ export class WorkGroupDetail implements OnInit {
         if(res && res.eventType == 'INSERT'){
             if(this.workGroup?.work_group_id == res.new.work_group_id){
                 const task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
-                this.workGroupTasks = [...this.workGroupTasks, res.new];
 
-                task.index = res.new.index;
-                
-                if(this.taskService.isTaskNotAssigned(task)){
-                    let assignedTaskProgressType = this.progressTypes.find((tt: any) => tt.task_progress_type_name == "Dodijeljeno");
-                    task.task_progress_type_id = assignedTaskProgressType?.task_progress_type_id;
-                }
+                if(!this.workGroupTasks.find((wgt: any) => wgt.task_id == res.new.task_id)){
+                    this.workGroupTasks = [...this.workGroupTasks, res.new];
     
-                if(!this.assignedTasks.some(at => at.task_id == task.task_id)){
-                    this.assignedTasks = [...this.assignedTasks, task];
+                    task.index = res.new.index;
+                    
+                    if(this.taskService.isTaskNotAssigned(task)){
+                        let assignedTaskProgressType = this.progressTypes.find((tt: any) => tt.task_progress_type_name == "Dodijeljeno");
+                        task.task_progress_type_id = assignedTaskProgressType?.task_progress_type_id;
+                    }
+        
+                    if(!this.assignedTasks.some(at => at.task_id == task.task_id)){
+                        this.assignedTasks = [...this.assignedTasks, task];
+                    }
+    
+                    this.dataService.setWorkGroupTasks(this.workGroupTasks);
                 }
-
-                this.dataService.setWorkGroupTasks(this.workGroupTasks);
             }
         } else if(res && res.eventType == 'DELETE'){
             if(this.workGroup?.work_group_id == res.old.work_group_id){
