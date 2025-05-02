@@ -221,24 +221,19 @@ export class WorkGroups implements OnInit {
         });
 
         this.lockedTeams = [];
-
+        
         if(workGroups){
-          if(!this.workGroups.some(workGroup => 
-              this.lockedTeams.some(lockedTeam => 
-                parseInt(lockedTeam.id) == workGroup.work_group_id)))
-          {
-            this.workGroups.forEach(workGroup => {
-              this.lockedTeams.push({
-                id: workGroup.work_group_id.toString(),
-                name: "Team " + workGroup.work_group_id.toString(),
-                members: this.workGroupStaff[workGroup.work_group_id],
-                tasks: this.workGroupTasks[workGroup.work_group_id],
-                homes: [],
-                isLocked: workGroup.is_locked,       
-              });
+          this.workGroups.forEach(workGroup => {
+            this.lockedTeams.push({
+              id: workGroup.work_group_id.toString(),
+              name: "Team " + workGroup.work_group_id.toString(),
+              members: this.workGroupStaff[workGroup.work_group_id],
+              tasks: this.workGroupTasks[workGroup.work_group_id],
+              homes: [],
+              isLocked: workGroup.is_locked,       
             });
-            this.workGroupService.setLockedTeams(this.lockedTeams);
-          }
+          });
+          this.workGroupService.setLockedTeams(this.lockedTeams);
         }
 
         this.loading = false;
@@ -270,12 +265,23 @@ export class WorkGroups implements OnInit {
     });
 
     this.dataService.$workGroupsUpdate.subscribe(res => {
-      if(res && res.eventType == 'DELETE'){
-        this.workGroups = this.workGroups.filter(wg => wg.work_group_id != res.old.work_group_id);
-        this.lockedTeams = this.lockedTeams.filter(lt => lt.id != res.old.work_group_id);
+      if(res && res.eventType == 'INSERT'){
+        if(!this.workGroups.find((wgp: any) => wgp.work_group_id == res.new.work_group_id)){
+          this.workGroups = [...this.workGroups, res.new];
+          this.lockedTeams = [...this.lockedTeams, {
+            id: res.new.work_group_id,
+            name: "Team " + res.new.work_group_id.toString(),
+            members: [],
+            tasks: [],
+            homes: [],
+            isLocked: res.new.is_locked,
+          }];
 
-        this.dataService.updateWorkGroups(this.workGroups);
-        this.workGroupService.setLockedTeams(this.lockedTeams);
+          this.dataService.updateWorkGroups(this.workGroups);
+          this.workGroupService.setLockedTeams(this.lockedTeams);
+        }
+      } else if(res && res.eventType == 'DELETE'){
+        this.deleteWorkGroup(res.old.work_group_id);
       }
     });
   }

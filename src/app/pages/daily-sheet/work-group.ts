@@ -620,6 +620,86 @@ export class WorkGroup implements OnInit {
         }
       });
     }
+
+    this.dataService.$workGroupProfiles.subscribe(res => {
+      if(res && res.eventType == 'INSERT'){
+        let lockedTeams = this.workGroupService.getLockedTeams();
+        let lockedTeam = lockedTeams.find(lt => lt.id == res.new.work_group_id);
+
+        if(lockedTeam && !lockedTeam.members?.find(member => member.id == res.new.profile_id)){
+          if(!lockedTeam?.members){
+            lockedTeam.members = [];
+          }
+          
+          this.workGroupProfiles = [...this.workGroupProfiles, res.new];
+
+          lockedTeam.isLocked = false;
+          lockedTeam.members.push(res.new);
+
+          this.workGroupService.updateLockedTeam(lockedTeam);
+          this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+          this.profileService.$staffToAdd.next(null);
+        }
+
+        
+      } else if(res && res.eventType == 'DELETE'){
+        this.workGroupProfiles = this.workGroupProfiles.filter((wgp: any) => wgp.profile_id != res.old.profile_id);
+      }
+    });
+
+    this.dataService.$workGroupTasksUpdate.subscribe(res => {
+      if(res && res.eventType == 'INSERT'){
+        if(!this.workGroupTasks.find((wgt: any) => wgt.task_id == res.new.task_id)){
+          let lockedTeams = this.workGroupService.getLockedTeams();
+          let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == res.new.work_group_id);
+
+          if(lockedTeam && !lockedTeam.tasks?.find(task => task.task_id == res.new.task_id)){
+            if(!lockedTeam.tasks){
+              lockedTeam.tasks = [];
+            }
+  
+            this.workGroupTasks = [...this.workGroupTasks, res.new];
+            let task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
+  
+            lockedTeam.isLocked = true;
+            lockedTeam.tasks.push(task);
+            this.workGroupService.updateLockedTeam(lockedTeam);
+            this.dataService.setWorkGroupTasks(this.workGroupTasks);
+          }
+        }
+      } else if(res && res.eventType == 'DELETE'){
+        if(this.workGroupTasks.find((wgt: any) => wgt.task_id == res.old.task_id)){
+          this.workGroupTasks = this.workGroupTasks.filter((wgt: any) => wgt.task_id != res.old.task_id);
+          let lockedTeams = this.workGroupService.getLockedTeams();
+          let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == res.old.work_group_id);
+
+          if(lockedTeam && !lockedTeam?.tasks){
+            lockedTeam.tasks = [];
+          }
+
+          if(lockedTeam && lockedTeam?.tasks){
+            lockedTeam.tasks = lockedTeam?.tasks?.filter(task => task.task_id != res.old.task_id);
+            this.workGroupService.updateLockedTeam(lockedTeam);
+            this.dataService.setWorkGroupTasks(this.workGroupTasks);
+
+            let taskIndex = this.tasks.findIndex((task: any) => task.task_id == res.old.task_id);
+            
+            if(taskIndex != -1){
+              let task = this.tasks[taskIndex];
+
+              let assignedProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Dodijeljeno");
+              let notAssignedProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Nije dodijeljeno");
+  
+              if(task.task_progress_type_id == assignedProgressType.task_progress_type_id){
+                task.task_progress_type_id = notAssignedProgressType.task_progress_type_id;
+                this.tasks[taskIndex] = task;
+                this.dataService.setTasks(this.tasks);
+              }
+            }
+          }
+        }
+      }
+    });
   }
 
   getHouseNumber(houseId: number){
