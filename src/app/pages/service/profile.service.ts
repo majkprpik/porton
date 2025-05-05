@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { WorkGroupService } from './work-group.service';
 import { BehaviorSubject, catchError, from, Observable, throwError } from 'rxjs';
-import { Profile } from './data.service';
+import { DataService, Profile } from './data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +13,8 @@ export class ProfileService {
 
   constructor(
     private supabase: SupabaseService,
-    private workGroupService: WorkGroupService
+    private workGroupService: WorkGroupService,
+    private dataService: DataService
   ) {}
 
   /**
@@ -152,7 +153,7 @@ export class ProfileService {
     let existingWorkGroupTask = await this.workGroupService.getWorkGroupTasksByTaskId(repairTaskId);
 
     if(Object.keys(existingWorkGroupTask).length > 0){
-      let existingWorkGroupProfile = await this.workGroupService.getWorkGroupProfilesByWorkGroupId(existingWorkGroupTask.work_group_id);
+      let existingWorkGroupProfile = await this.dataService.getWorkGroupProfilesByWorkGroupId(existingWorkGroupTask.work_group_id);
       return existingWorkGroupProfile[0].profile_id;
     }
     

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, HouseStatus, HouseStatusTask, Task, TaskProgressType, TaskType } from './data.service';
+import { DataService, HouseStatus, TaskProgressType, TaskType } from './data.service';
 import { BehaviorSubject } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 
@@ -104,69 +104,6 @@ export class TaskService {
     }
   }
 
-  async updateTask(task: HouseStatusTask){
-    try{
-      const { error: updateTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('tasks')
-        .update({
-          task_type_id: task.taskTypeId,
-          task_progress_type_id: task.taskProgressTypeId,
-          start_time: task.startTime,
-          end_time: task.endTime,
-          description: task.description,
-        })
-        .eq('task_id', task.taskId);
-
-      if(updateTaskError) throw updateTaskError
-
-      return true;
-    } catch (error){
-      console.error('Error updating task:', error);
-      return false;
-    }
-  }
-
-
-  async setTaskProgress(taskId: number, taskProgress: string){
-    try{
-      const taskProgressTypeId = await this.dataService.getTaskProgressTypeIdByTaskProgressTypeName(taskProgress);
-
-      const { error: taskTypeIdError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('tasks')
-        .update({ 
-          task_progress_type_id: taskProgressTypeId,
-        })
-        .eq('task_id', taskId)
-        .single();
-
-      if(taskTypeIdError) throw taskTypeIdError
-
-      return true;
-    } catch (error) {
-      console.error('Error fetching task type ids', error);
-      return false;
-    }
-  }
-
-  async deleteTaskForHouse(taskId: number){
-    try{
-      const { error: updateTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('tasks')
-        .delete()
-        .eq('task_id', taskId);
-
-      if(updateTaskError) throw updateTaskError
-
-      return true;
-    } catch (error){
-      console.error('Error updating task:', error);
-      return false;
-    }
-  }
-
   private getFormattedDateTimeNowForSupabase(){
     const now = new Date();
     const isoString = now.toISOString(); // Example: 2025-03-14T11:26:33.350Z
@@ -205,22 +142,6 @@ export class TaskService {
     } catch (error: any) {
       console.error('Error storing images:', error);
       return { error: error.message || "Error storing images in Supabase" };
-    }
-  }
-
-  async deleteStoredImageForTask(imagePath: string){
-    try {
-      const { data: data, error: deleteError } = await this.supabaseService.getClient()
-        .storage
-        .from('damage-reports-images')
-        .remove([imagePath]);
-
-      if (deleteError) throw deleteError;
-
-      return true;
-    } catch(error) {
-      console.log('Error fetching images: ' + error)
-      return false;
     }
   }
 

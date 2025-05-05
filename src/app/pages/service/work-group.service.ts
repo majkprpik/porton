@@ -275,58 +275,6 @@ export class WorkGroupService {
     }
   }
 
-  async getWorkGroupByWorkGroupId(workGroupId: number): Promise<any>{
-    try{
-      const { data: existingWorkGroup, error: existingWorkGroupError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_groups')
-        .select('*')
-        .eq('work_group_id', workGroupId)
-        .single();
-
-      if(existingWorkGroupError) throw existingWorkGroupError;
-
-      return existingWorkGroup;
-    } catch (error) {
-      console.log(error);
-      return null;
-    }
-  }
-
-  async getWorkGroupProfilesByWorkGroupId(workGroupId: number): Promise<any>{
-    try{
-      const { data: existingWorkGroup, error: existingWorkGroupError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_profiles')
-        .select('*')
-        .eq('work_group_id', workGroupId);
-
-      if(existingWorkGroupError) throw existingWorkGroupError;
-
-      return existingWorkGroup;
-    } catch (error) {
-      console.log(error);
-      return [];
-    }
-  }
-
-  async getWorkGroupTasksByWorkGroupId(workGroupId: number){
-    try{
-      const { data: existingWorkGroupTask, error: existingWorkGroupTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_tasks')
-        .select('*')
-        .eq('work_group_id', workGroupId);
-
-      if(existingWorkGroupTaskError) throw existingWorkGroupTaskError;
-
-      return existingWorkGroupTask;
-    } catch (error) {
-      console.log(error);
-      return [];
-    }
-  }
-
   async getWorkGroupTasksByTaskId(taskId: number){
     try{
       const { data: existingWorkGroupTask, error: existingWorkGroupTaskError } = await this.supabaseService.getClient()

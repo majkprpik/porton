@@ -7,7 +7,6 @@ import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
 import { Router } from '@angular/router';
-import { TeamService } from '../service/team.service';
 
 @Component({
     selector: 'app-teams',
@@ -295,7 +294,6 @@ export class Teams implements OnInit {
     constructor(
         private dataService: DataService,
         private router: Router,
-        private teamsService: TeamService,
     ) {}
 
     ngOnInit() {
@@ -306,16 +304,14 @@ export class Teams implements OnInit {
             this.dataService.workGroupProfiles$,
             this.dataService.profiles$,
             this.dataService.houses$,
-            this.teamsService.lockedTeams$,
             this.dataService.taskProgressTypes$,
             this.dataService.taskTypes$,
         ]).subscribe({
-            next: ([workGroups, tasks, workGroupProfiles, profiles, houses, teams, taskProgressTypes, taskTypes]) => {
+            next: ([workGroups, tasks, workGroupProfiles, profiles, houses, taskProgressTypes, taskTypes]) => {
                 this.workGroups = workGroups;
                 this.allTasks = tasks;
                 this.allProfiles = profiles;
                 this.houses = houses;
-                this.teams = teams;
                 this.taskProgressTypes = taskProgressTypes;
                 this.taskTypes = taskTypes;
                 

@@ -446,22 +446,6 @@ export class DataService {
     );
   }
 
-  async getAllHouseAvailabilities(){
-    try{
-      const { data, error } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('house_availabilities')
-        .select('*');
-
-      if (error) throw error;
-
-      return data;
-    } catch (error) {
-      console.error('Error fetching house number:', error);
-      return [];
-    }
-  }
-
   async loadTasksFromDb(){
     try{
       
@@ -615,86 +599,6 @@ export class DataService {
     );
   }
 
-  // Method to add a profile to a work group
-  addProfileToWorkGroup(workGroupId: number, profileId: string): Observable<WorkGroupProfile | null> {
-    this.loadingSubject.next(true);
-
-    const workGroupProfile: WorkGroupProfile = {
-      work_group_id: workGroupId,
-      profile_id: profileId
-    };
-
-    return from(this.supabaseService.insertData('work_group_profiles', workGroupProfile, this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentProfiles = this.workGroupProfilesSubject.value;
-          this.workGroupProfilesSubject.next([...currentProfiles, data[0]]);
-        }
-      }),
-      map((data) => (data ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  // Method to add a task to a work group
-  addTaskToWorkGroup(workGroupId: number, taskId: number, index?: number): Observable<WorkGroupTask | null> {
-    this.loadingSubject.next(true);
-
-    const workGroupTask: WorkGroupTask = {
-      work_group_id: workGroupId,
-      task_id: taskId,
-      index: index || null
-    };
-
-    return from(this.supabaseService.insertData('work_group_tasks', workGroupTask, this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentTasks = this.workGroupTasksSubject.value;
-          this.workGroupTasksSubject.next([...currentTasks, data[0]]);
-        }
-      }),
-      map((data) => (data ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  
-  async getWorkGroupByWorkGroupId(workGroupId: number): Promise<any>{
-    try{
-      const { data: existingWorkGroup, error: existingWorkGroupError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_groups')
-        .select('*')
-        .eq('work_group_id', workGroupId)
-        .single();
-
-      if(existingWorkGroupError) throw existingWorkGroupError;
-
-      return existingWorkGroup;
-    } catch (error) {
-      console.log(error);
-      return null;
-    }
-  }
-
-  async getAllWorkGroups(): Promise<any>{
-    try{
-      const { data: existingWorkGroups, error: existingWorkGroupsError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_groups')
-        .select('*');
-
-      if(existingWorkGroupsError) throw existingWorkGroupsError;
-
-      return existingWorkGroups;
-    } catch (error) {
-      console.log(error);
-      return null;
-    }
-  }
-
   async getWorkGroupProfilesByWorkGroupId(workGroupId: number): Promise<any>{
     try{
       const { data: existingWorkGroup, error: existingWorkGroupError } = await this.supabaseService.getClient()
@@ -706,23 +610,6 @@ export class DataService {
       if(existingWorkGroupError) throw existingWorkGroupError;
 
       return existingWorkGroup;
-    } catch (error) {
-      console.log(error);
-      return [];
-    }
-  }
-
-  async getWorkGroupTasksByWorkGroupId(workGroupId: number){
-    try{
-      const { data: existingWorkGroupTask, error: existingWorkGroupTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_tasks')
-        .select('*')
-        .eq('work_group_id', workGroupId);
-
-      if(existingWorkGroupTaskError) throw existingWorkGroupTaskError;
-
-      return existingWorkGroupTask;
     } catch (error) {
       console.log(error);
       return [];
@@ -931,66 +818,6 @@ export class DataService {
     );
   }
 
-  async getHomesForDate(date: string): Promise<HouseStatus[]> {
-    try {
-      const { data, error } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('house_statuses_view')
-        .select('*');
-
-      if (error) throw error;
-      // Return the data directly as it already matches our interface
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching houses:', error);
-      return [];
-    }
-  }
-
-  async getHomesWithTodaysStartDate(){
-    try {
-      const today = new Date();
-      const specificDateStr = today.toISOString().split('T')[0];
-
-      const { data, error } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('house_availabilities')
-        .select('*') 
-        .eq('house_availability_start_date', specificDateStr)
-
-      if (error) throw error;
-
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching houses for today: ', error);
-      return [];
-    }
-  }
-
-  async getHomesWithYesterdaysEndDate(){
-    try {
-      const today = new Date(); 
-      today.setHours(0, 0, 0, 0);
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-      
-      const specificDateStr = yesterday.toISOString().split('T')[0];
-
-      const { data, error } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('house_availabilities')
-        .select('*') 
-        .eq('house_availability_end_date', specificDateStr)
-
-      if (error) throw error;
-
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching houses for today: ', error);
-      return [];
-    }
-  }
-
   async getHouseAvailabilityTypeByName(name: string){
     try {
       const { data, error } = await this.supabaseService.getClient()
@@ -1006,67 +833,6 @@ export class DataService {
     } catch (error) {
       console.error('Error updating house availability:', error);
       return null;
-    }
-  }
-
-  async getHouseNumberByHouseId(houseId: number){
-    try{
-      const { data, error } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('houses')
-        .select('house_number')
-        .eq('house_id', houseId)
-        .single();
-
-      if (error) throw error;
-
-      return data ? data.house_number : null;
-    } catch (error) {
-      console.error('Error fetching house number:', error);
-      return null;
-    }
-  }
-
-  async getHouseIdByHouseNumber(houseNumber: string): Promise<number | null> {
-    try{
-      const { data, error } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('houses')
-        .select('house_id')
-        .eq('house_number', houseNumber)
-        .single();
-
-      if (error) throw error;
-
-      return data.house_id || null;
-    } catch (error) {
-      console.error('Error fetching house number:', error);
-      return null;
-    }
-  }
-
-  async getHomesWithRepairTasks(){
-    try {
-      const { data, error } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('house_statuses_view')
-        .select('*');
-
-      if (error) throw error;
-
-      let housesWithRepairTasks = data.flatMap(house => 
-        house.housetasks
-            .filter((houseTask: any) => houseTask.taskTypeName === "Popravak")
-            .map((houseTask: any) => ({
-                ...house,
-                ...houseTask,
-            }))
-      );
-
-      return housesWithRepairTasks;
-    } catch (error) {
-      console.error('Error fetching houses:', error);
-      return [];
     }
   }
 
@@ -1324,122 +1090,6 @@ export class DataService {
     }
   }
 
-  async getTaskProgressTypeByTaskProgressId(taskProgressId: number){
-    try{
-      const { data: taskProgress, error: progressTypeIdError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('task_progress_types')
-        .select('*')
-        .eq('task_progress_type_id', taskProgressId)
-        .single();
-
-      if(progressTypeIdError) throw progressTypeIdError
-
-      return taskProgress;
-    } catch (error) {
-      console.error('Error fetching task type ids', error);
-      return null;
-    }
-  }
-
-  
-  async getAllHousesByTaskTypeName(taskTypeName: string){
-    try{
-      const today = new Date().toISOString().split('T')[0];
-      let taskTypeId = await this.getTaskTypeIdByTaskName(taskTypeName);
-      let mobileHomesForRepair;
-
-      const { data: existingHouseIds, error: houseIdError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('tasks')
-        .select('house_id')
-        .eq('task_type_id', taskTypeId)
-
-      if(houseIdError) throw houseIdError
-
-      const houseIdList = existingHouseIds.map(house => house.house_id);
-      const homes = await this.getHomesForDate(today);
-      mobileHomesForRepair = homes.filter((home: any) => houseIdList.includes(home.house_id));
-
-      return mobileHomesForRepair;
-    } catch (error) {
-      console.error('Error fetching task type ids', error);
-      return [];
-    }
-  }
-
-  async getAllTaskTypes(){
-    try {
-      const { data: taskTypes, error: houseIdError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('task_types')
-        .select('*')
-
-      if (houseIdError) throw houseIdError;
-
-      return taskTypes;
-    } catch (error) {
-      console.error('Error fetching task types:', error);
-      return [];
-    }
-  }
-
-  async getAllTasksByTaskTypeName(taskTypeName: string): Promise<HouseStatusTask[]>{
-    try {
-      let taskTypeId = await this.getTaskTypeIdByTaskName(taskTypeName);
-
-      const { data: existingHouseIds, error: houseIdError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('tasks')
-        .select('*')
-        .eq('task_type_id', taskTypeId)
-
-      if (houseIdError) throw houseIdError;
-
-      return existingHouseIds;
-    } catch (error) {
-      console.error('Error fetching houses:', error);
-      return [];
-    }
-  }
-
-  async getTaskByTaskId(taskId: number){
-    try{
-      const { data: task, error: taskTypeIdError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('tasks')
-        .select('*')
-        .eq('task_id', taskId)
-        .single();
-
-      if(taskTypeIdError) throw taskTypeIdError
-
-      return task;
-    } catch (error) {
-      console.error('Error fetching task type ids', error);
-      return [];
-    }
-  }
-
-  async getTaskTypeByTaskTypeId(taskTypeId: number){
-    try{
-      const { data: task, error: taskTypeIdError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('task_types')
-        .select('*')
-        .eq('task_type_id', taskTypeId)
-        .single();
-
-      if(taskTypeIdError) throw taskTypeIdError
-
-      return task;
-    } catch (error) {
-      console.error('Error fetching task type ids', error);
-      return [];
-    }
-  }
-
-  
   async getTaskTypeIdByTaskName(taskName: string){
     try{
       const { data: existingTaskTypeId, error: taskTypeIdError } = await this.supabaseService.getClient()
@@ -1458,7 +1108,6 @@ export class DataService {
     }
   }
   
-
   getAssignedStaffForWorkGroup(workGroupId: number): Observable<Profile[]> {
     return combineLatest([
       this.workGroupProfiles$,
@@ -1472,14 +1121,6 @@ export class DataService {
         return profiles.filter(profile => profile.id && assignedProfileIds.includes(profile.id));
       })
     );
-  }
-
-  getTaskById(taskId: number): Task | undefined {
-    return this.tasksSubject.value.find(task => task.task_id === taskId);
-  }
-
-  getProfileById(profileId: string): Profile | undefined {
-    return this.profilesSubject.value.find(profile => profile.id === profileId);
   }
 
   // Method to delete work group
@@ -1560,11 +1201,6 @@ export class DataService {
       }),
       tap(() => this.loadingSubject.next(false))
     );
-  }
-
-  // Add method to refresh house statuses
-  refreshHouseStatuses(): Observable<HouseStatus[]> {
-    return this.loadHouseStatuses();
   }
 
   listenToDatabaseChanges(){
@@ -1649,28 +1285,6 @@ export class DataService {
       catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
     );
-  }
-
-  async getAllNotesForToday(){
-    const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
-
-    try{
-      const { data: notes, error: getNotesError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('notes')
-        .select('*')
-        .gte('time_sent', startOfDay)
-        .lte('time_sent', endOfDay);
-
-      if(getNotesError) throw getNotesError;
-
-      return notes;
-    } catch (error) {
-      console.log(error);
-      return null;
-    }
   }
 
   // Method to create a new task progress type
