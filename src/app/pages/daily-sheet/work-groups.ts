@@ -280,6 +280,16 @@ export class WorkGroups implements OnInit {
           this.dataService.updateWorkGroups(this.workGroups);
           this.workGroupService.setLockedTeams(this.lockedTeams);
         }
+      } else if(res && res.eventType == 'UPDATE'){
+        if(res.new.is_locked){
+          let workGroupIndex = this.workGroups.findIndex(wg => wg.work_group_id == res.new.work_group_id);
+          this.workGroups[workGroupIndex].is_locked = res.new.is_locked;
+          this.dataService.updateWorkGroups(this.workGroups);
+
+          if(this.activeGroupId == res.new.work_group_id){
+            this.workGroupService.setActiveGroup(undefined);
+          }
+        }
       } else if(res && res.eventType == 'DELETE'){
         this.deleteWorkGroup(res.old.work_group_id);
       }
