@@ -429,39 +429,45 @@ export class WorkGroups implements OnInit {
     let lockedWorkGroups = this.workGroupService.getLockedTeams();
     let assignedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Dodijeljeno");
     let completedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Završeno');
-    let unlockedWorkGroupsCount = lockedWorkGroups.filter(lwg => !lwg.isLocked).length;
+    let unlockedWorkGroups = lockedWorkGroups.filter(lwg => !lwg.isLocked);
 
-    for(let lockedWorkGroup of lockedWorkGroups){
-      if(!lockedWorkGroup.isLocked){
-        await this.workGroupService.lockWorkGroup(parseInt(lockedWorkGroup.id));
-        await this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(parseInt(lockedWorkGroup.id));
-        await this.workGroupService.deleteAllWorkGroupProfilesByWorkGroupId(parseInt(lockedWorkGroup.id));
+    const workGroupPromises = unlockedWorkGroups.map(async (lockedWorkGroup) => {
+      const workGroupId = parseInt(lockedWorkGroup.id);
+  
+      await this.workGroupService.lockWorkGroup(workGroupId);
+  
+      await Promise.all([
+        this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(workGroupId),
+        this.workGroupService.deleteAllWorkGroupProfilesByWorkGroupId(workGroupId)
+      ]);
+  
+      lockedWorkGroup.tasks ??= [];
+      lockedWorkGroup.members ??= [];
+  
+      const createTaskPromises = lockedWorkGroup.tasks.map((task, index) => 
+        this.workGroupService.createWorkGroupTask(workGroupId, task.task_id, index)
+      );
+  
+      const updateTaskProgressPromises = lockedWorkGroup.tasks
+        .filter(task => task.task_progress_type_id !== completedTaskProgressType.task_progress_type_id)
+        .map(task => 
+          this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
+        );
+  
+      const createProfilePromises = lockedWorkGroup.members.map(member =>
+        this.workGroupService.createWorkGroupProfile(workGroupId, member.id)
+      );
+  
+      await Promise.all([
+        ...createTaskPromises,
+        ...updateTaskProgressPromises,
+        ...createProfilePromises
+      ]);
+    });
+  
+    await Promise.all(workGroupPromises);
 
-        if(!lockedWorkGroup.tasks){
-          lockedWorkGroup.tasks = [];
-        }
-
-        for (const [index, task] of lockedWorkGroup.tasks.entries()) {
-          await this.workGroupService.createWorkGroupTask(parseInt(lockedWorkGroup.id), task.task_id, index);
-        }
-
-        for (const task of lockedWorkGroup.tasks){
-          if(task.task_progress_type_id != completedTaskProgressType.task_progress_type_id){
-            await this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
-          }
-        }
-
-        if(!lockedWorkGroup.members){
-          lockedWorkGroup.members = [];
-        }
-
-        for (const member of lockedWorkGroup.members){
-          await this.workGroupService.createWorkGroupProfile(parseInt(lockedWorkGroup.id), member.id);
-        }
-      }
-    }
-
-    if(unlockedWorkGroupsCount){
+    if(unlockedWorkGroups.length){
       window.location.reload();
     }
   }
