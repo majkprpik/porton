@@ -90,7 +90,7 @@ import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
               }
             </div>
           }
-          @if(isActive){
+          @if(isActive && assignedTasks.length > 0){
             <div (click)="openSortDialog()" class="tasks-sort-icon">
               <i class="pi pi-sort-alt"></i>
             </div>
