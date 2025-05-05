@@ -163,8 +163,7 @@ export class StaffGroup implements OnInit, OnChanges {
   }
 
   updateAvailableStaff(workGroupId: number) {
-    this.dataService.getAssignedStaffForWorkGroup(workGroupId).subscribe(
-      assignedStaff => {
+    this.dataService.getAssignedStaffForWorkGroup(workGroupId).subscribe(assignedStaff => {
         const assignedIds = assignedStaff.map(staff => staff.id);
         this.availableStaff = this.staffMembers.filter(
           staff => staff.id && !assignedIds.includes(staff.id)

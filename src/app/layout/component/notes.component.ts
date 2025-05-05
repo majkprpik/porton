@@ -1,3 +1,4 @@
+import { InputTextModule } from 'primeng/inputtext';
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -17,13 +18,15 @@ import { ButtonModule } from 'primeng/button';
   ],
   template: `
     <div class="notes-container">
-      <div class="notes-header">
-        <p-button [disabled]="daysIndex <= 0" (onClick)="decreaseIndex()" icon="pi pi-angle-left"></p-button>
-        <div class="notes-title">
-          <span id="notes">Notes</span>
-          <span id="days">{{daysDisplay[daysIndex]}}</span>
+      <div class="header-container">
+        <div class="notes-header">
+          <p-button [disabled]="daysIndex <= 0" (onClick)="decreaseIndex()" icon="pi pi-angle-left"></p-button>
+          <div class="notes-title">
+            <span id="notes">Notes</span>
+            <span id="days">{{daysDisplay[daysIndex]}}</span>
+          </div>
+          <p-button [disabled]="daysIndex >= 4" (onClick)="increaseIndex()" icon="pi pi-angle-right"></p-button>
         </div>
-        <p-button [disabled]="daysIndex >= 4" (onClick)="increaseIndex()" icon="pi pi-angle-right"></p-button>
       </div>
 
       <div class="notes-content" #messagesContainer>
@@ -34,7 +37,7 @@ import { ButtonModule } from 'primeng/button';
           <span>No notes for today</span>
         } @else {
           @for(note of last5DaysNotes[daysIndex]; track $index){
-            <span>{{findUser(note.profile_id)?.first_name}} - {{note.time_sent | date: 'HH:mm'}}: {{note.note}}</span>
+            <span><b>{{findUser(note.profile_id)?.first_name}} - {{note.time_sent | date: 'HH:mm'}}:</b> {{note.note}}</span>
           }
         }
       </div>
@@ -51,37 +54,44 @@ import { ButtonModule } from 'primeng/button';
   `,
   styles: `
     .notes-container{
-      background-color: whitesmoke;
       height: 300px;
       width: 500px;
       border-radius: 10px;
-      border: 1px solid black;
+      border: 1px solid #e5e7eb;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
 
-      .notes-header{
-        height: 50px;
+      .header-container{
         width: 100%;
-        border-radius: 10px 10px 0 0;
+        height: 50px;
         display: flex;
         flex-direction: row;
         align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid black;
-        padding: 0 10px 0 10px;
+        justify-content: center;
+        border-radius: 10px 10px 0 0;
+        border-bottom: 1px solid #e5e7eb;
+        background-color: var(--surface-ground);
 
-        .notes-title{
+        .notes-header{
+          width: 80%;
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
           align-items: center;
-
-          #notes{
-            font-size: 21px;
-            font-weight: bold;
+          justify-content: space-between;
+          padding: 0 10px 0 10px;
+  
+          .notes-title{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+  
+            #notes{
+              font-size: 21px;
+              font-weight: bold;
+            }
           }
         }
-
       }
 
       .notes-content{
@@ -93,13 +103,15 @@ import { ButtonModule } from 'primeng/button';
         overflow-y: auto;
         overflow-x: hidden;
         word-wrap: break-word;
+        align-items: flex-start;
+        background-color: white;
       }
 
       .notes-footer{
         height: 50px;
         width: 100%;
         border-radius: 0 0 10px 10px;
-        border-top: 1px solid black;
+        border-top: 1px solid #e5e7eb;
 
         textarea{
           width: 100%;
@@ -109,6 +121,10 @@ import { ButtonModule } from 'primeng/button';
           box-sizing: border-box; 
           padding: 10px;
           outline: none;
+
+          &:disabled {
+            background-color: var(--surface-ground);
+          }
         }
       }
     }

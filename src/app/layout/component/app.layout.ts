@@ -12,10 +12,13 @@ import { InputTextarea } from 'primeng/inputtextarea';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
-import { DataService, House, TaskType } from '../../pages/service/data.service';
+import { DataService, House, Task, TaskProgressType, TaskType } from '../../pages/service/data.service';
 import { TaskService } from '../../pages/service/task.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { NotesComponent } from './notes.component';
+import { CdkDrag, CdkDragEnd, CdkDragHandle } from '@angular/cdk/drag-drop';
+import { ArrivalsAndDeparturesComponent } from './arrivals-and-departures.component';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -37,16 +40,101 @@ interface SpecialLocation {
         InputTextarea,
         ButtonModule,
         FormsModule,
-        ToastModule
+        ToastModule,
+        NotesComponent,
+        ArrivalsAndDeparturesComponent,
+        CdkDrag, 
+        CdkDragHandle
     ],
     providers: [MessageService],
     template: `
-    <div class="layout-wrapper" [ngClass]="containerClass">
+    <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">
             <div class="layout-main">
                 <router-outlet></router-outlet>
+
+                @if(isNotesWindowVisible){
+                    <div 
+                        class="notes-window" 
+                        cdkDrag
+                        (cdkDragEnded)="onDragEnd('notes', $event)"
+                        [cdkDragBoundary]="dragBoundary"
+                        [cdkDragFreeDragPosition]="positions['notes'] || {x: 0, y: 0}"
+                    >
+                        <app-notes></app-notes>
+
+                        <div class="example-handle" cdkDragHandle>
+                            <svg width="24px" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
+                            <path d="M0 0h24v24H0z" fill="none"></path>
+                            </svg>
+                        </div>
+
+                        <div (click)="closeNotesWindow()" class="close-notes-window">
+                            <i class="pi pi-times"></i>
+                        </div>
+                    </div>
+                }
+
+                @if(isArrivalsAndDeparturesWindowVisible){
+                    <div 
+                        class="arrivals-and-departures-window" 
+                        cdkDrag
+                        (cdkDragEnded)="onDragEnd('arrivals', $event)"
+                        [cdkDragBoundary]="dragBoundary"
+                        [cdkDragFreeDragPosition]="positions['arrivals'] || {x: 0, y: 0}"
+                    >
+                        <app-arrivals-and-departures></app-arrivals-and-departures>
+
+                        <div class="example-handle" cdkDragHandle>
+                            <svg width="24px" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
+                            <path d="M0 0h24v24H0z" fill="none"></path>
+                            </svg>
+                        </div>
+
+                        <div (click)="closeArrivalsAndDeparturesWindow()" class="close-arrivals-and-departures-window">
+                            <i class="pi pi-times"></i>
+                        </div>	
+                    </div>
+                }
+
+                <p-dialog
+                    header="Detalji zadatka:" 
+                    [(visible)]="isTaskDetailsWindowVisible"
+                    [modal]="true"
+                    [style]="{ width: '30rem' }"
+                    [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
+                    (onHide)="resetDialog()"
+                >
+                    <div class="details">
+                        <div>
+                            <span><b>Kućica:</b> {{getHouseForTask(task)?.house_number}}</span>
+                        </div>
+                
+                        <div>
+                            <span><b>Tip:</b> {{getTaskTypeName(task)}}</span>
+                        </div>
+                
+                        <div>
+                            <span><b>Status:</b> {{getTaskProgressTypeName(task)}}</span>
+                        </div>
+                
+                        <div>
+                            <span><b>Opis:</b> {{task?.description}}</span>
+                        </div>
+
+                        @if(getTaskTypeName(task) == 'Popravak' && taskImages.length > 0){
+                            <div class="task-images">
+                            @for(image of taskImages; track image.name){
+                                <img [src]="image.url" [alt]="image.name">
+                            }
+                            </div>
+                        }
+                    </div>
+                </p-dialog>
             </div>
         </div>
         <div class="layout-mask animate-fadein"></div>
@@ -54,13 +142,14 @@ interface SpecialLocation {
 
         <p-speedDial 
             [model]="menuItems" 
-            direction="up"
+            [radius]="120" 
+            type="quarter-circle"
+            direction="up-left"
             buttonClassName="p-button-primary"
             [buttonProps]="{ size: 'large', raised: true }"
-            showIcon="pi pi-plus"
+            showIcon="pi pi-list"
             hideIcon="pi pi-times"
             [transitionDelay]="80"
-            [radius]="80"
         ></p-speedDial>
 
         <!-- Fault Report Dialog -->
@@ -144,6 +233,7 @@ interface SpecialLocation {
                               <button 
                                   pButton
                                   label="Odbaci"
+                                  class="p-button-text" 
                                   (click)="discardImage()">
                               </button>
                     
@@ -157,23 +247,26 @@ interface SpecialLocation {
                     </div>
                 }
             </div>
-
+  
             <ng-template pTemplate="footer">
-                <div class="flex justify-content-end gap-2">
-                    <button 
-                        pButton 
-                        label="Odustani" 
-                        class="p-button-text" 
-                        (click)="faultReportVisible = false"
-                    ></button>
-                    <button 
-                        pButton 
-                        label="Prijavi" 
-                        (click)="submitFaultReport()"
-                        [disabled]="!isFormValid()"
-                    ></button>
-                </div>
+                @if(!capturedImage){
+                    <div class="flex justify-content-end gap-2">
+                        <button 
+                            pButton 
+                            label="Odustani" 
+                            class="p-button-text" 
+                            (click)="faultReportVisible = false"
+                        ></button>
+                        <button 
+                            pButton 
+                            label="Prijavi" 
+                            (click)="submitFaultReport()"
+                            [disabled]="!isFormValid()"
+                        ></button>
+                    </div>
+                }
             </ng-template>
+            
         </p-dialog>
 
         <!-- Extraordinary Task Dialog -->
@@ -247,23 +340,6 @@ interface SpecialLocation {
             </ng-template>
         </p-dialog>
 
-        <!-- Phone Dialog -->
-        <!-- <p-dialog 
-            header="Phone" 
-            [(visible)]="phoneDialogVisible" 
-            [modal]="true"
-            [style]="{ width: '50vw' }"
-            [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
-        >
-            <div class="p-4">
-                <h3>Phone Content</h3>
-                <p>This is a placeholder for the phone functionality.</p>
-            </div>
-            <ng-template pTemplate="footer">
-                <button pButton label="Close" (click)="phoneDialogVisible = false"></button>
-            </ng-template>
-        </p-dialog> -->
-
         <p-toast></p-toast>
     </div>`,
     styles: [`
@@ -280,14 +356,14 @@ interface SpecialLocation {
                     z-index: inherit !important;
                     background: var(--primary-color) !important;
                     border-color: var(--primary-color) !important;
+                    transition: transform 0.3s ease;
                     
                     .p-button-icon {
                         font-size: 1.8rem;
                     }
 
                     &:hover {
-                        background: var(--primary-600) !important;
-                        border-color: var(--primary-600) !important;
+                        transform: scale(1.1);
                     }
                 }
 
@@ -299,9 +375,9 @@ interface SpecialLocation {
                     border: 1px solid var(--surface-border);
                     margin-bottom: 0.5rem;
                     z-index: inherit !important;
+                    transition: transform 0.3s ease;
 
                     &:hover {
-                        background: var(--surface-hover);
                         transform: scale(1.1);
                     }
 
@@ -423,6 +499,137 @@ interface SpecialLocation {
                 }
             }
         }
+
+        .notes-window {
+            position: fixed !important;
+            top: 100px;
+            left: 100px;
+            z-index: 99999 !important;
+            width: 500px;
+            height: 300px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: solid 1px #ccc;
+            color: rgba(0, 0, 0, 0.87);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: #fff;
+            border-radius: 10px;
+            position: relative;
+            transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
+            box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
+                        0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                        0 1px 5px 0 rgba(0, 0, 0, 0.12);
+
+            .example-handle {
+                position: absolute;
+                top: 12px;
+                left: 15px;
+                color: #ccc;
+                cursor: move;
+                width: 24px;
+                height: 24px;
+            } 
+
+            .close-notes-window {
+                position: absolute;
+                top: 8px;
+                right: 12px;
+                color: #ccc;
+                cursor: pointer;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 5px;
+            
+                &:hover {
+                    background-color: red;
+                    cursor: pointer;
+                
+                    i{
+                        color: white;
+                    }
+                }
+            }
+        }
+
+
+        .arrivals-and-departures-window {
+            position: fixed !important;
+            top: 100px;
+            left: 100px;
+            z-index: 99999 !important;
+            width: 480px;
+            height: 340px;
+            box-sizing: border-box;
+            border: solid 1px #ccc;
+            color: rgba(0, 0, 0, 0.87);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: #fff;
+            border-radius: 10px;
+            position: relative;
+            transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
+            box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
+                        0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                        0 1px 5px 0 rgba(0, 0, 0, 0.12);
+
+            .example-handle {
+                position: absolute;
+                top: 8px;
+                left: 15px;
+                color: #ccc;
+                cursor: move;
+                width: 24px;
+                height: 24px;
+            } 
+            
+            .close-arrivals-and-departures-window {
+                position: absolute;
+                top: 4px;
+                right: 12px;
+                color: #ccc;
+                cursor: pointer;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 5px;
+            
+                &:hover {
+                    background-color: red;
+                    cursor: pointer;
+            
+                    i{
+                        color: white;
+                    }
+                }
+            }
+        }
+
+
+        p-dialog{
+            .details{
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+            
+              .task-images{
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                overflow-x: auto;
+              }
+            }
+        }
     `]
 })
 export class AppLayout {
@@ -445,7 +652,9 @@ export class AppLayout {
     // Dialog visibility flags
     faultReportVisible: boolean = false;
     extraordinaryTaskVisible: boolean = false;
-    phoneDialogVisible: boolean = false;
+    isNotesWindowVisible: boolean = false;
+    isArrivalsAndDeparturesWindowVisible: boolean = false;
+    isTaskDetailsWindowVisible: boolean = false;
 
     // Form fields
     selectedLocation: House | SpecialLocation | null = null;
@@ -462,32 +671,46 @@ export class AppLayout {
 
     houses: House[] = [];
     taskTypes: TaskType[] = [];
+    taskProgressTypes: TaskProgressType[] = [];
+    task: any;
+    tasks: Task[] = [];
 
     imageToUpload: any;
     imagesToUpload: any[] = [];
     capturedImage: any;
     taskImages: any[] = [];
     openImage: any;
+    positions: { [key: string]: { x: number; y: number } } = {};
 
     menuItems: MenuItem[] = [
         {
-            icon: 'pi pi-exclamation-circle',
+            icon: 'pi pi-wrench',
             command: () => {
                 this.faultReportVisible = true;
             }
         },
         {
-            icon: 'pi pi-plus-circle',
+            icon: 'pi pi-file-edit',
             command: () => {
                 this.extraordinaryTaskVisible = true;
             }
         },
-        // {
-        //     icon: 'pi pi-phone',
-        //     command: () => {
-        //         this.phoneDialogVisible = true;
-        //     }
-        // }
+        {
+            icon: 'pi pi-clipboard',
+            command: () => {
+                this.isNotesWindowVisible = true;
+                this.positions['notes'] = { x: 0, y: 0 };
+                localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+            }
+        },
+        {
+            icon: 'pi pi-arrow-right-arrow-left',
+            command: () => {
+                this.isArrivalsAndDeparturesWindowVisible = true;
+                this.positions['arrivals'] = { x: 0, y: 0 };
+                localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+            }
+        },
     ];
 
     constructor(
@@ -528,9 +751,74 @@ export class AppLayout {
             this.taskTypes = types;
         });
 
+        this.dataService.taskProgressTypes$.subscribe(taskProgressTypes => {
+            this.taskProgressTypes = taskProgressTypes;
+        });
+
+        this.dataService.tasks$.subscribe(tasks => {
+            this.tasks = tasks;
+        })
+
         // Load initial data
         this.dataService.loadHouses().subscribe();
         this.dataService.getTaskTypes().subscribe();
+    }
+
+    ngOnInit(){
+        this.taskService.$taskModalData.subscribe(res => {
+            if(res){
+                if(res.taskId) {
+                    this.task = this.tasks.find(task => task.task_id == res.taskId);
+                } else {
+                    this.task = res;
+                }
+            
+                this.isTaskDetailsWindowVisible = true;
+
+                if(this.getTaskTypeName(this.task) == 'Popravak'){
+                    this.getStoredImagesForTask(this.task);
+                } else {
+                    this.taskImages = [];
+                }
+            } else {
+              this.isTaskDetailsWindowVisible = false;
+            }
+        });
+
+        const saved = localStorage.getItem('windowPositions');
+
+        if (saved) {
+          this.positions = JSON.parse(saved);
+
+          if(this.positions['notes']){
+            this.isNotesWindowVisible = true;
+          }
+
+          if(this.positions['arrivals']){
+            this.isArrivalsAndDeparturesWindowVisible = true;
+          }
+        } 
+    }
+    
+    async getStoredImagesForTask(task: Task) {
+      try {
+        const fetchedImages = await this.dataService.getStoredImagesForTask(task.task_id);
+
+        if (!fetchedImages || fetchedImages.length === 0) {
+          console.warn('No images found.');
+          this.taskImages = [];
+          return;
+        }
+
+        this.taskImages = await Promise.all(fetchedImages.map(async (image: any) => {
+          const url = await this.dataService.getPublicUrlForImage(`task-${task.task_id}/${image.name}`);
+          return { name: image.name, url };
+        }));
+
+        this.taskImages;
+      } catch (error) {
+        console.error('Error fetching images:', error);
+      }
     }
 
     // Handle location change in fault report dialog
@@ -660,7 +948,8 @@ export class AppLayout {
                         this.faultReportVisible = false;
                         
                         // Refresh tasks list
-                        this.dataService.loadTasksFromDb();
+                        this.tasks = [...this.tasks, result];
+                        this.dataService.setTasks(this.tasks);
                     }
                     catch(imagesSaveError){
                         console.error("Error saving images: ", imagesSaveError);
@@ -932,6 +1221,9 @@ export class AppLayout {
     }
 
     resetForm(){
+        this.selectedLocation = null;
+        this.faultDescription = '';
+        this.capturedImage = '';
         this.taskImages = [];
         this.taskService.$taskModalData.next(null);
     }
@@ -939,5 +1231,61 @@ export class AppLayout {
     removeImage(imageToRemove: any){
         this.taskImages = this.taskImages.filter(ti => ti.file != imageToRemove.file);
         this.imagesToUpload = this.imagesToUpload.filter(itu => itu != imageToRemove.file);
+    }
+
+    closeNotesWindow(){
+        this.isNotesWindowVisible = false;
+        const stored = localStorage.getItem('windowPositions');
+
+        if (stored) {
+          delete this.positions['notes'];
+          localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+        }
+    }
+
+    closeArrivalsAndDeparturesWindow(){
+        this.isArrivalsAndDeparturesWindowVisible = false;
+        const stored = localStorage.getItem('windowPositions');
+        
+        if (stored) {
+          delete this.positions['arrivals'];
+          localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+        }
+    }
+
+    resetDialog(){
+      this.taskService.$taskModalData.next(null);
+    }
+    
+    getHouseForTask(task: any){
+      if(task){
+        return this.houses.find(house => house.house_id == task.house_id);
+      }
+      return;
+    }
+    
+    getTaskTypeName(task: any){
+      if(task){
+        return this.taskTypes.find(tt => tt.task_type_id == task.task_type_id || tt.task_type_id == task.taskTypeId)?.task_type_name;
+      }
+      return;
+    }
+    
+    getTaskProgressTypeName(task: any){
+      if(task){
+        return this.taskProgressTypes.find(tpt => tpt.task_progress_type_id == task.task_progress_type_id || tpt.task_progress_type_id == task.taskProgressTypeId)?.task_progress_type_name;
+      }
+      return;
+    }
+
+    onDragEnd(windowKey: string, event: CdkDragEnd) {
+      const pos = event.source.getFreeDragPosition();
+      this.positions[windowKey] = { x: pos.x, y: pos.y };
+      localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+    }
+
+    getWindowPosition(windowKey: string): { [key: string]: string } {
+        const pos = this.positions[windowKey];
+        return pos ? { transform: `translate(${pos.x}px, ${pos.y}px)` } : {};
     }
 }

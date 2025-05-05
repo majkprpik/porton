@@ -3,16 +3,23 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
-import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType, HouseAvailability } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType, HouseAvailability, WorkGroupProfile } from '../service/data.service';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { HouseService } from '../service/house.service';
 import { TaskService } from '../service/task.service';
+import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
 
 @Component({
     selector: 'app-work-group-detail',
     standalone: true,
-    imports: [CommonModule, ButtonModule, ProgressSpinnerModule, CardModule],
+    imports: [
+        CommonModule, 
+        ButtonModule, 
+        ProgressSpinnerModule, 
+        CardModule,
+        TasksIndexSortPipe
+    ],
     template: `
         @if (loading) {
             <div class="loading-container">
@@ -51,8 +58,14 @@ import { TaskService } from '../service/task.service';
                             @if (assignedTasks.length === 0) {
                                 <p class="empty-section">Nema dodijeljenih zadataka</p>
                             } @else {
-                                @for (task of assignedTasks; track task.task_id) {
-                                    <div class="task-card" [class.completed]="taskService.isTaskCompleted(task)">
+                                @for (task of assignedTasks | tasksIndexSort; track task.task_id) {
+                                    <div class="task-card" 
+                                        [class.completed]="taskService.isTaskCompleted(task)"  
+                                        [class.assigned]="taskService.isTaskAssigned(task)"
+                                        [class.not-assigned]="taskService.isTaskNotAssigned(task)"
+                                        [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
+                                        [class.completed]="taskService.isTaskCompleted(task)"
+                                    >
                                         <div class="task-info">
                                             <div class="house-info">
                                                 <span class="house-number">{{getHouseNumber(task.house_id)}}</span>
@@ -179,7 +192,7 @@ import { TaskService } from '../service/task.service';
         .tasks-list {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.5rem;
         }
 
         .task-card {
@@ -188,13 +201,24 @@ import { TaskService } from '../service/task.service';
             border-radius: 6px;
             padding: 1rem;
 
-            &.completed {
-                background: var(--surface-hover);
-                border-color: var(--green-500);
+            &.completed{
+                background: var(--p-red-400);
+                color: var(--p-surface-0);
+            }
 
-                .task-status {
-                    color: var(--green-500);
-                }
+            &.in-progress {
+                background: var(--p-yellow-500);
+                color: var(--p-surface-0);
+            }
+
+            &.assigned {
+                background: var(--p-blue-500);
+                color: var(--p-surface-0);
+            }
+
+            &.not-assigned {
+                background: var(--p-green-500);
+                color: var(--p-surface-0);
             }
 
             .task-info {
@@ -212,11 +236,9 @@ import { TaskService } from '../service/task.service';
                 .house-number {
                     font-size: 1.2rem;
                     font-weight: 600;
-                    color: var(--text-color);
                 }
 
                 .task-icon {
-                    color: var(--text-color-secondary);
                     font-size: 1.1rem;
                 }
             }
@@ -225,7 +247,6 @@ import { TaskService } from '../service/task.service';
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
-                color: var(--text-color-secondary);
 
                 .status-icon {
                     font-size: 1rem;
@@ -271,6 +292,7 @@ export class WorkGroupDetail implements OnInit {
     workGroupTasks: any;
     tasks: any;
     houseAvailabilities: HouseAvailability[] = [];
+    workGroupProfiles: WorkGroupProfile[] = [];
 
     constructor(
         private route: ActivatedRoute,
@@ -305,35 +327,39 @@ export class WorkGroupDetail implements OnInit {
             this.taskTypes = taskTypes;
             this.progressTypes = taskProgressTypes;
             this.houseAvailabilities = houseAvailabilities;
-            
-            // Log progress types to debug
-            console.log('Progress Types:', taskProgressTypes);
-            
             this.tasks = tasks;
             this.profiles = profiles;
+            this.workGroupProfiles = workGroupProfiles;
 
             // Get tasks for this work group
             const groupTaskIds = workGroupTasks
                 .filter(wgt => wgt.work_group_id === workGroupId)
                 .map(wgt => wgt.task_id);
-            this.assignedTasks = tasks.filter(task => groupTaskIds.includes(task.task_id));
-            
-            // Log tasks with their progress types
-            console.log('Assigned Tasks:', this.assignedTasks);
+
+            this.assignedTasks = tasks
+                .filter(task => groupTaskIds.includes(task.task_id))
+                .map(task => {
+                    const workGroupTask = workGroupTasks.find(wgt => wgt.task_id === task.task_id);
+                    return {
+                      ...task,
+                      index: workGroupTask?.index ?? null
+                    };
+                });
 
             // Get staff for this work group
             const groupProfileIds = workGroupProfiles
                 .filter(wgp => wgp.work_group_id === workGroupId)
                 .map(wgp => wgp.profile_id);
+
             this.assignedStaff = profiles.filter(profile => groupProfileIds.includes(profile.id));
-
-            this.loading = false;
-
+ 
             if(houseAvailabilities && houseAvailabilities.length > 0 && this.assignedTasks && this.assignedTasks.length > 0){
                 this.assignedTasks.forEach(task => {
                     this.houseService.isHouseOccupied(task.house_id);
                 });
             }
+
+            this.loading = false;
           },
           error: (error) => {
               console.error('Error loading work group details:', error);
@@ -343,30 +369,62 @@ export class WorkGroupDetail implements OnInit {
 
       this.dataService.$workGroupTasksUpdate.subscribe(async res => {
         if(res && res.eventType == 'INSERT'){
-            let assignedTaskProgressType = this.progressTypes.find((tt: any) => tt.task_progress_type_name == "Dodijeljeno");
+            if(this.workGroup?.work_group_id == res.new.work_group_id){
+                const task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
 
-            const task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
-            task.task_progress_type_id = assignedTaskProgressType?.task_progress_type_id;
-
-            if(!this.assignedTasks.some(at => at.task_id == task.task_id)){
-                this.assignedTasks = [...this.assignedTasks, task];
+                if(!this.workGroupTasks.find((wgt: any) => wgt.task_id == res.new.task_id)){
+                    this.workGroupTasks = [...this.workGroupTasks, res.new];
+    
+                    task.index = res.new.index;
+                    
+                    if(this.taskService.isTaskNotAssigned(task)){
+                        let assignedTaskProgressType = this.progressTypes.find((tt: any) => tt.task_progress_type_name == "Dodijeljeno");
+                        task.task_progress_type_id = assignedTaskProgressType?.task_progress_type_id;
+                    }
+        
+                    if(!this.assignedTasks.some(at => at.task_id == task.task_id)){
+                        this.assignedTasks = [...this.assignedTasks, task];
+                    }
+    
+                    this.dataService.setWorkGroupTasks(this.workGroupTasks);
+                }
             }
         } else if(res && res.eventType == 'DELETE'){
-            this.assignedTasks = this.assignedTasks.filter(task => task.task_id != res.old.task_id);
+            if(this.workGroup?.work_group_id == res.old.work_group_id){
+                this.assignedTasks = this.assignedTasks.filter(task => task.task_id != res.old.task_id);
+                this.workGroupTasks = this.workGroupTasks.filter((task: any) => task.task_id != res.old.task_id);
+                this.dataService.setWorkGroupTasks(this.workGroupTasks);
+            }
         }
       });
     
       this.dataService.$workGroupProfiles.subscribe(res => {
         if(res && res.eventType == 'INSERT'){
-            const profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
-            this.assignedStaff = [...this.assignedStaff, profile];
+            if(this.workGroup?.work_group_id == res.new.work_group_id){
+                const profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
+                if(!this.assignedStaff.find(as => as.id == profile.id)){
+                    this.assignedStaff = [...this.assignedStaff, profile];
+                    this.workGroupProfiles = [...this.workGroupProfiles, res.new];
+                    this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+                }
+            }
         } else if(res && res.eventType == 'DELETE'){
-            this.assignedStaff = this.assignedStaff.filter(profile => profile.id != res.old.profile_id);
+            if(this.workGroup?.work_group_id == res.old.work_group_id){
+                this.assignedStaff = this.assignedStaff.filter(profile => profile.id != res.old.profile_id);
+                this.workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id != res.old.profile_id);
+                this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+            }
         }
       });
     
       this.dataService.$tasksUpdate.subscribe(res => {
-        if(res){
+        if(res && res.eventType == 'INSERT'){
+            if(!this.tasks.find((task: any) => task.task_id == res.new.task_id)){
+                this.tasks = [...this.tasks, res.new];
+                this.dataService.setTasks(this.tasks);
+            }   
+        }
+        else if(res && res.eventType == 'UPDATE'){
             let taskProgress = this.progressTypes.find(tp => tp.task_progress_type_id == res.new.task_progress_type_id);
 
             if(taskProgress && taskProgress.task_progress_type_name == 'Završeno'){
@@ -382,8 +440,6 @@ export class WorkGroupDetail implements OnInit {
 
       this.dataService.$houseAvailabilitiesUpdate.subscribe(res => {
         if(res && res.eventType == 'UPDATE') {
-            console.log(res);
-            console.log(this.assignedTasks);
             let ha = this.houseService.getTodaysHouseAvailabilityForHouse(res.new.house_id);
 
             if(ha){
@@ -489,8 +545,6 @@ export class WorkGroupDetail implements OnInit {
         
         this.dataService.updateTaskProgressType(task.task_id, progressType.task_progress_type_id).subscribe({
             next: () => {
-                console.log('Task progress updated:', { taskId: task.task_id, progressType: newProgressTypeName });
-                
                 // Update the task in the UI to reflect the new status
                 const updatedTask = this.assignedTasks.find(t => t.task_id === task.task_id);
                 if (updatedTask) {
@@ -513,8 +567,6 @@ export class WorkGroupDetail implements OnInit {
         
         this.dataService.updateTaskProgressType(task.task_id, pauseProgressType.task_progress_type_id).subscribe({
             next: () => {
-                console.log('Task paused:', { taskId: task.task_id });
-                
                 // Update the task in the UI to reflect the new status
                 const updatedTask = this.assignedTasks.find(t => t.task_id === task.task_id);
                 if (updatedTask) {

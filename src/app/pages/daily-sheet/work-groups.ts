@@ -8,6 +8,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { WorkGroupService } from '../service/work-group.service';
+import { TaskService } from '../service/task.service';
 
 @Component({
   selector: 'app-work-groups',
@@ -159,7 +160,7 @@ import { WorkGroupService } from '../service/work-group.service';
 })
 export class WorkGroups implements OnInit {
   loading = true;
-  workGroups: { work_group_id: number; is_locked: boolean }[] = [];
+  workGroups: any[] = [];
   activeGroupId?: number;
   workGroupTasks: { [key: number]: Task[] } = {};
   workGroupStaff: { [key: number]: Profile[] } = {};
@@ -171,6 +172,7 @@ export class WorkGroups implements OnInit {
   constructor(
     private dataService: DataService,
     private workGroupService: WorkGroupService,
+    private taskService: TaskService,
   ) {}
 
   ngOnInit() {
@@ -219,24 +221,19 @@ export class WorkGroups implements OnInit {
         });
 
         this.lockedTeams = [];
-
+        
         if(workGroups){
-          if(!this.workGroups.some(workGroup => 
-              this.lockedTeams.some(lockedTeam => 
-                parseInt(lockedTeam.id) == workGroup.work_group_id)))
-          {
-            this.workGroups.forEach(workGroup => {
-              this.lockedTeams.push({
-                id: workGroup.work_group_id.toString(),
-                name: "Team " + workGroup.work_group_id.toString(),
-                members: this.workGroupStaff[workGroup.work_group_id],
-                tasks: this.workGroupTasks[workGroup.work_group_id],
-                homes: [],
-                isLocked: workGroup.is_locked,       
-              });
+          this.workGroups.forEach(workGroup => {
+            this.lockedTeams.push({
+              id: workGroup.work_group_id.toString(),
+              name: "Team " + workGroup.work_group_id.toString(),
+              members: this.workGroupStaff[workGroup.work_group_id],
+              tasks: this.workGroupTasks[workGroup.work_group_id],
+              homes: [],
+              isLocked: workGroup.is_locked,       
             });
-            this.workGroupService.setLockedTeams(this.lockedTeams);
-          }
+          });
+          this.workGroupService.setLockedTeams(this.lockedTeams);
         }
 
         this.loading = false;
@@ -250,11 +247,41 @@ export class WorkGroups implements OnInit {
     this.dataService.$tasksUpdate.subscribe(res => {
       if(res && res.eventType == 'UPDATE'){
         let lockedTeam = this.lockedTeams.find(lt => lt.tasks?.some(task => task.task_id == res.new.task_id));
-        let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id);
+        let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id) ?? -1;
 
-        if(taskIndex && lockedTeam?.tasks){
+        if(taskIndex != -1 && lockedTeam?.tasks){
           lockedTeam.tasks = [...lockedTeam.tasks.slice(0, taskIndex), res.new, ...lockedTeam.tasks.slice(taskIndex + 1)];
         }
+
+        if(lockedTeam?.tasks && lockedTeam?.tasks.every(task => this.taskService.isTaskCompleted(task))){
+          this.workGroupService.deleteWorkGroup(lockedTeam.id);
+          this.workGroups = this.workGroups.filter(wg => wg.work_group_id != parseInt(lockedTeam.id));
+          this.lockedTeams = this.lockedTeams.filter(lt => lt.id != lockedTeam.id);
+        }
+
+        this.dataService.updateWorkGroups(this.workGroups);
+        this.workGroupService.setLockedTeams(this.lockedTeams);
+      }
+    });
+
+    this.dataService.$workGroupsUpdate.subscribe(res => {
+      if(res && res.eventType == 'INSERT'){
+        if(!this.workGroups.find((wgp: any) => wgp.work_group_id == res.new.work_group_id)){
+          this.workGroups = [...this.workGroups, res.new];
+          this.lockedTeams = [...this.lockedTeams, {
+            id: res.new.work_group_id,
+            name: "Team " + res.new.work_group_id.toString(),
+            members: [],
+            tasks: [],
+            homes: [],
+            isLocked: res.new.is_locked,
+          }];
+
+          this.dataService.updateWorkGroups(this.workGroups);
+          this.workGroupService.setLockedTeams(this.lockedTeams);
+        }
+      } else if(res && res.eventType == 'DELETE'){
+        this.deleteWorkGroup(res.old.work_group_id);
       }
     });
   }
@@ -280,25 +307,12 @@ export class WorkGroups implements OnInit {
 
   createWorkGroup() {
     if(this.activeGroupId){
-      console.log(this.activeGroupId);
       this.workGroupService.$newGroupWhileGroupActive.next(true);
     }
     this.dataService.createWorkGroup().subscribe({
       next: (workGroup) => {
         if (workGroup) {
           this.setActiveGroup(workGroup.work_group_id);
-          // let lockedTeams = this.workGroupService.getLockedTeams();
-          // let ltIndex = lockedTeams.findIndex(lt => parseInt(lt.id) == workGroup.work_group_id);
-
-          // lockedTeams[ltIndex] = {
-          //   homes: [],
-          //   id: workGroup.work_group_id.toString(),
-          //   isLocked: false,
-          //   members: [],
-          //   name: "Team " + workGroup.work_group_id.toString(),
-          //   tasks: [],
-          // }
-          // this.workGroupService.setLockedTeams(lockedTeams);
         }
       },
       error: (error) => {
@@ -343,7 +357,7 @@ export class WorkGroups implements OnInit {
         switchMap(() => this.dataService.deleteWorkGroup(workGroupId)),
         tap(() => this.workGroupService.$workGroupToDelete.next(workGroupId)),
         catchError((err) => {
-          console.log("Error:", err);
+          console.error("Error:", err);
           throw new Error("Error deleting work group!");
         })
       ).subscribe();
@@ -411,6 +425,7 @@ export class WorkGroups implements OnInit {
       if(!lockedWorkGroup.isLocked){
         await this.workGroupService.lockWorkGroup(parseInt(lockedWorkGroup.id));
         await this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(parseInt(lockedWorkGroup.id));
+        await this.workGroupService.deleteAllWorkGroupProfilesByWorkGroupId(parseInt(lockedWorkGroup.id));
 
         if(!lockedWorkGroup.tasks){
           lockedWorkGroup.tasks = [];

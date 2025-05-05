@@ -154,7 +154,8 @@ export class TasksComponent implements OnInit {
     this.dataService.$tasksUpdate.subscribe(res => {
       if(res && res.eventType == 'UPDATE'){
         let taskIndex = this.tasks.findIndex(task => task.task_id == res.new.task_id);
-        this.tasks[taskIndex] = res.new;
+        this.tasks = [...this.tasks.slice(0, taskIndex), res.new, ...this.tasks.slice(taskIndex + 1)
+        ];
       }
     });
   }

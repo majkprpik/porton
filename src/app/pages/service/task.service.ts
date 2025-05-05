@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, HouseStatus, HouseStatusTask, Task, TaskProgressType } from './data.service';
+import { DataService, HouseStatus, HouseStatusTask, Task, TaskProgressType, TaskType } from './data.service';
 import { BehaviorSubject } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 
@@ -12,7 +12,20 @@ export class TaskService {
   $selectedTask = new BehaviorSubject<any>(null);
   $taskToRemove = new BehaviorSubject<any>(null);
   $taskModalData = new BehaviorSubject<any>(null);
+
   taskProgressTypes: TaskProgressType[] = [];
+  assignedTaskProgressType: TaskProgressType | undefined = undefined;
+  pausedTaskProgressType: TaskProgressType | undefined = undefined;
+  completedTaskProgressType: TaskProgressType | undefined = undefined;
+  inProgressTaskProgressType: TaskProgressType | undefined = undefined;
+  notAssignedTaskProgressType: TaskProgressType | undefined = undefined;
+
+  taskTypes: TaskType[] = [];
+  houseRepairTaskType: TaskType | undefined = undefined;
+  houseCleaningTaskType: TaskType | undefined = undefined;
+  deckCleaningTaskType: TaskType | undefined = undefined;
+  sheetChangeTaskType: TaskType | undefined = undefined;
+  towelChangeTaskType: TaskType | undefined = undefined;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -20,6 +33,22 @@ export class TaskService {
   ) {
     this.dataService.taskProgressTypes$.subscribe(res => {
       this.taskProgressTypes = res;
+
+      this.pausedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Pauzirano');
+      this.completedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
+      this.inProgressTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'U progresu');
+      this.notAssignedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Nije dodijeljeno');
+      this.assignedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Dodijeljeno');
+    });
+
+    this.dataService.taskTypes$.subscribe(taskTypes => {
+      this.taskTypes = taskTypes;
+
+      this.houseCleaningTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Čišćenje kućice');
+      this.deckCleaningTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Čišćenje terase');
+      this.houseRepairTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Popravak');
+      this.sheetChangeTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Mijenjanje posteljine');
+      this.towelChangeTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Mijenjanje ručnika');
     });
   }
 
@@ -208,27 +237,84 @@ export class TaskService {
   }
 
   isTaskAssigned(task: any){
-    let assignedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Dodijeljeno');
-    return assignedTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
+    return (
+      this.assignedTaskProgressType?.task_progress_type_id == task.task_progress_type_id || 
+      this.assignedTaskProgressType?.task_progress_type_id == task.taskProgressTypeId); 
   }
 
   isTaskNotAssigned(task: any){
-    let assignedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Nije dodijeljeno');
-    return assignedTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
+    return (
+      this.notAssignedTaskProgressType?.task_progress_type_id == task.task_progress_type_id || 
+      this.notAssignedTaskProgressType?.task_progress_type_id == task.taskProgressTypeId);
   }
 
   isTaskInProgress(task: any){
-    let inProgressTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'U progresu');
-    return inProgressTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
+    return (
+      this.inProgressTaskProgressType?.task_progress_type_id == task.task_progress_type_id || 
+      this.inProgressTaskProgressType?.task_progress_type_id == task.taskProgressTypeId);
   }
 
   isTaskCompleted(task: any){
-    let completedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
-    return completedTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
+    return (
+      this.completedTaskProgressType?.task_progress_type_id == task.task_progress_type_id || 
+      this.completedTaskProgressType?.task_progress_type_id == task.taskProgressTypeId);
   }
 
   isTaskPaused(task: any){
-    let pausedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Pauzirano');
-    return pausedTaskProgressType?.task_progress_type_id == task.task_progress_type_id;
+    return (
+      this.pausedTaskProgressType?.task_progress_type_id == task.task_progress_type_id || 
+      this.pausedTaskProgressType?.task_progress_type_id == task.taskProgressTypeId);
+  }
+
+  isRepairTask(task: any){
+    return (
+      this.houseRepairTaskType?.task_type_id == task.task_type_id || 
+      this.houseRepairTaskType?.task_type_id == task.taskTypeId
+    );
+  }
+
+  isHouseCleaningTask(task: any){
+    return (
+      this.houseCleaningTaskType?.task_type_id == task.task_type_id || 
+      this.houseCleaningTaskType?.task_type_id == task.taskTypeId
+    );
+  }
+
+  isDeckCleaningTask(task: any){
+    return (
+      this.deckCleaningTaskType?.task_type_id == task.task_type_id || 
+      this.deckCleaningTaskType?.task_type_id == task.taskTypeId
+    );
+  }
+
+  isSheetChangeTask(task: any){
+    return (
+      this.sheetChangeTaskType?.task_type_id == task.task_type_id || 
+      this.sheetChangeTaskType?.task_type_id == task.taskTypeId
+    );
+  }
+
+  isTowelChangeTask(task: any){
+    return (
+      this.towelChangeTaskType?.task_type_id == task.task_type_id || 
+      this.towelChangeTaskType?.task_type_id == task.taskTypeId
+    );
+  }
+
+  getTaskIcon(taskTypeId: number): string {
+    switch(taskTypeId){
+      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
+        return 'pi pi-home';
+      case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
+        return 'pi pi-table';
+      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
+        return 'pi pi-inbox';
+      case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
+        return 'pi pi-bookmark';
+      case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
+        return 'pi pi-wrench';
+      default: 
+        return 'pi pi-file';
+    }
   }
 }

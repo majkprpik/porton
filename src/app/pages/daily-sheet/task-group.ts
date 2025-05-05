@@ -121,11 +121,11 @@ export class TaskGroupComponent implements OnInit {
       this.dataService.taskProgressTypes$,
       this.dataService.workGroupTasks$,
       this.dataService.houses$,
-      this.dataService.taskTypes$
+      this.dataService.taskTypes$,
     ]).subscribe({
-      next: ([types, tasks, houses, taskTypes]) => {
+      next: ([types, workGroupTasks, houses, taskTypes]) => {
         this.progressTypes = types;
-        this.workGroupTasks = tasks;
+        this.workGroupTasks = workGroupTasks;
         this.houses = houses;
         this.taskTypes = taskTypes;
       }

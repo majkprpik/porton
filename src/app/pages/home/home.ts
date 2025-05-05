@@ -1,18 +1,15 @@
-import { HeroWidget } from './../landing/components/herowidget';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService, House, HouseAvailability, HouseStatus, HouseStatusTask, TaskType } from '../service/data.service';
+import { DataService, House, HouseAvailability, HouseStatus, HouseStatusTask, Task, TaskType } from '../service/data.service';
 import { Subscription } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { InputTextarea } from 'primeng/inputtextarea';
 import { MenuItem } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
-import { ArrivalsAndDeparturesComponent } from '../../layout/component/arrivals-and-departures.component';
-import { NotesComponent } from '../../layout/component/notes.component';
+import { TaskService } from '../service/task.service';
 
 // Define the special location option interface
 interface SpecialLocation {
@@ -29,14 +26,10 @@ interface SpecialLocation {
         ButtonModule, 
         DialogModule,
         DropdownModule,
-        InputTextarea,
         FormsModule,
-        ArrivalsAndDeparturesComponent,
-        NotesComponent
     ],
     template: `
-        <div class="home-container" (click)="handleContainerClick($event)">
-            
+        <div class="home-container" (click)="handleContainerClick($event)">         
             <div class="house-grid">
                 @for (house of houses(); track house.house_id) {
                     <div class="house-card" 
@@ -47,11 +40,41 @@ interface SpecialLocation {
                         <div class="house-content">
                             <div class="house-number">{{house.house_number}}</div>
                             <div class="house-icons">
-                                <i class="pi pi-calendar"></i>
-                                <i class="pi" [class.pi-check-circle]="hasCompletedTasks(house.house_id)" 
-                                           [class.pi-times-circle]="hasInProgressTasks(house.house_id)"
-                                           [class.pi-exclamation-circle]="!hasAnyTasks(house.house_id)"></i>
-                                <i class="pi pi-cog"></i>
+                                @if(hasAnyTasks(house.house_id)) {
+                                    @for (task of getHouseTasks(house.house_id); track task.taskId) {
+                                        @if(taskService.isRepairTask(task)) {
+                                            <i 
+                                                class="pi pi-wrench" 
+                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
+                                                (click)="openTaskDetails(task)"
+                                            ></i>
+                                        } @else if(taskService.isHouseCleaningTask(task)) {
+                                            <i 
+                                                class="pi pi-home" 
+                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
+                                                (click)="openTaskDetails(task)"
+                                            ></i>
+                                        } @else if(taskService.isTowelChangeTask(task)){
+                                            <i 
+                                                class="pi pi-bookmark" 
+                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
+                                                (click)="openTaskDetails(task)"
+                                            ></i>
+                                        } @else if(taskService.isDeckCleaningTask(task)){
+                                            <i 
+                                                class="pi pi-table" 
+                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
+                                                (click)="openTaskDetails(task)"
+                                            ></i>
+                                        } @else if(taskService.isSheetChangeTask(task)){
+                                            <i 
+                                                class="pi pi-inbox" 
+                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
+                                                (click)="openTaskDetails(task)"
+                                            ></i>
+                                        }
+                                    }
+                                }
                             </div>
                         </div>
                         <div class="expanded-content" 
@@ -80,7 +103,7 @@ interface SpecialLocation {
                                         <span>{{getDogsCount(house.house_id)}}</span>
                                     </div>
                                 </div>
-                                @if (hasAnyTasks(house.house_id)) {
+                                <!-- @if (hasAnyTasks(house.house_id)) {
                                     <div class="tasks-section">
                                         <div class="tasks-header">Tasks:</div>
                                         <div class="tasks-list">
@@ -93,18 +116,12 @@ interface SpecialLocation {
                                             }
                                         </div>
                                     </div>
-                                }
+                                } -->
                             </div>
                         </div>
                     </div>
                 }
             </div>
-
-        </div>
-
-        <div class="bottom"> 
-            <app-arrivals-and-departures></app-arrivals-and-departures>
-            <app-notes></app-notes>
         </div>
     `,
     styles: [`
@@ -423,11 +440,13 @@ interface SpecialLocation {
             }
         }
 
-        .bottom{
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
+        .rotate-icon {
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
         }
     `]
 })
@@ -466,6 +485,7 @@ export class Home implements OnInit, OnDestroy {
     selectedTaskType: TaskType | null = null;
     taskDescription: string = '';
     taskTypes = signal<TaskType[]>([]);
+    tasks: Task[] = [];
 
     menuItems: MenuItem[] = [
         {
@@ -488,7 +508,52 @@ export class Home implements OnInit, OnDestroy {
         }
     ];
 
-    constructor(private dataService: DataService) {}
+    constructor(
+        private dataService: DataService,
+        public taskService: TaskService
+    ) {}
+    
+    ngOnInit(): void {
+        // Load houses data if not already loaded
+        this.dataService.loadHouses().subscribe();
+        
+        // Load house availabilities data if not already loaded
+        this.dataService.loadHouseAvailabilities().subscribe();
+
+        // Load house statuses data
+        this.dataService.loadHouseStatuses().subscribe();
+        
+        // Subscribe to houses data from DataService
+        const housesSubscription = this.dataService.houses$.subscribe(houses => {
+            this.houses.set(houses);
+            // Update location options when houses change
+            this.updateLocationOptions();
+        });
+
+        // Subscribe to house availabilities data from DataService
+        const availabilitiesSubscription = this.dataService.houseAvailabilities$.subscribe(availabilities => {
+            this.houseAvailabilities.set(availabilities);
+        });
+
+        // Subscribe to house statuses data from DataService
+        const statusesSubscription = this.dataService.houseStatuses$.subscribe(statuses => {
+            this.houseStatuses.set(statuses);
+        });
+        
+        // Store subscriptions for cleanup
+        this.subscriptions.push(housesSubscription, availabilitiesSubscription, statusesSubscription);
+
+        // Subscribe to task types
+        const taskTypesSubscription = this.dataService.taskTypes$.subscribe(types => {
+            this.taskTypes.set(types);
+        });
+        
+        // Add to subscriptions array
+        this.subscriptions.push(taskTypesSubscription);
+
+        // Load task types if not already loaded
+        this.dataService.getTaskTypes().subscribe();
+    }
 
     @HostListener('document:click', ['$event'])
     handleDocumentClick(event: MouseEvent) {
@@ -794,13 +859,15 @@ export class Home implements OnInit, OnDestroy {
     hasCompletedTasks(houseId: number): boolean {
         const status = this.houseStatuses().find(s => s.house_id === houseId);
         if (!status?.housetasks?.length) return false;
-        return status.housetasks.some(task => task.taskProgressTypeId === 3); // Assuming 3 is "Completed"
+        let hasCompletedTasks = status.housetasks.some(task => this.taskService.isTaskCompleted(task)); // Assuming 3 is "Completed"
+        return hasCompletedTasks;
     }
 
     hasInProgressTasks(houseId: number): boolean {
         const status = this.houseStatuses().find(s => s.house_id === houseId);
         if (!status?.housetasks?.length) return false;
-        return status.housetasks.some(task => task.taskProgressTypeId === 2); // Assuming 2 is "In Progress"
+        let hasTasksInProgress = status.housetasks.some(task => this.taskService.isTaskInProgress(task)); // Assuming 2 is "In Progress"
+        return hasTasksInProgress;
     }
 
     hasAnyTasks(houseId: number): boolean {
@@ -811,52 +878,6 @@ export class Home implements OnInit, OnDestroy {
     getHouseTasks(houseId: number): HouseStatusTask[] {
         const status = this.houseStatuses().find(s => s.house_id === houseId);
         return status?.housetasks || [];
-    }
-
-    isTaskCompleted(task: HouseStatusTask): boolean {
-        return task.taskProgressTypeId === 3; // Assuming 3 is "Completed"
-    }
-
-    ngOnInit(): void {
-        // Load houses data if not already loaded
-        this.dataService.loadHouses().subscribe();
-        
-        // Load house availabilities data if not already loaded
-        this.dataService.loadHouseAvailabilities().subscribe();
-
-        // Load house statuses data
-        this.dataService.loadHouseStatuses().subscribe();
-        
-        // Subscribe to houses data from DataService
-        const housesSubscription = this.dataService.houses$.subscribe(houses => {
-            this.houses.set(houses);
-            // Update location options when houses change
-            this.updateLocationOptions();
-        });
-
-        // Subscribe to house availabilities data from DataService
-        const availabilitiesSubscription = this.dataService.houseAvailabilities$.subscribe(availabilities => {
-            this.houseAvailabilities.set(availabilities);
-        });
-
-        // Subscribe to house statuses data from DataService
-        const statusesSubscription = this.dataService.houseStatuses$.subscribe(statuses => {
-            this.houseStatuses.set(statuses);
-        });
-        
-        // Store subscriptions for cleanup
-        this.subscriptions.push(housesSubscription, availabilitiesSubscription, statusesSubscription);
-
-        // Subscribe to task types
-        const taskTypesSubscription = this.dataService.taskTypes$.subscribe(types => {
-            this.taskTypes.set(types);
-        });
-        
-        // Add to subscriptions array
-        this.subscriptions.push(taskTypesSubscription);
-
-        // Load task types if not already loaded
-        this.dataService.getTaskTypes().subscribe();
     }
 
     // Update location options method
@@ -987,18 +1008,55 @@ export class Home implements OnInit, OnDestroy {
     isHouseOccupied(houseId: number): boolean {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const todayTime = today.getTime();
+        
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+        const yesterdayTime = yesterday.getTime();
 
-        return this.houseAvailabilities().some(availability => {
-            if (availability.house_id !== houseId) return false;
-            
-            const startDate = new Date(availability.house_availability_start_date);
-            const endDate = new Date(availability.house_availability_end_date);
-            
-            startDate.setHours(0, 0, 0, 0);
-            endDate.setHours(23, 59, 59, 999); // Make end date inclusive until end of day
-            
-            return today >= startDate && today <= endDate;
+        const houseAvailabilities = this.houseAvailabilities().filter(availability => {
+            if (availability.house_id == houseId) {
+                const start = new Date(availability.house_availability_start_date);
+                start.setHours(0, 0, 0, 0);
+        
+                const end = new Date(availability.house_availability_end_date);
+                end.setHours(23, 59, 59, 999);
+        
+                // Main case: today is in range
+                const isTodayInRange = start.getTime() <= todayTime && end.getTime() >= todayTime;
+        
+                // Extra case: ended exactly yesterday
+                const endedYesterday = end.getTime() >= yesterdayTime && end.getTime() < todayTime;
+        
+                return isTodayInRange || endedYesterday;
+            }
+        
+            return false;
+        })
+        .sort((a, b) => {
+          const endA = new Date(a.house_availability_end_date).getTime();
+          const endB = new Date(b.house_availability_end_date).getTime();
+          return endA - endB;
         });
+
+        if(houseAvailabilities && houseAvailabilities.length == 1){
+            return !houseAvailabilities[0].has_departed;
+        } else if(houseAvailabilities && houseAvailabilities.length == 2){
+            if(!houseAvailabilities[0].has_departed){
+                return true;
+            } else if(houseAvailabilities[0].has_departed && !houseAvailabilities[1].has_arrived){
+                return false;
+            } else if(houseAvailabilities[0].has_departed && houseAvailabilities[1].has_arrived){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    openTaskDetails(task: any){
+        this.taskService.$taskModalData.next(task);
     }
 
     ngOnDestroy(): void {
