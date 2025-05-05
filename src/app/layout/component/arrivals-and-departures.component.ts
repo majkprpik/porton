@@ -297,6 +297,10 @@ export class ArrivalsAndDeparturesComponent {
           this.departures[departureIndex] = res.new;
           this.departures = [...this.departures];
         }
+
+        const haIndex = this.houseAvailabilities.findIndex(ha => ha.house_availability_id == res.new.house_availability_id);
+        this.houseAvailabilities[haIndex] = res.new;
+        this.dataService.setHouseAvailabilites([...this.houseAvailabilities]);
       };
     });
   }
