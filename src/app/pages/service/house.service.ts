@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, HouseAvailability, HouseAvailabilityType } from './data.service';
+import { DataService, House, HouseAvailability, HouseAvailabilityType } from './data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -8,6 +8,7 @@ import { DataService, HouseAvailability, HouseAvailabilityType } from './data.se
 export class HouseService {
   houseAvailabilityTypes: HouseAvailabilityType[] = [];
   houseAvailabilities: HouseAvailability[] = [];
+  houses: House[] = [];
 
   constructor(
     private supabase: SupabaseService,
@@ -21,6 +22,10 @@ export class HouseService {
     this.dataService.houseAvailabilities$.subscribe(ha => {
       this.houseAvailabilities = ha;
     });
+
+    this.dataService.houses$.subscribe(houses => {
+      this.houses = houses;
+    })
   }
 
   isHouseOccupied(houseId: number){
@@ -41,6 +46,11 @@ export class HouseService {
     }
 
     return false;
+  }
+
+  getHouseNumber(houseId: number): string {
+    const house = this.houses.find(h => h.house_id === houseId);
+    return house ? house.house_number.toString() : '?';
   }
 
   getTodaysHouseAvailabilityForHouse(houseId: number){

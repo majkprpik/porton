@@ -7,11 +7,21 @@ import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
 import { Router } from '@angular/router';
+import { TabViewModule } from 'primeng/tabview';
+import { TeamTaskCardComponent } from '../../layout/component/team-task-card.component';
 
 @Component({
     selector: 'app-teams',
     standalone: true,
-    imports: [CommonModule, ButtonModule, ProgressSpinnerModule, ChipModule, CardModule],
+    imports: [
+        CommonModule, 
+        ButtonModule, 
+        ProgressSpinnerModule,
+        ChipModule, 
+        CardModule,
+        TabViewModule,
+        TeamTaskCardComponent
+    ],
     template: `
         @if (loading) {
             <div class="loading-container">
@@ -20,6 +30,7 @@ import { Router } from '@angular/router';
             </div>
         } @else {
             <div class="teams-container">
+                <h2>Čišćenje</h2>
                 <div class="teams-list">
                     @if (workGroups.length === 0) {
                         <div class="empty-state">
@@ -28,60 +39,38 @@ import { Router } from '@angular/router';
                     } @else {
                         <div class="teams-grid">
                             @for (group of workGroups; track group.work_group_id) {
-                                <div class="team-card" [class.locked]="group.is_locked" (click)="navigateToDetail(group.work_group_id)">
-                                    <div class="team-header">
-                                        <h3>Tim {{group.work_group_id}}</h3>
-                                        <span class="status-badge" [class.locked]="group.is_locked">
-                                            {{group.is_locked ? 'Zaključano' : 'Aktivno'}}
-                                        </span>
-                                    </div>
-                                    <div class="team-content">
-                                        <p>Kreirano: {{group.created_at | date:'dd.MM.yyyy'}}</p>
-                                        
-                                        <div class="section">
-                                            <h4>Članovi tima</h4>
-                                            @if (getAssignedStaff(group.work_group_id).length === 0) {
-                                                <p class="empty-section">Nema dodijeljenih članova</p>
-                                            } @else {
-                                                <div class="staff-list">
-                                                    @for (staff of getAssignedStaff(group.work_group_id); track staff.id) {
-                                                        <p-chip 
-                                                            [label]="getStaffFullName(staff)"
-                                                            [removable]="!group.is_locked"
-                                                            (onRemove)="removeStaffFromGroup(staff.id!, group.work_group_id)"
-                                                        ></p-chip>
-                                                    }
-                                                </div>
-                                            }
-                                        </div>
+                                @if (!isRepairWorkGroup(group)){
+                                   <app-team-task-card
+                                        [workGroup]="group"
+                                        [workGroupTasks]="getAssignedTasks(group.work_group_id)"
+                                        [workGroupStaff]="getAssignedStaff(group.work_group_id)"
+                                        [isRepairGroup]="isRepairWorkGroup(group)"
+                                   ></app-team-task-card> 
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
 
-                                        <div class="section">
-                                            <h4>Zadaci</h4>
-                                            @if (getAssignedTasks(group.work_group_id).length === 0) {
-                                                <p class="empty-section">Nema dodijeljenih zadataka</p>
-                                            } @else {
-                                                <div class="tasks-list">
-                                                    @for (task of getAssignedTasks(group.work_group_id); track task.task_id) {
-                                                        <div class="task-card" [class.removable]="!group.is_locked" (click)="!group.is_locked && removeTaskFromGroup(task.task_id, group.work_group_id)">
-                                                            <span class="house-number">{{getHouseNumber(task.house_id)}}</span>
-                                                            <i class="task-icon" [class]="getTaskTypeIcon(task.task_type_id)"></i>
-                                                            @if (!group.is_locked) {
-                                                                <i class="remove-icon pi pi-times"></i>
-                                                            }
-                                                        </div>
-                                                    }
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                    <!-- <div class="team-actions">
-                                        <p-button 
-                                            icon="pi pi-trash" 
-                                            severity="danger"
-                                            (onClick)="deleteWorkGroup(group.work_group_id)"
-                                        ></p-button>
-                                    </div> -->
-                                </div>
+            <div class="teams-container">
+                <h2>Popravci</h2>
+                <div class="teams-list">
+                    @if (workGroups.length === 0) {
+                        <div class="empty-state">
+                            <p>Nema kreiranih timova</p>
+                        </div>
+                    } @else {
+                        <div class="teams-grid">
+                            @for (group of workGroups; track group.work_group_id) {
+                                @if (isRepairWorkGroup(group)){
+                                    <app-team-task-card
+                                        [workGroup]="group"
+                                        [workGroupTasks]="getAssignedTasks(group.work_group_id)"
+                                        [workGroupStaff]="getAssignedStaff(group.work_group_id)"
+                                        [isRepairGroup]="isRepairWorkGroup(group)"
+                                   ></app-team-task-card> 
+                                }
                             }
                         </div>
                     }
@@ -101,31 +90,13 @@ import { Router } from '@angular/router';
         }
 
         .teams-container {
-            height: 100%;
+            min-height: 500px;
             padding: 1rem;
             background-color: var(--surface-card);
             border-radius: 8px;
             display: flex;
             flex-direction: column;
-        }
-
-        .teams-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-
-            h2 {
-                margin: 0;
-                color: var(--text-color);
-                font-size: 1.5rem;
-                font-weight: 600;
-            }
-
-            .header-actions {
-                display: flex;
-                gap: 0.5rem;
-            }
+            margin-bottom: 15px;
         }
 
         .teams-list {
@@ -135,86 +106,11 @@ import { Router } from '@angular/router';
         }
 
         .teams-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-
-        .team-card {
-            background: var(--surface-card);
-            border: 1px solid var(--surface-border);
-            border-radius: 6px;
-            padding: 1rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-
-            &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            }
-
-            &.locked {
-                background: var(--surface-ground);
-                opacity: 0.8;
-            }
-
-            .team-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 1rem;
-
-                h3 {
-                    margin: 0;
-                    color: var(--text-color);
-                    font-size: 1.2rem;
-                }
-
-                .status-badge {
-                    padding: 0.25rem 0.5rem;
-                    border-radius: 4px;
-                    font-size: 0.875rem;
-                    background: var(--primary-color);
-                    color: var(--primary-color-text);
-
-                    &.locked {
-                        background: var(--surface-border);
-                        color: var(--text-color-secondary);
-                    }
-                }
-            }
-
-            .team-content {
-                margin-bottom: 1rem;
-                color: var(--text-color-secondary);
-
-                .section {
-                    margin-top: 1rem;
-
-                    h4 {
-                        margin: 0 0 0.5rem 0;
-                        color: var(--text-color);
-                        font-size: 1rem;
-                    }
-
-                    .empty-section {
-                        color: var(--text-color-secondary);
-                        font-style: italic;
-                        margin: 0;
-                    }
-
-                    .staff-list, .tasks-list {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 0.5rem;
-                    }
-                }
-            }
-
-            .team-actions {
-                display: flex;
-                justify-content: flex-end;
-            }
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            margin-left: 10px;
+            margin-top: 15px;
         }
 
         .empty-state {
@@ -228,52 +124,6 @@ import { Router } from '@angular/router';
 
             p {
                 margin: 0;
-            }
-        }
-
-        .task-card {
-            background: var(--surface-ground);
-            border: 1px solid var(--surface-border);
-            border-radius: 4px;
-            padding: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            position: relative;
-            min-width: 80px;
-
-            &.removable {
-                cursor: pointer;
-                
-                &:hover {
-                    background: var(--surface-hover);
-                    
-                    .remove-icon {
-                        display: block;
-                    }
-                    
-                    .task-icon {
-                        display: none;
-                    }
-                }
-            }
-
-            .house-number {
-                font-weight: 600;
-                color: var(--text-color);
-            }
-
-            .task-icon {
-                color: var(--text-color-secondary);
-                font-size: 1rem;
-            }
-
-            .remove-icon {
-                display: none;
-                position: absolute;
-                right: 0.5rem;
-                color: var(--red-500);
-                font-size: 0.875rem;
             }
         }
     `
@@ -290,6 +140,7 @@ export class Teams implements OnInit {
     taskProgressTypes: TaskProgressType[] = [];
     taskTypes: TaskType[] = [];
     allWorkGroupTasks: WorkGroupTask[] = [];
+    taskImages: any[] = [];
 
     constructor(
         private dataService: DataService,
@@ -479,4 +330,34 @@ export class Teams implements OnInit {
     navigateToDetail(workGroupId: number) {
         this.router.navigate(['/teams', workGroupId]);
     }
+
+    isRepairWorkGroup(workGroup: WorkGroup){
+        const workGroupStaff = this.workGroupStaff[workGroup.work_group_id];
+        if(this.allProfiles.some(profile => workGroupStaff.some(wgs => wgs.id == profile.id && profile.role == 'odrzavanje'))) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    async getStoredImagesForTask(task: Task) {
+        try {
+          const fetchedImages = await this.dataService.getStoredImagesForTask(task.task_id);
+  
+          if (!fetchedImages || fetchedImages.length === 0) {
+            console.warn('No images found.');
+            this.taskImages = [];
+            return;
+          }
+  
+          this.taskImages = await Promise.all(fetchedImages.map(async (image: any) => {
+            const url = await this.dataService.getPublicUrlForImage(`task-${task.task_id}/${image.name}`);
+            return { name: image.name, url };
+          }));
+  
+          this.taskImages;
+        } catch (error) {
+          console.error('Error fetching images:', error);
+        }
+      }
 } 
