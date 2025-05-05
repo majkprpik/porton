@@ -1,11 +1,9 @@
-import { InputTextModule } from 'primeng/inputtext';
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotesService } from '../../pages/service/notes.service';
 import { DataService, Note, Profile } from '../../pages/service/data.service';
 import { combineLatest } from 'rxjs';
-import { PrimeIcons } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 
 @Component({
