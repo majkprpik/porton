@@ -162,6 +162,14 @@ export interface Note {
   time_sent: string,
 }
 
+export interface RepairTaskComment {
+  id: string;
+  task_id: number;
+  user_id: string;
+  comment: string;
+  created_at: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -189,6 +197,7 @@ export class DataService {
   private houseStatusesSubject = new BehaviorSubject<HouseStatus[]>([]);
   private authUsersSubject = new BehaviorSubject<Profile[]>([]);
   private notesSubject = new BehaviorSubject<Note[]>([]);
+  private repairTaskCommentsSubject = new BehaviorSubject<RepairTaskComment[]>([]);
 
   // Public Observables
   loading$ = this.loadingSubject.asObservable();
@@ -207,6 +216,7 @@ export class DataService {
   houseStatuses$ = this.houseStatusesSubject.asObservable();
   authUsers$ = this.authUsersSubject.asObservable();
   notes$ = this.notesSubject.asObservable();
+  repairTaskComments$ = this.repairTaskCommentsSubject.asObservable();
   
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tasksUpdate = new BehaviorSubject<any>('');
@@ -214,8 +224,10 @@ export class DataService {
   $workGroupProfiles = new BehaviorSubject<any>('');
   $workGroupsUpdate = new BehaviorSubject<any>('');
   $notesUpdate = new BehaviorSubject<any>('');
+  $repairTaskCommentsUpdate = new BehaviorSubject<any>('');
 
   $areNotesLoaded = new BehaviorSubject<boolean>(false);
+  $areRepairTaskCommentsLoaded = new BehaviorSubject<boolean>(false);
 
   constructor(private supabaseService: SupabaseService) {
     // Load all enum types when service is initialized
@@ -286,6 +298,7 @@ export class DataService {
     this.loadProfiles().subscribe();
     this.loadHouses().subscribe();
     this.loadNotes().subscribe();
+    this.loadRepairTaskComments().subscribe();
     // this.loadAuthUsers().subscribe();
   }
 
@@ -573,6 +586,23 @@ export class DataService {
           this.notesSubject.next(data);
           this.logData('Notes', data);
           this.$areNotesLoaded.next(true);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  loadRepairTaskComments(): Observable<RepairTaskComment[]> { 
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('repair_task_comments', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.repairTaskCommentsSubject.next(data);
+          this.logData('Repair task comments', data);
+          this.$areRepairTaskCommentsLoaded.next(true);
         }
       }),
       map((data) => data || []),
@@ -1265,6 +1295,16 @@ export class DataService {
       },
       async (payload: any) => {
         this.$notesUpdate.next(payload);
+      }
+    ).on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'porton',
+        table: 'repair_task_comments'
+      },
+      async (payload: any) => {
+        this.$repairTaskCommentsUpdate.next(payload);
       }
     )
     .subscribe();

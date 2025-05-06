@@ -1,7 +1,7 @@
 import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { filter, Subscription } from 'rxjs';
+import { combineLatest, filter, Subscription } from 'rxjs';
 import { AppTopbar } from './app.topbar';
 import { AppSidebar } from './app.sidebar';
 import { LayoutService } from '../service/layout.service';
@@ -12,7 +12,7 @@ import { InputTextarea } from 'primeng/inputtextarea';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MenuItem } from 'primeng/api';
-import { DataService, House, Task, TaskProgressType, TaskType } from '../../pages/service/data.service';
+import { DataService, House, RepairTaskComment, Task, TaskProgressType, TaskType } from '../../pages/service/data.service';
 import { TaskService } from '../../pages/service/task.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
@@ -22,6 +22,7 @@ import { ArrivalsAndDeparturesComponent } from './arrivals-and-departures.compon
 import { TabViewModule } from 'primeng/tabview';
 import { ChipModule } from 'primeng/chip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ProfileService } from '../../pages/service/profile.service';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -142,7 +143,7 @@ interface SpecialLocation {
                             <p-tabPanel header="Slike">
                             @if(!capturedImage){
                                 <div class="upload-a-photo">
-                                    @if(taskImages.length <= 0){
+                                    @if(!taskImages.length){
                                         <label for="description" class="font-bold block mb-2">Učitaj sliku</label>
                                     }
                                 
@@ -193,9 +194,25 @@ interface SpecialLocation {
                             }
                             </p-tabPanel>
                             <p-tabPanel header="Komentari">
-                                <p>
-                                    At vero eos et accusamus et iusto odio dignissimos...
-                                </p>
+                                <div class="comments-content" #commentsContainer>
+                                    @if(!commentsForTask.length && !areCommentsLoaded){
+                                        <span>Loading comments...</span>
+                                    } @else if (!commentsForTask.length && areCommentsLoaded){
+                                        <span>No comments for this task.</span>
+                                    } @else {
+                                        @for(comment of commentsForTask; track $index){
+                                            <span><b>{{profileService.findProfile(comment.user_id)?.first_name}} - {{comment.created_at | date: 'HH:mm':'UTC'}}:</b> {{comment.comment}}</span>
+                                        }
+                                    }
+                                </div>
+
+                                <div class="comments-footer">
+                                    <textarea 
+                                        placeholder="Add a comment..."
+                                        [(ngModel)]="comment"
+                                        (keydown.enter)="addComment($event)"
+                                    ></textarea>
+                                </div>
                             </p-tabPanel>
                         } @else {
                             <div class="details">
@@ -278,7 +295,7 @@ interface SpecialLocation {
 
                 @if(!capturedImage){
                     <div class="upload-a-photo">
-                        @if(taskImages.length <= 0){
+                        @if(!taskImages.length){
                             <label for="description" class="font-bold block mb-2">Učitaj sliku</label>
                         } @else {
                             <label for="description" class="font-bold block mb-2">Učitane slike</label>
@@ -496,6 +513,41 @@ interface SpecialLocation {
 
         .team-card{
             padding: 0 !important;
+
+            .comments-content{
+                min-height: 150px;
+                box-sizing: border-box;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+                overflow-x: hidden;
+                word-break: break-word;    
+                white-space: normal;       
+                align-items: flex-start;
+                background-color: white;
+            }
+
+            .comments-footer{
+                height: 50px;
+                width: 100%;
+                border-radius: 0 0 10px 10px;
+                border-top: 1px solid #e5e7eb;
+
+                textarea{
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 0 0 10px 10px;
+                    resize: none;
+                    box-sizing: border-box; 
+                    padding: 10px;
+                    outline: none;
+
+                    &:disabled {
+                        background-color: var(--surface-ground);
+                    }
+                }
+            }
         }
 
         .fault-report-form, .task-form, .team-card {
@@ -657,7 +709,6 @@ interface SpecialLocation {
             }
         }
 
-
         .arrivals-and-departures-window {
             position: fixed !important;
             top: 100px;
@@ -713,7 +764,6 @@ interface SpecialLocation {
                 }
             }
         }
-
 
         p-dialog{
             .details{
@@ -787,6 +837,11 @@ export class AppLayout {
     openImage: any;
     positions: { [key: string]: { x: number; y: number } } = {};
 
+    comments: RepairTaskComment[] = [];
+    comment: string = '';
+    commentsForTask: RepairTaskComment[] = [];
+    areCommentsLoaded: boolean = false;
+
     menuItems: MenuItem[] = [
         {
             icon: 'pi pi-wrench',
@@ -828,6 +883,7 @@ export class AppLayout {
         private taskService: TaskService,
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
+        public profileService: ProfileService,
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
@@ -846,33 +902,32 @@ export class AppLayout {
         this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
             this.hideMenu();
         });
-
-        // Subscribe to houses data
-        this.dataService.houses$.subscribe(houses => {
-            this.houses = houses;
-            // Update location options when houses change
-            this.updateLocationOptions();
-        });
-
-        // Subscribe to task types
-        this.dataService.taskTypes$.subscribe(types => {
-            this.taskTypes = types;
-        });
-
-        this.dataService.taskProgressTypes$.subscribe(taskProgressTypes => {
-            this.taskProgressTypes = taskProgressTypes;
-        });
-
-        this.dataService.tasks$.subscribe(tasks => {
-            this.tasks = tasks;
-        })
-
-        // Load initial data
-        this.dataService.loadHouses().subscribe();
-        this.dataService.getTaskTypes().subscribe();
     }
 
     ngOnInit(){
+        combineLatest([
+            this.dataService.repairTaskComments$,
+            this.dataService.houses$,
+            this.dataService.taskTypes$,
+            this.dataService.taskProgressTypes$,
+            this.dataService.tasks$
+        ]).subscribe({
+            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks]) => {
+                this.comments = repairTaskComments;
+                this.houses = houses;
+                this.taskTypes = taskTypes;
+                this.taskProgressTypes = taskProgressTypes;
+                this.tasks = tasks;
+
+                if(houses){
+                    this.updateLocationOptions();
+                }
+            }, 
+            error: (error) => {
+                console.error(error);
+            }
+        });
+
         this.taskService.$taskModalData.subscribe(res => {
             if(res){
                 this.resetForm('fault-report');
@@ -886,6 +941,9 @@ export class AppLayout {
                 this.isTaskDetailsWindowVisible = true;
                 this.faultReportVisible = false;
 
+                this.commentsForTask = this.comments.filter(comments => comments.task_id == this.task.task_id);
+                this.areCommentsLoaded = true;
+
                 if(this.getTaskTypeName(this.task) == 'Popravak'){
                     this.getStoredImagesForTask(this.task);
                 } else {
@@ -895,6 +953,10 @@ export class AppLayout {
               this.isTaskDetailsWindowVisible = false;
             }
         });
+
+        // Load initial data
+        this.dataService.loadHouses().subscribe();
+        this.dataService.getTaskTypes().subscribe();
 
         const saved = localStorage.getItem('windowPositions');
 
@@ -909,6 +971,17 @@ export class AppLayout {
             this.isArrivalsAndDeparturesWindowVisible = true;
           }
         } 
+
+        this.dataService.$repairTaskCommentsUpdate.subscribe(res => {
+            if(res && res.eventType == 'INSERT'){
+                let existingComment = this.comments.find(comment => comment.id == res.new.id);
+
+                if(!existingComment){
+                    this.comments = [...this.comments, res.new];
+                    this.commentsForTask = this.comments.filter(comments => comments.task_id == this.task.task_id);
+                }
+            }
+        })
     }
     
     async getStoredImagesForTask(task: Task) {
@@ -1439,5 +1512,15 @@ export class AppLayout {
     getWindowPosition(windowKey: string): { [key: string]: string } {
         const pos = this.positions[windowKey];
         return pos ? { transform: `translate(${pos.x}px, ${pos.y}px)` } : {};
+    }
+
+    addComment(event: any){
+        event.preventDefault();
+        this.comment = this.comment.trim();
+
+        if(this.comment){
+            this.taskService.addCommentOnRepairTask(this.comment, this.task.task_id);
+            this.comment = '';
+        }
     }
 }

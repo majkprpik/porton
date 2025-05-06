@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, HouseStatus, TaskProgressType, TaskType } from './data.service';
+import { DataService, HouseStatus, RepairTaskComment, TaskProgressType, TaskType } from './data.service';
 import { BehaviorSubject } from 'rxjs';
 import imageCompression from 'browser-image-compression';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -30,6 +31,7 @@ export class TaskService {
   constructor(
     private supabaseService: SupabaseService,
     private dataService: DataService,
+    private authService: AuthService,
   ) {
     this.dataService.taskProgressTypes$.subscribe(res => {
       this.taskProgressTypes = res;
@@ -163,6 +165,28 @@ export class TaskService {
     } catch (error: any) {
       console.error('Error removing image:', error);
       return { error: error.message || "Error removing image from Supabase" };
+    }
+  }
+
+  async addCommentOnRepairTask(repairTaskComment: string, taskId: number){
+    try{
+      const { data: comment, error: commentError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('repair_task_comments')
+        .insert({
+          task_id: taskId,
+          user_id: this.authService.getStoredUserId(),
+          comment: repairTaskComment,
+          created_at: this.supabaseService.getFormattedDateTimeNowForSupabase(),
+        })
+        .single();
+
+      if(commentError) throw commentError
+
+      return comment;
+    } catch (error){
+      console.error('Error uploading comment:', error);
+      return null;
     }
   }
 
