@@ -65,6 +65,7 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                                         [class.not-assigned]="taskService.isTaskNotAssigned(task)"
                                         [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
                                         [class.completed]="taskService.isTaskCompleted(task)"
+                                        (click)="openTaskDetails(task)"
                                     >
                                         <div class="task-info">
                                             <div class="house-info">
@@ -200,6 +201,7 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
             border: 1px solid var(--surface-border);
             border-radius: 6px;
             padding: 1rem;
+            transition: transform 0.3s ease;
 
             &.completed{
                 background: var(--p-red-400);
@@ -256,6 +258,11 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
             .task-actions {
                 display: flex;
                 justify-content: flex-end;
+            }
+
+            &:hover{
+                cursor: pointer;
+                transform: scale(1.01);
             }
         }
 
@@ -577,6 +584,10 @@ export class WorkGroupDetail implements OnInit {
                 console.error('Error pausing task:', error);
             }
         });
+    }
+
+    openTaskDetails(task: Task){
+        this.taskService.$taskModalData.next(task);
     }
 } 
 
