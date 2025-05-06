@@ -108,7 +108,7 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
         .teams-grid {
             display: flex;
             flex-direction: row;
-            gap: 10px;
+            gap: 20px;
             margin-left: 10px;
             margin-top: 15px;
         }
@@ -325,10 +325,6 @@ export class Teams implements OnInit {
     getStaffFullName(staff: Profile): string {
         if (!staff.first_name && !staff.last_name) return 'Nepoznat';
         return [staff.first_name, staff.last_name].filter(Boolean).join(' ');
-    }
-
-    navigateToDetail(workGroupId: number) {
-        this.router.navigate(['/teams', workGroupId]);
     }
 
     isRepairWorkGroup(workGroup: WorkGroup){

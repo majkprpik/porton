@@ -11,7 +11,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
-import { MenuItem } from 'primeng/api';
+import { ConfirmationService, MenuItem } from 'primeng/api';
 import { DataService, House, Task, TaskProgressType, TaskType } from '../../pages/service/data.service';
 import { TaskService } from '../../pages/service/task.service';
 import { MessageService } from 'primeng/api';
@@ -19,6 +19,9 @@ import { ToastModule } from 'primeng/toast';
 import { NotesComponent } from './notes.component';
 import { CdkDrag, CdkDragEnd, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { ArrivalsAndDeparturesComponent } from './arrivals-and-departures.component';
+import { TabViewModule } from 'primeng/tabview';
+import { ChipModule } from 'primeng/chip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -44,9 +47,15 @@ interface SpecialLocation {
         NotesComponent,
         ArrivalsAndDeparturesComponent,
         CdkDrag, 
-        CdkDragHandle
+        CdkDragHandle,
+        TabViewModule,
+        ChipModule, 
+        ConfirmDialogModule
     ],
-    providers: [MessageService],
+    providers: [
+        MessageService,
+        ConfirmationService
+    ],
     template: `
     <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
         <app-topbar></app-topbar>
@@ -107,33 +116,107 @@ interface SpecialLocation {
                     [modal]="true"
                     [style]="{ width: '30rem' }"
                     [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
-                    (onHide)="resetDialog()"
+                    (onHide)="resetForm('task-details')"
                 >
-                    <div class="details">
-                        <div>
-                            <span><b>Kućica:</b> {{getHouseForTask(task)?.house_number}}</span>
-                        </div>
-                
-                        <div>
-                            <span><b>Tip:</b> {{getTaskTypeName(task)}}</span>
-                        </div>
-                
-                        <div>
-                            <span><b>Status:</b> {{getTaskProgressTypeName(task)}}</span>
-                        </div>
-                
-                        <div>
-                            <span><b>Opis:</b> {{task?.description}}</span>
-                        </div>
+                    <p-tabView class="team-card">
+                        @if(getTaskTypeName(task) == 'Popravak'){
+                            <p-tabPanel header="Detalji">
+                                <div class="details">
+                                    <div>
+                                        <span><b>Kućica:</b> {{getHouseForTask(task)?.house_number}}</span>
+                                    </div>
 
-                        @if(getTaskTypeName(task) == 'Popravak' && taskImages.length > 0){
-                            <div class="task-images">
-                            @for(image of taskImages; track image.name){
-                                <img [src]="image.url" [alt]="image.name">
+                                    <div>
+                                        <span><b>Tip:</b> {{getTaskTypeName(task)}}</span>
+                                    </div>
+
+                                    <div>
+                                        <span><b>Status:</b> {{getTaskProgressTypeName(task)}}</span>
+                                    </div>
+
+                                    <div>
+                                        <span><b>Opis:</b> {{task?.description}}</span>
+                                    </div>
+                                </div>
+                            </p-tabPanel>
+                            <p-tabPanel header="Slike">
+                            @if(!capturedImage){
+                                <div class="upload-a-photo">
+                                    @if(taskImages.length <= 0){
+                                        <label for="description" class="font-bold block mb-2">Učitaj sliku</label>
+                                    }
+                                
+                                    <div class="task-images-container" [ngStyle]="{'justify-content': taskImages.length ? 'flex-start' : 'center'}">
+                                        <input type="file" accept="image/*" capture="environment" (change)="handleImageCapture($event)" hidden #fileInput>
+                                
+                                        @for(image of taskImages; track image.url){
+                                            <div class="task-images">
+                                                <div class="image-wrapper">
+                                                    <div class="close-icon-container">
+                                                        <i (click)="removeImage(image, $event, 'task-details')" class="pi pi-trash"></i>
+                                                    </div>
+                                                    <img (click)="onOpenImage(image.url)" [src]="image.url" [alt]="image.url" >
+                                                </div>
+                                            </div>
+                                        }
+
+                                        <div 
+                                          class="camera-icon-container"
+                                          (click)="openCamera()"
+                                        >
+                                          <span class="camera-icon">📷</span>
+                                          <span class="camera-icon-label">Capture an image...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            } @else {
+                                <div class="save-captured-image"> 
+                                    <label for="description" class="font-bold block mb-2">Spremi fotografiju?</label>
+                                    <div class="captured-image-container">
+                                        <img [src]="capturedImage" alt="Captured Photo">
+                                        <div class="save-captured-image-buttons">
+                                          <button 
+                                              pButton
+                                              label="Odbaci"
+                                              class="p-button-text" 
+                                              (click)="discardImage()">
+                                          </button>
+
+                                          <button 
+                                              pButton
+                                              label="Spremi"
+                                              (click)="saveImage()">
+                                          </button>
+                                        </div>
+                                    </div>
+                                </div>
                             }
+                            </p-tabPanel>
+                            <p-tabPanel header="Komentari">
+                                <p>
+                                    At vero eos et accusamus et iusto odio dignissimos...
+                                </p>
+                            </p-tabPanel>
+                        } @else {
+                            <div class="details">
+                                <div>
+                                    <span><b>Kućica:</b> {{getHouseForTask(task)?.house_number}}</span>
+                                </div>
+
+                                <div>
+                                    <span><b>Tip:</b> {{getTaskTypeName(task)}}</span>
+                                </div>
+
+                                <div>
+                                    <span><b>Status:</b> {{getTaskProgressTypeName(task)}}</span>
+                                </div>
+
+                                <div>
+                                    <span><b>Opis:</b> {{task?.description}}</span>
+                                </div>
                             </div>
                         }
-                    </div>
+                    </p-tabView>
                 </p-dialog>
             </div>
         </div>
@@ -159,7 +242,7 @@ interface SpecialLocation {
             [modal]="true"
             [style]="{ width: '30rem' }"
             [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
-            (onHide)="resetForm()"
+            (onHide)="resetForm('fault-report')"
         >
             <div class="fault-report-form">
                 <div class="field">
@@ -204,11 +287,11 @@ interface SpecialLocation {
                         <div class="task-images-container" [ngStyle]="{'justify-content': taskImages.length ? 'flex-start' : 'center'}">
                             <input type="file" accept="image/*" capture="environment" (change)="handleImageCapture($event)" hidden #fileInput>
 
-                            @for(image of taskImages; track image.base64Url){
+                            @for(image of taskImages; let i = $index; track i){
                                 <div class="task-images">
                                     <div class="image-wrapper">
                                         <div class="close-icon-container">
-                                            <i (click)="removeImage(image)" class="pi pi-trash"></i>
+                                            <i (click)="removeImage(image, $event, 'repair-task')" class="pi pi-trash"></i>
                                         </div>
                                         <img (click)="onOpenImage(image.base64Url)" [src]="image.base64Url" [alt]="image.base64Url" >
                                     </div>
@@ -341,8 +424,21 @@ interface SpecialLocation {
         </p-dialog>
 
         <p-toast></p-toast>
+        
+        <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
     </div>`,
     styles: [`
+       ::ng-deep .p-tablist-tab-list {
+            justify-content: space-evenly;
+        }
+    
+        ::ng-deep .p-tabview-panel {
+            min-height: 150px;
+            border-radius: 4px;
+            transition: transform 0.3s ease;
+            border-radius: 4px;
+        }
+
         ::ng-deep {
             .p-speeddial {
                 position: fixed !important;
@@ -398,7 +494,11 @@ interface SpecialLocation {
             }
         }
 
-        .fault-report-form, .task-form {
+        .team-card{
+            padding: 0 !important;
+        }
+
+        .fault-report-form, .task-form, .team-card {
             padding: 1.5rem 0;
 
             .field {
@@ -619,7 +719,12 @@ interface SpecialLocation {
             .details{
               display: flex;
               flex-direction: column;
-              gap: 10px;
+              gap: 15px;
+              margin-top: 10px;
+
+              span{
+                font-size: 16px;
+              }
             
               .task-images{
                 width: 100%;
@@ -672,7 +777,7 @@ export class AppLayout {
     houses: House[] = [];
     taskTypes: TaskType[] = [];
     taskProgressTypes: TaskProgressType[] = [];
-    task: any;
+    task: any = {};
     tasks: Task[] = [];
 
     imageToUpload: any;
@@ -687,6 +792,8 @@ export class AppLayout {
             icon: 'pi pi-wrench',
             command: () => {
                 this.faultReportVisible = true;
+                this.isTaskDetailsWindowVisible = false;
+                this.resetForm('task-details');
             }
         },
         {
@@ -719,7 +826,8 @@ export class AppLayout {
         public router: Router,
         private dataService: DataService,
         private taskService: TaskService,
-        private messageService: MessageService
+        private messageService: MessageService,
+        private confirmationService: ConfirmationService,
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
@@ -767,6 +875,8 @@ export class AppLayout {
     ngOnInit(){
         this.taskService.$taskModalData.subscribe(res => {
             if(res){
+                this.resetForm('fault-report');
+
                 if(res.taskId) {
                     this.task = this.tasks.find(task => task.task_id == res.taskId);
                 } else {
@@ -774,6 +884,7 @@ export class AppLayout {
                 }
             
                 this.isTaskDetailsWindowVisible = true;
+                this.faultReportVisible = false;
 
                 if(this.getTaskTypeName(this.task) == 'Popravak'){
                     this.getStoredImagesForTask(this.task);
@@ -1170,18 +1281,31 @@ export class AppLayout {
         }
     }
 
-    saveImage(){
-      if(this.imageToUpload && this.capturedImage){
-        const renamedFile = this.renameImageNameForSupabaseStorage();
-        this.taskImages.push({
-            base64Url: this.capturedImage,
-            file: renamedFile,
-        });
-        this.imagesToUpload.push(renamedFile);
-        this.capturedImage = '';
-      } else{
-        console.log("Image or id null");
-      }
+    async saveImage(){
+        if(this.imageToUpload && this.capturedImage){
+            const renamedFile = this.renameImageNameForSupabaseStorage();
+
+            if(this.task && Object.keys(this.task).length > 0){
+                this.taskImages.push({
+                    url: this.capturedImage,
+                    file: renamedFile,
+                });
+            } else {
+                this.taskImages.push({
+                    base64Url: this.capturedImage,
+                    file: renamedFile,
+                });
+            }
+
+            this.imagesToUpload.push(renamedFile);
+            this.capturedImage = '';
+        } else{
+            console.log("Image or id null");
+        }
+
+        if(this.task){
+            await this.taskService.storeImagesForTask(this.imagesToUpload, this.task.task_id);
+        }
     }
     
     discardImage(){
@@ -1220,17 +1344,49 @@ export class AppLayout {
       return renamedFile;
     }
 
-    resetForm(){
+    resetForm(window: string){
         this.selectedLocation = null;
         this.faultDescription = '';
         this.capturedImage = '';
         this.taskImages = [];
-        this.taskService.$taskModalData.next(null);
+        this.imagesToUpload = [];
+        this.task = {};
+
+        if(window == 'task-details'){
+            this.taskService.$taskModalData.next(null);
+        }
     }
 
-    removeImage(imageToRemove: any){
-        this.taskImages = this.taskImages.filter(ti => ti.file != imageToRemove.file);
-        this.imagesToUpload = this.imagesToUpload.filter(itu => itu != imageToRemove.file);
+    removeImage(imageToRemove: any, event: any, window: string){
+        if(window == 'task-details'){
+            this.confirmationService.confirm({
+                target: event.target,
+                message: `Are you sure you want to remove this image?`,
+                header: 'Confirm Image Delete',
+                icon: 'pi pi-exclamation-triangle',
+                rejectLabel: 'Cancel',
+                rejectButtonProps: {
+                  label: 'Cancel',
+                  severity: 'secondary',
+                  outlined: true,
+                },
+                acceptButtonProps: {
+                  label: 'Confirm',
+                  severity: 'danger',
+                },
+                accept: async () => {
+                    this.taskService.removeImageForTask(imageToRemove, this.task.task_id);
+                    this.messageService.add({ severity: 'info', summary: 'Updated', detail: 'Image removed' });
+                    this.taskImages = this.taskImages.filter(ti => ti.url != imageToRemove.url);
+                },
+                reject: () => {
+                    this.messageService.add({ severity: 'warn', summary: 'Cancelled', detail: 'Change was cancelled' });
+                }
+            });
+        } else {
+            this.taskImages = this.taskImages.filter(ti => ti.file != imageToRemove.file);
+            this.imagesToUpload = this.imagesToUpload.filter(itu => itu != imageToRemove.file);
+        }
     }
 
     closeNotesWindow(){
@@ -1251,10 +1407,6 @@ export class AppLayout {
           delete this.positions['arrivals'];
           localStorage.setItem('windowPositions', JSON.stringify(this.positions));
         }
-    }
-
-    resetDialog(){
-      this.taskService.$taskModalData.next(null);
     }
     
     getHouseForTask(task: any){

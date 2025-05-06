@@ -145,6 +145,27 @@ export class TaskService {
     }
   }
 
+  async removeImageForTask(image: any, taskId: number) {
+    try {
+      const filePath = image.path || `task-${taskId}/${image.name}`;
+  
+      const { error } = await this.supabaseService.getClient()
+        .storage
+        .from('damage-reports-images')
+        .remove([filePath]);
+  
+      if (error) {
+        throw error;
+      }
+  
+      console.log(`Image ${filePath} deleted successfully.`);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error removing image:', error);
+      return { error: error.message || "Error removing image from Supabase" };
+    }
+  }
+
   private async compressImage(image: File, targetMegaBytes: number){
     const options = {
       maxSizeMB: targetMegaBytes, 
