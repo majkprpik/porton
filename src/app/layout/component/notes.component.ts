@@ -5,6 +5,7 @@ import { NotesService } from '../../pages/service/notes.service';
 import { DataService, Note, Profile } from '../../pages/service/data.service';
 import { combineLatest } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
+import { ProfileService } from '../../pages/service/profile.service';
 
 @Component({
   selector: 'app-notes',
@@ -35,7 +36,7 @@ import { ButtonModule } from 'primeng/button';
           <span>No notes for today</span>
         } @else {
           @for(note of last5DaysNotes[daysIndex]; track $index){
-            <span><b>{{findUser(note.profile_id)?.first_name}} - {{note.time_sent | date: 'HH:mm'}}:</b> {{note.note}}</span>
+            <span><b>{{profileService.findProfile(note.profile_id)?.first_name}} - {{note.time_sent | date: 'HH:mm'}}:</b> {{note.note}}</span>
           }
         }
       </div>
@@ -133,7 +134,6 @@ export class NotesComponent {
 
   note: string = '';
   notes: Note[] = [];
-  users: Profile[] = [];
   last5DaysNotes: { [key: number]: Note[] } = {};
   daysIndex = 4;
   daysDisplay = ['4 days ago', '3 days ago', '2 days ago', '1 day ago', 'Today'];
@@ -142,6 +142,7 @@ export class NotesComponent {
   constructor(
     private notesService: NotesService,
     private dataService: DataService,
+    public profileService: ProfileService,
   ) {
   }
 
@@ -164,12 +165,10 @@ export class NotesComponent {
   ngOnInit(){
     combineLatest([
       this.dataService.notes$,
-      this.dataService.profiles$,
       this.dataService.$areNotesLoaded,
     ]).subscribe({
-      next: ([notes, users, areNotesLoaded]) => {
+      next: ([notes, areNotesLoaded]) => {
         this.notes = notes;
-        this.users = users;
 
         if(notes && areNotesLoaded){
           this.areNotesLoaded = true;
@@ -209,14 +208,6 @@ export class NotesComponent {
         }
       }
     });
-  }
-
-  findUser(profileId: string){
-    let foundUser = this.users.find(user => user.id == profileId);
-    if(foundUser && !foundUser?.first_name){
-      foundUser.first_name = foundUser?.role + ' ' + 'user'
-    }
-    return foundUser
   }
 
   async addNote(event: any){

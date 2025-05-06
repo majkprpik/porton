@@ -10,12 +10,27 @@ import { DataService, Profile } from './data.service';
 export class ProfileService {
   $staffToAdd = new BehaviorSubject<any>(null);
   $staffToRemove = new BehaviorSubject<any>(null);
+  profiles: Profile[] = [];
 
   constructor(
     private supabase: SupabaseService,
     private workGroupService: WorkGroupService,
     private dataService: DataService
-  ) {}
+  ) {
+    this.dataService.profiles$.subscribe(profiles => {
+      this.profiles = profiles;
+    }); 
+  }
+
+  findProfile(profileId: string){
+    let foundUser = this.profiles.find(profile => profile.id == profileId);
+    
+    if(foundUser && !foundUser?.first_name){
+      foundUser.first_name = foundUser?.role + ' ' + 'user'
+    }
+
+    return foundUser
+  }
 
   /**
    * Get all profiles
