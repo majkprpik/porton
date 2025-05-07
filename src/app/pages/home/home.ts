@@ -20,87 +20,58 @@ interface SpecialLocation {
 @Component({
     selector: 'app-home',
     standalone: true,
-    imports: [
-        CommonModule, 
-        CardModule, 
-        ButtonModule, 
-        DialogModule,
-        DropdownModule,
-        FormsModule,
-    ],
+    imports: [CommonModule, CardModule, ButtonModule, DialogModule, DropdownModule, FormsModule],
     template: `
-        <div class="home-container" (click)="handleContainerClick($event)">         
+        <div class="home-container" (click)="handleContainerClick($event)">
             <div class="house-grid">
                 @for (house of houses(); track house.house_id) {
-                    <div class="house-card" 
-                         [class.occupied]="isHouseOccupied(house.house_id)" 
-                         [class.available]="!isHouseOccupied(house.house_id)"
-                         [class.expanded]="expandedHouseId === house.house_id"
-                         (click)="toggleExpand($event, house.house_id)">
+                    <div class="house-card" [class.occupied]="isHouseOccupied(house.house_id)" [class.available]="!isHouseOccupied(house.house_id)" [class.expanded]="expandedHouseId === house.house_id" (click)="toggleExpand($event, house.house_id)">
                         <div class="house-content">
-                            <div class="house-number">{{house.house_number}}</div>
+                            <div class="house-number">{{ house.house_number }}</div>
                             <div class="house-icons">
-                                @if(hasAnyTasks(house.house_id)) {
+                                @if (hasAnyTasks(house.house_id)) {
                                     @for (task of getHouseTasks(house.house_id); track task.taskId) {
-                                        @if(taskService.isRepairTask(task)) {
-                                            <i 
-                                                class="pi pi-wrench" 
-                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
-                                                (click)="openTaskDetails(task)"
-                                            ></i>
-                                        } @else if(taskService.isHouseCleaningTask(task)) {
-                                            <i 
-                                                class="pi pi-home" 
-                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
-                                                (click)="openTaskDetails(task)"
-                                            ></i>
-                                        } @else if(taskService.isTowelChangeTask(task)){
-                                            <i 
-                                                class="pi pi-bookmark" 
-                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
-                                                (click)="openTaskDetails(task)"
-                                            ></i>
-                                        } @else if(taskService.isDeckCleaningTask(task)){
-                                            <i 
-                                                class="pi pi-table" 
-                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
-                                                (click)="openTaskDetails(task)"
-                                            ></i>
-                                        } @else if(taskService.isSheetChangeTask(task)){
-                                            <i 
-                                                class="pi pi-inbox" 
-                                                [ngClass]="{'rotate-icon': taskService.isTaskInProgress(task)}"
-                                                (click)="openTaskDetails(task)"
-                                            ></i>
+                                        @if (taskService.isRepairTask(task)) {
+                                            <i class="pi pi-wrench" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                        } @else if (taskService.isHouseCleaningTask(task)) {
+                                            <i class="pi pi-home" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                        } @else if (taskService.isTowelChangeTask(task)) {
+                                            <i class="pi pi-bookmark" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                        } @else if (taskService.isDeckCleaningTask(task)) {
+                                            <i class="pi pi-table" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                        } @else if (taskService.isSheetChangeTask(task)) {
+                                            <i class="pi pi-inbox" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
                                         }
                                     }
                                 }
                             </div>
                         </div>
-                        <div class="expanded-content" 
-                             [class.expanded-occupied]="!isCurrentSlotGap(house.house_id) && isHouseOccupied(house.house_id)"
-                             [class.expanded-free]="isCurrentSlotGap(house.house_id) || !isHouseOccupied(house.house_id)"
-                             (click)="handleExpandedContentClick($event)">
+                        <div
+                            class="expanded-content"
+                            [class.expanded-occupied]="!isCurrentSlotGap(house.house_id) && isCurrentSlotOccupied(house.house_id)"
+                            [class.expanded-free]="isCurrentSlotGap(house.house_id) || !isCurrentSlotOccupied(house.house_id)"
+                            (click)="handleExpandedContentClick($event)"
+                        >
                             <div class="date-range">
                                 <div class="date-nav">
                                     <i class="pi pi-chevron-left" (click)="navigateReservation(house.house_id, 'prev')"></i>
-                                    <span>{{getCurrentReservationDates(house.house_id)}}</span>
+                                    <span>{{ getCurrentReservationDates(house.house_id) }}</span>
                                     <i class="pi pi-chevron-right" (click)="navigateReservation(house.house_id, 'next')"></i>
                                 </div>
                                 <div class="numbers">
                                     <div class="number-item">
                                         <i class="pi pi-user"></i>
-                                        <span>{{getAdultsCount(house.house_id)}}</span>
+                                        <span>{{ getAdultsCount(house.house_id) }}</span>
                                     </div>
                                     <span class="separator">|</span>
                                     <div class="number-item">
                                         <i class="pi pi-heart"></i>
-                                        <span>{{getBabiesCount(house.house_id)}}</span>
+                                        <span>{{ getBabiesCount(house.house_id) }}</span>
                                     </div>
                                     <span class="separator">|</span>
                                     <div class="number-item">
                                         <i class="pi pi-star"></i>
-                                        <span>{{getDogsCount(house.house_id)}}</span>
+                                        <span>{{ getDogsCount(house.house_id) }}</span>
                                     </div>
                                 </div>
                                 <!-- @if (hasAnyTasks(house.house_id)) {
@@ -124,331 +95,345 @@ interface SpecialLocation {
             </div>
         </div>
     `,
-    styles: [`
-        .home-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px
-        }
-        
-        .header-card {
-            background: var(--surface-card);
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-
-            h2 {
-                margin: 0;
-                color: var(--text-color);
-                font-size: 1.5rem;
-            }
-        }
-
-        .house-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.25rem;
-            padding: 0;
-            position: relative;
-        }
-
-        .house-card {
-            background: var(--surface-card);
-            border-radius: 6px;
-            box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 
-                       0 1px 1px 0 rgba(0,0,0,.14), 
-                       0 1px 3px 0 rgba(0,0,0,.12);
-            transition: all 0.2s ease;
-            cursor: pointer;
-            min-width: unset;
-            position: relative;
-            z-index: 1;
-
-            &.expanded {
-                z-index: 2;
-                border-radius: 6px 6px 0 0;
-                box-shadow: none;
-                outline: 1px solid rgba(255, 255, 255, 0.3);
-
-                .expanded-content {
-                    visibility: visible;
-                    opacity: 1;
-                    transform: translateY(0);
-                    border-radius: 0 0 6px 6px;
-                    outline: 1px solid rgba(255, 255, 255, 0.3);
-                    outline-top: none;
-                    margin-top: -1px;
-                }
-
-                &:before {
-                    content: '';
-                    position: absolute;
-                    top: -1px;
-                    left: -1px;
-                    right: -1px;
-                    bottom: -1px;
-                    z-index: -1;
-                    border-radius: 7px;
-                    box-shadow: var(--p-shadow-2);
-                }
-            }
-
-            .house-content {
-                padding: 0.5rem;
+    styles: [
+        `
+            .home-container {
                 display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
+                flex-direction: column;
+                gap: 10px;
             }
 
-            .expanded-content {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background: inherit;
+            .header-card {
+                background: var(--surface-card);
+                padding: 1rem;
                 border-radius: 6px;
-                box-shadow: var(--p-shadow-2);
-                padding: 0.5rem;
-                visibility: hidden;
-                opacity: 0;
-                transform: translateY(-10px);
-                transition: all 0.3s ease;
-                z-index: 3;
+                margin-bottom: 1rem;
 
-                &.expanded-occupied {
-                    background: var(--p-red-400);
-                    color: white;
-
-                    .date-nav i {
-                        color: white;
-                        &:hover {
-                            background-color: rgba(255, 255, 255, 0.2);
-                        }
-                    }
-
-                    & + .house-content {
-                        background: var(--p-red-400);
-                        color: white;
-                        border-radius: 6px 6px 0 0;
-                    }
-                }
-
-                &.expanded-free {
-                    background: var(--p-green-500);
-                    color: white;
-
-                    .date-nav i {
-                        color: white;
-                        &:hover {
-                            background-color: rgba(255, 255, 255, 0.2);
-                        }
-                    }
-
-                    & + .house-content {
-                        background: var(--p-green-500);
-                        color: white;
-                        border-radius: 6px 6px 0 0;
-                    }
-                }
-
-                .date-range {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 0.5rem;
-
-                    .date-nav {
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        font-size: 1rem;
-
-                        i {
-                            cursor: pointer;
-                            padding: 0.25rem;
-                            border-radius: 50%;
-                            transition: background-color 0.2s;
-
-                            &:hover {
-                                background-color: var(--p-surface-hover);
-                            }
-                        }
-                    }
-
-                    .numbers {
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        font-size: 1.2rem;
-                        font-weight: 500;
-
-                        .number-item {
-                            display: flex;
-                            align-items: center;
-                            gap: 0.25rem;
-
-                            i {
-                                font-size: 1rem;
-                            }
-                        }
-
-                        .separator {
-                            opacity: 0.8;
-                        }
-                    }
+                h2 {
+                    margin: 0;
+                    color: var(--text-color);
+                    font-size: 1.5rem;
                 }
             }
 
-            &.available {
-                background: var(--p-surface-ground);
-                .house-number, .house-icons i {
-                    color: var(--p-green-500);
-                }
-
-                @media (prefers-color-scheme: dark) {
-                    background: var(--p-green-400);
-                    .house-number, .house-icons i {
-                        color: var(--p-green-100);
-                    }
-                }
-            }
-
-            &.occupied {
-                background: var(--p-surface-ground);
-                .house-number, .house-icons i {
-                    color: var(--p-red-500);
-                }
-
-                @media (prefers-color-scheme: dark) {
-                    background: var(--p-red-400);
-                    .house-number, .house-icons i {
-                        color: var(--p-red-100);
-                    }
-                }
-            }
-
-            &:hover {
-                box-shadow: var(--p-shadow-2);
-                transform: translateY(-1px);
-            }
-
-            .house-number {
-                font-size: 1.25rem;
-                font-weight: 700;
-                padding-left: 0;
-            }
-
-            .house-icons {
-                display: flex;
-                gap: 0.25rem;
-                padding-right: 0;
-
-                i {
-                    font-size: 1.25rem;
-                }
-            }
-        }
-
-        @media screen and (min-width: 768px) {
             .house-grid {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 0.5rem;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.25rem;
+                padding: 0;
+                position: relative;
             }
 
             .house-card {
+                background: var(--surface-card);
+                border-radius: 6px;
+                box-shadow:
+                    0 2px 1px -1px rgba(0, 0, 0, 0.2),
+                    0 1px 1px 0 rgba(0, 0, 0, 0.14),
+                    0 1px 3px 0 rgba(0, 0, 0, 0.12);
+                transition: all 0.2s ease;
+                cursor: pointer;
+                min-width: unset;
+                position: relative;
+                z-index: 1;
+
+                &.expanded {
+                    z-index: 2;
+                    border-radius: 6px 6px 0 0;
+                    box-shadow: none;
+                    outline: 1px solid rgba(255, 255, 255, 0.3);
+
+                    .house-content {
+                        border-radius: 6px 6px 0 0;
+                    }
+
+                    .expanded-content {
+                        visibility: visible;
+                        opacity: 1;
+                        transform: translateY(0);
+                        border-radius: 0 0 6px 6px;
+                        outline: 1px solid rgba(255, 255, 255, 0.3);
+                        outline-top: none;
+                        margin-top: -1px;
+                    }
+
+                    &:before {
+                        content: '';
+                        position: absolute;
+                        top: -1px;
+                        left: -1px;
+                        right: -1px;
+                        bottom: -1px;
+                        z-index: -1;
+                        border-radius: 7px;
+                        box-shadow: var(--p-shadow-2);
+                    }
+                }
+
                 .house-content {
-                    padding: 0.75rem 1rem;
+                    padding: 0.5rem;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+
+                .expanded-content {
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    width: 100%;
+                    background: var(--surface-card);
+                    border-radius: 6px;
+                    box-shadow: var(--p-shadow-2);
+                    padding: 0.5rem;
+                    visibility: hidden;
+                    opacity: 0;
+                    transform: translateY(-10px);
+                    transition: all 0.3s ease;
+                    z-index: 3;
+
+                    &.expanded-occupied {
+                        background: var(--p-red-400);
+                        color: white;
+
+                        .date-nav i {
+                            color: white;
+                            &:hover {
+                                background-color: rgba(255, 255, 255, 0.2);
+                            }
+                        }
+                    }
+
+                    &.expanded-free {
+                        background: var(--p-green-500);
+                        color: white;
+
+                        .date-nav i {
+                            color: white;
+                            &:hover {
+                                background-color: rgba(255, 255, 255, 0.2);
+                            }
+                        }
+                    }
+
+                    .date-range {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 0.5rem;
+
+                        .date-nav {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            font-size: 1rem;
+
+                            i {
+                                cursor: pointer;
+                                padding: 0.25rem;
+                                border-radius: 50%;
+                                transition: background-color 0.2s;
+
+                                &:hover {
+                                    background-color: var(--p-surface-hover);
+                                }
+                            }
+                        }
+
+                        .numbers {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            font-size: 1.2rem;
+                            font-weight: 500;
+
+                            .number-item {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.25rem;
+
+                                i {
+                                    font-size: 1rem;
+                                }
+                            }
+
+                            .separator {
+                                opacity: 0.8;
+                            }
+                        }
+                    }
+                }
+
+                &.available {
+                    // background: var(--p-surface-ground);
+                    // .house-number, .house-icons i {
+                    //     color: var(--p-green-500);
+                    // }
+
+                    background: var(--p-green-400);
+                    .house-number,
+                    .house-icons i {
+                        color: var(--p-green-100);
+                    }
+
+                    @media (prefers-color-scheme: dark) {
+                        background: var(--p-green-400);
+                        .house-number,
+                        .house-icons i {
+                            color: var(--p-green-100);
+                        }
+                    }
+                }
+
+                &.occupied {
+                    // background: var(--p-surface-ground);
+                    // .house-number,
+                    // .house-icons i {
+                    //     color: var(--p-red-500);
+                    // }
+
+                    background: var(--p-red-400);
+                    .house-number,
+                    .house-icons i {
+                        color: var(--p-red-100);
+                    }
+
+                    @media (prefers-color-scheme: dark) {
+                        background: var(--p-red-400);
+                        .house-number,
+                        .house-icons i {
+                            color: var(--p-red-100);
+                        }
+                    }
+                }
+
+                &:hover {
+                    box-shadow: var(--p-shadow-2);
+                    transform: translateY(-1px);
                 }
 
                 .house-number {
-                    font-size: 1.5rem;
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    padding-left: 0;
                 }
 
                 .house-icons {
-                    gap: 0.5rem;
+                    display: flex;
+                    gap: 0.25rem;
+                    padding-right: 0;
+
                     i {
-                        font-size: 1.5rem;
+                        font-size: 1.25rem;
                     }
                 }
             }
-        }
 
-        @media screen and (min-width: 1200px) {
-            .house-grid {
-                grid-template-columns: repeat(6, 1fr);
-            }
-        }
+            @media screen and (min-width: 768px) {
+                .house-grid {
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 0.5rem;
+                }
 
-        .tasks-section {
-            margin-top: 0.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            padding-top: 0.5rem;
-        }
+                .house-card {
+                    .house-content {
+                        padding: 0.75rem 1rem;
+                    }
 
-        .tasks-header {
-            font-size: 0.9rem;
-            margin-bottom: 0.3rem;
-            opacity: 0.9;
-        }
+                    .house-number {
+                        font-size: 1.5rem;
+                    }
 
-        .tasks-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-        }
-
-        .task-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.1);
-
-            &.completed {
-                background: rgba(255, 255, 255, 0.2);
+                    .house-icons {
+                        gap: 0.5rem;
+                        i {
+                            font-size: 1.5rem;
+                        }
+                    }
+                }
             }
 
-            i {
-                font-size: 1rem;
-            }
-        }
-
-        .fault-report-form {
-            padding: 1.5rem 0;
-
-            .field {
-                margin-bottom: 1rem;
+            @media screen and (min-width: 1200px) {
+                .house-grid {
+                    grid-template-columns: repeat(6, 1fr);
+                }
             }
 
-            label {
-                color: var(--text-color);
-            }
-        }
-
-        .task-form {
-            padding: 1.5rem 0;
-
-            .field {
-                margin-bottom: 1rem;
+            .tasks-section {
+                margin-top: 0.5rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+                padding-top: 0.5rem;
             }
 
-            label {
-                color: var(--text-color);
+            .tasks-header {
+                font-size: 0.9rem;
+                margin-bottom: 0.3rem;
+                opacity: 0.9;
             }
-        }
 
-        .rotate-icon {
-            animation: rotate 2s linear infinite;
-        }
+            .tasks-list {
+                display: flex;
+                flex-direction: column;
+                gap: 0.3rem;
+            }
 
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(360deg); }
-        }
-    `]
+            .task-item {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-size: 0.9rem;
+                padding: 0.2rem 0.5rem;
+                border-radius: 4px;
+                background: rgba(255, 255, 255, 0.1);
+
+                &.completed {
+                    background: rgba(255, 255, 255, 0.2);
+                }
+
+                i {
+                    font-size: 1rem;
+                }
+            }
+
+            .fault-report-form {
+                padding: 1.5rem 0;
+
+                .field {
+                    margin-bottom: 1rem;
+                }
+
+                label {
+                    color: var(--text-color);
+                }
+            }
+
+            .task-form {
+                padding: 1.5rem 0;
+
+                .field {
+                    margin-bottom: 1rem;
+                }
+
+                label {
+                    color: var(--text-color);
+                }
+            }
+
+            .rotate-icon {
+                animation: rotate 2s linear infinite;
+            }
+
+            @keyframes rotate {
+                from {
+                    transform: rotate(0deg);
+                }
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+        `
+    ]
 })
 export class Home implements OnInit, OnDestroy {
     houses = signal<House[]>([]);
@@ -463,7 +448,7 @@ export class Home implements OnInit, OnDestroy {
         { name: 'Zgrada', type: 'building' },
         { name: 'Parcela', type: 'parcel' }
     ];
-    
+
     // Combined location options
     locationOptions: (House | SpecialLocation)[] = [];
 
@@ -512,42 +497,42 @@ export class Home implements OnInit, OnDestroy {
         private dataService: DataService,
         public taskService: TaskService
     ) {}
-    
+
     ngOnInit(): void {
         // Load houses data if not already loaded
         this.dataService.loadHouses().subscribe();
-        
+
         // Load house availabilities data if not already loaded
         this.dataService.loadHouseAvailabilities().subscribe();
 
         // Load house statuses data
         this.dataService.loadHouseStatuses().subscribe();
-        
+
         // Subscribe to houses data from DataService
-        const housesSubscription = this.dataService.houses$.subscribe(houses => {
+        const housesSubscription = this.dataService.houses$.subscribe((houses) => {
             this.houses.set(houses);
             // Update location options when houses change
             this.updateLocationOptions();
         });
 
         // Subscribe to house availabilities data from DataService
-        const availabilitiesSubscription = this.dataService.houseAvailabilities$.subscribe(availabilities => {
+        const availabilitiesSubscription = this.dataService.houseAvailabilities$.subscribe((availabilities) => {
             this.houseAvailabilities.set(availabilities);
         });
 
         // Subscribe to house statuses data from DataService
-        const statusesSubscription = this.dataService.houseStatuses$.subscribe(statuses => {
+        const statusesSubscription = this.dataService.houseStatuses$.subscribe((statuses) => {
             this.houseStatuses.set(statuses);
         });
-        
+
         // Store subscriptions for cleanup
         this.subscriptions.push(housesSubscription, availabilitiesSubscription, statusesSubscription);
 
         // Subscribe to task types
-        const taskTypesSubscription = this.dataService.taskTypes$.subscribe(types => {
+        const taskTypesSubscription = this.dataService.taskTypes$.subscribe((types) => {
             this.taskTypes.set(types);
         });
-        
+
         // Add to subscriptions array
         this.subscriptions.push(taskTypesSubscription);
 
@@ -587,7 +572,7 @@ export class Home implements OnInit, OnDestroy {
     // Handle location change in fault report dialog
     onLocationChange(event: any) {
         const selection = event.value;
-        if (selection && ('type' in selection)) {
+        if (selection && 'type' in selection) {
             // This is a special location
             this.locationType = selection.type;
             this.selectedHouse = null;
@@ -601,7 +586,7 @@ export class Home implements OnInit, OnDestroy {
     // Handle location change in extraordinary task dialog
     onLocationChangeForTask(event: any) {
         const selection = event.value;
-        if (selection && ('type' in selection)) {
+        if (selection && 'type' in selection) {
             // This is a special location
             this.locationTypeForTask = selection.type;
             this.selectedHouseForTask = null;
@@ -617,14 +602,14 @@ export class Home implements OnInit, OnDestroy {
         today.setHours(0, 0, 0, 0);
 
         const allSlots = this.getSortedReservationsWithGaps(houseId);
-        const index = allSlots.findIndex(slot => {
+        const index = allSlots.findIndex((slot) => {
             if (slot.isGap) return false;
-            
+
             const startDate = new Date(slot.startDate);
             const endDate = new Date(slot.endDate!);
             startDate.setHours(0, 0, 0, 0);
             endDate.setHours(23, 59, 59, 999);
-            
+
             // If today is the start date or within the reservation period
             return (startDate.getTime() === today.getTime() || today > startDate) && today <= endDate;
         });
@@ -634,14 +619,14 @@ export class Home implements OnInit, OnDestroy {
 
     getSortedReservations(houseId: number): HouseAvailability[] {
         return this.houseAvailabilities()
-            .filter(availability => availability.house_id === houseId)
+            .filter((availability) => availability.house_id === houseId)
             .sort((a, b) => new Date(a.house_availability_start_date).getTime() - new Date(b.house_availability_start_date).getTime());
     }
 
     getSortedReservationsWithGaps(houseId: number): { isGap: boolean; startDate: Date; endDate: Date | null; nextStartDate: Date | null }[] {
         const reservations = this.getSortedReservations(houseId);
         const result: { isGap: boolean; startDate: Date; endDate: Date | null; nextStartDate: Date | null }[] = [];
-        
+
         // If we have no reservations, return empty array
         if (reservations.length === 0) {
             return result;
@@ -653,7 +638,7 @@ export class Home implements OnInit, OnDestroy {
         const firstReservation = reservations[0];
         const firstStart = new Date(firstReservation.house_availability_start_date);
         firstStart.setHours(0, 0, 0, 0);
-        
+
         // Only add initial gap if first reservation starts after today
         if (firstStart.getTime() > today.getTime()) {
             result.push({
@@ -663,11 +648,11 @@ export class Home implements OnInit, OnDestroy {
                 nextStartDate: firstStart
             });
         }
-        
+
         for (let i = 0; i < reservations.length; i++) {
             const current = reservations[i];
             const next = reservations[i + 1];
-            
+
             // Add current reservation
             result.push({
                 isGap: false,
@@ -675,15 +660,15 @@ export class Home implements OnInit, OnDestroy {
                 endDate: new Date(current.house_availability_end_date),
                 nextStartDate: null
             });
-            
+
             // Check for gap between current and next reservation
             if (next) {
                 const currentEnd = new Date(current.house_availability_end_date);
                 const nextStart = new Date(next.house_availability_start_date);
-                
+
                 // Add one day to currentEnd to check for immediate consecutive dates
                 currentEnd.setDate(currentEnd.getDate() + 1);
-                
+
                 if (currentEnd.getTime() < nextStart.getTime()) {
                     // There's a gap
                     result.push({
@@ -695,14 +680,14 @@ export class Home implements OnInit, OnDestroy {
                 }
             }
         }
-        
+
         return result;
     }
 
     getCurrentReservationDates(houseId: number): string {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const allSlots = this.getSortedReservationsWithGaps(houseId);
         const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
 
@@ -714,7 +699,7 @@ export class Home implements OnInit, OnDestroy {
         // If showing initial empty state (index is -1)
         if (currentIndex === -1) {
             // Find the next upcoming reservation or gap
-            const nextSlot = allSlots.find(slot => {
+            const nextSlot = allSlots.find((slot) => {
                 if (slot.isGap) {
                     return slot.startDate > today;
                 }
@@ -724,7 +709,10 @@ export class Home implements OnInit, OnDestroy {
             if (nextSlot) {
                 const formatDate = (date: Date) => `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.`;
                 if (nextSlot.isGap) {
-                    return `${formatDate(nextSlot.startDate)} - ${formatDate(nextSlot.endDate!)}`;
+                    // For gaps, also add one day to end date
+                    const endDatePlusOne = new Date(nextSlot.endDate!);
+                    endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
+                    return `${formatDate(nextSlot.startDate)} - ${formatDate(endDatePlusOne)}`;
                 } else {
                     return `----- - ${formatDate(nextSlot.startDate)}`;
                 }
@@ -735,25 +723,20 @@ export class Home implements OnInit, OnDestroy {
         // Show the selected slot
         const slot = allSlots[currentIndex];
         const formatDate = (date: Date) => `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.`;
-        
-        if (slot.isGap) {
-            // For gaps, show normal date range
-            return `${formatDate(slot.startDate)} - ${formatDate(slot.endDate!)}`;
-        } else {
-            // For reservations, add one day to end date
-            const endDatePlusOne = new Date(slot.endDate!);
-            endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
-            return `${formatDate(slot.startDate)} - ${formatDate(endDatePlusOne)}`;
-        }
+
+        // Always add one day to end date for both gaps and reservations
+        const endDatePlusOne = new Date(slot.endDate!);
+        endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
+        return `${formatDate(slot.startDate)} - ${formatDate(endDatePlusOne)}`;
     }
 
     navigateReservation(houseId: number, direction: 'prev' | 'next') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const allSlots = this.getSortedReservationsWithGaps(houseId);
         let currentIndex = this.currentReservationIndex.get(houseId);
-        
+
         // If we don't have a current index, initialize based on current state
         if (currentIndex === undefined) {
             currentIndex = this.getCurrentReservationIndex(houseId);
@@ -761,7 +744,7 @@ export class Home implements OnInit, OnDestroy {
 
         // If we're showing empty state (-1) and going next, start from the first upcoming slot
         if (currentIndex === -1 && direction === 'next') {
-            const nextIndex = allSlots.findIndex(slot => {
+            const nextIndex = allSlots.findIndex((slot) => {
                 if (slot.isGap) {
                     return slot.startDate > today;
                 }
@@ -784,7 +767,7 @@ export class Home implements OnInit, OnDestroy {
     getAdultsCount(houseId: number): number {
         const allSlots = this.getSortedReservationsWithGaps(houseId);
         const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-        
+
         if (currentIndex === -1 || currentIndex >= allSlots.length) {
             return 0;
         }
@@ -794,14 +777,14 @@ export class Home implements OnInit, OnDestroy {
             return 0;
         }
 
-        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter(s => !s.isGap).length - 1];
+        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter((s) => !s.isGap).length - 1];
         return reservation?.adults || 0;
     }
 
     getBabiesCount(houseId: number): number {
         const allSlots = this.getSortedReservationsWithGaps(houseId);
         const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-        
+
         if (currentIndex === -1 || currentIndex >= allSlots.length) {
             return 0;
         }
@@ -811,14 +794,14 @@ export class Home implements OnInit, OnDestroy {
             return 0;
         }
 
-        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter(s => !s.isGap).length - 1];
+        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter((s) => !s.isGap).length - 1];
         return reservation?.babies || 0;
     }
 
     getDogsCount(houseId: number): number {
         const allSlots = this.getSortedReservationsWithGaps(houseId);
         const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-        
+
         if (currentIndex === -1 || currentIndex >= allSlots.length) {
             return 0;
         }
@@ -828,7 +811,7 @@ export class Home implements OnInit, OnDestroy {
             return 0;
         }
 
-        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter(s => !s.isGap).length - 1];
+        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter((s) => !s.isGap).length - 1];
         if (!reservation) return 0;
         return (reservation.dogs_d || 0) + (reservation.dogs_s || 0) + (reservation.dogs_b || 0);
     }
@@ -836,7 +819,7 @@ export class Home implements OnInit, OnDestroy {
     isCurrentSlotGap(houseId: number): boolean {
         const allSlots = this.getSortedReservationsWithGaps(houseId);
         const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-        
+
         if (currentIndex === -1 || currentIndex >= allSlots.length) {
             return true; // Consider initial state as a gap
         }
@@ -847,7 +830,7 @@ export class Home implements OnInit, OnDestroy {
             today.setHours(0, 0, 0, 0);
             const endDate = new Date(slot.endDate);
             endDate.setHours(23, 59, 59, 999); // Make end date inclusive until end of day
-            
+
             if (today <= endDate) {
                 return false;
             }
@@ -856,36 +839,46 @@ export class Home implements OnInit, OnDestroy {
         return slot.isGap;
     }
 
+    isCurrentSlotOccupied(houseId: number): boolean {
+        const allSlots = this.getSortedReservationsWithGaps(houseId);
+        const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
+
+        // If we don't have a valid index or we're looking at a gap, the slot is not occupied
+        if (currentIndex === -1 || currentIndex >= allSlots.length || allSlots[currentIndex].isGap) {
+            return false;
+        }
+
+        // If we're looking at a reservation slot, it's occupied
+        return true;
+    }
+
     hasCompletedTasks(houseId: number): boolean {
-        const status = this.houseStatuses().find(s => s.house_id === houseId);
+        const status = this.houseStatuses().find((s) => s.house_id === houseId);
         if (!status?.housetasks?.length) return false;
-        let hasCompletedTasks = status.housetasks.some(task => this.taskService.isTaskCompleted(task)); // Assuming 3 is "Completed"
+        let hasCompletedTasks = status.housetasks.some((task) => this.taskService.isTaskCompleted(task)); // Assuming 3 is "Completed"
         return hasCompletedTasks;
     }
 
     hasInProgressTasks(houseId: number): boolean {
-        const status = this.houseStatuses().find(s => s.house_id === houseId);
+        const status = this.houseStatuses().find((s) => s.house_id === houseId);
         if (!status?.housetasks?.length) return false;
-        let hasTasksInProgress = status.housetasks.some(task => this.taskService.isTaskInProgress(task)); // Assuming 2 is "In Progress"
+        let hasTasksInProgress = status.housetasks.some((task) => this.taskService.isTaskInProgress(task)); // Assuming 2 is "In Progress"
         return hasTasksInProgress;
     }
 
     hasAnyTasks(houseId: number): boolean {
-        const status = this.houseStatuses().find(s => s.house_id === houseId);
+        const status = this.houseStatuses().find((s) => s.house_id === houseId);
         return !!status?.housetasks?.length;
     }
 
     getHouseTasks(houseId: number): HouseStatusTask[] {
-        const status = this.houseStatuses().find(s => s.house_id === houseId);
+        const status = this.houseStatuses().find((s) => s.house_id === houseId);
         return status?.housetasks || [];
     }
 
     // Update location options method
     updateLocationOptions() {
-        this.locationOptions = [
-            ...this.specialLocations, 
-            ...this.houses()
-        ];
+        this.locationOptions = [...this.specialLocations, ...this.houses()];
     }
 
     isFormValid(): boolean {
@@ -896,14 +889,14 @@ export class Home implements OnInit, OnDestroy {
         if (!this.isFormValid()) return;
 
         // Get fault report task type (assuming it's "Popravak")
-        this.dataService.getTaskTypeIdByTaskName("Popravak").then(taskTypeId => {
+        this.dataService.getTaskTypeIdByTaskName('Popravak').then((taskTypeId) => {
             if (!taskTypeId) {
                 console.error('Failed to get task type ID for "Popravak"');
                 return;
             }
 
             // Get "U tijeku" (In Progress) task progress type
-            this.dataService.getTaskProgressTypeIdByTaskProgressTypeName("U tijeku").then(progressTypeId => {
+            this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('U tijeku').then((progressTypeId) => {
                 if (!progressTypeId) {
                     console.error('Failed to get task progress type ID for "U tijeku"');
                     return;
@@ -932,9 +925,9 @@ export class Home implements OnInit, OnDestroy {
 
                 // Create task
                 this.dataService.createTask(taskData).subscribe(
-                    result => {
+                    (result) => {
                         console.log('Fault report created:', result);
-                        
+
                         // Reset form and close dialog
                         this.selectedLocation = null;
                         this.selectedHouse = null;
@@ -942,15 +935,14 @@ export class Home implements OnInit, OnDestroy {
                         this.faultDescription = '';
                         this.faultReportVisible = false;
                     },
-                    error => console.error('Error creating fault report:', error)
+                    (error) => console.error('Error creating fault report:', error)
                 );
             });
         });
     }
 
     isTaskFormValid(): boolean {
-        return !!this.selectedLocationForTask && 
-               !!this.selectedTaskType;
+        return !!this.selectedLocationForTask && !!this.selectedTaskType;
     }
 
     submitExtraordinaryTask() {
@@ -960,7 +952,7 @@ export class Home implements OnInit, OnDestroy {
         if (!this.selectedTaskType) return;
 
         // Get "U tijeku" (In Progress) task progress type
-        this.dataService.getTaskProgressTypeIdByTaskProgressTypeName("U tijeku").then(progressTypeId => {
+        this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('U tijeku').then((progressTypeId) => {
             if (!progressTypeId) {
                 console.error('Failed to get task progress type ID for "U tijeku"');
                 return;
@@ -989,9 +981,9 @@ export class Home implements OnInit, OnDestroy {
 
             // Create task
             this.dataService.createTask(taskData).subscribe(
-                result => {
+                (result) => {
                     console.log('Extraordinary task created:', result);
-                    
+
                     // Reset form and close dialog
                     this.selectedLocationForTask = null;
                     this.selectedHouseForTask = null;
@@ -1000,7 +992,7 @@ export class Home implements OnInit, OnDestroy {
                     this.taskDescription = '';
                     this.extraordinaryTaskVisible = false;
                 },
-                error => console.error('Error creating extraordinary task:', error)
+                (error) => console.error('Error creating extraordinary task:', error)
             );
         });
     }
@@ -1009,45 +1001,46 @@ export class Home implements OnInit, OnDestroy {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const todayTime = today.getTime();
-        
+
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
         yesterday.setHours(0, 0, 0, 0);
         const yesterdayTime = yesterday.getTime();
 
-        const houseAvailabilities = this.houseAvailabilities().filter(availability => {
-            if (availability.house_id == houseId) {
-                const start = new Date(availability.house_availability_start_date);
-                start.setHours(0, 0, 0, 0);
-        
-                const end = new Date(availability.house_availability_end_date);
-                end.setHours(23, 59, 59, 999);
-        
-                // Main case: today is in range
-                const isTodayInRange = start.getTime() <= todayTime && end.getTime() >= todayTime;
-        
-                // Extra case: ended exactly yesterday
-                const endedYesterday = end.getTime() >= yesterdayTime && end.getTime() < todayTime;
-        
-                return isTodayInRange || endedYesterday;
-            }
-        
-            return false;
-        })
-        .sort((a, b) => {
-          const endA = new Date(a.house_availability_end_date).getTime();
-          const endB = new Date(b.house_availability_end_date).getTime();
-          return endA - endB;
-        });
+        const houseAvailabilities = this.houseAvailabilities()
+            .filter((availability) => {
+                if (availability.house_id == houseId) {
+                    const start = new Date(availability.house_availability_start_date);
+                    start.setHours(0, 0, 0, 0);
 
-        if(houseAvailabilities && houseAvailabilities.length == 1){
-            return !houseAvailabilities[0].has_departed;
-        } else if(houseAvailabilities && houseAvailabilities.length == 2){
-            if(!houseAvailabilities[0].has_departed){
-                return true;
-            } else if(houseAvailabilities[0].has_departed && !houseAvailabilities[1].has_arrived){
+                    const end = new Date(availability.house_availability_end_date);
+                    end.setHours(23, 59, 59, 999);
+
+                    // Main case: today is in range
+                    const isTodayInRange = start.getTime() <= todayTime && end.getTime() >= todayTime;
+
+                    // Extra case: ended exactly yesterday
+                    const endedYesterday = end.getTime() >= yesterdayTime && end.getTime() < todayTime;
+
+                    return isTodayInRange || endedYesterday;
+                }
+
                 return false;
-            } else if(houseAvailabilities[0].has_departed && houseAvailabilities[1].has_arrived){
+            })
+            .sort((a, b) => {
+                const endA = new Date(a.house_availability_end_date).getTime();
+                const endB = new Date(b.house_availability_end_date).getTime();
+                return endA - endB;
+            });
+
+        if (houseAvailabilities && houseAvailabilities.length == 1) {
+            return !houseAvailabilities[0].has_departed;
+        } else if (houseAvailabilities && houseAvailabilities.length == 2) {
+            if (!houseAvailabilities[0].has_departed) {
+                return true;
+            } else if (houseAvailabilities[0].has_departed && !houseAvailabilities[1].has_arrived) {
+                return false;
+            } else if (houseAvailabilities[0].has_departed && houseAvailabilities[1].has_arrived) {
                 return true;
             }
         }
@@ -1055,12 +1048,12 @@ export class Home implements OnInit, OnDestroy {
         return false;
     }
 
-    openTaskDetails(task: any){
+    openTaskDetails(task: any) {
         this.taskService.$taskModalData.next(task);
     }
 
     ngOnDestroy(): void {
         // Unsubscribe from all subscriptions to prevent memory leaks
-        this.subscriptions.forEach(sub => sub.unsubscribe());
+        this.subscriptions.forEach((sub) => sub.unsubscribe());
     }
-} 
+}

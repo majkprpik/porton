@@ -146,8 +146,10 @@ export class ReservationFormComponent implements OnInit, OnChanges {
                 }
                 
                 if (currentReservation.house_availability_end_date) {
+                    // Add one day to end date for display purposes
                     this.endDate = new Date(currentReservation.house_availability_end_date);
-                    console.log("Updated endDate from reservation:", this.endDate);
+                    this.endDate.setDate(this.endDate.getDate() + 1);
+                    console.log("Updated endDate from reservation (added 1 day):", this.endDate);
                 }
             }
         }
@@ -294,11 +296,15 @@ export class ReservationFormComponent implements OnInit, OnChanges {
             return `${year}-${month}-${day}`;
         };
 
+        // Create a copy of the end date and subtract one day before saving
+        const adjustedEndDate = new Date(this.endDate);
+        adjustedEndDate.setDate(adjustedEndDate.getDate() - 1);
+
         const reservation: HouseAvailability = {
             ...this.reservation,
             house_id: this.houseId,
             house_availability_start_date: formatDate(this.startDate),
-            house_availability_end_date: formatDate(this.endDate),
+            house_availability_end_date: formatDate(adjustedEndDate), // Use adjusted end date here
             description: this.notes // Add notes to the reservation
         } as HouseAvailability;
         this.save.emit(reservation);
