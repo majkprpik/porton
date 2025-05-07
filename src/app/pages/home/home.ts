@@ -868,11 +868,17 @@ export class Home implements OnInit, OnDestroy {
 
     hasAnyTasks(houseId: number): boolean {
         const status = this.houseStatuses().find((s) => s.house_id === houseId);
+
+        debugger;
+
         return !!status?.housetasks?.length;
     }
 
     getHouseTasks(houseId: number): HouseStatusTask[] {
         const status = this.houseStatuses().find((s) => s.house_id === houseId);
+
+        debugger;
+
         return status?.housetasks || [];
     }
 
