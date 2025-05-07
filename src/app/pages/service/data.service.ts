@@ -125,7 +125,7 @@ export interface HouseAvailability {
   dogs_b: number;
   color_theme: number;
   color_tint: number;
-  description?: string | null;
+  note?: string | null;
   arrival_time?: string | null;
   departure_time?: string | null;
 }

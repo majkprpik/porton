@@ -76,8 +76,8 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         console.log("Form initialized with dates:", this.startDate, this.endDate);
         
         // Initialize notes from reservation description if it exists
-        if (this.reservation && this.reservation.description) {
-            this.notes = this.reservation.description;
+        if (this.reservation && this.reservation.note) {
+            this.notes = this.reservation.note;
         } else {
             // Make sure notes is empty for new reservations
             this.notes = '';
@@ -163,8 +163,8 @@ export class ReservationFormComponent implements OnInit, OnChanges {
                 console.log("Form visibility changed to visible, dates:", this.startDate, this.endDate);
                 
                 // Check for description
-                if (this.reservation && this.reservation.description) {
-                    this.notes = this.reservation.description;
+                if (this.reservation && this.reservation.note) {
+                    this.notes = this.reservation.note;
                 } else {
                     this.notes = '';
                 }
