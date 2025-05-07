@@ -735,6 +735,7 @@ export class WorkGroup implements OnInit {
 
       let lockedTeams = this.workGroupService.getLockedTeams();
       let lockedWorkGroupTasks: any[] = [];
+      let lockedWorkGroupProfiles: any[] = [];
       
       lockedTeams.forEach(lockedTeam => {
         lockedTeam.tasks?.forEach((task, index) => {
@@ -744,9 +745,17 @@ export class WorkGroup implements OnInit {
             index: index,
           });
         });
+
+        lockedTeam.members.forEach(member => {
+          lockedWorkGroupProfiles.push({
+            work_group_id: parseInt(lockedTeam.id),
+            profile_id: member.id,
+          });
+        })
       });
 
       this.dataService.setWorkGroupTasks(lockedWorkGroupTasks);
+      this.dataService.setWorkGroupProfiles(lockedWorkGroupProfiles);
       this.workGroupService.setActiveGroup(undefined);
     } else {
       // If the group is not active, activate it
