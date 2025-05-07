@@ -6,7 +6,6 @@ import { DataService, WorkGroup, Profile, Task, House, LockedTeam, TaskProgressT
 import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
-import { Router } from '@angular/router';
 import { TabViewModule } from 'primeng/tabview';
 import { TeamTaskCardComponent } from '../../layout/component/team-task-card.component';
 
@@ -144,7 +143,6 @@ export class Teams implements OnInit {
 
     constructor(
         private dataService: DataService,
-        private router: Router,
     ) {}
 
     ngOnInit() {
@@ -312,11 +310,7 @@ export class Teams implements OnInit {
 
     isRepairWorkGroup(workGroup: WorkGroup){
         const workGroupStaff = this.workGroupStaff[workGroup.work_group_id];
-        if(this.allProfiles.some(profile => workGroupStaff.some(wgs => wgs.id == profile.id && profile.role == 'odrzavanje'))) {
-            return true;
-        } else {
-            return false;
-        }
+        return workGroupStaff && this.allProfiles.some(profile => workGroupStaff.some(wgs => wgs.id == profile.id && profile.role == 'odrzavanje'));
     }
 
     async getStoredImagesForTask(task: Task) {
