@@ -869,7 +869,9 @@ export class Home implements OnInit, OnDestroy {
     hasAnyTasks(houseId: number): boolean {
         const status = this.houseStatuses().find((s) => s.house_id === houseId);
 
-        debugger;
+        if(status){
+            'aaa';
+        }
 
         return !!status?.housetasks?.length;
     }
@@ -877,7 +879,9 @@ export class Home implements OnInit, OnDestroy {
     getHouseTasks(houseId: number): HouseStatusTask[] {
         const status = this.houseStatuses().find((s) => s.house_id === houseId);
 
-        debugger;
+        if(status){
+            'aaa';
+        }
 
         return status?.housetasks || [];
     }
