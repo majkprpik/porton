@@ -38,12 +38,12 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
                     } @else {
                         <div class="teams-grid">
                             @for (group of workGroups; track group.work_group_id) {
-                                @if (!isRepairWorkGroup(group)){
+                                @if (!group.is_repair){
                                    <app-team-task-card
                                         [workGroup]="group"
                                         [workGroupTasks]="getAssignedTasks(group.work_group_id)"
                                         [workGroupStaff]="getAssignedStaff(group.work_group_id)"
-                                        [isRepairGroup]="isRepairWorkGroup(group)"
+                                        [isRepairGroup]="group.is_repair"
                                    ></app-team-task-card> 
                                 }
                             }
@@ -62,12 +62,12 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
                     } @else {
                         <div class="teams-grid">
                             @for (group of workGroups; track group.work_group_id) {
-                                @if (isRepairWorkGroup(group)){
+                                @if (group.is_repair){
                                     <app-team-task-card
                                         [workGroup]="group"
                                         [workGroupTasks]="getAssignedTasks(group.work_group_id)"
                                         [workGroupStaff]="getAssignedStaff(group.work_group_id)"
-                                        [isRepairGroup]="isRepairWorkGroup(group)"
+                                        [isRepairGroup]="group.is_repair"
                                    ></app-team-task-card> 
                                 }
                             }
@@ -205,19 +205,26 @@ export class Teams implements OnInit {
                 this.workGroups = [...this.workGroups, res.new];
                 this.dataService.setWorkGroups(this.workGroups);
             }
+          } else if(res && res.eventType == 'UPDATE') {
+            this.workGroups = this.workGroups.map(wg => {
+                return wg.work_group_id == res.new.work_group_id ? res.new : wg;
+            });
+            this.dataService.setWorkGroups(this.workGroups);
           } else if(res && res.eventType == 'DELETE') {
-                this.workGroups = this.workGroups.filter(wg => wg.work_group_id != res.old.work_group_id);
+            this.workGroups = this.workGroups.filter(wg => wg.work_group_id != res.old.work_group_id);
+            this.dataService.setWorkGroups(this.workGroups);
           }
         });
 
         this.dataService.$workGroupTasksUpdate.subscribe(res => {
-          if(res && res.eventType == 'INSERT'){
+          if(res && res.eventType == 'INSERT') {
             if(!this.workGroupTasks[res.new.work_group_id]){
                 this.workGroupTasks[res.new.work_group_id] = [];
             }
 
             if(!this.workGroupTasks[res.new.work_group_id].some(task => task.task_id == res.new.task_id)){
                 let task = this.allTasks.find(task => task.task_id == res.new.task_id);
+
                 if(task){
                     this.workGroupTasks[res.new.work_group_id] = [...this.workGroupTasks[res.new.work_group_id], task];
                     this.allWorkGroupTasks = [...this.allWorkGroupTasks, res.new];
@@ -225,10 +232,28 @@ export class Teams implements OnInit {
             }
         
             this.dataService.setWorkGroupTasks(this.allWorkGroupTasks);
-          } else if(res && res.eventType == 'DELETE'){
-                this.workGroupTasks[res.old.work_group_id] = this.workGroupTasks[res.old.work_group_id].filter(task => task.task_id != res.old.task_id);
-                this.allWorkGroupTasks = this.allWorkGroupTasks.filter(wgt => wgt.task_id != res.old.task_id);
+          } else if(res && res.eventType == 'DELETE') {
+            this.workGroupTasks[res.old.work_group_id] = this.workGroupTasks[res.old.work_group_id].filter(task => task.task_id != res.old.task_id);
+            this.allWorkGroupTasks = this.allWorkGroupTasks.filter(wgt => wgt.task_id != res.old.task_id);
+
+            this.dataService.setWorkGroupTasks(this.allWorkGroupTasks);
           }
+        });
+
+        this.dataService.$tasksUpdate.subscribe(res => {
+            if(res && res.eventType == 'UPDATE'){
+                let allTasksIndex = this.allTasks.findIndex(task => task.task_id == res.new.task_id) ?? -1;
+                let workGroupTask = this.allWorkGroupTasks.find(wgt => wgt.task_id == res.new.task_id);
+
+                if(allTasksIndex != -1 && workGroupTask){
+                  this.allTasks = [...this.allTasks.slice(0, allTasksIndex), res.new, ...this.allTasks.slice(allTasksIndex + 1)];
+                  this.dataService.setTasks(this.allTasks);
+
+                  this.workGroupTasks[workGroupTask.work_group_id] = this.workGroupTasks[workGroupTask.work_group_id].map(wgt => {
+                    return wgt.task_id == res.new.task_id ? res.new : wgt;
+                  });
+                }
+            }
         });
     }
 
@@ -243,69 +268,6 @@ export class Teams implements OnInit {
 
     getAssignedStaff(workGroupId: number): Profile[] {
         return this.workGroupStaff[workGroupId] || [];
-    }
-
-    createWorkGroup() {
-        this.dataService.createWorkGroup().subscribe({
-            next: (workGroup) => {
-                if (workGroup) {
-                    console.log('Work group created:', workGroup);
-                }
-            },
-            error: (error) => {
-                console.error('Error creating work group:', error);
-            }
-        });
-    }
-
-    deleteWorkGroup(workGroupId: number) {
-        this.dataService.deleteWorkGroup(workGroupId).subscribe({
-            next: () => {
-                console.log('Work group deleted:', workGroupId);
-            },
-            error: (error) => {
-                console.error('Error deleting work group:', error);
-            }
-        });
-    }
-
-    publishWorkGroups() {
-        const workGroupIds = this.workGroups.map(group => group.work_group_id);
-        this.dataService.publishWorkGroups(workGroupIds).subscribe({
-            next: () => {
-                console.log('Work groups published successfully');
-            },
-            error: (error) => {
-                console.error('Error publishing work groups:', error);
-            }
-        });
-    }
-
-    removeStaffFromGroup(profileId: string, workGroupId: number) {
-        this.dataService.removeStaffFromWorkGroup(profileId, workGroupId).subscribe({
-            next: () => {
-                console.log('Staff removed from work group:', { profileId, workGroupId });
-            },
-            error: (error) => {
-                console.error('Error removing staff from work group:', error);
-            }
-        });
-    }
-
-    removeTaskFromGroup(taskId: number, workGroupId: number) {
-        this.dataService.removeTaskFromWorkGroup(workGroupId, taskId).subscribe({
-            next: () => {
-                console.log('Task removed from work group:', { taskId, workGroupId });
-            },
-            error: (error) => {
-                console.error('Error removing task from work group:', error);
-            }
-        });
-    }
-
-    getStaffFullName(staff: Profile): string {
-        if (!staff.first_name && !staff.last_name) return 'Nepoznat';
-        return [staff.first_name, staff.last_name].filter(Boolean).join(' ');
     }
 
     isRepairWorkGroup(workGroup: WorkGroup){

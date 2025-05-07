@@ -746,7 +746,7 @@ export class WorkGroup implements OnInit {
           });
         });
 
-        lockedTeam.members.forEach(member => {
+        lockedTeam.members?.forEach(member => {
           lockedWorkGroupProfiles.push({
             work_group_id: parseInt(lockedTeam.id),
             profile_id: member.id,

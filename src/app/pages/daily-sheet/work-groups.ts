@@ -9,11 +9,18 @@ import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { WorkGroupService } from '../service/work-group.service';
 import { TaskService } from '../service/task.service';
+import { PanelModule } from 'primeng/panel';
 
 @Component({
   selector: 'app-work-groups',
   standalone: true,
-  imports: [CommonModule, ButtonModule, WorkGroup, ProgressSpinnerModule],
+  imports: [
+    CommonModule, 
+    ButtonModule, 
+    WorkGroup, 
+    ProgressSpinnerModule,
+    PanelModule,
+  ],
   template: `
     @if (loading) {
       <div class="loading-container">
@@ -26,12 +33,6 @@ import { TaskService } from '../service/task.service';
           <h2>Radne Grupe</h2>
           <div class="header-actions">
             <p-button 
-              label="Nova Grupa" 
-              icon="pi pi-plus"
-              severity="secondary"
-              (onClick)="createWorkGroup()"
-            ></p-button>
-            <p-button 
               label="OBJAVI" 
               icon="pi pi-check"
               (onClick)="publishWorkGroups()"
@@ -39,31 +40,103 @@ import { TaskService } from '../service/task.service';
           </div>
         </div>
 
-        <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
-          @if (workGroups.length === 0) {
-            <div class="empty-state">
-              <p>Nema kreiranih radnih grupa</p>
+        <p-panel
+          [toggleable]="true"
+          class="cleaning-group"
+        >
+          <ng-template pTemplate="header">
+            <div class="flex align-items-center">
+              <i class="group-icon mr-2" [class]=""></i>
+              <span class="group-name">ČIŠĆENJE</span>
             </div>
-          } @else {
-            <div class="groups-container">
-              @for (group of workGroups; track group.work_group_id) {
-                <div class="group-wrapper">
-                  <app-work-group
-                    [workGroup]="group"
-                    [isActive]="group.work_group_id == activeGroupId"
-                    [assignedTasks]="getAssignedTasks(group.work_group_id)"
-                    [assignedStaff]="getAssignedStaff(group.work_group_id)"
-                    (groupSelected)="setActiveGroup(group.work_group_id)"
-                    (deleteClicked)="deleteWorkGroup(group.work_group_id)"
-                    (taskRemoved)="onTaskRemoved($event)"
-                    (staffRemoved)="onStaffRemoved($event)"
-                    [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
-                  ></app-work-group>
-                </div>
-              }
+          </ng-template>
+          
+          <div class="work-group-header-actions">
+            <p-button 
+              label="Nova Grupa" 
+              icon="pi pi-plus"
+              severity="secondary"
+              (onClick)="createWorkGroup(false)"
+            ></p-button>
+          </div>
+
+          <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
+            @if (workGroups.length === 0) {
+              <div class="empty-state">
+                <p>Nema kreiranih radnih grupa</p>
+              </div>
+            } @else {
+              <div class="groups-container">
+                @for (group of workGroups; track group.work_group_id) {
+                  @if(!group.is_repair){
+                    <div class="group-wrapper">
+                      <app-work-group
+                        [workGroup]="group"
+                        [isActive]="group.work_group_id == activeGroupId"
+                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                        [assignedStaff]="getAssignedStaff(group.work_group_id)"
+                        (groupSelected)="setActiveGroup(group.work_group_id)"
+                        (deleteClicked)="deleteWorkGroup(group.work_group_id)"
+                        (taskRemoved)="onTaskRemoved($event)"
+                        (staffRemoved)="onStaffRemoved($event)"
+                        [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
+                      ></app-work-group>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        </p-panel>
+
+        <p-panel
+          [toggleable]="true"
+          class="cleaning-group"
+        >
+          <ng-template pTemplate="header">
+            <div class="flex align-items-center">
+              <i class="group-icon mr-2" [class]=""></i>
+              <span class="group-name">POPRAVCI</span>
             </div>
-          }
-        </div>
+          </ng-template>
+          
+          <div class="work-group-header-actions">
+            <p-button 
+              label="Nova Grupa" 
+              icon="pi pi-plus"
+              severity="secondary"
+              (onClick)="createWorkGroup(true)"
+            ></p-button>
+          </div>
+          
+          <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
+            @if (workGroups.length === 0) {
+              <div class="empty-state">
+                <p>Nema kreiranih radnih grupa</p>
+              </div>
+            } @else {
+              <div class="groups-container">
+                @for (group of workGroups; track group.work_group_id) {
+                  @if(group.is_repair){
+                    <div class="group-wrapper">
+                      <app-work-group
+                        [workGroup]="group"
+                        [isActive]="group.work_group_id == activeGroupId"
+                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                        [assignedStaff]="getAssignedStaff(group.work_group_id)"
+                        (groupSelected)="setActiveGroup(group.work_group_id)"
+                        (deleteClicked)="deleteWorkGroup(group.work_group_id)"
+                        (taskRemoved)="onTaskRemoved($event)"
+                        (staffRemoved)="onStaffRemoved($event)"
+                        [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
+                      ></app-work-group>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        </p-panel>
       </div>
     }
   `,
@@ -85,6 +158,7 @@ import { TaskService } from '../service/task.service';
       border-radius: 8px;
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
     }
 
     .work-groups-header {
@@ -103,6 +177,49 @@ import { TaskService } from '../service/task.service';
       .header-actions {
         display: flex;
         gap: 0.5rem;
+      }
+    }
+
+    :host ::ng-deep {
+      .cleaning-group {
+        margin-bottom: 0.5rem;
+
+        .work-group-header-actions{
+          width: 100%;
+          margin-bottom: 1rem;
+        }
+
+        .p-panel {
+          background: transparent;
+          margin-bottom: 0.5rem;
+        }
+
+        .p-panel-header {
+          padding: 0.75rem 1.25rem;
+          border: none;
+          border-radius: 6px;
+          background: var(--surface-ground);
+        }
+
+        .p-panel-content {
+          padding: 1rem;
+          border: none;
+          background: transparent !important;
+        }
+
+        .p-panel-icons {
+          order: 2;
+        }
+      }
+
+      .group-icon {
+        font-size: 1.2rem;
+        color: var(--text-color);
+      }
+
+      .group-name {
+        font-weight: 600;
+        color: var(--text-color);
       }
     }
 
@@ -248,18 +365,31 @@ export class WorkGroups implements OnInit {
       if(res && res.eventType == 'UPDATE'){
         let lockedTeam = this.lockedTeams.find(lt => lt.tasks?.some(task => task.task_id == res.new.task_id));
         let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id) ?? -1;
+        let workGroup = this.workGroups.find(wg => wg.work_group_id == lockedTeam?.id);
+        let updatedLockedTeam: any;
+        
+        let allTasksIndex = this.allTasks.findIndex(task => task.task_id == res.new.task_id) ?? -1;
+        if(allTasksIndex != -1){
+          this.allTasks = [...this.allTasks.slice(0, allTasksIndex), res.new, ...this.allTasks.slice(allTasksIndex + 1)];
+          this.dataService.setTasks(this.allTasks);
+        }
 
         if(taskIndex != -1 && lockedTeam?.tasks){
-          lockedTeam.tasks = [...lockedTeam.tasks.slice(0, taskIndex), res.new, ...lockedTeam.tasks.slice(taskIndex + 1)];
+          const updatedTasks = [...lockedTeam.tasks.slice(0, taskIndex), res.new, ...lockedTeam.tasks.slice(taskIndex + 1)];
+          updatedLockedTeam = { ...lockedTeam, tasks: updatedTasks };
+  
+          this.lockedTeams = this.lockedTeams.map(lt =>
+            lt.id === lockedTeam.id ? updatedLockedTeam : lt
+          );
         }
 
-        if(lockedTeam?.tasks && lockedTeam?.tasks.every(task => this.taskService.isTaskCompleted(task))){
-          this.workGroupService.deleteWorkGroup(lockedTeam.id);
-          this.workGroups = this.workGroups.filter(wg => wg.work_group_id != parseInt(lockedTeam.id));
-          this.lockedTeams = this.lockedTeams.filter(lt => lt.id != lockedTeam.id);
+        if(updatedLockedTeam && updatedLockedTeam?.tasks && updatedLockedTeam?.tasks.every((task: any) => this.taskService.isTaskCompleted(task)) && !workGroup.is_repair){
+          this.workGroupService.deleteWorkGroup(updatedLockedTeam.id);
+          this.workGroups = this.workGroups.filter(wg => wg.work_group_id != parseInt(updatedLockedTeam.id));
+          this.lockedTeams = this.lockedTeams.filter(lt => lt.id != updatedLockedTeam.id);
+          this.dataService.setWorkGroups(this.workGroups);
         }
 
-        this.dataService.setWorkGroups(this.workGroups);
         this.workGroupService.setLockedTeams(this.lockedTeams);
       }
     });
@@ -315,11 +445,11 @@ export class WorkGroups implements OnInit {
     this.workGroupService.setActiveGroup(workGroupId);
   }
 
-  createWorkGroup() {
+  createWorkGroup(isRepairWorkGroup: boolean) {
     if(this.activeGroupId){
       this.workGroupService.$newGroupWhileGroupActive.next(true);
     }
-    this.dataService.createWorkGroup().subscribe({
+    this.dataService.createWorkGroup(isRepairWorkGroup).subscribe({
       next: (workGroup) => {
         if (workGroup) {
           this.setActiveGroup(workGroup.work_group_id);

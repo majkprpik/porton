@@ -56,6 +56,7 @@ export interface WorkGroup {
   work_group_id: number;
   created_at: string;
   is_locked: boolean;
+  is_repair: boolean;
 }
 
 export interface LockedTeam {
@@ -606,10 +607,10 @@ export class DataService {
   }
 
   // Method to create a new work group
-  createWorkGroup(): Observable<WorkGroup | null> {
+  createWorkGroup(isRepairWorkGroup: boolean): Observable<WorkGroup | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabaseService.insertData('work_groups', {}, this.schema)).pipe(
+    return from(this.supabaseService.insertData('work_groups', {is_repair: isRepairWorkGroup}, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentWorkGroups = this.workGroupsSubject.value;
