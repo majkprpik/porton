@@ -85,7 +85,7 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                                                     <p-button 
                                                         [label]="getActionButtonLabel(task)"
                                                         [severity]="getActionButtonSeverity(task)"
-                                                        (onClick)="handleTaskAction(task)"
+                                                        (onClick)="handleTaskAction($event, task)"
                                                     ></p-button>
                                                     
                                                     @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
@@ -532,7 +532,8 @@ export class WorkGroupDetail implements OnInit {
         return task.task_type_id === cleaningHouseType?.task_type_id;
     }
 
-    handleTaskAction(task: Task) {
+    handleTaskAction(event: any, task: Task) {
+        event.stopPropagation();
         let newProgressTypeName: string;
         
         if (this.taskService.isTaskInProgress(task)) {
