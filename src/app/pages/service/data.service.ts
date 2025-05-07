@@ -243,6 +243,12 @@ export class DataService {
     }
   }
 
+  setWorkGroups(workGroups: WorkGroup[]){
+    if(workGroups){
+      this.workGroupsSubject.next(workGroups);
+    }
+  }
+
   setWorkGroupTasks(workGroupTasks: WorkGroupTask[]){
     if(workGroupTasks){
       this.workGroupTasksSubject.next(workGroupTasks);
@@ -326,18 +332,6 @@ export class DataService {
   // Method to get schema name
   getSchema(): string {
     return this.schema;
-  }
-
-  updateWorkGroups(workGroups: WorkGroup[]){
-    this.workGroupsSubject.next(workGroups);
-  }
-
-  updateTasksSubject(tasks: any){
-    this.tasksSubject.next(tasks);
-  }
-
-  updateWorkGroupTasks(workGroupTasks: any){
-    this.workGroupTasksSubject.next(workGroupTasks);
   }
 
   getHouseAvailabilityTypes(): Observable<HouseAvailabilityType[]> {

@@ -259,7 +259,7 @@ export class WorkGroups implements OnInit {
           this.lockedTeams = this.lockedTeams.filter(lt => lt.id != lockedTeam.id);
         }
 
-        this.dataService.updateWorkGroups(this.workGroups);
+        this.dataService.setWorkGroups(this.workGroups);
         this.workGroupService.setLockedTeams(this.lockedTeams);
       }
     });
@@ -277,14 +277,14 @@ export class WorkGroups implements OnInit {
             isLocked: res.new.is_locked,
           }];
 
-          this.dataService.updateWorkGroups(this.workGroups);
+          this.dataService.setWorkGroups(this.workGroups);
           this.workGroupService.setLockedTeams(this.lockedTeams);
         }
       } else if(res && res.eventType == 'UPDATE'){
         if(res.new.is_locked){
           let workGroupIndex = this.workGroups.findIndex(wg => wg.work_group_id == res.new.work_group_id);
           this.workGroups[workGroupIndex].is_locked = res.new.is_locked;
-          this.dataService.updateWorkGroups(this.workGroups);
+          this.dataService.setWorkGroups(this.workGroups);
 
           if(this.activeGroupId == res.new.work_group_id){
             this.workGroupService.setActiveGroup(undefined);
@@ -344,7 +344,7 @@ export class WorkGroups implements OnInit {
     if(tasksToReturn && tasksToReturn.length > 0){
       this.wgt = this.wgt.filter(wgt => !this.workGroupTasks[workGroupId].some(wgtask => wgtask.task_id == wgt.task_id));
       this.workGroupTasks[workGroupId] = this.workGroupTasks[workGroupId].filter(task => !tasksToReturn.some(ttr => ttr.task_id == task.task_id));
-      this.dataService.updateWorkGroupTasks(this.wgt);
+      this.dataService.setWorkGroupTasks(this.wgt);
     }
     
     // Get the progress type ID for "Nije dodijeljeno"

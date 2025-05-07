@@ -746,7 +746,7 @@ export class WorkGroup implements OnInit {
         });
       });
 
-      this.dataService.updateWorkGroupTasks(lockedWorkGroupTasks);
+      this.dataService.setWorkGroupTasks(lockedWorkGroupTasks);
       this.workGroupService.setActiveGroup(undefined);
     } else {
       // If the group is not active, activate it

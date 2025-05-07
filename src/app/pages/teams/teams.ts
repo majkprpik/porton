@@ -205,7 +205,7 @@ export class Teams implements OnInit {
           if(res && res.eventType == 'INSERT') {
             if(!this.workGroups.find(wg => wg.work_group_id == res.new.work_group_id)) {
                 this.workGroups = [...this.workGroups, res.new];
-                this.dataService.updateWorkGroups(this.workGroups);
+                this.dataService.setWorkGroups(this.workGroups);
             }
           } else if(res && res.eventType == 'DELETE') {
                 this.workGroups = this.workGroups.filter(wg => wg.work_group_id != res.old.work_group_id);
