@@ -133,16 +133,16 @@ export interface HouseAvailability {
 
 // Interface for house status task
 export interface HouseStatusTask {
-  taskId: number;
-  taskTypeId: number;
-  taskTypeName: string;
-  taskProgressTypeId: number;
-  taskProgressTypeName: string;
-  startTime: string | null;
-  endTime: string | null;
+  task_id: number;
+  taskt_type_id: number;
+  task_type_name: string;
+  task_progress_type_id: number;
+  task_progress_type_name: string;
+  start_time: string | null;
+  end_time: string | null;
   description: string | null;
-  createdBy: string;
-  createdAt: string;
+  created_by: string;
+  created_at: string;
 }
 
 // Interface for house status from view
