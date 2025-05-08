@@ -79,7 +79,22 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                                         </div>
                                         <div class="task-actions">
                                             @if (!taskService.isTaskCompleted(task)) {
-                                                @if(houseService.isHouseOccupied(task.house_id) && !task.is_unscheduled){
+                                                @if(task.is_unscheduled){
+                                                    <p-button 
+                                                        [label]="getActionButtonLabel(task)"
+                                                        [severity]="getActionButtonSeverity(task)"
+                                                        (onClick)="handleTaskAction($event, task)"
+                                                    ></p-button>
+                                                    
+                                                    @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
+                                                        <p-button 
+                                                            label="Pauza"
+                                                            severity="warn" 
+                                                            (onClick)="handleTaskPause(task)"
+                                                            [style]="{'margin-left': '0.5rem'}"
+                                                        ></p-button>
+                                                    }
+                                                } @else if(houseService.isHouseOccupied(task.house_id)){
                                                     <span>Kućica zauzeta</span>
                                                 } @else {
                                                     <p-button 
