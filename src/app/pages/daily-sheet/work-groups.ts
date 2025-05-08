@@ -43,22 +43,20 @@ import { PanelModule } from 'primeng/panel';
         <p-panel
           [toggleable]="true"
           class="cleaning-group"
+          [(collapsed)]="isCleaningCollapsed"
         >
-          <ng-template pTemplate="header">
-            <div class="flex align-items-center">
-              <i class="group-icon mr-2" [class]=""></i>
-              <span class="group-name">ČIŠĆENJE</span>
-            </div>
+          <ng-template pTemplate="header" class="work-group-container-header">
+            <span class="group-name">ČIŠĆENJE</span>
+            
+            @if(!isCleaningCollapsed){
+              <p-button 
+                label="Nova Grupa" 
+                icon="pi pi-plus"
+                severity="secondary"
+                (onClick)="createWorkGroup(false)"
+              ></p-button>
+            }
           </ng-template>
-          
-          <div class="work-group-header-actions">
-            <p-button 
-              label="Nova Grupa" 
-              icon="pi pi-plus"
-              severity="secondary"
-              (onClick)="createWorkGroup(false)"
-            ></p-button>
-          </div>
 
           <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
             @if (workGroups.length === 0) {
@@ -92,22 +90,20 @@ import { PanelModule } from 'primeng/panel';
         <p-panel
           [toggleable]="true"
           class="cleaning-group"
+          [(collapsed)]="isRepairsCollapsed"
         >
-          <ng-template pTemplate="header">
-            <div class="flex align-items-center">
-              <i class="group-icon mr-2" [class]=""></i>
-              <span class="group-name">POPRAVCI</span>
-            </div>
+          <ng-template pTemplate="header" class="work-group-container-header">
+            <span class="group-name">POPRAVCI</span>
+            
+            @if(!isRepairsCollapsed){
+              <p-button 
+                label="Nova Grupa" 
+                icon="pi pi-plus"
+                severity="secondary"
+                (onClick)="createWorkGroup(true)"
+              ></p-button>
+            }
           </ng-template>
-          
-          <div class="work-group-header-actions">
-            <p-button 
-              label="Nova Grupa" 
-              icon="pi pi-plus"
-              severity="secondary"
-              (onClick)="createWorkGroup(true)"
-            ></p-button>
-          </div>
           
           <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
             @if (workGroups.length === 0) {
@@ -285,6 +281,8 @@ export class WorkGroups implements OnInit {
   lockedTeams: LockedTeam[] = [];
   taskProgressTypes: any;
   wgt: any[] = [];
+  isRepairsCollapsed: boolean = true;
+  isCleaningCollapsed: boolean = false;
 
   constructor(
     private dataService: DataService,
