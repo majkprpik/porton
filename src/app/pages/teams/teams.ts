@@ -270,11 +270,6 @@ export class Teams implements OnInit {
         return this.workGroupStaff[workGroupId] || [];
     }
 
-    isRepairWorkGroup(workGroup: WorkGroup){
-        const workGroupStaff = this.workGroupStaff[workGroup.work_group_id];
-        return workGroupStaff && this.allProfiles.some(profile => workGroupStaff.some(wgs => wgs.id == profile.id && profile.role == 'odrzavanje'));
-    }
-
     async getStoredImagesForTask(task: Task) {
         try {
           const fetchedImages = await this.dataService.getStoredImagesForTask(task.task_id);
