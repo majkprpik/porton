@@ -317,10 +317,11 @@ export class WorkGroups implements OnInit {
           }
           const task = tasks.find(t => t.task_id === workGroupTask.task_id);
           if (task) {
+            const taskCopy = { ...task };
             if(task.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
-              task.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
+              taskCopy.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
             }
-            this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], task];
+            this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], taskCopy];
           }
         });
 
@@ -366,12 +367,6 @@ export class WorkGroups implements OnInit {
         let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id) ?? -1;
         let workGroup = this.workGroups.find(wg => wg.work_group_id == lockedTeam?.id);
         let updatedLockedTeam: any;
-        
-        let allTasksIndex = this.allTasks.findIndex(task => task.task_id == res.new.task_id) ?? -1;
-        if(allTasksIndex != -1){
-          this.allTasks = [...this.allTasks.slice(0, allTasksIndex), res.new, ...this.allTasks.slice(allTasksIndex + 1)];
-          this.dataService.setTasks(this.allTasks);
-        }
 
         if(taskIndex != -1 && lockedTeam?.tasks){
           const updatedTasks = [...lockedTeam.tasks.slice(0, taskIndex), res.new, ...lockedTeam.tasks.slice(taskIndex + 1)];
@@ -384,9 +379,7 @@ export class WorkGroups implements OnInit {
 
         if(updatedLockedTeam && updatedLockedTeam?.tasks && updatedLockedTeam?.tasks.every((task: any) => this.taskService.isTaskCompleted(task)) && !workGroup.is_repair){
           this.workGroupService.deleteWorkGroup(updatedLockedTeam.id);
-          this.workGroups = this.workGroups.filter(wg => wg.work_group_id != parseInt(updatedLockedTeam.id));
           this.lockedTeams = this.lockedTeams.filter(lt => lt.id != updatedLockedTeam.id);
-          this.dataService.setWorkGroups(this.workGroups);
         }
 
         this.workGroupService.setLockedTeams(this.lockedTeams);
@@ -396,7 +389,6 @@ export class WorkGroups implements OnInit {
     this.dataService.$workGroupsUpdate.subscribe(res => {
       if(res && res.eventType == 'INSERT'){
         if(!this.workGroups.find((wgp: any) => wgp.work_group_id == res.new.work_group_id)){
-          this.workGroups = [...this.workGroups, res.new];
           this.lockedTeams = [...this.lockedTeams, {
             id: res.new.work_group_id,
             name: "Team " + res.new.work_group_id.toString(),
@@ -406,21 +398,14 @@ export class WorkGroups implements OnInit {
             isLocked: res.new.is_locked,
           }];
 
-          this.dataService.setWorkGroups(this.workGroups);
           this.workGroupService.setLockedTeams(this.lockedTeams);
         }
       } else if(res && res.eventType == 'UPDATE'){
         if(res.new.is_locked){
-          let workGroupIndex = this.workGroups.findIndex(wg => wg.work_group_id == res.new.work_group_id);
-          this.workGroups[workGroupIndex].is_locked = res.new.is_locked;
-          this.dataService.setWorkGroups(this.workGroups);
-
           if(this.activeGroupId == res.new.work_group_id){
             this.workGroupService.setActiveGroup(undefined);
           }
         }
-      } else if(res && res.eventType == 'DELETE'){
-        this.deleteWorkGroup(res.old.work_group_id);
       }
     });
   }

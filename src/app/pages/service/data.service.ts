@@ -222,7 +222,7 @@ export class DataService {
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tasksUpdate = new BehaviorSubject<any>('');
   $workGroupTasksUpdate = new BehaviorSubject<any>('');
-  $workGroupProfiles = new BehaviorSubject<any>('');
+  $workGroupProfilesUpdate = new BehaviorSubject<any>('');
   $workGroupsUpdate = new BehaviorSubject<any>('');
   $notesUpdate = new BehaviorSubject<any>('');
   $repairTaskCommentsUpdate = new BehaviorSubject<any>('');
@@ -265,6 +265,12 @@ export class DataService {
   setHouseAvailabilites(houseAvailabilties: HouseAvailability[]){
     if(houseAvailabilties){
       this.houseAvailabilitiesSubject.next(houseAvailabilties);
+    }
+  }
+
+  setHouseStatuses(houseStatuses: HouseStatus[]){
+    if(houseStatuses){
+      this.houseStatusesSubject.next(houseStatuses);
     }
   }
 
@@ -1269,7 +1275,7 @@ export class DataService {
         table: 'work_group_profiles'
       },
       async (payload: any) => {
-        this.$workGroupProfiles.next(payload);
+        this.$workGroupProfilesUpdate.next(payload);
       }
     ).on(
       'postgres_changes',

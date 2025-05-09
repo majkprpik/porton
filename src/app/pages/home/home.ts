@@ -544,64 +544,6 @@ export class Home implements OnInit, OnDestroy {
 
         // Load task types if not already loaded
         this.dataService.getTaskTypes().subscribe();
-
-        this.dataService.$tasksUpdate.subscribe(res => {
-            if (res && res.eventType === 'INSERT') {
-              const updatedStatuses = this.houseStatuses().map(hs => {
-                if (hs.house_id === res.new.house_id) {
-                  const existingTask = hs.housetasks.some((task: any) => task.task_id === res.new.task_id);
-            
-                  if (!existingTask) {
-                    return {
-                      ...hs,
-                      housetasks: [...hs.housetasks, res.new]
-                    };
-                  }
-                }
-                return hs;
-              });
-            
-              this.houseStatuses.set(updatedStatuses);
-              this.dataService.setTasks([...this.tasks, res.new]);
-            } else if (res && res.eventType == 'UPDATE'){
-                const updatedStatuses = this.houseStatuses().map(hs => {
-                    let housetaskIndex = hs.housetasks.findIndex(ht => ht.task_id == res.new.task_id);
-
-                    if(housetaskIndex != -1){
-                        const updatedTasks = [...hs.housetasks];
-                        updatedTasks[housetaskIndex] = res.new;
-                    
-                        return {
-                          ...hs,
-                          housetasks: updatedTasks
-                        };
-                    }
-
-                    return hs;
-                });
-
-                this.houseStatuses.set(updatedStatuses);
-                const taskIndex = this.tasks.findIndex(task => task.task_id);
-
-                if(taskIndex != -1){
-                    this.tasks = [...this.tasks.slice(0, taskIndex), res.new, ...this.tasks.slice(taskIndex + 1)];
-                    this.dataService.setTasks(this.tasks);
-                }
-            }
-        });
-
-        this.dataService.$houseAvailabilitiesUpdate.subscribe(res => {
-            if(res && res.eventType == 'UPDATE'){
-                let houseAvailabilityIndex = this.houseAvailabilities().findIndex(ha => ha.house_availability_id == res.new.house_availability_id);
-
-                if(houseAvailabilityIndex != -1){
-                    const updatedHouseAvailabilites = [...this.houseAvailabilities()];
-                    updatedHouseAvailabilites[houseAvailabilityIndex] = res.new;
-
-                    this.dataService.setHouseAvailabilites(updatedHouseAvailabilites);
-                }
-            }
-        });
     }
 
     @HostListener('document:click', ['$event'])

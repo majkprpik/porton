@@ -420,7 +420,7 @@ export class WorkGroupDetail implements OnInit {
         }
       });
     
-      this.dataService.$workGroupProfiles.subscribe(res => {
+      this.dataService.$workGroupProfilesUpdate.subscribe(res => {
         if(res && res.eventType == 'INSERT'){
             if(this.workGroup?.work_group_id == res.new.work_group_id){
                 const profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
@@ -443,7 +443,7 @@ export class WorkGroupDetail implements OnInit {
         if(res && res.eventType == 'INSERT'){
             if(!this.tasks.find((task: any) => task.task_id == res.new.task_id)){
                 this.tasks = [...this.tasks, res.new];
-                this.dataService.setTasks(this.tasks);
+                // this.dataService.setTasks(this.tasks);
             }   
         }
         else if(res && res.eventType == 'UPDATE'){

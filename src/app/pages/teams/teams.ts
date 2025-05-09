@@ -247,7 +247,7 @@ export class Teams implements OnInit {
 
                 if(allTasksIndex != -1 && workGroupTask){
                   this.allTasks = [...this.allTasks.slice(0, allTasksIndex), res.new, ...this.allTasks.slice(allTasksIndex + 1)];
-                  this.dataService.setTasks(this.allTasks);
+                //   this.dataService.setTasks(this.allTasks);
 
                   this.workGroupTasks[workGroupTask.work_group_id] = this.workGroupTasks[workGroupTask.work_group_id].map(wgt => {
                     return wgt.task_id == res.new.task_id ? res.new : wgt;
