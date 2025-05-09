@@ -1,3 +1,4 @@
+import { WorkGroup as WorkGroupModel } from './../service/data.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -59,9 +60,9 @@ import { PanelModule } from 'primeng/panel';
           </ng-template>
 
           <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
-            @if (workGroups.length === 0) {
+            @if (!getNumberOfCleaningWorkGroups(workGroups)) {
               <div class="empty-state">
-                <p>Nema kreiranih radnih grupa</p>
+                <p>Nema kreiranih radnih grupa za čišćenje</p>
               </div>
             } @else {
               <div class="groups-container">
@@ -106,9 +107,9 @@ import { PanelModule } from 'primeng/panel';
           </ng-template>
           
           <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
-            @if (workGroups.length === 0) {
+            @if (!getNumberOfRepairWorkGroups(workGroups)) {
               <div class="empty-state">
-                <p>Nema kreiranih radnih grupa</p>
+                <p>Nema kreiranih radnih grupa za popravke</p>
               </div>
             } @else {
               <div class="groups-container">
@@ -598,5 +599,29 @@ export class WorkGroups implements OnInit {
     if(unlockedWorkGroups.length){
       window.location.reload();
     }
+  }
+
+  getNumberOfRepairWorkGroups(workGroups: WorkGroupModel[]){
+    let repairWorkGroupsCount = 0;
+
+    workGroups.forEach(wg => {
+      if(wg.is_repair){
+        repairWorkGroupsCount++;
+      }
+    });
+
+    return repairWorkGroupsCount;
+  }
+
+  getNumberOfCleaningWorkGroups(workGroups: WorkGroupModel[]){
+    let cleaningWorkGroupsCount = 0;
+
+    workGroups.forEach(wg => {
+      if(!wg.is_repair){
+        cleaningWorkGroupsCount++;
+      }
+    });
+
+    return cleaningWorkGroupsCount;
   }
 } 
