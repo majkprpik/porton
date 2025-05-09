@@ -47,7 +47,10 @@ import { PanelModule } from 'primeng/panel';
           [(collapsed)]="isCleaningCollapsed"
         >
           <ng-template pTemplate="header" class="work-group-container-header">
-            <span class="group-name">ČIŠĆENJE</span>
+            <div class="left-side">
+              <span class="group-name">ČIŠĆENJE</span>
+              <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroups)}}</span>
+            </div>
             
             @if(!isCleaningCollapsed){
               <p-button 
@@ -60,7 +63,7 @@ import { PanelModule } from 'primeng/panel';
           </ng-template>
 
           <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
-            @if (!getNumberOfCleaningWorkGroups(workGroups)) {
+            @if (!workGroupService.getNumberOfCleaningWorkGroups(workGroups)) {
               <div class="empty-state">
                 <p>Nema kreiranih radnih grupa za čišćenje</p>
               </div>
@@ -94,7 +97,10 @@ import { PanelModule } from 'primeng/panel';
           [(collapsed)]="isRepairsCollapsed"
         >
           <ng-template pTemplate="header" class="work-group-container-header">
-            <span class="group-name">POPRAVCI</span>
+            <div class="left-side">
+              <span class="group-name">POPRAVCI</span>
+              <span class="work-groups-count">{{workGroupService.getNumberOfRepairWorkGroups(workGroups)}}</span>
+            </div>
             
             @if(!isRepairsCollapsed){
               <p-button 
@@ -107,7 +113,7 @@ import { PanelModule } from 'primeng/panel';
           </ng-template>
           
           <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
-            @if (!getNumberOfRepairWorkGroups(workGroups)) {
+            @if (!workGroupService.getNumberOfRepairWorkGroups(workGroups)) {
               <div class="empty-state">
                 <p>Nema kreiranih radnih grupa za popravke</p>
               </div>
@@ -178,8 +184,30 @@ import { PanelModule } from 'primeng/panel';
     }
 
     :host ::ng-deep {
+      
       .cleaning-group {
         margin-bottom: 0.5rem;
+
+        .left-side{
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .work-groups-count {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 1.5rem;
+          height: 1.5rem;
+          padding: 0 0.5rem;
+          background: var(--primary-color);
+          color: var(--primary-color-text);
+          border-radius: 1rem;
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
 
         .work-group-header-actions{
           width: 100%;
@@ -196,6 +224,7 @@ import { PanelModule } from 'primeng/panel';
           border: none;
           border-radius: 6px;
           background: var(--surface-ground);
+          height: 45px;
         }
 
         .p-panel-content {
@@ -215,7 +244,7 @@ import { PanelModule } from 'primeng/panel';
       }
 
       .group-name {
-        font-weight: 600;
+        font-weight: 500;
         color: var(--text-color);
       }
     }
@@ -287,7 +316,7 @@ export class WorkGroups implements OnInit {
 
   constructor(
     private dataService: DataService,
-    private workGroupService: WorkGroupService,
+    public workGroupService: WorkGroupService,
     private taskService: TaskService,
   ) {}
 
@@ -584,29 +613,5 @@ export class WorkGroups implements OnInit {
     if(unlockedWorkGroups.length){
       window.location.reload();
     }
-  }
-
-  getNumberOfRepairWorkGroups(workGroups: WorkGroupModel[]){
-    let repairWorkGroupsCount = 0;
-
-    workGroups.forEach(wg => {
-      if(wg.is_repair){
-        repairWorkGroupsCount++;
-      }
-    });
-
-    return repairWorkGroupsCount;
-  }
-
-  getNumberOfCleaningWorkGroups(workGroups: WorkGroupModel[]){
-    let cleaningWorkGroupsCount = 0;
-
-    workGroups.forEach(wg => {
-      if(!wg.is_repair){
-        cleaningWorkGroupsCount++;
-      }
-    });
-
-    return cleaningWorkGroupsCount;
   }
 } 

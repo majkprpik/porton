@@ -56,6 +56,7 @@ import { ProfileService } from '../service/profile.service';
           border: none;
           border-radius: 6px;
           background: var(--surface-ground);
+          height: 40px;
         }
 
         .p-panel-content {
@@ -95,7 +96,7 @@ import { ProfileService } from '../service/profile.service';
     }
 
     .group-name {
-      font-weight: 600;
+      font-weight: 500;
       color: var(--text-color);
     }
   `
