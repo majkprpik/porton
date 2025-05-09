@@ -79,7 +79,7 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                                         </div>
                                         <div class="task-actions">
                                             @if (!taskService.isTaskCompleted(task)) {
-                                                @if(task.is_unscheduled){
+                                                @if(task.is_unscheduled || taskService.isRepairTask(task)){
                                                     <p-button 
                                                         [label]="getActionButtonLabel(task)"
                                                         [severity]="getActionButtonSeverity(task)"
