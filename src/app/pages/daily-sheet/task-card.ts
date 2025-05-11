@@ -6,7 +6,7 @@ import { Task } from '../service/data.service';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
 
-export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed';
+export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed' | 'paused';
 
 @Component({
   selector: 'app-task-card',

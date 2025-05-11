@@ -283,4 +283,19 @@ export class TaskService {
         return 'pi pi-file';
     }
   }
+
+  getTaskState(taskProgressTypeId: number): 'assigned' | 'not-assigned' | 'in-progress' | 'completed' | 'paused' {
+    if (this.assignedTaskProgressType?.task_progress_type_id === taskProgressTypeId) {
+      return 'assigned';
+    } else if (this.notAssignedTaskProgressType?.task_progress_type_id === taskProgressTypeId) {
+      return 'not-assigned';
+    } else if (this.inProgressTaskProgressType?.task_progress_type_id === taskProgressTypeId) {
+      return 'in-progress';
+    } else if (this.completedTaskProgressType?.task_progress_type_id === taskProgressTypeId) {
+      return 'completed';
+    } else if (this.pausedTaskProgressType?.task_progress_type_id === taskProgressTypeId) {
+      return 'paused';
+    }
+    return 'not-assigned'; // default state
+  }
 }
