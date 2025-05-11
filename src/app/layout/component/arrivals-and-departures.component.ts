@@ -33,13 +33,13 @@ import { CommonModule } from '@angular/common';
       <div class="departures-side">
         <div class="section-header">
           <i class="pi pi-sign-out mr-2"></i>
-          <span>Departures</span>
+          <span>Odlasci</span>
         </div>
         <div class="section-content">
           @if(!departures.length){
             <div class="empty-message">
               <i class="pi pi-info-circle"></i>
-              <span>No departures for today</span>
+              <span>Nema odlazaka za danas</span>
             </div>
           } @else{
             @for(departure of departures; track departure.house_availability_id){
@@ -81,13 +81,13 @@ import { CommonModule } from '@angular/common';
       <div class="arrivals-side">
         <div class="section-header">
           <i class="pi pi-sign-in mr-2"></i>
-          <span>Arrivals</span>
+          <span>Dolasci</span>
         </div>
         <div class="section-content">
           @if(!arrivals.length){
             <div class="empty-message">
               <i class="pi pi-info-circle"></i>
-              <span>No arrivals for today</span>
+              <span>Nema dolazaka za danas</span>
             </div>
           } @else{
             @for(arrival of arrivals; track arrival.house_availability_id){
