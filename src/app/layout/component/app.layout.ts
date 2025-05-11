@@ -1,4 +1,5 @@
-import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
+import { HouseAvailability, HouseStatus, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
+import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { combineLatest, filter, Subscription } from 'rxjs';
@@ -842,6 +843,14 @@ export class AppLayout {
     commentsForTask: RepairTaskComment[] = [];
     areCommentsLoaded: boolean = false;
 
+    workGroups: WorkGroup[] = [];
+    workGroupTasks: WorkGroupTask[] = [];
+    workGroupProfiles: WorkGroupProfile[] = [];
+
+    
+    houseStatuses = signal<HouseStatus[]>([]);
+    houseAvailabilities = signal<HouseAvailability[]>([]);
+
     menuItems: MenuItem[] = [
         {
             icon: 'pi pi-wrench',
@@ -910,14 +919,24 @@ export class AppLayout {
             this.dataService.houses$,
             this.dataService.taskTypes$,
             this.dataService.taskProgressTypes$,
-            this.dataService.tasks$
+            this.dataService.tasks$,
+            this.dataService.workGroups$,
+            this.dataService.workGroupTasks$,
+            this.dataService.workGroupProfiles$,
+            this.dataService.houseStatuses$,
+            this.dataService.houseAvailabilities$,
         ]).subscribe({
-            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks]) => {
+            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities]) => {
                 this.comments = repairTaskComments;
                 this.houses = houses;
                 this.taskTypes = taskTypes;
                 this.taskProgressTypes = taskProgressTypes;
                 this.tasks = tasks;
+                this.workGroups = workGroups;
+                this.workGroupTasks = workGroupTasks;
+                this.workGroupProfiles = workGroupProfiles;
+                this.houseStatuses.set(houseStatuses);
+                this.houseAvailabilities.set(houseAvailabilities);
 
                 if(houses){
                     this.updateLocationOptions();
@@ -927,7 +946,7 @@ export class AppLayout {
                 console.error(error);
             }
         });
-
+        
         this.taskService.$taskModalData.subscribe(res => {
             if(res){
                 this.resetForm('fault-report');
@@ -981,7 +1000,114 @@ export class AppLayout {
                     this.commentsForTask = this.comments.filter(comments => comments.task_id == this.task.task_id);
                 }
             }
-        })
+        });
+
+        this.dataService.$workGroupsUpdate.subscribe(res => {
+            if(res && res.eventType == 'INSERT'){
+                if(!this.workGroups.find(wg => wg.work_group_id == res.new.work_group_id)){
+                    this.workGroups = [...this.workGroups, res.new];
+                    this.dataService.setWorkGroups(this.workGroups);
+                }
+            } else if(res && res.eventType == 'UPDATE') {
+                let workGroupIndex = this.workGroups.findIndex(wg => wg.work_group_id == res.new.work_group_id);
+
+                if(workGroupIndex != -1){
+                    this.workGroups = [...this.workGroups.slice(0, workGroupIndex), res.new, ...this.workGroups.slice(workGroupIndex + 1)];
+                    this.dataService.setWorkGroups(this.workGroups);
+                }
+            } else if(res && res.eventType == 'DELETE'){
+                this.workGroups = this.workGroups.filter(wg => wg.work_group_id != res.old.work_group_id);
+                this.dataService.setWorkGroups(this.workGroups);
+            }
+        });
+
+        this.dataService.$tasksUpdate.subscribe(res => {
+            if(res && res.eventType == 'INSERT'){
+                if(!this.tasks.find(task => task.task_id == res.new.task_id)){
+                    const updatedStatuses = this.houseStatuses().map(hs => {
+                        if (hs.house_id === res.new.house_id) {
+                            const existingTask = hs.housetasks.some((task: any) => task.task_id === res.new.task_id);
+                            
+                            if (!existingTask) {
+                                return {
+                                    ...hs,
+                                    housetasks: [...hs.housetasks, res.new]
+                                };
+                            }
+                        }
+                        return hs;
+                    });
+                    
+                    this.dataService.setHouseStatuses(updatedStatuses);
+                    this.tasks = [...this.tasks, res.new];
+                    this.dataService.setTasks(this.tasks);
+                }
+            } else if(res && res.eventType == 'UPDATE'){
+                let taskIndex = this.tasks.findIndex(task => task.task_id == res.new.task_id);
+
+                if(taskIndex != -1){  
+                    const updatedStatuses = this.houseStatuses().map(hs => {
+                        let housetaskIndex = hs.housetasks.findIndex(ht => ht.task_id == res.new.task_id);
+
+                        if(housetaskIndex != -1){
+                            const updatedTasks = [...hs.housetasks];
+                            updatedTasks[housetaskIndex] = res.new;
+                        
+                            return {
+                                ...hs,
+                                housetasks: updatedTasks
+                            };
+                        }
+
+                        return hs;
+                    });
+
+                    this.dataService.setHouseStatuses(updatedStatuses);
+                    this.tasks = this.tasks.map(task =>
+                        task.task_id === res.new.task_id ? res.new : task
+                    );
+
+                    this.dataService.setTasks(this.tasks);
+                }
+            } else if(res && res.eventType == 'DELETE'){
+                this.tasks = this.tasks.filter(task => task.task_id != res.old.task_id);
+                this.dataService.setTasks(this.tasks);
+            }
+        });
+
+        this.dataService.$workGroupTasksUpdate.subscribe(res => {
+            if(res && res.eventType == 'INSERT'){
+                if(!this.workGroupTasks.find(wgt => wgt.task_id == res.new.task_id)){
+                    this.workGroupTasks = [...this.workGroupTasks, res.new];
+                    this.dataService.setWorkGroupTasks(this.workGroupTasks);
+                }
+            } else if(res && res.eventType == 'DELETE'){
+                this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != res.old.task_id);
+                this.dataService.setWorkGroupTasks(this.workGroupTasks);
+            }
+        });
+
+        this.dataService.$workGroupProfilesUpdate.subscribe(res => {
+            if(res && res.eventType == 'INSERT'){
+                this.workGroupProfiles = [...this.workGroupProfiles, res.new];
+                this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+            } else if(res && res.eventType == 'DELETE'){
+                this.workGroupProfiles = this.workGroupProfiles.filter(wgp => !(wgp.profile_id == res.old.profile_id && wgp.work_group_id == res.old.work_group_id));
+                this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+            }
+        });
+
+        this.dataService.$houseAvailabilitiesUpdate.subscribe(res => {
+            if(res && res.eventType == 'UPDATE'){
+                let houseAvailabilityIndex = this.houseAvailabilities().findIndex(ha => ha.house_availability_id == res.new.house_availability_id);
+
+                if(houseAvailabilityIndex != -1){
+                    const updatedHouseAvailabilites = [...this.houseAvailabilities()];
+                    updatedHouseAvailabilites[houseAvailabilityIndex] = res.new;
+                    this.dataService.setHouseAvailabilites(updatedHouseAvailabilites);
+                }
+            }
+        });
     }
     
     async getStoredImagesForTask(task: Task) {

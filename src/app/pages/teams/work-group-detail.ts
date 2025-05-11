@@ -79,13 +79,28 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                                         </div>
                                         <div class="task-actions">
                                             @if (!taskService.isTaskCompleted(task)) {
-                                                @if(houseService.isHouseOccupied(task.house_id) && !task.is_unscheduled){
+                                                @if(task.is_unscheduled || taskService.isRepairTask(task)){
+                                                    <p-button 
+                                                        [label]="getActionButtonLabel(task)"
+                                                        [severity]="getActionButtonSeverity(task)"
+                                                        (onClick)="handleTaskAction($event, task)"
+                                                    ></p-button>
+                                                    
+                                                    @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
+                                                        <p-button 
+                                                            label="Pauza"
+                                                            severity="warn" 
+                                                            (onClick)="handleTaskPause(task)"
+                                                            [style]="{'margin-left': '0.5rem'}"
+                                                        ></p-button>
+                                                    }
+                                                } @else if(houseService.isHouseOccupied(task.house_id)){
                                                     <span>Kućica zauzeta</span>
                                                 } @else {
                                                     <p-button 
                                                         [label]="getActionButtonLabel(task)"
                                                         [severity]="getActionButtonSeverity(task)"
-                                                        (onClick)="handleTaskAction(task)"
+                                                        (onClick)="handleTaskAction($event, task)"
                                                     ></p-button>
                                                     
                                                     @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
@@ -405,7 +420,7 @@ export class WorkGroupDetail implements OnInit {
         }
       });
     
-      this.dataService.$workGroupProfiles.subscribe(res => {
+      this.dataService.$workGroupProfilesUpdate.subscribe(res => {
         if(res && res.eventType == 'INSERT'){
             if(this.workGroup?.work_group_id == res.new.work_group_id){
                 const profile = this.profiles.find((profile: any) => profile.id == res.new.profile_id);
@@ -428,7 +443,7 @@ export class WorkGroupDetail implements OnInit {
         if(res && res.eventType == 'INSERT'){
             if(!this.tasks.find((task: any) => task.task_id == res.new.task_id)){
                 this.tasks = [...this.tasks, res.new];
-                this.dataService.setTasks(this.tasks);
+                // this.dataService.setTasks(this.tasks);
             }   
         }
         else if(res && res.eventType == 'UPDATE'){
@@ -532,7 +547,8 @@ export class WorkGroupDetail implements OnInit {
         return task.task_type_id === cleaningHouseType?.task_type_id;
     }
 
-    handleTaskAction(task: Task) {
+    handleTaskAction(event: any, task: Task) {
+        event.stopPropagation();
         let newProgressTypeName: string;
         
         if (this.taskService.isTaskInProgress(task)) {

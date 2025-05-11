@@ -19,7 +19,7 @@ import { CommonModule } from '@angular/common';
         <div class="team-header">
           <h3>Tim {{workGroup?.work_group_id}}</h3>
           <span class="status-badge" [class.locked]="workGroup?.is_locked">
-              {{workGroup?.is_locked ? 'Zaključano' : 'Aktivno'}}
+              {{workGroup?.is_locked ? 'Objavljeno' : 'Neobjavljeno'}}
           </span>
       </div>
       <div class="team-content">

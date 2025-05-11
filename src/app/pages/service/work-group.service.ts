@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { LockedTeam } from './data.service';
+import { LockedTeam, WorkGroup } from './data.service';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
@@ -42,6 +42,30 @@ export class WorkGroupService {
 
   getLockedTeams(){
     return this.lockedTeams;
+  }
+
+  getNumberOfRepairWorkGroups(workGroups: WorkGroup[]){
+    let repairWorkGroupsCount = 0;
+
+    workGroups.forEach(wg => {
+      if(wg.is_repair){
+        repairWorkGroupsCount++;
+      }
+    });
+
+    return repairWorkGroupsCount;
+  }
+
+  getNumberOfCleaningWorkGroups(workGroups: WorkGroup[]){
+    let cleaningWorkGroupsCount = 0;
+
+    workGroups.forEach(wg => {
+      if(!wg.is_repair){
+        cleaningWorkGroupsCount++;
+      }
+    });
+
+    return cleaningWorkGroupsCount;
   }
 
   async createWorkGroup(): Promise<any>{

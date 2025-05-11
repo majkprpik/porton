@@ -56,6 +56,7 @@ export interface WorkGroup {
   work_group_id: number;
   created_at: string;
   is_locked: boolean;
+  is_repair: boolean;
 }
 
 export interface LockedTeam {
@@ -132,16 +133,16 @@ export interface HouseAvailability {
 
 // Interface for house status task
 export interface HouseStatusTask {
-  taskId: number;
-  taskTypeId: number;
-  taskTypeName: string;
-  taskProgressTypeId: number;
-  taskProgressTypeName: string;
-  startTime: string | null;
-  endTime: string | null;
+  task_id: number;
+  taskt_type_id: number;
+  task_type_name: string;
+  task_progress_type_id: number;
+  task_progress_type_name: string;
+  start_time: string | null;
+  end_time: string | null;
   description: string | null;
-  createdBy: string;
-  createdAt: string;
+  created_by: string;
+  created_at: string;
 }
 
 // Interface for house status from view
@@ -221,7 +222,7 @@ export class DataService {
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tasksUpdate = new BehaviorSubject<any>('');
   $workGroupTasksUpdate = new BehaviorSubject<any>('');
-  $workGroupProfiles = new BehaviorSubject<any>('');
+  $workGroupProfilesUpdate = new BehaviorSubject<any>('');
   $workGroupsUpdate = new BehaviorSubject<any>('');
   $notesUpdate = new BehaviorSubject<any>('');
   $repairTaskCommentsUpdate = new BehaviorSubject<any>('');
@@ -264,6 +265,12 @@ export class DataService {
   setHouseAvailabilites(houseAvailabilties: HouseAvailability[]){
     if(houseAvailabilties){
       this.houseAvailabilitiesSubject.next(houseAvailabilties);
+    }
+  }
+
+  setHouseStatuses(houseStatuses: HouseStatus[]){
+    if(houseStatuses){
+      this.houseStatusesSubject.next(houseStatuses);
     }
   }
 
@@ -606,10 +613,10 @@ export class DataService {
   }
 
   // Method to create a new work group
-  createWorkGroup(): Observable<WorkGroup | null> {
+  createWorkGroup(isRepairWorkGroup: boolean): Observable<WorkGroup | null> {
     this.loadingSubject.next(true);
 
-    return from(this.supabaseService.insertData('work_groups', {}, this.schema)).pipe(
+    return from(this.supabaseService.insertData('work_groups', {is_repair: isRepairWorkGroup}, this.schema)).pipe(
       tap((data) => {
         if (data) {
           const currentWorkGroups = this.workGroupsSubject.value;
@@ -1268,7 +1275,7 @@ export class DataService {
         table: 'work_group_profiles'
       },
       async (payload: any) => {
-        this.$workGroupProfiles.next(payload);
+        this.$workGroupProfilesUpdate.next(payload);
       }
     ).on(
       'postgres_changes',

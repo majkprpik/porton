@@ -1,3 +1,4 @@
+import { WorkGroup as WorkGroupModel } from './../service/data.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -9,11 +10,18 @@ import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { WorkGroupService } from '../service/work-group.service';
 import { TaskService } from '../service/task.service';
+import { PanelModule } from 'primeng/panel';
 
 @Component({
   selector: 'app-work-groups',
   standalone: true,
-  imports: [CommonModule, ButtonModule, WorkGroup, ProgressSpinnerModule],
+  imports: [
+    CommonModule, 
+    ButtonModule, 
+    WorkGroup, 
+    ProgressSpinnerModule,
+    PanelModule,
+  ],
   template: `
     @if (loading) {
       <div class="loading-container">
@@ -26,12 +34,6 @@ import { TaskService } from '../service/task.service';
           <h2>Radne Grupe</h2>
           <div class="header-actions">
             <p-button 
-              label="Nova Grupa" 
-              icon="pi pi-plus"
-              severity="secondary"
-              (onClick)="createWorkGroup()"
-            ></p-button>
-            <p-button 
               label="OBJAVI" 
               icon="pi pi-check"
               (onClick)="publishWorkGroups()"
@@ -39,31 +41,105 @@ import { TaskService } from '../service/task.service';
           </div>
         </div>
 
-        <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
-          @if (workGroups.length === 0) {
-            <div class="empty-state">
-              <p>Nema kreiranih radnih grupa</p>
+        <p-panel
+          [toggleable]="true"
+          class="cleaning-group"
+          [(collapsed)]="isCleaningCollapsed"
+        >
+          <ng-template pTemplate="header" class="work-group-container-header">
+            <div class="left-side">
+              <span class="group-name">ČIŠĆENJE</span>
+              <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroups)}}</span>
             </div>
-          } @else {
-            <div class="groups-container">
-              @for (group of workGroups; track group.work_group_id) {
-                <div class="group-wrapper">
-                  <app-work-group
-                    [workGroup]="group"
-                    [isActive]="group.work_group_id == activeGroupId"
-                    [assignedTasks]="getAssignedTasks(group.work_group_id)"
-                    [assignedStaff]="getAssignedStaff(group.work_group_id)"
-                    (groupSelected)="setActiveGroup(group.work_group_id)"
-                    (deleteClicked)="deleteWorkGroup(group.work_group_id)"
-                    (taskRemoved)="onTaskRemoved($event)"
-                    (staffRemoved)="onStaffRemoved($event)"
-                    [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
-                  ></app-work-group>
-                </div>
-              }
+            
+            @if(!isCleaningCollapsed){
+              <p-button 
+                label="Nova Grupa" 
+                icon="pi pi-plus"
+                severity="secondary"
+                (onClick)="createWorkGroup(false)"
+              ></p-button>
+            }
+          </ng-template>
+
+          <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
+            @if (!workGroupService.getNumberOfCleaningWorkGroups(workGroups)) {
+              <div class="empty-state">
+                <p>Nema kreiranih radnih grupa za čišćenje</p>
+              </div>
+            } @else {
+              <div class="groups-container">
+                @for (group of workGroups; track group.work_group_id) {
+                  @if(!group.is_repair){
+                    <div class="group-wrapper">
+                      <app-work-group
+                        [workGroup]="group"
+                        [isActive]="group.work_group_id == activeGroupId"
+                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                        [assignedStaff]="getAssignedStaff(group.work_group_id)"
+                        (groupSelected)="setActiveGroup(group.work_group_id)"
+                        (deleteClicked)="deleteWorkGroup(group.work_group_id)"
+                        (taskRemoved)="onTaskRemoved($event)"
+                        (staffRemoved)="onStaffRemoved($event)"
+                        [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
+                      ></app-work-group>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        </p-panel>
+
+        <p-panel
+          [toggleable]="true"
+          class="cleaning-group"
+          [(collapsed)]="isRepairsCollapsed"
+        >
+          <ng-template pTemplate="header" class="work-group-container-header">
+            <div class="left-side">
+              <span class="group-name">POPRAVCI</span>
+              <span class="work-groups-count">{{workGroupService.getNumberOfRepairWorkGroups(workGroups)}}</span>
             </div>
-          }
-        </div>
+            
+            @if(!isRepairsCollapsed){
+              <p-button 
+                label="Nova Grupa" 
+                icon="pi pi-plus"
+                severity="secondary"
+                (onClick)="createWorkGroup(true)"
+              ></p-button>
+            }
+          </ng-template>
+          
+          <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
+            @if (!workGroupService.getNumberOfRepairWorkGroups(workGroups)) {
+              <div class="empty-state">
+                <p>Nema kreiranih radnih grupa za popravke</p>
+              </div>
+            } @else {
+              <div class="groups-container">
+                @for (group of workGroups; track group.work_group_id) {
+                  @if(group.is_repair){
+                    <div class="group-wrapper">
+                      <app-work-group
+                        [workGroup]="group"
+                        [isActive]="group.work_group_id == activeGroupId"
+                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                        [assignedStaff]="getAssignedStaff(group.work_group_id)"
+                        (groupSelected)="setActiveGroup(group.work_group_id)"
+                        (deleteClicked)="deleteWorkGroup(group.work_group_id)"
+                        (taskRemoved)="onTaskRemoved($event)"
+                        (staffRemoved)="onStaffRemoved($event)"
+                        [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
+                      ></app-work-group>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        </p-panel>
       </div>
     }
   `,
@@ -85,6 +161,7 @@ import { TaskService } from '../service/task.service';
       border-radius: 8px;
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
     }
 
     .work-groups-header {
@@ -103,6 +180,72 @@ import { TaskService } from '../service/task.service';
       .header-actions {
         display: flex;
         gap: 0.5rem;
+      }
+    }
+
+    :host ::ng-deep {
+      
+      .cleaning-group {
+        margin-bottom: 0.5rem;
+
+        .left-side{
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .work-groups-count {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 1.5rem;
+          height: 1.5rem;
+          padding: 0 0.5rem;
+          background: var(--primary-color);
+          color: var(--primary-color-text);
+          border-radius: 1rem;
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+
+        .work-group-header-actions{
+          width: 100%;
+          margin-bottom: 1rem;
+        }
+
+        .p-panel {
+          background: transparent;
+          margin-bottom: 0.5rem;
+        }
+
+        .p-panel-header {
+          padding: 0.75rem 1.25rem;
+          border: none;
+          border-radius: 6px;
+          background: var(--surface-ground);
+          height: 45px;
+        }
+
+        .p-panel-content {
+          padding: 1rem;
+          border: none;
+          background: transparent !important;
+        }
+
+        .p-panel-icons {
+          order: 2;
+        }
+      }
+
+      .group-icon {
+        font-size: 1.2rem;
+        color: var(--text-color);
+      }
+
+      .group-name {
+        font-weight: 500;
+        color: var(--text-color);
       }
     }
 
@@ -168,10 +311,12 @@ export class WorkGroups implements OnInit {
   lockedTeams: LockedTeam[] = [];
   taskProgressTypes: any;
   wgt: any[] = [];
+  isRepairsCollapsed: boolean = true;
+  isCleaningCollapsed: boolean = false;
 
   constructor(
     private dataService: DataService,
-    private workGroupService: WorkGroupService,
+    public workGroupService: WorkGroupService,
     private taskService: TaskService,
   ) {}
 
@@ -201,10 +346,11 @@ export class WorkGroups implements OnInit {
           }
           const task = tasks.find(t => t.task_id === workGroupTask.task_id);
           if (task) {
+            const taskCopy = { ...task };
             if(task.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
-              task.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
+              taskCopy.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
             }
-            this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], task];
+            this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], taskCopy];
           }
         });
 
@@ -248,18 +394,23 @@ export class WorkGroups implements OnInit {
       if(res && res.eventType == 'UPDATE'){
         let lockedTeam = this.lockedTeams.find(lt => lt.tasks?.some(task => task.task_id == res.new.task_id));
         let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id) ?? -1;
+        let workGroup = this.workGroups.find(wg => wg.work_group_id == lockedTeam?.id);
+        let updatedLockedTeam: any;
 
         if(taskIndex != -1 && lockedTeam?.tasks){
-          lockedTeam.tasks = [...lockedTeam.tasks.slice(0, taskIndex), res.new, ...lockedTeam.tasks.slice(taskIndex + 1)];
+          const updatedTasks = [...lockedTeam.tasks.slice(0, taskIndex), res.new, ...lockedTeam.tasks.slice(taskIndex + 1)];
+          updatedLockedTeam = { ...lockedTeam, tasks: updatedTasks };
+  
+          this.lockedTeams = this.lockedTeams.map(lt =>
+            lt.id === lockedTeam.id ? updatedLockedTeam : lt
+          );
         }
 
-        if(lockedTeam?.tasks && lockedTeam?.tasks.every(task => this.taskService.isTaskCompleted(task))){
-          this.workGroupService.deleteWorkGroup(lockedTeam.id);
-          this.workGroups = this.workGroups.filter(wg => wg.work_group_id != parseInt(lockedTeam.id));
-          this.lockedTeams = this.lockedTeams.filter(lt => lt.id != lockedTeam.id);
+        if(updatedLockedTeam && updatedLockedTeam?.tasks && updatedLockedTeam?.tasks.every((task: any) => this.taskService.isTaskCompleted(task)) && !workGroup.is_repair){
+          this.workGroupService.deleteWorkGroup(updatedLockedTeam.id);
+          this.lockedTeams = this.lockedTeams.filter(lt => lt.id != updatedLockedTeam.id);
         }
 
-        this.dataService.setWorkGroups(this.workGroups);
         this.workGroupService.setLockedTeams(this.lockedTeams);
       }
     });
@@ -267,7 +418,6 @@ export class WorkGroups implements OnInit {
     this.dataService.$workGroupsUpdate.subscribe(res => {
       if(res && res.eventType == 'INSERT'){
         if(!this.workGroups.find((wgp: any) => wgp.work_group_id == res.new.work_group_id)){
-          this.workGroups = [...this.workGroups, res.new];
           this.lockedTeams = [...this.lockedTeams, {
             id: res.new.work_group_id,
             name: "Team " + res.new.work_group_id.toString(),
@@ -277,21 +427,14 @@ export class WorkGroups implements OnInit {
             isLocked: res.new.is_locked,
           }];
 
-          this.dataService.setWorkGroups(this.workGroups);
           this.workGroupService.setLockedTeams(this.lockedTeams);
         }
       } else if(res && res.eventType == 'UPDATE'){
         if(res.new.is_locked){
-          let workGroupIndex = this.workGroups.findIndex(wg => wg.work_group_id == res.new.work_group_id);
-          this.workGroups[workGroupIndex].is_locked = res.new.is_locked;
-          this.dataService.setWorkGroups(this.workGroups);
-
           if(this.activeGroupId == res.new.work_group_id){
             this.workGroupService.setActiveGroup(undefined);
           }
         }
-      } else if(res && res.eventType == 'DELETE'){
-        this.deleteWorkGroup(res.old.work_group_id);
       }
     });
   }
@@ -315,11 +458,11 @@ export class WorkGroups implements OnInit {
     this.workGroupService.setActiveGroup(workGroupId);
   }
 
-  createWorkGroup() {
+  createWorkGroup(isRepairWorkGroup: boolean) {
     if(this.activeGroupId){
       this.workGroupService.$newGroupWhileGroupActive.next(true);
     }
-    this.dataService.createWorkGroup().subscribe({
+    this.dataService.createWorkGroup(isRepairWorkGroup).subscribe({
       next: (workGroup) => {
         if (workGroup) {
           this.setActiveGroup(workGroup.work_group_id);

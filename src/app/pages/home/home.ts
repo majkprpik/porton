@@ -30,17 +30,19 @@ interface SpecialLocation {
                             <div class="house-number">{{ house.house_number }}</div>
                             <div class="house-icons">
                                 @if (hasAnyTasks(house.house_id)) {
-                                    @for (task of getHouseTasks(house.house_id); track task.taskId) {
-                                        @if (taskService.isRepairTask(task)) {
-                                            <i class="pi pi-wrench" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
-                                        } @else if (taskService.isHouseCleaningTask(task)) {
-                                            <i class="pi pi-home" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
-                                        } @else if (taskService.isTowelChangeTask(task)) {
-                                            <i class="pi pi-bookmark" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
-                                        } @else if (taskService.isDeckCleaningTask(task)) {
-                                            <i class="pi pi-table" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
-                                        } @else if (taskService.isSheetChangeTask(task)) {
-                                            <i class="pi pi-inbox" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                    @for (task of getHouseTasks(house.house_id); track task.task_id) {
+                                        @if (!taskService.isTaskCompleted(task)){
+                                            @if (taskService.isRepairTask(task)) {
+                                                <i class="pi pi-wrench" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                            } @else if (taskService.isHouseCleaningTask(task)) {
+                                                <i class="pi pi-home" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                            } @else if (taskService.isTowelChangeTask(task)) {
+                                                <i class="pi pi-bookmark" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                            } @else if (taskService.isDeckCleaningTask(task)) {
+                                                <i class="pi pi-table" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                            } @else if (taskService.isSheetChangeTask(task)) {
+                                                <i class="pi pi-inbox" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                            }
                                         }
                                     }
                                 }
@@ -508,6 +510,10 @@ export class Home implements OnInit, OnDestroy {
         // Load house statuses data
         this.dataService.loadHouseStatuses().subscribe();
 
+        this.dataService.tasks$.subscribe(tasks => {
+            this.tasks = tasks;
+        });
+
         // Subscribe to houses data from DataService
         const housesSubscription = this.dataService.houses$.subscribe((houses) => {
             this.houses.set(houses);
@@ -868,11 +874,13 @@ export class Home implements OnInit, OnDestroy {
 
     hasAnyTasks(houseId: number): boolean {
         const status = this.houseStatuses().find((s) => s.house_id === houseId);
+
         return !!status?.housetasks?.length;
     }
 
     getHouseTasks(houseId: number): HouseStatusTask[] {
         const status = this.houseStatuses().find((s) => s.house_id === houseId);
+
         return status?.housetasks || [];
     }
 
