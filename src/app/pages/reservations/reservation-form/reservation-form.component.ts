@@ -34,6 +34,7 @@ export class ReservationFormComponent implements OnInit, OnChanges {
     @Input() existingReservations: HouseAvailability[] = [];
     
     notes: string = '';
+    minEndDate!: Date;
     
     // New computed property to determine if we're editing an existing reservation
     get isEditMode(): boolean {
@@ -60,6 +61,7 @@ export class ReservationFormComponent implements OnInit, OnChanges {
             this._minStartDate = new Date();
             this._minStartDate.setHours(0, 0, 0, 0);
         }
+    
         return this._minStartDate;
     }
     
@@ -84,6 +86,7 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         }
         
         // Ensure dates are properly initialized
+        this.updateMinEndDate();
         this.ensureDatesAreValid();
     }
     
@@ -129,6 +132,10 @@ export class ReservationFormComponent implements OnInit, OnChanges {
     // Reset form when visibility changes (prevents data persistence between openings)
     ngOnChanges(changes: SimpleChanges) {
         // Log all changes for debugging
+        if (changes['startDate'] || changes['isEditMode']) {
+            this.updateMinEndDate();
+        }
+
         console.log("Form changes:", Object.keys(changes).join(', '));
         
         // Check if the reservation object changed (which contains date strings)
@@ -185,26 +192,32 @@ export class ReservationFormComponent implements OnInit, OnChanges {
             this.ensureDatesAreValid();
         }
     }
-
-    // Return the minimum allowed end date
-    getMinEndDate(): Date {
-        // If we're in edit mode, the minimum end date should be the start date
+    
+    updateMinEndDate() {
         if (this.isEditMode) {
-            return new Date(this.startDate);
+            this.minEndDate = new Date(this.startDate);
+            return;
         }
-        
-        // For new reservations, it's either the start date or today, whichever is later
+
         if (!this.startDate) {
-            return this.minStartDate;
+            this.minEndDate = this.minStartDate;
+            return;
         }
-        
+
         const startDate = new Date(this.startDate);
         startDate.setHours(0, 0, 0, 0);
-        
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
-        return startDate.getTime() >= today.getTime() ? startDate : today;
+
+        if (startDate.getTime() >= today.getTime()) {
+            startDate.setDate(startDate.getDate() + 1);
+            this.minEndDate = startDate;
+        } else {
+            this.minEndDate = today;
+        }
+
+        this.endDate;
     }
 
     onStartDateChange(): void {
@@ -240,6 +253,7 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         }
         
         // Check for conflicts after date changes
+        this.updateMinEndDate();
         this.checkForDateConflicts();
     }
     
