@@ -1238,7 +1238,8 @@ export class AppLayout {
                 this.selectedHouse.house_id.toString(),
                 this.faultDescription,
                 'Popravak',
-                false
+                false,
+                true
             ).then(async result => {
                 if (result) {
                     try{
