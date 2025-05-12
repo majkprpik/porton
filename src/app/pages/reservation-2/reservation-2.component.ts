@@ -1052,24 +1052,22 @@ export class Reservation2Component implements OnInit, OnDestroy {
     // Handle mouse up to end selection
     @HostListener('document:mouseup')
     onDocumentMouseUp(): void {
-        if (this.isSelecting()) {
-            this.isSelecting.set(false);
-            
-            // Check if we have a valid date range selected
-            const dateRange = this.getSelectedDateRange();
-            if (dateRange && this.selectedCellRowIndex() >= 0) {
-                // Get the house for the selected row
-                const houses = this.filteredHouses();
-                const row = this.selectedCellRowIndex();
-                
-                if (houses.length > row) {
-                    const house = houses[row];
-                    
-                    // Open the reservation form with the selected date range
-                    this.openReservationForm(house, dateRange.startDate, dateRange.endDate);
+        setTimeout(() => {
+            if (this.isSelecting()) {
+                this.isSelecting.set(false);
+
+                const dateRange = this.getSelectedDateRange();
+                if (dateRange && this.selectedCellRowIndex() >= 0) {
+                    const houses = this.filteredHouses();
+                    const row = this.selectedCellRowIndex();
+
+                    if (houses.length > row) {
+                        const house = houses[row];
+                        this.openReservationForm(house, dateRange.startDate, dateRange.endDate);
+                    }
                 }
             }
-        }
+        });
     }
 
     // Helper method to open the reservation form with given dates
