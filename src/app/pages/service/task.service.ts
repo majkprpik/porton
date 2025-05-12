@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, HouseStatus, RepairTaskComment, TaskProgressType, TaskType } from './data.service';
+import { DataService, HouseStatus, TaskProgressType, TaskType } from './data.service';
 import { BehaviorSubject } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 import { AuthService } from './auth.service';
@@ -28,11 +28,17 @@ export class TaskService {
   sheetChangeTaskType: TaskType | undefined = undefined;
   towelChangeTaskType: TaskType | undefined = undefined;
 
+  private isUrgentIconVisibleSubject = new BehaviorSubject<boolean>(false);
+  isUrgentIconVisible$ = this.isUrgentIconVisibleSubject.asObservable();
+  private intervalId: any;
+
   constructor(
     private supabaseService: SupabaseService,
     private dataService: DataService,
     private authService: AuthService,
   ) {
+    this.startUrgencyInterval();
+
     this.dataService.taskProgressTypes$.subscribe(res => {
       this.taskProgressTypes = res;
 
@@ -52,6 +58,22 @@ export class TaskService {
       this.sheetChangeTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Mijenjanje posteljine');
       this.towelChangeTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Mijenjanje ručnika');
     });
+  }
+
+  private startUrgencyInterval() {
+    if (!this.intervalId) {
+      this.intervalId = setInterval(() => {
+        const currentState = this.isUrgentIconVisibleSubject.value;
+        this.isUrgentIconVisibleSubject.next(!currentState);
+      }, 1000);
+    }
+  }
+
+  stopUrgencyInterval() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
   }
 
   async createTaskForHouse(houseId: string, description: string, taskTypeName: string, isAssigned: boolean, isUnscheduled: boolean = false){

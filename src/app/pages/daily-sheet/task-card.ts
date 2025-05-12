@@ -25,9 +25,21 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       (contextmenu)="onContextMenu($event)"
     >
       <div class="house-number">{{houseNumber}}</div>
-      <div class="task-icon">
-        <i class="{{taskIcon}}"></i>
-      </div>
+      @if(task?.is_unscheduled){
+        @if(isUrgentIconVisible){
+          <div class="urgent-task-icon">
+            <i class="pi pi-exclamation-triangle"></i>
+          </div>
+        } @else{
+          <div class="task-icon">
+            <i class="{{taskIcon}}"></i>
+          </div>
+        }
+      } @else {
+        <div class="task-icon">
+          <i class="{{taskIcon}}"></i>
+        </div>
+      }
     </div>
 
     <p-contextMenu #cm [model]="menuItems"></p-contextMenu>
@@ -123,20 +135,33 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       i {
         font-size: 0.875rem;
       }
+    } 
+
+    .urgent-task-icon{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      i {
+        color: red;
+        font-size: 0.875rem;
+      }
     }
   `
 })
 export class TaskCardComponent {
+  @ViewChild('cm') contextMenu!: ContextMenu;
+
   @Input() state: TaskState = 'not-assigned';
   @Input() houseNumber: number = 0;
   @Input() taskIcon: string = 'pi-home';
   @Input() task?: Task;
   @Input() canBeAssigned: boolean = false;
   @Input() isInActiveGroup: boolean = false;
-  
   @Output() removeFromGroup = new EventEmitter<void>();
   
-  @ViewChild('cm') contextMenu!: ContextMenu;
+  isUrgentIconVisible = false;
+  private intervalId: any;
 
   menuItems: MenuItem[] = [
     {
@@ -189,6 +214,20 @@ export class TaskCardComponent {
     private workGroupService: WorkGroupService,
   ) {
     
+  }
+
+  ngOnInit(){
+    if(this.task?.is_unscheduled){
+      this.taskService.isUrgentIconVisible$.subscribe((visible) => {
+        this.isUrgentIconVisible = visible;
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
   }
 
   onClick(event: MouseEvent) {
