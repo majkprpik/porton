@@ -418,7 +418,6 @@ export class WorkGroup implements OnInit {
   
   @Output() groupSelected = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
-  @Output() taskRemoved = new EventEmitter<Task>();
   @Output() staffRemoved = new EventEmitter<Profile>();
   
   @ViewChild('staffContextMenu') staffContextMenu!: ContextMenu;
@@ -791,36 +790,6 @@ export class WorkGroup implements OnInit {
       }
 
       this.taskService.$taskToRemove.next(taskToRemove);
-      let lockedTeams = this.workGroupService.getLockedTeams();
-      let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == this.workGroup?.work_group_id)
-
-      if(lockedTeam?.tasks){
-        lockedTeam.tasks = lockedTeam.tasks.filter(task => task.task_id != taskToRemove.task_id);
-        const nijeDodijeljenoType = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno");
-        const completedTaskType = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == 'Završeno');
-
-        if (nijeDodijeljenoType && completedTaskType) {
-          this.dataService.updateTaskProgressType1(taskToRemove.task_id, nijeDodijeljenoType.task_progress_type_id)
-            .then(() => {
-              // Emit the task to parent component
-              this.taskRemoved.emit(taskToRemove);
-            })
-            .catch(error => {
-              console.error('Error updating task progress type:', error);
-            });
-          
-          // Also update local state
-          if (taskToRemove.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => 
-            taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id) {
-            let task = this.tasks.find((task: any) => task.task_id == taskToRemove.task_id);
-            if (task) {
-              task.task_progress_type_id = nijeDodijeljenoType.task_progress_type_id;
-            }
-          }
-        }
-        lockedTeam.isLocked = false;
-        this.workGroupService.updateLockedTeam(lockedTeam);
-      }
     }
   }
 

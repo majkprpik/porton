@@ -10,7 +10,6 @@ export class WorkGroupService {
   private activeGroupIdSubject = new BehaviorSubject<number | undefined>(undefined);
   private lockedTeams: LockedTeam[] = [];
   activeGroupId$ = this.activeGroupIdSubject.asObservable();
-  $workGroupToDelete = new BehaviorSubject<any>(null);
   $newGroupWhileGroupActive = new BehaviorSubject<boolean>(false);
 
   constructor(
