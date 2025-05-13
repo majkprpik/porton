@@ -1,4 +1,3 @@
-import { WorkGroup as WorkGroupModel } from './../service/data.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -79,7 +78,6 @@ import { PanelModule } from 'primeng/panel';
                         [assignedStaff]="getAssignedStaff(group.work_group_id)"
                         (groupSelected)="setActiveGroup(group.work_group_id)"
                         (deleteClicked)="deleteWorkGroup(group.work_group_id)"
-                        (taskRemoved)="onTaskRemoved($event)"
                         (staffRemoved)="onStaffRemoved($event)"
                         [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
                       ></app-work-group>
@@ -129,7 +127,6 @@ import { PanelModule } from 'primeng/panel';
                         [assignedStaff]="getAssignedStaff(group.work_group_id)"
                         (groupSelected)="setActiveGroup(group.work_group_id)"
                         (deleteClicked)="deleteWorkGroup(group.work_group_id)"
-                        (taskRemoved)="onTaskRemoved($event)"
                         (staffRemoved)="onStaffRemoved($event)"
                         [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
                       ></app-work-group>
@@ -313,6 +310,7 @@ export class WorkGroups implements OnInit {
   wgt: any[] = [];
   isRepairsCollapsed: boolean = true;
   isCleaningCollapsed: boolean = false;
+  tasksToRemove: Task[] = [];
 
   constructor(
     private dataService: DataService,
@@ -437,6 +435,18 @@ export class WorkGroups implements OnInit {
         }
       }
     });
+
+    this.taskService.$taskToRemove.subscribe(res => {
+      if(res){
+        this.tasksToRemove.push(res);
+      }
+    });
+
+    this.taskService.$selectedTask.subscribe(res => {
+      if(res){
+        this.tasksToRemove = this.tasksToRemove.filter(ttrm => ttrm.task_id != res.task_id);
+      }
+    })
   }
 
   getAssignedTasks(workGroupId: number): Task[] {
@@ -479,7 +489,7 @@ export class WorkGroups implements OnInit {
       this.workGroupService.setActiveGroup(undefined);
     }
 
-    const assignedTaskType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Dodijeljeno')
+    const assignedTaskType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Dodijeljeno');
 
     // Get the tasks that will be removed from this work group
     const tasksToReturn = this.getAssignedTasks(workGroupId);
@@ -505,10 +515,15 @@ export class WorkGroups implements OnInit {
         .map(task => 
           from(this.dataService.updateTaskProgressType1(task.task_id, nijeDodijeljenoType.task_progress_type_id))
         );
+
+      // this.allTasks.forEach(task => {
+      //   if(tasksToReturn.find(ttr => ttr.task_id == task.task_id)){
+      //     task.task_progress_type_id = nijeDodijeljenoType.task_progress_type_id;
+      //   }
+      // });
       
       forkJoin(updateObservables.length > 0 ? updateObservables : [of(null)]).pipe(
         switchMap(() => this.dataService.deleteWorkGroup(workGroupId)),
-        tap(() => this.workGroupService.$workGroupToDelete.next(workGroupId)),
         catchError((err) => {
           console.error("Error:", err);
           throw new Error("Error deleting work group!");
@@ -534,31 +549,6 @@ export class WorkGroups implements OnInit {
     });
   }
 
-  onTaskRemoved(task: Task) {
-    // Refresh the tasks list for the active group
-    if (this.activeGroupId) {
-      const tasks = this.getAssignedTasks(this.activeGroupId);
-      const updatedTasks = tasks.filter(t => t.task_id !== task.task_id);
-      this.workGroupTasks[this.activeGroupId] = updatedTasks;
-
-      // Update the task progress type to "Nije dodijeljeno"
-      const nijeDodijeljenoType = this.taskProgressTypes.find(
-        (tpt: any) => tpt.task_progress_type_name === "Nije dodijeljeno"
-      );
-      
-      if (nijeDodijeljenoType && task.task_id) {
-        this.dataService.updateTaskProgressType1(
-          task.task_id, 
-          nijeDodijeljenoType.task_progress_type_id
-        ).then(() => {
-          console.log(`Task ${task.task_id} progress type updated to Nije dodijeljeno`);
-        }).catch(error => {
-          console.error('Error updating task progress type:', error);
-        });
-      }
-    }
-  }
-
   onStaffRemoved(staff: Profile) {
     // Refresh the staff list for the active group
     if (this.activeGroupId && staff.id) {
@@ -571,6 +561,7 @@ export class WorkGroups implements OnInit {
   async publishWorkGroups() {
     let lockedWorkGroups = this.workGroupService.getLockedTeams();
     let assignedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Dodijeljeno");
+    let notAssignedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Nije dodijeljeno");
     let completedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Završeno');
     let unlockedWorkGroups = lockedWorkGroups.filter(lwg => !lwg.isLocked);
 
@@ -583,20 +574,26 @@ export class WorkGroups implements OnInit {
         this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(workGroupId),
         this.workGroupService.deleteAllWorkGroupProfilesByWorkGroupId(workGroupId)
       ]);
-  
+    
       lockedWorkGroup.tasks ??= [];
       lockedWorkGroup.members ??= [];
   
       const createTaskPromises = lockedWorkGroup.tasks.map((task, index) => 
         this.workGroupService.createWorkGroupTask(workGroupId, task.task_id, index)
       );
-  
+
       const updateTaskProgressPromises = lockedWorkGroup.tasks
         .filter(task => task.task_progress_type_id !== completedTaskProgressType.task_progress_type_id)
         .map(task => 
           this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
         );
-  
+      
+      const updateRemovedTasksPromises = this.tasksToRemove.map(ttrm =>
+        this.dataService.updateTaskProgressType1(ttrm.task_id, notAssignedTaskProgressType.task_progress_type_id)
+      );
+
+      this.tasksToRemove = [];
+
       const createProfilePromises = lockedWorkGroup.members.map(member =>
         this.workGroupService.createWorkGroupProfile(workGroupId, member.id)
       );
@@ -604,7 +601,8 @@ export class WorkGroups implements OnInit {
       await Promise.all([
         ...createTaskPromises,
         ...updateTaskProgressPromises,
-        ...createProfilePromises
+        ...createProfilePromises,
+        ...updateRemovedTasksPromises
       ]);
     });
   
