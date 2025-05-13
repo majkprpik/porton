@@ -113,7 +113,7 @@ import { CommonModule } from '@angular/common';
                     [showSeconds]="false"
                     (onBlur)="updateArrivalTime(arrival)"
                     appendTo="body"
-                    placeholder="15:00"
+                    placeholder="16:00"
                     styleClass="w-full"
                   ></p-calendar>
                 </div>
@@ -279,7 +279,7 @@ export class ArrivalsAndDeparturesComponent {
           res.new = {
             ...res.new,
             house_number: house?.house_number,
-            arrivalTimeObj: this.getTimeObjFromTimeString(res.new.arrival_time || '15:00'),
+            arrivalTimeObj: this.getTimeObjFromTimeString(res.new.arrival_time || '16:00'),
           }
 
           this.arrivals[arrivalIndex] = res.new;
@@ -314,7 +314,7 @@ export class ArrivalsAndDeparturesComponent {
     this.arrivals = todaysHouseAvailabilities.map(ha => {
       const house_number = this.houses.find(house => house.house_id == ha.house_id)?.house_number;
       // Parse time string into Date object for the calendar component
-      const arrivalTimeObj = this.getTimeObjFromTimeString(ha.arrival_time || '15:00');
+      const arrivalTimeObj = this.getTimeObjFromTimeString(ha.arrival_time || '16:00');
       return { ...ha, house_number, arrivalTimeObj };
     });
 
@@ -349,17 +349,17 @@ export class ArrivalsAndDeparturesComponent {
     });
   }
 
-  // Convert time string (e.g. "15:00") to Date object for p-calendar
   getTimeObjFromTimeString(timeString: string): Date {
     const date = new Date();
     const [hours, minutes] = timeString.split(':').map(n => parseInt(n, 10));
+
     date.setHours(hours || 0);
     date.setMinutes(minutes || 0);
     date.setSeconds(0);
+    
     return date;
   }
 
-  // Convert Date object to time string (e.g. "15:00")
   getTimeStringFromObj(date: Date): string {
     if (!date) return '';
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
