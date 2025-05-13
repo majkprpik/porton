@@ -58,8 +58,7 @@
                                             'reservation-middle': gridMatrix()[i]?.[j]?.isReservationMiddle,
                                             'reservation-end': gridMatrix()[i]?.[j]?.isReservationEnd
                                         }"
-                                        [style.background-color]="gridMatrix()[i]?.[j]?.color"
-                                        [title]="gridMatrix()[i]?.[j]?.tooltip">
+                                        [style.background-color]="gridMatrix()[i]?.[j]?.color">
                                         <!-- Simple reservation cell without drag functionality -->
                                         @if (gridMatrix()[i]?.[j]?.isReserved && gridMatrix()[i]?.[j]?.isReservationStart) {
                                             <div class="reservation-item">
