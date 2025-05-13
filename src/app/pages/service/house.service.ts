@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, House, HouseAvailability, HouseAvailabilityType } from './data.service';
+import { DataService, House, HouseAvailability, HouseAvailabilityType, HouseStatus, HouseStatusTask } from './data.service';
+import { TaskService } from './task.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,10 +10,12 @@ export class HouseService {
   houseAvailabilityTypes: HouseAvailabilityType[] = [];
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
+  houseStatuses = signal<HouseStatus[]>([]);
 
   constructor(
     private supabase: SupabaseService,
-    private dataService: DataService
+    private dataService: DataService,
+    private taskService: TaskService,
   ) {
 
     this.dataService.houseAvailabilityTypes$.subscribe(ha => {
@@ -26,6 +29,10 @@ export class HouseService {
     this.dataService.houses$.subscribe(houses => {
       this.houses = houses;
     })
+
+    this.dataService.houseStatuses$.subscribe((statuses) => {
+        this.houseStatuses.set(statuses);
+    });
   }
 
   isHouseOccupied(houseId: number){
@@ -46,6 +53,34 @@ export class HouseService {
     }
 
     return false;
+  }
+
+  hasCompletedTasks(houseId: number): boolean {
+    const status = this.houseStatuses().find((s) => s.house_id === houseId);
+    if (!status?.housetasks?.length) return false;
+    let hasCompletedTasks = status.housetasks.some((task) => this.taskService.isTaskCompleted(task));
+    
+    return hasCompletedTasks;
+  }
+
+  hasInProgressTasks(houseId: number): boolean {
+    const status = this.houseStatuses().find((s) => s.house_id === houseId);
+    if (!status?.housetasks?.length) return false;
+    let hasTasksInProgress = status.housetasks.some((task) => this.taskService.isTaskInProgress(task)); 
+
+    return hasTasksInProgress;
+  }
+
+  hasAnyTasks(houseId: number): boolean {
+    const status = this.houseStatuses().find((s) => s.house_id === houseId);
+
+    return !!status?.housetasks?.length;
+  }
+
+  getHouseTasks(houseId: number): HouseStatusTask[] {
+    const status = this.houseStatuses().find((s) => s.house_id === houseId);
+
+    return status?.housetasks || [];
   }
 
   getHouseNumber(houseId: number): string {

@@ -10,6 +10,7 @@ import { MenuItem } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
 import { TaskService } from '../service/task.service';
+import { HouseService } from '../service/house.service';
 
 // Define the special location option interface
 interface SpecialLocation {
@@ -25,12 +26,18 @@ interface SpecialLocation {
         <div class="home-container" (click)="handleContainerClick($event)">
             <div class="house-grid">
                 @for (house of houses(); track house.house_id) {
-                    <div class="house-card" [class.occupied]="isHouseOccupied(house.house_id)" [class.available]="!isHouseOccupied(house.house_id)" [class.expanded]="expandedHouseId === house.house_id" (click)="toggleExpand($event, house.house_id)">
+                    <div 
+                        class="house-card" 
+                        [class.occupied]="isHouseOccupied(house.house_id)" 
+                        [class.available]="!isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
+                        [class.available-with-tasks]="!isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
+                        [class.expanded]="expandedHouseId === house.house_id" 
+                        (click)="toggleExpand($event, house.house_id)">
                         <div class="house-content">
                             <div class="house-number">{{ house.house_number }}</div>
                             <div class="house-icons">
-                                @if (hasAnyTasks(house.house_id)) {
-                                    @for (task of getHouseTasks(house.house_id); track task.task_id) {
+                                @if (houseService.hasAnyTasks(house.house_id)) {
+                                    @for (task of houseService.getHouseTasks(house.house_id); track task.task_id) {
                                         @if (!taskService.isTaskCompleted(task)){
                                             @if (taskService.isRepairTask(task)) {
                                                 <i class="pi pi-wrench" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
@@ -268,11 +275,6 @@ interface SpecialLocation {
                 }
 
                 &.available {
-                    // background: var(--p-surface-ground);
-                    // .house-number, .house-icons i {
-                    //     color: var(--p-green-500);
-                    // }
-
                     background: var(--p-green-400);
                     .house-number,
                     .house-icons i {
@@ -289,12 +291,6 @@ interface SpecialLocation {
                 }
 
                 &.occupied {
-                    // background: var(--p-surface-ground);
-                    // .house-number,
-                    // .house-icons i {
-                    //     color: var(--p-red-500);
-                    // }
-
                     background: var(--p-red-400);
                     .house-number,
                     .house-icons i {
@@ -306,6 +302,22 @@ interface SpecialLocation {
                         .house-number,
                         .house-icons i {
                             color: var(--p-red-100);
+                        }
+                    }
+                }
+
+                &.available-with-tasks {
+                    background: var(--p-yellow-400);
+                    .house-number,
+                    .house-icons i {
+                        color: var(--p-yellow-100);
+                    }
+
+                    @media (prefers-color-scheme: dark) {
+                        background: var(--p-yellow-400);
+                        .house-number,
+                        .house-icons i {
+                            color: var(--p-yellow-100);
                         }
                     }
                 }
@@ -497,7 +509,8 @@ export class Home implements OnInit, OnDestroy {
 
     constructor(
         private dataService: DataService,
-        public taskService: TaskService
+        public taskService: TaskService,
+        public houseService: HouseService,
     ) {}
 
     ngOnInit(): void {
@@ -856,32 +869,6 @@ export class Home implements OnInit, OnDestroy {
 
         // If we're looking at a reservation slot, it's occupied
         return true;
-    }
-
-    hasCompletedTasks(houseId: number): boolean {
-        const status = this.houseStatuses().find((s) => s.house_id === houseId);
-        if (!status?.housetasks?.length) return false;
-        let hasCompletedTasks = status.housetasks.some((task) => this.taskService.isTaskCompleted(task)); // Assuming 3 is "Completed"
-        return hasCompletedTasks;
-    }
-
-    hasInProgressTasks(houseId: number): boolean {
-        const status = this.houseStatuses().find((s) => s.house_id === houseId);
-        if (!status?.housetasks?.length) return false;
-        let hasTasksInProgress = status.housetasks.some((task) => this.taskService.isTaskInProgress(task)); // Assuming 2 is "In Progress"
-        return hasTasksInProgress;
-    }
-
-    hasAnyTasks(houseId: number): boolean {
-        const status = this.houseStatuses().find((s) => s.house_id === houseId);
-
-        return !!status?.housetasks?.length;
-    }
-
-    getHouseTasks(houseId: number): HouseStatusTask[] {
-        const status = this.houseStatuses().find((s) => s.house_id === houseId);
-
-        return status?.housetasks || [];
     }
 
     // Update location options method
