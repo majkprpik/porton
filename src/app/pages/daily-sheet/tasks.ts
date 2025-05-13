@@ -141,19 +141,15 @@ export class TasksComponent implements OnInit {
   // Helper method to update task progress type after task removal
   private updateTaskAfterRemoval(task: Task | undefined, taskToRemove: any) {
     if (task) {
-      const taskProgressType = this.progressTypes.find(progressType => 
-        progressType.task_progress_type_name === "Nije dodijeljeno");
+      const taskProgressType = this.progressTypes.find(progressType => progressType.task_progress_type_name === "Nije dodijeljeno");
       
       if (taskProgressType) {
-        // Update the local task
         task.task_progress_type_id = taskProgressType.task_progress_type_id;
         
-        // Update the tasks array
         this.tasks = this.tasks.map(t => 
           t.task_id === task.task_id ? { ...t, task_progress_type_id: taskProgressType.task_progress_type_id } : t
         );
-        
-        // Remove from workGroupTasks
+
         this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
         this.dataService.setWorkGroupTasks(this.workGroupTasks);
       }
