@@ -233,7 +233,7 @@ export class TaskCardComponent {
   onClick(event: MouseEvent) {
     event.stopPropagation();
 
-    if(this.task?.task_progress_type_id == 37){
+    if(this.taskService.isTaskNotAssigned(this.task)){
       this.canBeAssigned = true;
     }
     
