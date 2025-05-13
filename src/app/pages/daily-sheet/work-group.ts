@@ -549,14 +549,12 @@ export class WorkGroup implements OnInit {
     });
 
     if (this.workGroup) {
-      const workGroup = this.workGroup;
-
       this.taskService.$selectedTask.subscribe(selectedTask => {
         if(selectedTask && !this.workGroupTasks.some((wgt: any) => wgt.task_id == selectedTask.task_id)){
           const activeGroup = this.workGroupService.getActiveGroup();
           
-          if(activeGroup && workGroup?.work_group_id == activeGroup){
-            workGroup.is_locked = false;
+          if(activeGroup && this.workGroup && this.workGroup?.work_group_id == activeGroup){
+            this.workGroup.is_locked = false;
             let lockedTeams = this.workGroupService.getLockedTeams();
             let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup)
 
