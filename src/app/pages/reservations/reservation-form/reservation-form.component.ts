@@ -326,7 +326,7 @@ export class ReservationFormComponent implements OnInit, OnChanges {
             house_id: this.houseId,
             house_availability_start_date: formatDate(this.startDate),
             house_availability_end_date: formatDate(adjustedEndDate), // Use adjusted end date here
-            description: this.notes, // Add notes to the reservation
+            note: this.notes, // Add notes to the reservation
             color_theme: this.colors.findIndex(color => color == this.selectedColor),
             color_tint: this.reservation.color_tint || 0.5,
         } as HouseAvailability;

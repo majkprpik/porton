@@ -745,8 +745,6 @@ export class DataService {
     for (const field of validFields) {
       if (field in saveData) {
         cleanSaveData[field] = (saveData as any)[field];
-      } else if(field == 'note'){
-        cleanSaveData[field] = (saveData as any)['description'];
       }
     }
     
@@ -801,7 +799,8 @@ export class DataService {
       'dogs_s',
       'dogs_b',
       'color_theme',
-      'color_tint'
+      'color_tint',
+      'note'
     ];
     
     // Create clean object with only valid fields
