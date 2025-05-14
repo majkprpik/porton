@@ -121,6 +121,33 @@ export class HouseService {
     );
   }
 
+  hasArrivalForToday(houseId: number){
+    const today = new Date();
+    const specificDateStr = today.toISOString().split('T')[0];
+
+    return this.houseAvailabilities.find(ha => ha.house_availability_start_date.split('T')[0] == specificDateStr && ha.house_id == houseId);
+  } 
+
+  hasDepartureForToday(houseId: number){
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const specificDateStr = yesterday.toISOString().split('T')[0];
+
+    return this.houseAvailabilities.find(ha => ha.house_availability_end_date.split('T')[0] == specificDateStr && ha.house_id == houseId);
+  }
+
+   getTimeObjFromTimeString(timeString: string): Date {
+    const date = new Date();
+    const [hours, minutes] = timeString.split(':').map(n => parseInt(n, 10));
+
+    date.setHours(hours || 0);
+    date.setMinutes(minutes || 0);
+    date.setSeconds(0);
+    
+    return date;
+  }
+
   async setHouseAvailabilityDeparted(houseAvailabilityId: number, state: boolean){
     let houseAvailability;
 

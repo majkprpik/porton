@@ -31,6 +31,8 @@ interface SpecialLocation {
                         [class.occupied]="isHouseOccupied(house.house_id)" 
                         [class.available]="!isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
                         [class.available-with-tasks]="!isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
+                        [class.available-with-arrival]="!isHouseOccupied(house.house_id) && houseService.hasArrivalForToday(house.house_id)"
+                        [class.occupied-without-arrival]="isHouseOccupied(house.house_id) && houseService.hasDepartureForToday(house.house_id)"
                         [class.expanded]="expandedHouseId === house.house_id" 
                         (click)="toggleExpand($event, house.house_id)">
                         <div class="house-content">
@@ -275,14 +277,14 @@ interface SpecialLocation {
                 }
 
                 &.available {
-                    background: var(--p-green-400);
+                    background: var(--p-green-600);
                     .house-number,
                     .house-icons i {
                         color: var(--p-green-100);
                     }
 
                     @media (prefers-color-scheme: dark) {
-                        background: var(--p-green-400);
+                        background: var(--p-green-600);
                         .house-number,
                         .house-icons i {
                             color: var(--p-green-100);
@@ -291,6 +293,22 @@ interface SpecialLocation {
                 }
 
                 &.occupied {
+                    background: var(--p-red-600);
+                    .house-number,
+                    .house-icons i {
+                        color: var(--p-red-100);
+                    }
+
+                    @media (prefers-color-scheme: dark) {
+                        background: var(--p-red-600);
+                        .house-number,
+                        .house-icons i {
+                            color: var(--p-red-100);
+                        }
+                    }
+                }
+
+                &.available-with-arrival{
                     background: var(--p-red-400);
                     .house-number,
                     .house-icons i {
@@ -302,6 +320,22 @@ interface SpecialLocation {
                         .house-number,
                         .house-icons i {
                             color: var(--p-red-100);
+                        }
+                    }
+                }
+
+                &.occupied-without-arrival{
+                    background: var(--p-green-400);
+                    .house-number,
+                    .house-icons i {
+                        color: var(--p-green-100);
+                    }
+
+                    @media (prefers-color-scheme: dark) {
+                        background: var(--p-green-400);
+                        .house-number,
+                        .house-icons i {
+                            color: var(--p-green-100);
                         }
                     }
                 }
@@ -1028,8 +1062,18 @@ export class Home implements OnInit, OnDestroy {
                 return endA - endB;
             });
 
+        if(houseId == 455){
+            console.log('aaa');
+        }
+
         if (houseAvailabilities && houseAvailabilities.length == 1) {
-            return !houseAvailabilities[0].has_departed;
+            if(this.houseService.hasArrivalForToday(houseId)){
+                return houseAvailabilities[0].has_arrived
+            } else if(this.houseService.hasDepartureForToday(houseId)){
+                return !houseAvailabilities[0].has_departed
+            } else {
+                return true;
+            }
         } else if (houseAvailabilities && houseAvailabilities.length == 2) {
             if (!houseAvailabilities[0].has_departed) {
                 return true;
