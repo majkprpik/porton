@@ -8,6 +8,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { HouseAvailability } from '../../service/data.service';
+import { DropdownModule } from 'primeng/dropdown';
 
 @Component({
     selector: 'app-reservation-form',
@@ -22,7 +23,8 @@ import { HouseAvailability } from '../../service/data.service';
         InputTextModule,
         InputNumberModule,
         CalendarModule,
-        InputTextarea
+        DropdownModule,
+        InputTextarea,
     ]
 })
 export class ReservationFormComponent implements OnInit, OnChanges {
@@ -31,10 +33,12 @@ export class ReservationFormComponent implements OnInit, OnChanges {
     @Input() houseId!: number;
     @Input() startDate!: Date;
     @Input() endDate!: Date;
-    @Input() existingReservations: HouseAvailability[] = [];
+    @Input() existingReservations: HouseAvailability[] = [];  
+    @Input() colors: any[] = [];
     
     notes: string = '';
     minEndDate!: Date;
+    selectedColor: any;
     
     // New computed property to determine if we're editing an existing reservation
     get isEditMode(): boolean {
@@ -76,6 +80,9 @@ export class ReservationFormComponent implements OnInit, OnChanges {
 
     ngOnInit() {
         console.log("Form initialized with dates:", this.startDate, this.endDate);
+        if(this.reservation && this.reservation.color_theme != undefined){
+            this.selectedColor = this.colors[this.reservation.color_theme];
+        }
         
         // Initialize notes from reservation description if it exists
         if (this.reservation && this.reservation.note) {
@@ -319,7 +326,9 @@ export class ReservationFormComponent implements OnInit, OnChanges {
             house_id: this.houseId,
             house_availability_start_date: formatDate(this.startDate),
             house_availability_end_date: formatDate(adjustedEndDate), // Use adjusted end date here
-            description: this.notes // Add notes to the reservation
+            description: this.notes, // Add notes to the reservation
+            color_theme: this.colors.findIndex(color => color == this.selectedColor),
+            color_tint: this.reservation.color_tint || 0.5,
         } as HouseAvailability;
         this.save.emit(reservation);
         this.visibleChange.emit(false);

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, ViewChild, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -84,6 +84,8 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     // Add a flag to track whether the page has been loaded for the first time
     private isFirstLoad = true;
+
+    colors = ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA', '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'];
     
     constructor(private dataService: DataService) {
         // Monitor grid matrix updates
@@ -267,8 +269,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
         if (reservation) {
             // Calculate color
-            const colors = ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA', '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'];
-            const baseColor = colors[reservation.color_theme % colors.length];
+            const baseColor = this.colors[reservation.color_theme % this.colors.length];
             const opacity = 0.7 + (reservation.color_tint * 0.3);
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor);
             

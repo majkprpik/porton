@@ -55,6 +55,27 @@
                         (onSelect)="checkForDateConflicts()">
                     </p-calendar>
                 </div>
+
+            </div>
+            <div class="form-col">
+                <div class="field">
+                    <label for="endDate">Color</label>
+                    <p-dropdown 
+                        [options]="colors" 
+                        [(ngModel)]="selectedColor"
+                        [ngStyle]="{ 'width': '210px'}"
+                        [panelStyle]="{ 'max-height': '200px' }"
+                        placeholder="Select a color"
+                        appendTo="body"
+                    >
+                        <ng-template let-option pTemplate="item">
+                            <div class="color-item" [style.background]="option"></div>
+                        </ng-template>
+                        <ng-template let-selectedOption pTemplate="selectedItem">
+                            <div class="color-item" [style.background]="selectedOption"></div>
+                        </ng-template>
+                    </p-dropdown>
+                </div>
             </div>
         </div>
 
