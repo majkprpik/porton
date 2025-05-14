@@ -1151,10 +1151,14 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     color_tint: 0.5, // Default tint
                     adults: 2, // Default values
                     babies: 0,
+                    cribs: 0,
                     has_arrived: false,
                     has_departed: false,
                     prev_connected: false,
-                    next_connected: false
+                    next_connected: false,
+                    dogs_b: 0,
+                    dogs_d: 0,
+                    dogs_s: 0,
                 });
                 
                 // Show the form

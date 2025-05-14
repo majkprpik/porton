@@ -16,6 +16,22 @@
                     <input id="reservationNumber" type="text" pInputText [(ngModel)]="reservation.reservation_number" />
                 </div>
                 <div class="field">
+                    <div class="pets-row">
+                        <div class="half-field">
+                            <label for="defaultPets">Pets</label>
+                            <p-inputNumber class="small-input" id="defaultPets" [(ngModel)]="reservation.dogs_d" [min]="0" [max]="10"></p-inputNumber>
+                        </div>
+                        <div class="half-field">
+                            <label for="smallPets">Small pets</label>
+                            <p-inputNumber class="small-input" id="smallPets" [(ngModel)]="reservation.dogs_s" [min]="0" [max]="10"></p-inputNumber>
+                        </div>
+                        <div class="half-field">
+                            <label for="bigPets">Big pets</label>
+                            <p-inputNumber class="small-input" id="bigPets" [(ngModel)]="reservation.dogs_b" [min]="0" [max]="10"></p-inputNumber>
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
                     <label for="startDate">Start Date</label>
                     <p-calendar 
                         id="startDate" 
@@ -38,28 +54,19 @@
                     <p-inputNumber id="adults" [(ngModel)]="reservation.adults" [min]="0" [max]="10"></p-inputNumber>
                 </div>
                 <div class="field">
-                    <label for="babies">Babies</label>
-                    <p-inputNumber id="babies" [(ngModel)]="reservation.babies" [min]="0" [max]="10"></p-inputNumber>
+                    <div class="babies-cribs-row">
+                        <div class="half-field">
+                            <label for="babies">Babies</label>
+                            <p-inputNumber class="small-input" id="babies" [(ngModel)]="reservation.babies" [min]="0" [max]="10"></p-inputNumber>
+                        </div>
+                        <div class="half-field">
+                            <label for="cribs">Baby cribs</label>
+                            <p-inputNumber class="small-input" id="cribs" [(ngModel)]="reservation.cribs" [min]="0" [max]="10"></p-inputNumber>
+                        </div>
+                    </div>
                 </div>
                 <div class="field">
-                    <label for="endDate">End Date</label>
-                    <p-calendar 
-                        id="endDate" 
-                        [(ngModel)]="endDate" 
-                        [readonlyInput]="true" 
-                        dateFormat="dd.mm.yy"
-                        [minDate]="minEndDate" 
-                        [maxDate]="maxDate" 
-                        [showIcon]="true"
-                        placeholder="Select end date" 
-                        (onSelect)="checkForDateConflicts()">
-                    </p-calendar>
-                </div>
-
-            </div>
-            <div class="form-col">
-                <div class="field">
-                    <label for="endDate">Color</label>
+                    <label for="colors">Color</label>
                     <p-dropdown 
                         [options]="colors" 
                         [(ngModel)]="selectedColor"
@@ -75,6 +82,20 @@
                             <div class="color-item" [style.background]="selectedOption"></div>
                         </ng-template>
                     </p-dropdown>
+                </div>
+                <div class="field">
+                    <label for="endDate">End Date</label>
+                    <p-calendar 
+                        id="endDate" 
+                        [(ngModel)]="endDate" 
+                        [readonlyInput]="true" 
+                        dateFormat="dd.mm.yy"
+                        [minDate]="minEndDate" 
+                        [maxDate]="maxDate" 
+                        [showIcon]="true"
+                        placeholder="Select end date" 
+                        (onSelect)="checkForDateConflicts()">
+                    </p-calendar>
                 </div>
             </div>
         </div>
