@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, House, HouseAvailability, HouseAvailabilityType, HouseStatus, HouseStatusTask } from './data.service';
+import { DataService, House, HouseAvailability, HouseAvailabilityType, HouseStatus, HouseStatusTask, TaskProgressType } from './data.service';
 import { TaskService } from './task.service';
 
 @Injectable({
@@ -11,12 +11,17 @@ export class HouseService {
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
   houseStatuses = signal<HouseStatus[]>([]);
+  taskProgressTypes: TaskProgressType[] = [];
 
   constructor(
     private supabase: SupabaseService,
     private dataService: DataService,
     private taskService: TaskService,
   ) {
+
+    this.dataService.taskProgressTypes$.subscribe(taskProgressTypes => {
+      this.taskProgressTypes = taskProgressTypes;
+    });
 
     this.dataService.houseAvailabilityTypes$.subscribe(ha => {
       this.houseAvailabilityTypes = ha;
@@ -72,9 +77,11 @@ export class HouseService {
   }
 
   hasAnyTasks(houseId: number): boolean {
+    const finishedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
     const status = this.houseStatuses().find((s) => s.house_id === houseId);
+    const notCompletedTasks = status?.housetasks.filter(housetask => housetask.task_progress_type_id != finishedTaskProgressType?.task_progress_type_id);
 
-    return !!status?.housetasks?.length;
+    return !!notCompletedTasks?.length;
   }
 
   getHouseTasks(houseId: number): HouseStatusTask[] {
