@@ -17,6 +17,7 @@ import { ConfirmationService } from 'primeng/api';
 import { ProfileService } from '../service/profile.service';
 import { DialogModule } from 'primeng/dialog';
 import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
+import { HouseService } from '../service/house.service';
 
 @Component({
   selector: 'app-work-group',
@@ -79,8 +80,8 @@ import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
                   (onDragEnd)="onDragEnd()"
                 >
                   <app-task-card 
-                    [houseNumber]="getHouseNumber(task.house_id)"
-                    [houseName]="getHouseName(task.house_id)"
+                    [houseNumber]="houseService.getHouseNumber(task.house_id)"
+                    [houseName]="houseService.getHouseName(task.house_id)"
                     [task]="task"
                     [state]="isTaskCompleted(task) ? 'completed' : 'assigned'"
                     [taskIcon]="taskService.getTaskIcon(task.task_type_id)"
@@ -139,7 +140,7 @@ import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
               [class.completed]="taskService.isTaskCompleted(task)"
             >
               <div class="house-number">
-                {{getHouseNumber(task.house_id)}}
+                {{houseService.getHouseNumber(task.house_id)}}
               </div>
   
               <div class="task-icon">
@@ -517,6 +518,7 @@ export class WorkGroup implements OnInit {
     public taskService: TaskService,
     private confirmationService: ConfirmationService,
     private profileService: ProfileService,
+    public houseService: HouseService,
   ) {}
 
   ngOnInit() {
@@ -671,14 +673,6 @@ export class WorkGroup implements OnInit {
         }
       }
     });
-  }
-
-  getHouseNumber(houseId: number){
-    return this.houses.find(house => house.house_id == houseId)?.house_number ?? 0;
-  }
-
-  getHouseName(houseId: number){
-    return this.houses.find(house => house.house_id == houseId)?.house_name ?? '';
   }
 
   loadAssignedStaff() {

@@ -90,9 +90,14 @@ export class HouseService {
     return status?.housetasks || [];
   }
 
-  getHouseNumber(houseId: number): string {
+  getHouseNumber(houseId: number) {
     const house = this.houses.find(h => h.house_id === houseId);
-    return house ? house.house_number.toString() : '?';
+    return house ? house?.house_number : -1;
+  }
+
+  getHouseName(houseId: number){
+    const house = this.houses.find(h => h.house_id === houseId);
+    return house ? house.house_name.toString() : '?';
   }
 
   getTodaysHouseAvailabilityForHouse(houseId: number){

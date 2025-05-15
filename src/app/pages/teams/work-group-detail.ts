@@ -69,7 +69,7 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                                     >
                                         <div class="task-info">
                                             <div class="house-info">
-                                                <span class="house-number">{{getHouseNumber(task.house_id)}}</span>
+                                                <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
                                                 <i class="task-icon" [class]="getTaskTypeIcon(task.task_type_id)"></i>
                                             </div>
                                             <div class="task-status">
@@ -480,11 +480,6 @@ export class WorkGroupDetail implements OnInit {
     getStaffFullName(staff: Profile): string {
         if (!staff.first_name && !staff.last_name) return 'Nepoznat';
         return [staff.first_name, staff.last_name].filter(Boolean).join(' ');
-    }
-
-    getHouseNumber(houseId: number): string {
-        const house = this.houses.find(h => h.house_id === houseId);
-        return house ? house.house_number.toString() : '?';
     }
 
     getTaskTypeIcon(taskTypeId: number): string {

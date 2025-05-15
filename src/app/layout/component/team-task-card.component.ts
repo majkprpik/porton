@@ -58,7 +58,7 @@ import { CommonModule } from '@angular/common';
                             [class.removable]="!workGroup?.is_locked" 
                             (click)="onTaskClick($event, task)"
                         >
-                            <span class="house-number">{{houseService.getHouseNumber(task.house_id)}}</span>
+                            <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
                             <i class="task-icon" [class]="taskService.getTaskIcon(task.task_type_id)"></i>
                             @if (!workGroup?.is_locked) {
                                 <i class="remove-icon pi pi-times"></i>

@@ -257,11 +257,6 @@ export class Teams implements OnInit {
         });
     }
 
-    getHouseNumber(houseId: number): string {
-        const house = this.houses.find(h => h.house_id === houseId);
-        return house ? house.house_number.toString() : '?';
-    }
-
     getAssignedTasks(workGroupId: number): Task[] {
         return this.workGroupTasks[workGroupId] || [];
     }

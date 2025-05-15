@@ -7,6 +7,7 @@ import { PanelModule } from 'primeng/panel';
 import { BadgeModule } from 'primeng/badge';
 import { combineLatest } from 'rxjs';
 import { TaskService } from '../service/task.service';
+import { HouseService } from '../service/house.service';
 
 @Component({
   selector: 'app-task-group',
@@ -30,8 +31,8 @@ import { TaskService } from '../service/task.service';
       <div class="task-grid">
         @for (task of filteredTasks; track task.task_id) {
           <app-task-card 
-            [houseNumber]="getHouseNumber(task.house_id)"
-            [houseName]="getHouseName(task.house_id)"
+            [houseNumber]="houseService.getHouseNumber(task.house_id)"
+            [houseName]="houseService.getHouseName(task.house_id)"
             [state]="taskService.getTaskState(task.task_progress_type_id)"
             [taskIcon]="taskService.getTaskIcon(task.task_type_id)"
             [task]="task"
@@ -138,6 +139,7 @@ export class TaskGroupComponent implements OnInit {
   constructor(
     private dataService: DataService,
     public taskService: TaskService,
+    public houseService: HouseService,
   ) {}
 
   ngOnInit() {
@@ -165,15 +167,6 @@ export class TaskGroupComponent implements OnInit {
     );
 
     return ftsks;
-  }
-
-  
-  getHouseNumber(houseId: number){
-    return this.houses.find(house => house.house_id == houseId)?.house_number ?? 0;
-  }
-
-  getHouseName(houseId: number){
-    return this.houses.find(house => house.house_id == houseId)?.house_name ?? '';
   }
 
   getProgressTypeIdByName(progressTypeName: string){
