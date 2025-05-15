@@ -1067,7 +1067,7 @@ export class AppLayout {
             } else {
                 return Number(nameA) - Number(nameB);
             }
-        }
+        });
     }
 
     isOutsideClicked(event: MouseEvent) {
