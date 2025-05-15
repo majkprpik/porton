@@ -85,20 +85,6 @@ interface SpecialLocation {
                                         <span>{{ getDogsCount(house.house_id) }}</span>
                                     </div>
                                 </div>
-                                <!-- @if (hasAnyTasks(house.house_id)) {
-                                    <div class="tasks-section">
-                                        <div class="tasks-header">Tasks:</div>
-                                        <div class="tasks-list">
-                                            @for (task of getHouseTasks(house.house_id); track task.taskId) {
-                                                <div class="task-item" [class.completed]="isTaskCompleted(task)">
-                                                    <i class="pi" [class.pi-check-circle]="isTaskCompleted(task)"
-                                                               [class.pi-clock]="!isTaskCompleted(task)"></i>
-                                                    <span>{{task.taskTypeName}}</span>
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                } -->
                             </div>
                         </div>
                     </div>
