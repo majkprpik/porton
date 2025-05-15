@@ -36,7 +36,7 @@ interface SpecialLocation {
                         [class.expanded]="expandedHouseId === house.house_id" 
                         (click)="toggleExpand($event, house.house_id)">
                         <div class="house-content">
-                            <div class="house-number">{{ house.house_number }}</div>
+                            <div class="house-number">{{ house.house_name }}</div>
                             <div class="house-icons">
                                 @if (houseService.hasAnyTasks(house.house_id)) {
                                     @for (task of houseService.getHouseTasks(house.house_id); track task.task_id) {

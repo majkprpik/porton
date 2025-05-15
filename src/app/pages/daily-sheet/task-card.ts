@@ -22,9 +22,8 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       [class.assignable]="canBeAssigned"
       [class.in-active-group]="isInActiveGroup"
       (click)="onClick($event)"
-      (contextmenu)="onContextMenu($event)"
     >
-      <div class="house-number">{{houseNumber}}</div>
+      <div class="house-number">{{houseName}}</div>
       @if(task?.is_unscheduled){
         @if(isUrgentIconVisible){
           <div class="urgent-task-icon">
@@ -154,6 +153,7 @@ export class TaskCardComponent {
 
   @Input() state: TaskState = 'not-assigned';
   @Input() houseNumber: number = 0;
+  @Input() houseName: string = '';
   @Input() taskIcon: string = 'pi-home';
   @Input() task?: Task;
   @Input() canBeAssigned: boolean = false;
@@ -164,49 +164,6 @@ export class TaskCardComponent {
   private intervalId: any;
 
   menuItems: MenuItem[] = [
-    {
-      label: 'Change Status',
-      icon: 'pi pi-sync',
-      items: [
-        {
-          label: 'Pending',
-          icon: 'pi pi-clock',
-          command: () => this.updateStatus('not-assigned')
-        },
-        {
-          label: 'In Progress',
-          icon: 'pi pi-spin pi-spinner',
-          command: () => this.updateStatus('in-progress')
-        },
-        {
-          label: 'Completed',
-          icon: 'pi pi-check',
-          command: () => this.updateStatus('completed')
-        },
-        {
-          label: 'Assigned',
-          icon: 'pi pi-check',
-          command: () => this.updateStatus('assigned')
-        }
-      ]
-    },
-    { separator: true },
-    {
-      label: 'View Details',
-      icon: 'pi pi-eye',
-      command: () => this.viewDetails()
-    },
-    {
-      label: 'Edit',
-      icon: 'pi pi-pencil',
-      command: () => this.editTask()
-    },
-    { separator: true },
-    {
-      label: 'Delete',
-      icon: 'pi pi-trash',
-      command: () => this.deleteTask()
-    }
   ];
 
   constructor(

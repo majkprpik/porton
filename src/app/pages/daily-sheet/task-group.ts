@@ -31,6 +31,7 @@ import { TaskService } from '../service/task.service';
         @for (task of filteredTasks; track task.task_id) {
           <app-task-card 
             [houseNumber]="getHouseNumber(task.house_id)"
+            [houseName]="getHouseName(task.house_id)"
             [state]="taskService.getTaskState(task.task_progress_type_id)"
             [taskIcon]="taskService.getTaskIcon(task.task_type_id)"
             [task]="task"
@@ -169,6 +170,10 @@ export class TaskGroupComponent implements OnInit {
   
   getHouseNumber(houseId: number){
     return this.houses.find(house => house.house_id == houseId)?.house_number ?? 0;
+  }
+
+  getHouseName(houseId: number){
+    return this.houses.find(house => house.house_id == houseId)?.house_name ?? '';
   }
 
   getProgressTypeIdByName(progressTypeName: string){

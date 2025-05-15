@@ -80,6 +80,7 @@ import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
                 >
                   <app-task-card 
                     [houseNumber]="getHouseNumber(task.house_id)"
+                    [houseName]="getHouseName(task.house_id)"
                     [task]="task"
                     [state]="isTaskCompleted(task) ? 'completed' : 'assigned'"
                     [taskIcon]="taskService.getTaskIcon(task.task_type_id)"
@@ -674,6 +675,10 @@ export class WorkGroup implements OnInit {
 
   getHouseNumber(houseId: number){
     return this.houses.find(house => house.house_id == houseId)?.house_number ?? 0;
+  }
+
+  getHouseName(houseId: number){
+    return this.houses.find(house => house.house_id == houseId)?.house_name ?? '';
   }
 
   loadAssignedStaff() {
