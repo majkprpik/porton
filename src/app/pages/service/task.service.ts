@@ -212,6 +212,23 @@ export class TaskService {
     }
   }
 
+  async deleteTask(taskId: number){
+    try{
+      const { error: taskDeleteError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('tasks')
+        .delete()
+        .eq('task_id', taskId);
+
+      if(taskDeleteError) throw taskDeleteError
+
+      return true;
+    } catch (error){
+      console.error('Error uploading comment:', error);
+      return false;
+    }
+  }
+
   private async compressImage(image: File, targetMegaBytes: number){
     const options = {
       maxSizeMB: targetMegaBytes, 
