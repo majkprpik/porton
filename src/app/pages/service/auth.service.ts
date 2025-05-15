@@ -140,7 +140,7 @@ export class AuthService {
 
   async createRealUsers(): Promise<string[] | null> {
     const users = [
-      { name: 'Matej Adrić', role: 'voditelj_kampa', password: 'NzW3dj' }, // rezervacije(unos), dnevni list
+      { name: 'Matej Adrić', role: 'voditelj_kampa', password: 'NzW3dj' }, // pregled, rezervacije(unos), dnevni list, timovi, profili, statusi zadataka, tipovi kucica
       { name: 'Marko Sovulj', role: 'savjetnik_uprave', password: 'uNgVn1' }, // pregled, rezervacije, dnevni list, timovi 
       { name: 'Mirela Dronjić', role: 'voditelj_recepcije', password: '2Az84E' }, // pregled, rezervacije(unos)
       { name: 'Elena Rudan', role: 'prodaja', password: 't3Wd6N' }, // pregled, rezervacije(unos)
