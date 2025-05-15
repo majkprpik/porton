@@ -901,6 +901,7 @@ export class AppLayout {
 
     houses: House[] = [];
     taskTypes: TaskType[] = [];
+    otherTaskTypes: TaskType[] = [];
     taskProgressTypes: TaskProgressType[] = [];
     task: any = {};
     tasks: Task[] = [];
@@ -1003,6 +1004,7 @@ export class AppLayout {
                 this.comments = repairTaskComments;
                 this.houses = houses;
                 this.taskTypes = taskTypes;
+                this.otherTaskTypes = taskTypes;
                 this.taskProgressTypes = taskProgressTypes;
                 this.tasks = tasks;
                 this.workGroups = workGroups;
@@ -1229,6 +1231,14 @@ export class AppLayout {
     // Handle location change in extraordinary task dialog
     onLocationChangeForTask(event: any) {
         const selection = event.value;
+        let house = this.houses.find(house => house.house_id == selection.house_id);
+        
+        if(house?.house_name == 'Zgrada' || house?.house_name == 'Parcele'){
+            this.taskTypes = this.taskTypes.filter(tt => tt.task_type_name == 'Ostalo');
+        } else {
+            this.taskTypes = [...this.otherTaskTypes];
+        }
+
         if (selection && 'type' in selection) {
             // This is a special location
             this.locationTypeForTask = selection.type;

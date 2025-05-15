@@ -51,6 +51,8 @@ interface SpecialLocation {
                                                 <i class="pi pi-table" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
                                             } @else if (taskService.isSheetChangeTask(task)) {
                                                 <i class="pi pi-inbox" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                            } @else {
+                                                <i class="pi pi-file" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
                                             }
                                         }
                                     }
