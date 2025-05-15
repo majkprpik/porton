@@ -77,7 +77,20 @@ export class AppMenu implements OnInit, OnDestroy {
         return role === 'voditelj_kampa';
     }
 
-    private canViewTimoviAndDnevniList(role?: string): boolean {
+    private canViewTimovi(role?: string): boolean {
+        if (!role) return false;
+
+        const allowedRoles = [
+            'kucni_majstor', 
+            'savjetnik_uprave',
+            'voditelj_kampa',
+            'voditelj_domacinstva'
+        ];
+
+        return allowedRoles.includes(role);
+    }
+
+    private canViewDnevniList(role?: string): boolean {
         if (!role) return false;
         
         const allowedRoles = [
@@ -108,13 +121,13 @@ export class AppMenu implements OnInit, OnDestroy {
         if (this.isRoleAllowedForRezervacije2(userRole)) {
             menuItems.push({ label: 'Rezervacije', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/reservations-2'] });
         }
-        
-        // Conditionally add Timovi and Dnevni list
-        if (this.canViewTimoviAndDnevniList(userRole)) {
-            menuItems.push(
-                { label: 'Dnevni list', icon: 'pi pi-fw pi-file', routerLink: ['/daily-sheet'] },
-                { label: 'Timovi', icon: 'pi pi-fw pi-users', routerLink: ['/teams'] }
-            );
+
+        if(this.canViewTimovi(userRole)){
+            menuItems.push({ label: 'Timovi', icon: 'pi pi-fw pi-users', routerLink: ['/teams'] });
+        }
+
+        if(this.canViewDnevniList(userRole)){
+            menuItems.push({ label: 'Dnevni list', icon: 'pi pi-fw pi-file', routerLink: ['/daily-sheet'] });
         }
         
         // Add voditelj_kampa only menu items
