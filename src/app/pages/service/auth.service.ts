@@ -141,17 +141,17 @@ export class AuthService {
   async createRealUsers(): Promise<string[] | null> {
     const users = [
       { name: 'Matej Adrić', role: 'voditelj_kampa', password: 'NzW3dj' }, // rezervacije(unos), dnevni list
-      { name: 'Marko Sovulj', role: 'savjetnik_uprave', password: 'uNgVn1' }, // rezervacije, 
-      { name: 'Mirela Dronjić', role: 'voditelj_recepcije', password: '2Az84E' }, // rezervacije(unos)
-      { name: 'Elena Rudan', role: 'prodaja', password: 't3Wd6N' }, // rezervacije(unos)
-      { name: 'Simona Gjeorgievska', role: 'prodaja', password: 'u2Xe7P' }, // rezervacije(unos)
-      { name: 'Mia Lukić', role: 'voditelj_domacinstva', password: 'v1Yf8Q' }, // rezervacije, dnevni list
-      { name: 'Mila Malivuk', role: 'recepcija', password: 'aYqv9A' }, // rezervacije
-      { name: 'Ana Perak', role: 'recepcija', password: 'p9Xm2K' }, // rezervacije
-      { name: 'Mina Cvejić', role: 'recepcija', password: 'k8DN4U' }, // rezervacije
-      { name: 'Mauro Boljunčić', role: 'kucni_majstor', password: 'f2Ip8A' }, // pregled, zadaci, 
-      { name: 'Damir Zaharija', role: 'customer_service', password: 'r7Yb5L' },
-      { name: 'Ivica Nagel', role: 'nocni_recepcioner', password: 's4Vc8M' },
+      { name: 'Marko Sovulj', role: 'savjetnik_uprave', password: 'uNgVn1' }, // pregled, rezervacije, dnevni list, timovi 
+      { name: 'Mirela Dronjić', role: 'voditelj_recepcije', password: '2Az84E' }, // pregled, rezervacije(unos)
+      { name: 'Elena Rudan', role: 'prodaja', password: 't3Wd6N' }, // pregled, rezervacije(unos)
+      { name: 'Simona Gjeorgievska', role: 'prodaja', password: 'u2Xe7P' }, // pregled, rezervacije(unos)
+      { name: 'Mia Lukić', role: 'voditelj_domacinstva', password: 'v1Yf8Q' }, // pregled, rezervacije, dnevni list, timovi
+      { name: 'Mila Malivuk', role: 'recepcija', password: 'aYqv9A' }, // pregled, rezervacije
+      { name: 'Ana Perak', role: 'recepcija', password: 'p9Xm2K' }, // pregled, rezervacije
+      { name: 'Mina Cvejić', role: 'recepcija', password: 'k8DN4U' }, // pregled, rezervacije
+      { name: 'Mauro Boljunčić', role: 'kucni_majstor', password: 'f2Ip8A' }, // pregled, timovi
+      { name: 'Damir Zaharija', role: 'customer_service', password: 'r7Yb5L' }, //pregled
+      { name: 'Ivica Nagel', role: 'nocni_recepcioner', password: 's4Vc8M' }, //pregled
       { name: 'Liudmyla Babii', role: 'sobarica', password: 'w5Zg9R' },
       { name: 'Iryna Kara', role: 'sobarica', password: 'x4Ah0S' },
       { name: 'Tetiana Leonenko', role: 'sobarica', password: 'y3Bi1T' },
