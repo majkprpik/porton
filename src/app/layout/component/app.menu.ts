@@ -43,16 +43,16 @@ export class AppMenu implements OnInit, OnDestroy {
         if (!role) return false;
         
         const allowedRoles = [
-            'kućni_majstor', 
-            'održavanje',
+            'kucni_majstor', 
+            'odrzavanje',
             'voditelj_recepcije',
             'prodaja',
             'recepcija',
-            'noćni_recepcioner',
+            'nocni_recepcioner',
             'customer_service',
             'voditelj_kampa',
             'savjetnik_uprave',
-            'voditelj_domaćinstva'
+            'voditelj_domacinstva'
         ];
         
         return allowedRoles.includes(role);
@@ -65,7 +65,7 @@ export class AppMenu implements OnInit, OnDestroy {
             'voditelj_recepcije',
             'prodaja',
             'recepcija',
-            'voditelj_domaćinstva',
+            'voditelj_domacinstva',
             'voditelj_kampa',
             'savjetnik_uprave'
         ];
@@ -83,7 +83,7 @@ export class AppMenu implements OnInit, OnDestroy {
         const allowedRoles = [
             'savjetnik_uprave',
             'voditelj_kampa',
-            'voditelj_domaćinstva'
+            'voditelj_domacinstva'
         ];
         
         return allowedRoles.includes(role);
