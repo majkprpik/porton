@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, Subscription, forkJoin } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ReservationFormComponent } from '../reservations/reservation-form/reservation-form.component';
 
@@ -37,6 +37,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
     houseTypes = signal<HouseType[]>([]);
     selectedHouseTypeId = signal<number>(0);
     filteredHouses = computed(() => this.filterHousesByType());
+    tempHouses: House[] = [];
     
     // Signal for the entire grid matrix (from original component)
     gridMatrix = signal<CellData[][]>([]);
@@ -115,6 +116,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.setSelectedHouseType(types[0].house_type_id);
             }
         });
+
+        this.dataService.tempHouses$.subscribe(tempHouses => {
+            this.tempHouses = tempHouses;
+        });
         
         // Subscribe to houses data from DataService
         this.dataService.houses$
@@ -128,14 +133,15 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     this.scrollToToday();
                 }
             });
-        
-        // Subscribe to house availabilities data from DataService
-        this.dataService.houseAvailabilities$
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(availabilities => {
-                this.houseAvailabilities.set(availabilities);
-                this.updateGridMatrix();
-            });
+
+        forkJoin({
+            temp: this.dataService.loadTempHouseAvailabilities(),
+            main: this.dataService.loadHouseAvailabilities(),
+        }).subscribe( ({temp, main}) => {
+            const combined = [...main, ...temp];
+            this.houseAvailabilities.set(combined);
+            this.updateGridMatrix();
+        });
         
         // Subscribe to house availabilities updates from real-time database changes
         this.dataService.$houseAvailabilitiesUpdate
@@ -442,10 +448,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
     }
 
     // New version of handleDeleteReservation that takes a reservationId directly
-    handleDeleteReservation(reservationId: number): void {
+    handleDeleteReservation(data: { availabilityId: number; houseId: number }): void {
         // Find the reservation by ID
         const reservation = this.houseAvailabilities().find(
-            avail => avail.house_availability_id === reservationId
+            avail => avail.house_availability_id === data.availabilityId
         );
         
         if (!reservation) return;
@@ -453,49 +459,29 @@ export class Reservation2Component implements OnInit, OnDestroy {
         // First update UI optimistically
         const currentAvailabilities = this.houseAvailabilities();
         const filteredAvailabilities = currentAvailabilities.filter(
-            avail => avail.house_availability_id !== reservationId
+            avail => avail.house_availability_id !== data.availabilityId
         );
         this.houseAvailabilities.set(filteredAvailabilities);
         this.updateGridMatrix();
         
         // Delete from backend
-        this.dataService.deleteHouseAvailability(reservationId).subscribe({
+        this.dataService.deleteHouseAvailability(data.availabilityId, data.houseId).subscribe({
             next: (result) => {
                 // Update was already done optimistically above
             },
             error: (error: any) => {
                 console.error("Error deleting reservation:", error);
                 // Revert the optimistic update
-                this.houseAvailabilities.set(currentAvailabilities);
-                this.updateGridMatrix();
+                forkJoin({
+                    temp: this.dataService.loadTempHouseAvailabilities(),
+                    main: this.dataService.loadHouseAvailabilities(),
+                }).subscribe( ({temp, main}) => {
+                    const combined = [...main, ...temp];
+                    this.houseAvailabilities.set(combined);
+                    this.updateGridMatrix();
+                });
             }
         });
-    }
-
-    // Legacy version that takes row and column (can be removed or kept for backward compatibility)
-    private _handleDeleteReservationByCell(row: number, col: number): void {
-        // Hide context menu first
-        this.showReservationForm.set(false);
-        
-        // Get the actual house based on the filtered list
-        const houses = this.filteredHouses();
-        const days = this.days();
-        
-        if (houses.length > row && days.length > col) {
-            const house = houses[row];
-            const day = days[col];
-            
-            // Use actual house ID and date to find the reservation
-            const key = this.getReservationKey(house.house_id, day);
-            const reservation = this.reservationMap.get(key);
-            
-            if (!reservation) {
-                return;
-            }
-            
-            // Delete the reservation by ID
-            this.handleDeleteReservation(reservation.house_availability_id);
-        }
     }
 
     handleAddReservation(row: number, col: number): void {
@@ -612,16 +598,24 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.dataService.updateHouseAvailability(updatedReservation).subscribe({
                     next: (savedReservation: HouseAvailability | null) => {
                         // Force a complete reload of all availabilities to ensure we have the latest data
-                        this.dataService.loadHouseAvailabilities().subscribe(freshData => {
-                            this.houseAvailabilities.set(freshData);
+                        forkJoin({
+                            temp: this.dataService.loadTempHouseAvailabilities(),
+                            main: this.dataService.loadHouseAvailabilities(),
+                        }).subscribe( ({temp, main}) => {
+                            const combined = [...main, ...temp];
+                            this.houseAvailabilities.set(combined);
                             this.updateGridMatrix();
                         });
                     },
                     error: (error: any) => {
                         console.error("Error updating reservation:", error);
                         // Force a reload anyway to ensure we have consistent data
-                        this.dataService.loadHouseAvailabilities().subscribe(freshData => {
-                            this.houseAvailabilities.set(freshData);
+                        forkJoin({
+                            temp: this.dataService.loadTempHouseAvailabilities(),
+                            main: this.dataService.loadHouseAvailabilities(),
+                        }).subscribe( ({temp, main}) => {
+                            const combined = [...main, ...temp];
+                            this.houseAvailabilities.set(combined);
                             this.updateGridMatrix();
                         });
                     }
@@ -656,19 +650,19 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 
                 // Hide the form immediately for better UX
                 this.showReservationForm.set(false);
-                
+
                 // Then send to backend using the DataService method
                 this.dataService.saveHouseAvailability(newReservation).subscribe({
                     next: (savedReservation: HouseAvailability | null) => {
                         console.log("Reservation saved successfully:", savedReservation);
-                        
-                        // Force a complete reload of all availabilities to ensure we have the latest data
-                        this.dataService.loadHouseAvailabilities().subscribe(freshData => {
-                            console.log("Reloaded availabilities after save:", freshData.length);
-                            this.houseAvailabilities.set(freshData);
-                            this.updateGridMatrix();
-                            
-                            // Do another update after a short delay to ensure the UI is completely refreshed
+
+                        forkJoin({
+                            temp: this.dataService.loadTempHouseAvailabilities(),
+                            main: this.dataService.loadHouseAvailabilities(),
+                        }).subscribe( ({temp, main}) => {
+                            const combined = [...main, ...temp];
+                            this.houseAvailabilities.set(combined);
+
                             setTimeout(() => {
                                 this.updateGridMatrix();
                             }, 300);
@@ -678,8 +672,14 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         console.error("Error saving reservation:", error);
                         // Force a reload anyway to ensure we have consistent data
                         this.dataService.loadHouseAvailabilities().subscribe(freshData => {
-                            this.houseAvailabilities.set(freshData);
-                            this.updateGridMatrix();
+                            forkJoin({
+                                temp: this.dataService.loadTempHouseAvailabilities(),
+                                main: this.dataService.loadHouseAvailabilities(),
+                            }).subscribe( ({temp, main}) => {
+                                const combined = [...main, ...temp];
+                                this.houseAvailabilities.set(combined);
+                                this.updateGridMatrix();
+                            });
                         });
                     }
                 });
@@ -828,22 +828,15 @@ export class Reservation2Component implements OnInit, OnDestroy {
         
         // Filter houses by the selected type
         const filteredHouses = houses.filter(house => house.house_type_id === selectedTypeId);
+        const dummyHouses = this.tempHouses.filter(th => th.house_type_id == selectedTypeId);
         
-        // Add empty rows
-        for (let i = 0; i < 20; i++) {
-            // Create an empty house object with an ID that won't conflict with real houses
-            // Using negative IDs to ensure they won't match real house IDs
-            filteredHouses.push({
-                house_id: -1000 - i,
-                house_number: 0,
-                house_type_id: selectedTypeId || 0, // Use 0 as fallback
-                house_name: ''
-            } as House);
+        for (let i = 0; i < dummyHouses.length; i++) {
+            filteredHouses.push(dummyHouses[i]);
         }
         
         return filteredHouses;
     }
-    
+
     // Method to scroll to today's date in the table
     scrollToToday(): void {
         console.log("Scrolling to today's date");
@@ -1324,9 +1317,14 @@ export class Reservation2Component implements OnInit, OnDestroy {
         // Reload house availabilities from the database
         this.dataService.loadHouseAvailabilities().subscribe({
             next: (freshData) => {
-                console.log("Manually reloaded availabilities:", freshData.length);
-                this.houseAvailabilities.set(freshData);
-                this.updateGridMatrix();
+                forkJoin({
+                    temp: this.dataService.loadTempHouseAvailabilities(),
+                    main: this.dataService.loadHouseAvailabilities(),
+                }).subscribe( ({temp, main}) => {
+                    const combined = [...main, ...temp];
+                    this.houseAvailabilities.set(combined);
+                    this.updateGridMatrix();
+                });
             },
             error: (error) => {
                 console.error("Error reloading availabilities:", error);

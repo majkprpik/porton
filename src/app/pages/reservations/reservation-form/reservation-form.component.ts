@@ -76,7 +76,7 @@ export class ReservationFormComponent implements OnInit, OnChanges {
     @Output() visibleChange = new EventEmitter<boolean>();
     @Output() save = new EventEmitter<HouseAvailability>();
     @Output() cancel = new EventEmitter<void>();
-    @Output() delete = new EventEmitter<number>();
+    @Output() delete = new EventEmitter<{ availabilityId: number; houseId: number }>();
 
     ngOnInit() {
         console.log("Form initialized with dates:", this.startDate, this.endDate);
@@ -345,7 +345,7 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         if (this.isEditMode && this.reservation.house_availability_id) {
             // Confirm deletion
             if (confirm('Are you sure you want to delete this reservation?')) {
-                this.delete.emit(this.reservation.house_availability_id);
+                this.delete.emit({ availabilityId: this.reservation.house_availability_id, houseId: this.houseId });
                 this.visibleChange.emit(false);
             }
         }
