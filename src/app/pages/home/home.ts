@@ -536,49 +536,32 @@ export class Home implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        // Load houses data if not already loaded
-        this.dataService.loadHouses().subscribe();
+        this.subscriptions.push(this.dataService.loadHouses().subscribe());
+        this.subscriptions.push(this.dataService.loadHouseAvailabilities().subscribe());
+        this.subscriptions.push(this.dataService.loadHouseStatuses().subscribe());
 
-        // Load house availabilities data if not already loaded
-        this.dataService.loadHouseAvailabilities().subscribe();
-
-        // Load house statuses data
-        this.dataService.loadHouseStatuses().subscribe();
-
-        this.dataService.tasks$.subscribe(tasks => {
+        this.subscriptions.push(this.dataService.tasks$.subscribe(tasks => {
             this.tasks = tasks;
-        });
+        }));
 
-        // Subscribe to houses data from DataService
-        const housesSubscription = this.dataService.houses$.subscribe((houses) => {
-            this.houses.set(houses);
-            // Update location options when houses change
+        this.subscriptions.push(this.dataService.houses$.subscribe((houses) => {
+            this.houses.set(houses.filter(h => h.house_number > 0));
             this.updateLocationOptions();
-        });
+        }));
 
-        // Subscribe to house availabilities data from DataService
-        const availabilitiesSubscription = this.dataService.houseAvailabilities$.subscribe((availabilities) => {
+        this.subscriptions.push(this.dataService.houseAvailabilities$.subscribe((availabilities) => {
             this.houseAvailabilities.set(availabilities);
-        });
+        }));
 
-        // Subscribe to house statuses data from DataService
-        const statusesSubscription = this.dataService.houseStatuses$.subscribe((statuses) => {
+        this.subscriptions.push(this.dataService.houseStatuses$.subscribe((statuses) => {
             this.houseStatuses.set(statuses);
-        });
+        }));
 
-        // Store subscriptions for cleanup
-        this.subscriptions.push(housesSubscription, availabilitiesSubscription, statusesSubscription);
-
-        // Subscribe to task types
-        const taskTypesSubscription = this.dataService.taskTypes$.subscribe((types) => {
+        this.subscriptions.push(this.dataService.taskTypes$.subscribe((types) => {
             this.taskTypes.set(types);
-        });
+        }));
 
-        // Add to subscriptions array
-        this.subscriptions.push(taskTypesSubscription);
-
-        // Load task types if not already loaded
-        this.dataService.getTaskTypes().subscribe();
+        this.subscriptions.push(this.dataService.getTaskTypes().subscribe());
     }
 
     @HostListener('document:click', ['$event'])
