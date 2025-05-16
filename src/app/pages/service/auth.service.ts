@@ -138,7 +138,7 @@ export class AuthService {
   // pregled - svi mogu videti
     
 
-  async createRealUsers(): Promise<string[] | null> {
+  async createRealUsers() {
     const users = [
       { name: 'Matej Adrić', role: 'voditelj_kampa', password: 'NzW3dj' }, // pregled, rezervacije(unos), dnevni list, timovi, profili, statusi zadataka, tipovi kucica
       { name: 'Marko Sovulj', role: 'savjetnik_uprave', password: 'uNgVn1' }, // pregled, rezervacije, dnevni list, timovi 
@@ -167,40 +167,82 @@ export class AuthService {
       { name: 'Daniel Begzić', role: 'odrzavanje', password: 'j3Mt2E' },
     ];
   
-    const normalizeEmail = (name: string) =>
-      name.toLowerCase().replace(/[^a-z0-9]/g, '').concat('@porton.com');
-  
-    try {
-      const userIds: string[] = [];
-  
-      for (const user of users) {
-        const email = normalizeEmail(user.name);
-        
-        const { data, error } = await this.supabaseService.getAdminClient().auth.admin.createUser({
-          email,
-          password: user.password,
-          email_confirm: true,
-          user_metadata: {
-            display_name: user.name,
-            role: user.role
-          }
-        });
-  
-        if (error) {
-          console.error(`Error creating ${user.name}:`, error.message);
-          continue;
+    for (const user of users) {
+      this.createUser(user)
+    }
+  }
+
+  async createUser(newUser: UserToRegister){
+    try {      
+      const { data, error } = await this.supabaseService.getAdminClient().auth.admin.createUser({
+        email: this.normalizeEmail(newUser.name),
+        password: newUser.password,
+        email_confirm: true,
+        user_metadata: {
+          display_name: newUser.name,
+          role: newUser.role
         }
-  
-        if (data.user) {
-          userIds.push(data.user.id);
-          console.log(`Created: ${user.name} (${email})`);
-        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        console.log(`Created: ${newUser.name} (${newUser.normalized_email})`);
       }
   
-      return userIds.length > 0 ? userIds : null;
+      return data;
     } catch (error) {
       console.error('Error creating users:', error);
       return null;
     }
   }
+
+  normalizeEmail (name: string) {
+    return name.toLowerCase().replace(/[^a-z0-9]/g, '').concat('@porton.com');
+  }
+
+  generateRandomPassword(length = 6): string {
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lowercase = "abcdefghijklmnopqrstuvwxyz";
+    const digits = "0123456789";
+    
+    const allChars = uppercase + lowercase + digits;
+    
+    // Ensure at least one of each type
+    const requiredChars = [
+      this.randomChar(uppercase),
+      this.randomChar(lowercase),
+      this.randomChar(digits),
+    ];
+ 
+   // Fill the rest randomly
+    while (requiredChars.length < length) {
+      requiredChars.push(this.randomChar(allChars));
+    }
+ 
+   // Shuffle the array
+    const shuffled = this.shuffleArray(requiredChars);
+    
+    return shuffled.join('');
+  }
+
+  randomChar(chars: string): string {
+      return chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  shuffleArray(array: string[]): string[] {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+}
+
+export interface UserToRegister {
+  normalized_email?: string;
+  password: string;
+  email_confirm?: boolean;
+  name: string;
+  role: string;
 }
