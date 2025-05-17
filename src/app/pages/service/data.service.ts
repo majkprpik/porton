@@ -189,12 +189,14 @@ export class DataService {
   private taskProgressTypesSubject = new BehaviorSubject<TaskProgressType[]>([]);
   private houseTypesSubject = new BehaviorSubject<HouseType[]>([]);
   private houseAvailabilitiesSubject = new BehaviorSubject<HouseAvailability[]>([]);
+  private tempHouseAvailabilitiesSubject = new BehaviorSubject<HouseAvailability[]>([]);
   private tasksSubject = new BehaviorSubject<Task[]>([]);
   private workGroupsSubject = new BehaviorSubject<WorkGroup[]>([]);
   private workGroupProfilesSubject = new BehaviorSubject<WorkGroupProfile[]>([]);
   private workGroupTasksSubject = new BehaviorSubject<WorkGroupTask[]>([]);
   private profilesSubject = new BehaviorSubject<Profile[]>([]);
   private housesSubject = new BehaviorSubject<House[]>([]);
+  private tempHousesSubject = new BehaviorSubject<House[]>([]);
   private houseStatusesSubject = new BehaviorSubject<HouseStatus[]>([]);
   private authUsersSubject = new BehaviorSubject<Profile[]>([]);
   private notesSubject = new BehaviorSubject<Note[]>([]);
@@ -208,12 +210,14 @@ export class DataService {
   taskProgressTypes$ = this.taskProgressTypesSubject.asObservable();
   houseTypes$ = this.houseTypesSubject.asObservable();
   houseAvailabilities$ = this.houseAvailabilitiesSubject.asObservable();
+  tempHouseAvailabilities$ = this.tempHouseAvailabilitiesSubject.asObservable();
   tasks$ = this.tasksSubject.asObservable();
   workGroups$ = this.workGroupsSubject.asObservable();
   workGroupProfiles$ = this.workGroupProfilesSubject.asObservable();
   workGroupTasks$ = this.workGroupTasksSubject.asObservable();
   profiles$ = this.profilesSubject.asObservable();
   houses$ = this.housesSubject.asObservable();
+  tempHouses$ = this.tempHousesSubject.asObservable();
   houseStatuses$ = this.houseStatusesSubject.asObservable();
   authUsers$ = this.authUsersSubject.asObservable();
   notes$ = this.notesSubject.asObservable();
@@ -304,12 +308,14 @@ export class DataService {
     this.loadHouseStatuses().subscribe();
     // Then load other data
     this.loadHouseAvailabilities().subscribe();
+    this.loadTempHouseAvailabilities().subscribe();
     this.loadTasks().subscribe();
     this.loadWorkGroups().subscribe();
     this.loadWorkGroupProfiles().subscribe();
     this.loadWorkGroupTasks().subscribe();
     this.loadProfiles().subscribe();
     this.loadHouses().subscribe();
+    this.loadTempHouses().subscribe();
     this.loadNotes().subscribe();
     this.loadRepairTaskComments().subscribe();
     // this.loadAuthUsers().subscribe();
@@ -459,6 +465,22 @@ export class DataService {
       tap(() => this.loadingSubject.next(false))
     );
   }
+  
+  loadTempHouseAvailabilities(): Observable<HouseAvailability[]> {
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('temp_house_availabilities', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.tempHouseAvailabilitiesSubject.next(data);
+          this.logData('Temp House Availabilities', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
 
   async loadTasksFromDb(){
     try{
@@ -570,6 +592,22 @@ export class DataService {
         if (data) {
           this.housesSubject.next(data);
           this.logData('Houses', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  loadTempHouses(): Observable<House[]> {
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('temp_houses', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.tempHousesSubject.next(data);
+          this.logData('Temp Houses', data);
         }
       }),
       map((data) => data || []),
@@ -747,20 +785,36 @@ export class DataService {
         cleanSaveData[field] = (saveData as any)[field];
       }
     }
-    
-    return from(this.supabaseService.insertData('house_availabilities', cleanSaveData, this.schema)).pipe(
-      tap((data) => {
-        if (data && data.length > 0) {
-          // Update the local BehaviorSubject with the new data
-          const currentAvailabilities = this.houseAvailabilitiesSubject.value;
-          this.houseAvailabilitiesSubject.next([...currentAvailabilities, data[0]]);
-          this.logData('Created House Availability', data[0]);
-        }
-      }),
-      map((data) => (data && data.length > 0 ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
+
+    if(reservation.house_id > 0){
+      return from(this.supabaseService.insertData('house_availabilities', cleanSaveData, this.schema)).pipe(
+        tap((data) => {
+          if (data && data.length > 0) {
+            // Update the local BehaviorSubject with the new data
+            const currentAvailabilities = this.houseAvailabilitiesSubject.value;
+            this.houseAvailabilitiesSubject.next([...currentAvailabilities, data[0]]);
+            this.logData('Created House Availability', data[0]);
+          }
+        }),
+        map((data) => (data && data.length > 0 ? data[0] : null)),
+        catchError((error) => this.handleError(error)),
+        tap(() => this.loadingSubject.next(false))
+      );
+    } else {
+      return from(this.supabaseService.insertData('temp_house_availabilities', cleanSaveData, this.schema)).pipe(
+        tap((data) => {
+          if (data && data.length > 0) {
+            // Update the local BehaviorSubject with the new data
+            const currentTempAvailabilities = this.houseAvailabilitiesSubject.value;
+            this.tempHouseAvailabilitiesSubject.next([...currentTempAvailabilities, data[0]]);
+            this.logData('Created Temp House Availability', data[0]);
+          }
+        }),
+        map((data) => (data && data.length > 0 ? data[0] : null)),
+        catchError((error) => this.handleError(error)),
+        tap(() => this.loadingSubject.next(false))
+      );
+    }
   }
 
   // Method to update an existing house availability (reservation)
@@ -810,45 +864,80 @@ export class DataService {
         cleanUpdateData[field] = (updateData as any)[field];
       }
     }
-    
-    return from(this.supabaseService.updateData('house_availabilities', cleanUpdateData, availabilityId.toString(), this.schema)).pipe(
-      tap((data) => {
-        if (data && data.length > 0) {
-          // Update the local BehaviorSubject with the updated data
-          const currentAvailabilities = this.houseAvailabilitiesSubject.value;
-          const updatedAvailabilities = currentAvailabilities.map(avail => 
-            avail.house_availability_id === availabilityId ? data[0] : avail
-          );
-          this.houseAvailabilitiesSubject.next(updatedAvailabilities);
-          this.logData('Updated House Availability', data[0]);
-        }
-      }),
-      map((data) => (data && data.length > 0 ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
+
+    if(reservation.house_id > 0){
+      return from(this.supabaseService.updateData('house_availabilities', cleanUpdateData, availabilityId.toString(), this.schema)).pipe(
+        tap((data) => {
+          if (data && data.length > 0) {
+            // Update the local BehaviorSubject with the updated data
+            const currentAvailabilities = this.houseAvailabilitiesSubject.value;
+            const updatedAvailabilities = currentAvailabilities.map(avail => 
+              avail.house_availability_id === availabilityId ? data[0] : avail
+            );
+            this.houseAvailabilitiesSubject.next(updatedAvailabilities);
+            this.logData('Updated House Availability', data[0]);
+          }
+        }),
+        map((data) => (data && data.length > 0 ? data[0] : null)),
+        catchError((error) => this.handleError(error)),
+        tap(() => this.loadingSubject.next(false))
+      );
+    } else {
+      return from(this.supabaseService.updateData('temp_house_availabilities', cleanUpdateData, availabilityId.toString(), this.schema)).pipe(
+        tap((data) => {
+          if (data && data.length > 0) {
+            // Update the local BehaviorSubject with the updated data
+            const currentTempAvailabilities = this.tempHouseAvailabilitiesSubject.value;
+            const updatedTempAvailabilities = currentTempAvailabilities.map(avail => 
+              avail.house_availability_id === availabilityId ? data[0] : avail
+            );
+            this.tempHouseAvailabilitiesSubject.next(updatedTempAvailabilities);
+            this.logData('Updated Temp House Availability', data[0]);
+          }
+        }),
+        map((data) => (data && data.length > 0 ? data[0] : null)),
+        catchError((error) => this.handleError(error)),
+        tap(() => this.loadingSubject.next(false))
+      );
+    }
   }
 
   // Method to delete a house availability (reservation) from the backend
-  deleteHouseAvailability(availabilityId: number): Observable<any> {
+  deleteHouseAvailability(availabilityId: number, houseId: number): Observable<any> {
     this.loadingSubject.next(true);
     
     // Create the filter condition string
     const filterCondition = `house_availability_id = ${availabilityId}`;
-    
-    return from(this.supabaseService.deleteData('house_availabilities', filterCondition, this.schema)).pipe(
-      tap((data) => {
-        // Remove the deleted availability from local state
-        const currentAvailabilities = this.houseAvailabilitiesSubject.value;
-        const updatedAvailabilities = currentAvailabilities.filter(
-          availability => availability.house_availability_id !== availabilityId
-        );
-        this.houseAvailabilitiesSubject.next(updatedAvailabilities);
-        this.logData('Deleted House Availability', { house_availability_id: availabilityId });
-      }),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
+
+    if(houseId > 0){
+      return from(this.supabaseService.deleteData('house_availabilities', filterCondition, this.schema)).pipe(
+        tap((data) => {
+          // Remove the deleted availability from local state
+          const currentAvailabilities = this.houseAvailabilitiesSubject.value;
+          const updatedAvailabilities = currentAvailabilities.filter(
+            availability => availability.house_availability_id !== availabilityId
+          );
+          this.houseAvailabilitiesSubject.next(updatedAvailabilities);
+          this.logData('Deleted House Availability', { house_availability_id: availabilityId });
+        }),
+        catchError((error) => this.handleError(error)),
+        tap(() => this.loadingSubject.next(false))
+      );
+    } else {
+      return from(this.supabaseService.deleteData('temp_house_availabilities', filterCondition, this.schema)).pipe(
+        tap((data) => {
+          // Remove the deleted availability from local state
+          const currentTempAvailabilities = this.tempHouseAvailabilitiesSubject.value;
+          const updatedTempAvailabilities = currentTempAvailabilities.filter(
+            availability => availability.house_availability_id !== availabilityId
+          );
+          this.tempHouseAvailabilitiesSubject.next(updatedTempAvailabilities);
+          this.logData('Deleted Temp House Availability', { house_availability_id: availabilityId });
+        }),
+        catchError((error) => this.handleError(error)),
+        tap(() => this.loadingSubject.next(false))
+      );
+    }
   }
 
   async getHouseAvailabilityTypeByName(name: string){

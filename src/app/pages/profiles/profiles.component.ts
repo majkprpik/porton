@@ -9,7 +9,8 @@ import { DropdownModule } from 'primeng/dropdown';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { AuthService } from '../service/auth.service';
+import { AuthService, UserToRegister } from '../service/auth.service';
+import { InputTextModule } from 'primeng/inputtext';
 
 // Extended Profile interface to include the isDivider property
 interface ExtendedProfile extends Profile {
@@ -28,12 +29,21 @@ interface ExtendedProfile extends Profile {
     DialogModule, 
     DropdownModule, 
     FormsModule,
-    ToastModule
+    ToastModule,
+    InputTextModule
   ],
   providers: [MessageService],
   template: `
     <div class="card">
-      <h1>Upravljanje profilima</h1>
+      <div class="title">
+        <h1>Upravljanje profilima</h1>
+        <button 
+          class="add-button p-button-success"
+          (click)="openCreateProfileWindow()"
+        >
+          <i class="pi pi-plus mr-2"></i> Dodaj novi profil
+        </button>
+      </div>
       <p-table [value]="profiles" [tableStyle]="{'min-width': '50rem'}">
         <ng-template pTemplate="header">
           <tr>
@@ -85,7 +95,35 @@ interface ExtendedProfile extends Profile {
         <p-button label="Save" icon="pi pi-check" (click)="saveProfile()" [disabled]="!selectedProfile"></p-button>
       </div>
     </p-dialog>
-    
+
+     <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" header="Create New Profile" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+       <div class="field">
+          <label for="firstName">Full Name</label>
+          <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.name" />
+       </div>
+       <div class="field">
+          <label for="firstName">Password</label>
+          <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.password" />
+       </div>
+      <div class="p-field">
+        <label for="role">Role</label>
+        <p-dropdown 
+          [options]="availableRoles" 
+          [(ngModel)]="newProfile.role" 
+          placeholder="Select a Role" 
+          [showClear]="true"
+          [style]="{'width':'100%'}"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          id="role">
+        </p-dropdown>
+      </div>
+      <div class="p-dialog-footer">
+        <p-button label="Cancel" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
+        <p-button label="Save" icon="pi pi-check" (click)="createProfile()" [disabled]="!isNewProfileValid()"></p-button>
+      </div>
+    </p-dialog>
     <p-toast></p-toast>
   `,
   styles: [
@@ -95,6 +133,31 @@ interface ExtendedProfile extends Profile {
       background-color: var(--surface-card);
       border-radius: 8px;
       box-shadow: var(--card-shadow);
+
+      .title{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+
+        .add-button {
+          display: flex;
+          align-items: center;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          border: none;
+          background-color: #4CAF50;
+          color: white;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          height: 40px;
+        }
+
+        .add-button:hover {
+          background-color: #45a049;
+        }
+      }
     }
     
     h1 {
@@ -105,6 +168,14 @@ interface ExtendedProfile extends Profile {
     
     .p-field {
       margin-bottom: 1.5rem;
+    }
+
+    .field{
+      margin-bottom: 10px;
+
+      input{
+        width: 100%;
+      }
     }
     
     label {
@@ -136,8 +207,11 @@ interface ExtendedProfile extends Profile {
 export class ProfilesComponent implements OnInit {
   profiles: ExtendedProfile[] = [];
   profileDialog: boolean = false;
+  showNewProfileDialog: boolean = false;
   selectedProfile: ExtendedProfile | null = null;
   userPasswordMap: { [name: string]: string } = {};
+  newProfileRole: string = '';
+  newProfile: UserToRegister = { name: '', password: '', role: '' };
   
   availableRoles = [
     { label: 'voditelj kampa', value: 'voditelj_kampa' },
@@ -308,6 +382,9 @@ export class ProfilesComponent implements OnInit {
   hideDialog() {
     this.profileDialog = false;
     this.selectedProfile = null;
+
+    this.showNewProfileDialog = false;
+    this.newProfile = { name: '', password: '', role: '' };
   }
 
   saveProfile() {
@@ -338,8 +415,45 @@ export class ProfilesComponent implements OnInit {
     }
   }
 
+  createProfile(){
+    if (this.isNewProfileValid()) {
+      this.authService.createUser(this.newProfile)
+        .then(res => {
+          if(res) {
+            this.messageService.add({ 
+              severity: 'success', 
+              summary: 'Success', 
+              detail: 'Profile created successfully', 
+              life: 3000 
+            });
+            this.showNewProfileDialog = false;
+            this.newProfile = { name: '', password: '', role: '' };
+          }
+        })
+        .catch(error => {
+          this.messageService.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: 'Failed to create profile', 
+            life: 3000 
+          });
+          console.error('Error creating profile:', error);
+        }
+      );
+    }
+  }
+
+  isNewProfileValid(){
+    return this.newProfile.name?.trim() && this.newProfile.password?.trim() && this.newProfile.role && this.newProfile.role?.trim();
+  }
+
   getRoleLabel(roleValue: string): string {
     const role = this.availableRoles.find(r => r.value === roleValue);
     return role ? role.label : roleValue;
+  }
+
+  openCreateProfileWindow(){
+    this.showNewProfileDialog = true;
+    this.newProfile.password = this.authService.generateRandomPassword();
   }
 }

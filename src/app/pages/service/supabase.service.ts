@@ -77,6 +77,7 @@ export class SupabaseService {
           idColumn = 'task_id';
           break;
         case 'house_availabilities':
+        case 'temp_house_availabilities':
           idColumn = 'house_availability_id';
           break;
         case 'houses':
