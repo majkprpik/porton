@@ -108,7 +108,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
         
         // Load house types data
         this.dataService.getHouseTypes().pipe(takeUntil(this.destroy$)).subscribe(types => {
-            this.houseTypes.set(types);
+            this.houseTypes.set(types.filter(t => t.house_type_name != 'dodatno'));
             
             // Always select the first house type by default if there are any
             if (types && types.length > 0) {

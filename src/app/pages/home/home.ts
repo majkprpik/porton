@@ -42,17 +42,17 @@ interface SpecialLocation {
                                     @for (task of houseService.getHouseTasks(house.house_id); track task.task_id) {
                                         @if (!taskService.isTaskCompleted(task)){
                                             @if (taskService.isRepairTask(task)) {
-                                                <i class="pi pi-wrench" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                                <i class="fa fa-wrench" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
                                             } @else if (taskService.isHouseCleaningTask(task)) {
-                                                <i class="pi pi-home" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                                <i class="fa fa-house" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
                                             } @else if (taskService.isTowelChangeTask(task)) {
-                                                <i class="pi pi-bookmark" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                                <i class="fa fa-bookmark" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
                                             } @else if (taskService.isDeckCleaningTask(task)) {
-                                                <i class="pi pi-table" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                                <i class="fa fa-umbrella-beach" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
                                             } @else if (taskService.isSheetChangeTask(task)) {
-                                                <i class="pi pi-inbox" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                                <i class="fa fa-bed" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
                                             } @else {
-                                                <i class="pi pi-file" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails(task)"></i>
+                                                <i class="fa fa-file" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
                                             }
                                         }
                                     }
@@ -67,23 +67,23 @@ interface SpecialLocation {
                         >
                             <div class="date-range">
                                 <div class="date-nav">
-                                    <i class="pi pi-chevron-left" (click)="navigateReservation(house.house_id, 'prev')"></i>
+                                    <i class="fa fa-chevron-left" (click)="navigateReservation(house.house_id, 'prev')"></i>
                                     <span>{{ getCurrentReservationDates(house.house_id) }}</span>
-                                    <i class="pi pi-chevron-right" (click)="navigateReservation(house.house_id, 'next')"></i>
+                                    <i class="fa fa-chevron-right" (click)="navigateReservation(house.house_id, 'next')"></i>
                                 </div>
                                 <div class="numbers">
                                     <div class="number-item">
-                                        <i class="pi pi-user"></i>
+                                        <i class="fa fa-user"></i>
                                         <span>{{ getAdultsCount(house.house_id) }}</span>
                                     </div>
                                     <span class="separator">|</span>
                                     <div class="number-item">
-                                        <i class="pi pi-heart"></i>
+                                        <i class="fa fa-heart"></i>
                                         <span>{{ getBabiesCount(house.house_id) }}</span>
                                     </div>
                                     <span class="separator">|</span>
                                     <div class="number-item">
-                                        <i class="pi pi-star"></i>
+                                        <i class="fa fa-star"></i>
                                         <span>{{ getDogsCount(house.house_id) }}</span>
                                     </div>
                                 </div>
@@ -1058,7 +1058,8 @@ export class Home implements OnInit, OnDestroy {
         return false;
     }
 
-    openTaskDetails(task: any) {
+    openTaskDetails(event: Event, task: any) {
+        event.stopPropagation();
         this.taskService.$taskModalData.next(task);
     }
 

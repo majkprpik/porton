@@ -309,17 +309,17 @@ export class TaskService {
   getTaskIcon(taskTypeId: number): string {
     switch(taskTypeId){
       case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
-        return 'pi pi-home';
+        return 'fa fa-house';
       case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
-        return 'pi pi-table';
+        return 'fa fa-umbrella-beach';
       case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
-        return 'pi pi-inbox';
+        return 'fa fa-bed';
       case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
-        return 'pi pi-bookmark';
+        return 'fa fa-bookmark';
       case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
-        return 'pi pi-wrench';
+        return 'fa fa-wrench';
       default: 
-        return 'pi pi-file';
+        return 'fa fa-file';
     }
   }
 

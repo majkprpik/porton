@@ -6,6 +6,7 @@
 @use './assets/layout/layout.scss';
 @use 'primeicons/primeicons.css';
 @use './assets/demo/demo.scss';
+@use '@fortawesome/fontawesome-free/css/all.css';
 
 html {
   @include mat.theme((
