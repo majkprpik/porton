@@ -1,4 +1,4 @@
-import { HouseAvailability, HouseStatus, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
+import { HouseAvailability, HouseStatus, Profile, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
 import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -905,6 +905,7 @@ export class AppLayout {
     taskProgressTypes: TaskProgressType[] = [];
     task: any = {};
     tasks: Task[] = [];
+    profiles: Profile[] = [];
 
     imageToUpload: any;
     imagesToUpload: any[] = [];
@@ -998,9 +999,10 @@ export class AppLayout {
             this.dataService.workGroupTasks$,
             this.dataService.workGroupProfiles$,
             this.dataService.houseStatuses$,
-            this.dataService.houseAvailabilities$
+            this.dataService.houseAvailabilities$,
+            this.dataService.profiles$
         ]).subscribe({
-            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities]) => {
+            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities, profiles]) => {
                 this.comments = repairTaskComments;
                 this.houses = houses;
                 this.taskTypes = taskTypes;
@@ -1012,6 +1014,7 @@ export class AppLayout {
                 this.workGroupProfiles = workGroupProfiles;
                 this.houseStatuses.set(houseStatuses);
                 this.houseAvailabilities.set(houseAvailabilities);
+                this.profiles = profiles;
 
                 if (houses) {
                     this.updateLocationOptions();
@@ -1189,6 +1192,26 @@ export class AppLayout {
                 }
             }
         });
+
+        this.dataService.$profilesUpdate.subscribe((res) => {
+            if(res && res.eventType == 'INSERT'){
+                if(!this.profiles.find(profile => profile.id == res.new.id)){
+                    this.profiles = [...this.profiles, res.new];
+                    this.dataService.setProfiles(this.profiles);
+                }
+            } else if(res && res.eventType == 'UPDATE'){
+                let profileIndex = this.profiles.findIndex(profile => profile.id == res.new.id);
+
+                if(profileIndex != -1){
+                    const updatedProfiles = [...this.profiles];
+                    updatedProfiles[profileIndex] = res.new;
+                    this.dataService.setProfiles(updatedProfiles);
+                }
+            } else if (res && res.eventType == 'DELETE'){
+                this.profiles = this.profiles.filter(profile => profile.id != res.old.id);
+                this.dataService.setProfiles(this.profiles);
+            }
+        })
     }
 
     async getStoredImagesForTask(task: Task) {
