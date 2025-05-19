@@ -130,6 +130,7 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 15px;
 
       i {
         font-size: 0.875rem;
@@ -140,6 +141,7 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 15px;
 
       i {
         color: red;
