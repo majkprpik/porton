@@ -30,7 +30,7 @@ import { Subject, takeUntil } from 'rxjs';
   providers: [MessageService, ConfirmationService],
   template: `
     <div class="card">
-      <div class="flex justify-content-between align-items-center mb-4">
+      <div class="house-types-management-header">
         <h1>Upravljanje tipovima kuća</h1>
         <button 
           class="add-button p-button-success"
@@ -109,13 +109,34 @@ import { Subject, takeUntil } from 'rxjs';
       border-radius: 8px;
       box-shadow: var(--card-shadow);
       margin: 1rem;
+
+      .house-types-management-header{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+
+        .add-button {
+          display: flex;
+          align-items: center;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          border: none;
+          background-color: #4CAF50;
+          color: white;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          height: 40px;
+        }
+      }
     }
     
     h1 {
       margin-top: 0;
       margin-bottom: 0;
       color: var(--text-color);
-      font-size: 1.5rem;
     }
     
     .p-field {
