@@ -28,11 +28,10 @@ interface SpecialLocation {
                 @for (house of houses(); track house.house_id) {
                     <div 
                         class="house-card" 
-                        [class.occupied]="isHouseOccupied(house.house_id)" 
-                        [class.available]="!isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
-                        [class.available-with-tasks]="!isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
-                        [class.available-with-arrival]="!isHouseOccupied(house.house_id) && houseService.hasArrivalForToday(house.house_id)"
-                        [class.occupied-without-arrival]="isHouseOccupied(house.house_id) && houseService.hasDepartureForToday(house.house_id) && !houseService.hasArrivalForToday(house.house_id)"
+                        [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
+                        [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
+                        [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
+                        [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.hasArrivalForToday(house.house_id)"
                         [class.expanded]="expandedHouseId === house.house_id" 
                         (click)="toggleExpand($event, house.house_id)">
                         <div class="house-content">
