@@ -178,16 +178,18 @@ export class AuthService {
         email: this.normalizeEmail(newUser.name),
         password: newUser.password,
         email_confirm: true,
+        phone: '' ,
         user_metadata: {
-          display_name: newUser.name,
+          first_name: newUser.name,
+          last_name: '',
           role: newUser.role
-        }
+        },
       });
 
       if (error) throw error;
 
       if (data.user) {
-        console.log(`Created: ${newUser.name} (${newUser.normalized_email})`);
+        this.profileService.setProfilePassword(data.user.id, newUser.password);
       }
   
       return data;

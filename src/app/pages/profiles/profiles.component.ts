@@ -11,6 +11,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { AuthService, UserToRegister } from '../service/auth.service';
 import { InputTextModule } from 'primeng/inputtext';
+import { ProfileService } from '../service/profile.service';
 
 // Extended Profile interface to include the isDivider property
 interface ExtendedProfile extends Profile {
@@ -60,13 +61,18 @@ interface ExtendedProfile extends Profile {
             <ng-container *ngIf="!profile.isDivider">
               <td>{{ profile.first_name }} {{ profile.last_name }}</td>
               <td>{{ getRoleLabel(profile.role || '') }}</td>
-              <td>{{ getDisplayEmail(profile.email) }}</td>
-              <td>{{ profile.password || '' }}</td>
+              <td>{{ profile.email }}</td>
+              <td>{{ profile.password }}</td>
               <td>
                 <p-button 
                   icon="pi pi-pencil" 
                   styleClass="p-button-rounded p-button-success mr-2" 
                   (click)="editProfile(profile)">
+                </p-button>
+                <p-button 
+                  icon="pi pi-trash" 
+                  styleClass="p-button-rounded p-button-danger mr-2" 
+                  (click)="showDeleteProfile(profile)">
                 </p-button>
               </td>
             </ng-container>
@@ -93,6 +99,16 @@ interface ExtendedProfile extends Profile {
       <div class="p-dialog-footer">
         <p-button label="Cancel" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
         <p-button label="Save" icon="pi pi-check" (click)="saveProfile()" [disabled]="!selectedProfile"></p-button>
+      </div>
+    </p-dialog>
+
+    <p-dialog [(visible)]="showDeleteProfileDialog" [style]="{width: '450px'}" header="Delete Profile" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+      <label>
+        Are you sure you want to delete {{selectedProfile?.first_name}}'s profile?
+      </label>
+      <div class="p-dialog-footer">
+        <p-button label="Cancel" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
+        <p-button label="Delete" icon="pi pi-trash" (click)="deleteProfile(selectedProfile?.id)" styleClass="p-button-danger" [disabled]="!selectedProfile"></p-button>
       </div>
     </p-dialog>
 
@@ -208,6 +224,7 @@ export class ProfilesComponent implements OnInit {
   profiles: ExtendedProfile[] = [];
   profileDialog: boolean = false;
   showNewProfileDialog: boolean = false;
+  showDeleteProfileDialog: boolean = false;
   selectedProfile: ExtendedProfile | null = null;
   userPasswordMap: { [name: string]: string } = {};
   newProfileRole: string = '';
@@ -231,45 +248,46 @@ export class ProfilesComponent implements OnInit {
   constructor(
     private dataService: DataService,
     private messageService: MessageService,
-    private authService: AuthService
+    private authService: AuthService,
+    private profileService: ProfileService
   ) {
     // Create a map of user names to passwords from the auth service
-    this.initializePasswordMap();
+    // this.initializePasswordMap();
   }
 
-  initializePasswordMap() {
-    const users = [
-      { name: 'Matej Adrić', password: 'NzW3dj' },
-      { name: 'Marko Sovulj', password: 'uNgVn1' },
-      { name: 'Mirela Dronjić', password: '2Az84E' }, 
-      { name: 'Elena Rudan', password: 't3Wd6N' },
-      { name: 'Simona Gjeorgievska', password: 'u2Xe7P' },
-      { name: 'Mia Lukić', password: 'v1Yf8Q' },
-      { name: 'Mila Malivuk', password: 'aYqv9A' },
-      { name: 'Ana Perak', password: 'p9Xm2K' },
-      { name: 'Mina Cvejić', password: 'k8DN4U' },
-      { name: 'Mauro Boljunčić', password: 'f2Ip8A' },
-      { name: 'Damir Zaharija', password: 'r7Yb5L' },
-      { name: 'Ivica Nagel', password: 's4Vc8M' },
-      { name: 'Liudmyla Babii', password: 'w5Zg9R' },
-      { name: 'Iryna Kara', password: 'x4Ah0S' },
-      { name: 'Tetiana Leonenko', password: 'y3Bi1T' },
-      { name: 'Iuliia Myronova', password: 'z2Cj2U' },
-      { name: 'Jasenka Savković Cvet', password: 'a1Dk3V' },
-      { name: 'Nataliia Vladimyrova', password: 'b6El4W' },
-      { name: 'Slavica Petković', password: 'c5Fm5X' },
-      { name: 'Jelena Kaluđer', password: 'd4Gn6Y' },
-      { name: 'Sandi Maružin', password: 'e3Ho7Z' },
-      { name: 'Đani Guštin', password: 'g1Jq9B' },
-      { name: 'Dražen Pendeš', password: 'h5Kr0C' },
-      { name: 'Ivo Pranjić', password: 'i4Ls1D' },
-      { name: 'Daniel Begzić', password: 'j3Mt2E' },
-    ];
+  // initializePasswordMap() {
+  //   const users = [
+  //     { name: 'Matej Adrić', password: 'NzW3dj' },
+  //     { name: 'Marko Sovulj', password: 'uNgVn1' },
+  //     { name: 'Mirela Dronjić', password: '2Az84E' }, 
+  //     { name: 'Elena Rudan', password: 't3Wd6N' },
+  //     { name: 'Simona Gjeorgievska', password: 'u2Xe7P' },
+  //     { name: 'Mia Lukić', password: 'v1Yf8Q' },
+  //     { name: 'Mila Malivuk', password: 'aYqv9A' },
+  //     { name: 'Ana Perak', password: 'p9Xm2K' },
+  //     { name: 'Mina Cvejić', password: 'k8DN4U' },
+  //     { name: 'Mauro Boljunčić', password: 'f2Ip8A' },
+  //     { name: 'Damir Zaharija', password: 'r7Yb5L' },
+  //     { name: 'Ivica Nagel', password: 's4Vc8M' },
+  //     { name: 'Liudmyla Babii', password: 'w5Zg9R' },
+  //     { name: 'Iryna Kara', password: 'x4Ah0S' },
+  //     { name: 'Tetiana Leonenko', password: 'y3Bi1T' },
+  //     { name: 'Iuliia Myronova', password: 'z2Cj2U' },
+  //     { name: 'Jasenka Savković Cvet', password: 'a1Dk3V' },
+  //     { name: 'Nataliia Vladimyrova', password: 'b6El4W' },
+  //     { name: 'Slavica Petković', password: 'c5Fm5X' },
+  //     { name: 'Jelena Kaluđer', password: 'd4Gn6Y' },
+  //     { name: 'Sandi Maružin', password: 'e3Ho7Z' },
+  //     { name: 'Đani Guštin', password: 'g1Jq9B' },
+  //     { name: 'Dražen Pendeš', password: 'h5Kr0C' },
+  //     { name: 'Ivo Pranjić', password: 'i4Ls1D' },
+  //     { name: 'Daniel Begzić', password: 'j3Mt2E' },
+  //   ];
 
-    users.forEach(user => {
-      this.userPasswordMap[user.name] = user.password;
-    });
-  }
+  //   users.forEach(user => {
+  //     this.userPasswordMap[user.name] = user.password;
+  //   });
+  // }
 
   ngOnInit() {
     this.dataService.profiles$.subscribe(profiles => {
@@ -340,7 +358,7 @@ export class ProfilesComponent implements OnInit {
       const extendedProfile: ExtendedProfile = {...profile};
       
       // Find the password for this profile
-      extendedProfile.password = this.userPasswordMap[fullName] || '';
+      // extendedProfile.password = this.userPasswordMap[fullName] || '';
       
       // Generate email using the same format as in auth.service
       extendedProfile.email = this.normalizeEmail(fullName);
@@ -379,8 +397,23 @@ export class ProfilesComponent implements OnInit {
     this.profileDialog = true;
   }
 
+  showDeleteProfile(profile: ExtendedProfile){
+    this.selectedProfile = {...profile};
+    this.showDeleteProfileDialog = true;
+  }
+
+  deleteProfile(profileId: string | undefined){
+    if(profileId){
+      this.profileService.deleteProfile(profileId);
+    }
+
+    this.selectedProfile = null;
+    this.showDeleteProfileDialog = false;
+  }
+
   hideDialog() {
     this.profileDialog = false;
+    this.showDeleteProfileDialog = false;
     this.selectedProfile = null;
 
     this.showNewProfileDialog = false;
