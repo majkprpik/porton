@@ -518,7 +518,20 @@ td.selected-reservation {
     flex-direction: row;
     width: 100%;
     justify-content: center;
-    gap: 10px;
+    gap: 5px;
     box-sizing: border-box;
     padding: 0 10px 0 10px
+}
+
+.border-left-important {
+  border-left: 1px solid black !important;
+}
+.border-right-important {
+  border-right: 1px solid black !important;
+}
+.border-top-important {
+  border-top: 1px solid black !important;
+}
+.border-bottom-important {
+  border-bottom: 1px solid black !important;
 }
