@@ -1025,6 +1025,17 @@ export class AppLayout {
             }
         });
 
+        this.router.events
+            .pipe(filter(e => e instanceof NavigationEnd))
+        	.subscribe((e: NavigationEnd) => {
+                if(e.urlAfterRedirects === '/home'){
+                    this.loadStoredWindowPositions();
+                } else {
+                    this.isNotesWindowVisible = false;
+                    this.isArrivalsAndDeparturesWindowVisible = false;
+                }
+        	});
+
         this.taskService.$taskModalData.subscribe((res) => {
             if (res) {
                 this.resetForm('fault-report');
@@ -1051,19 +1062,7 @@ export class AppLayout {
         this.dataService.loadHouses().subscribe();
         this.dataService.getTaskTypes().subscribe();
 
-        const saved = localStorage.getItem('windowPositions');
-
-        if (saved) {
-            this.positions = JSON.parse(saved);
-
-            if (this.positions['notes']) {
-                this.isNotesWindowVisible = true;
-            }
-
-            if (this.positions['arrivals']) {
-                this.isArrivalsAndDeparturesWindowVisible = true;
-            }
-        }
+        this.loadStoredWindowPositions();
 
         this.dataService.$repairTaskCommentsUpdate.subscribe((res) => {
             if (res && res.eventType == 'INSERT') {
@@ -1212,6 +1211,22 @@ export class AppLayout {
                 this.dataService.setProfiles(this.profiles);
             }
         })
+    }
+
+    loadStoredWindowPositions(){
+        const saved = localStorage.getItem('windowPositions');
+
+        if (saved) {
+            this.positions = JSON.parse(saved);
+    
+            if (this.positions['notes']) {
+                this.isNotesWindowVisible = true;
+            }
+    
+            if (this.positions['arrivals']) {
+                this.isArrivalsAndDeparturesWindowVisible = true;
+            }
+        }
     }
 
     async getStoredImagesForTask(task: Task) {
