@@ -328,6 +328,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
             if (reservation.reservation_number) cellData.tooltip += `\nRef: ${reservation.reservation_number}`;
             if (reservation.adults > 0) cellData.tooltip += `\nAdults: ${reservation.adults}`;
             if (reservation.babies > 0) cellData.tooltip += `\nBabies: ${reservation.babies}`;
+            if (reservation.dogs_d > 0) cellData.tooltip += `\nPets: ${reservation.dogs_d}`;
+            if (reservation.dogs_b > 0) cellData.tooltip += `\nBig pets: ${reservation.dogs_b}`;
+            if (reservation.dogs_s > 0) cellData.tooltip += `\nSmall pets: ${reservation.dogs_s}`;
+            if (reservation.cribs > 0) cellData.tooltip += `\nCribs: ${reservation.cribs}`;
 
             // Set identifier
             cellData.identifier = `res-${reservation.house_id}-${new Date(reservation.house_availability_start_date).getTime()}`;
@@ -382,8 +386,67 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return `${day}.${month}`;
     }
     
-    // Enforce minimum column width
-    private enforceMinColumnWidth(column: number, minWidth: number): void {
+    getNumberOfAdults(grid: any){
+        if(grid.tooltip){
+            const match = grid.tooltip.match(/Adults:\s*(\d+)/);
+            const adults = match ? parseInt(match[1], 10) : null;
+
+            return adults;
+        }
+
+        return '';
+    }
+
+    getNumberOfCribs(grid: any){
+        if(grid.tooltip){
+            const cribs = grid.tooltip.match(/Cribs:\s*(\d+)/);
+
+            if(!cribs){
+                return '';
+            }
+
+            const cribsCount = cribs ? parseInt(cribs[1], 10) : 0;
+
+            return cribsCount;
+        }
+
+        return '';
+    }
+
+    getNumberOfPets(grid: any){
+        if(grid.tooltip){
+            const pets = grid.tooltip.match(/Pets:\s*(\d+)/);
+            const smallPets = grid.tooltip.match(/Small pets:\s*(\d+)/);
+            const bigPets = grid.tooltip.match(/Big pets:\s*(\d+)/);
+
+            if (!pets && !smallPets && !bigPets) {
+                return '';
+            }
+
+            const petsCount = pets ? parseInt(pets[1], 10) : 0;
+            const smallPetsCount = smallPets ? parseInt(smallPets[1], 10) : 0;
+            const bigPetsCount = bigPets ? parseInt(bigPets[1], 10) : 0;
+
+            return petsCount + smallPetsCount + bigPetsCount;
+        }
+
+        return '';
+    }
+
+    getNumberOfBabies(grid: any){
+        if(grid.tooltip){ 
+            const babies = grid.tooltip.match(/Babies:\s*(\d+)/);
+
+            if(!babies){
+                return '';
+            }
+
+            const babiesCount = babies ? parseInt(babies[1], 10) : 0;
+
+            return babiesCount;
+        }
+
+        return '';
     }
 
     // Make these methods public to use in template

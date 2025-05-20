@@ -512,3 +512,12 @@ td.selected-reservation {
         flex: 1;
     }
 }
+
+.reservation-numbers{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: 0 10px 0 10px
+}
