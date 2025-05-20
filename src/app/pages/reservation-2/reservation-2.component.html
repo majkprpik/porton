@@ -68,6 +68,12 @@
                                         } @else {
                                             @if (gridMatrix()[i]?.[j]?.isReserved && gridMatrix()[i]?.[j - 1]?.isReservationStart) {
                                                 <div class="reservation-numbers">
+                                                    @if (getNumberOfAdults(gridMatrix()[i]?.[j])){
+                                                        <div class="adults-count">
+                                                            {{ getNumberOfAdults(gridMatrix()[i]?.[j]) }} 
+                                                            <i class="fa-solid fa-person"></i>
+                                                        </div>
+                                                    }
                                                     @if (getNumberOfPets(gridMatrix()[i]?.[j])) {
                                                         <div class="pets-count">
                                                             {{ getNumberOfPets(gridMatrix()[i]?.[j]) }} 
