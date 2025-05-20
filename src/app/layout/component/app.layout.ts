@@ -1062,7 +1062,9 @@ export class AppLayout {
         this.dataService.loadHouses().subscribe();
         this.dataService.getTaskTypes().subscribe();
 
-        this.loadStoredWindowPositions();
+        if(this.router.url == '/home'){
+            this.loadStoredWindowPositions();
+        }
 
         this.dataService.$repairTaskCommentsUpdate.subscribe((res) => {
             if (res && res.eventType == 'INSERT') {
