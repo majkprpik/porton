@@ -151,7 +151,7 @@ interface SpecialLocation {
                                                         <div class="close-icon-container">
                                                             <i (click)="removeImage(image, $event, 'task-details')" class="pi pi-trash"></i>
                                                         </div>
-                                                        <img (click)="onOpenImage(image.url)" [src]="image.url" [alt]="image.url" />
+                                                        <img #imgElement (click)="onOpenImage(imgElement)" [src]="image.url" [alt]="image.url" />
                                                     </div>
                                                 </div>
                                             }
@@ -270,7 +270,7 @@ interface SpecialLocation {
                                         <div class="close-icon-container">
                                             <i (click)="removeImage(image, $event, 'repair-task')" class="pi pi-trash"></i>
                                         </div>
-                                        <img (click)="onOpenImage(image.base64Url)" [src]="image.base64Url" [alt]="image.base64Url" />
+                                        <img #imgElement (click)="onOpenImage(imgElement)" [src]="image.base64Url" [alt]="image.base64Url" />
                                     </div>
                                 </div>
                             }
@@ -1650,10 +1650,14 @@ export class AppLayout {
         this.fileInput.nativeElement.click();
     }
 
-    onOpenImage(imageUrl: string) {
-        this.openImage.emit({
-            imageUrl: imageUrl
-        });
+    onOpenImage(element: HTMLElement) {
+        if(element){
+            element.requestFullscreen();
+        } else if ((element as any).webkitRequestFullscreen) { // Safari
+            (element as any).webkitRequestFullscreen();
+        } else if ((element as any).msRequestFullscreen) { // IE11
+            (element as any).msRequestFullscreen();
+        }
     }
 
     private renameImageNameForSupabaseStorage() {
