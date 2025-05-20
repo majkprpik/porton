@@ -49,6 +49,7 @@ export interface Profile {
   last_name: string | null;
   phone_number?: string | null;
   created_at?: string | null;
+  password?: string;
 }
 
 // Interface for work groups and related entities
@@ -230,6 +231,7 @@ export class DataService {
   $workGroupsUpdate = new BehaviorSubject<any>('');
   $notesUpdate = new BehaviorSubject<any>('');
   $repairTaskCommentsUpdate = new BehaviorSubject<any>('');
+  $profilesUpdate = new BehaviorSubject<any>('');
 
   $areNotesLoaded = new BehaviorSubject<boolean>(false);
   $areRepairTaskCommentsLoaded = new BehaviorSubject<boolean>(false);
@@ -275,6 +277,12 @@ export class DataService {
   setHouseStatuses(houseStatuses: HouseStatus[]){
     if(houseStatuses){
       this.houseStatusesSubject.next(houseStatuses);
+    }
+  }
+
+  setProfiles(profiles: Profile[]){
+    if(profiles){
+      this.profilesSubject.next(profiles);
     }
   }
 
@@ -1397,6 +1405,16 @@ export class DataService {
       },
       async (payload: any) => {
         this.$repairTaskCommentsUpdate.next(payload);
+      }
+    ).on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'porton',
+        table: 'profiles'
+      },
+      async (payload: any) => {
+        this.$profilesUpdate.next(payload);
       }
     )
     .subscribe();

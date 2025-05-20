@@ -147,31 +147,41 @@ export class ProfileService {
     }
   }
 
-  public async getAllProfilesByRole(role: string){
-    try{
+  async deleteProfile(profileId: string){
+    try {
+      const { error } = await this.supabase.getClient()
+        .schema('porton')
+        .from('profiles')
+        .delete()
+        .eq('id', profileId);
+
+      if (error) throw error;
+
+      return true;
+    } catch (error) {
+      console.error(`Error deleting profile with ID ${profileId} to Supabase:`, error);
+      return false;
+    }
+  }
+
+  async setProfilePassword(profileId: string, password: string){
+      try {
       const { data, error } = await this.supabase.getClient()
         .schema('porton')
         .from('profiles')
-        .select('*')
-        .eq('role', role)
+        .update({
+          password: password
+        })
+        .eq('id', profileId)
+        .select()
+        .single();
 
       if (error) throw error;
 
       return data;
     } catch (error) {
-      console.error('Error fetching profiles from Supabase:', error);
-      return [];
+      console.error(`Error setting password for profile ID ${profileId} to Supabase:`, error);
+      throw error;
     }
-  }
-
-  public async getProfileByRepairTaskId(repairTaskId: number){
-    let existingWorkGroupTask = await this.workGroupService.getWorkGroupTasksByTaskId(repairTaskId);
-
-    if(Object.keys(existingWorkGroupTask).length > 0){
-      let existingWorkGroupProfile = await this.dataService.getWorkGroupProfilesByWorkGroupId(existingWorkGroupTask.work_group_id);
-      return existingWorkGroupProfile[0].profile_id;
-    }
-    
-    return "";
   }
 }

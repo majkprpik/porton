@@ -204,6 +204,7 @@ import { CommonModule } from '@angular/common';
       padding: 2rem 0;
       color: var(--text-color-secondary);
       height: 100%;
+      width: 215px;
       
       i {
         font-size: 2rem;

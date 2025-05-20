@@ -28,11 +28,10 @@ interface SpecialLocation {
                 @for (house of houses(); track house.house_id) {
                     <div 
                         class="house-card" 
-                        [class.occupied]="isHouseOccupied(house.house_id)" 
-                        [class.available]="!isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
-                        [class.available-with-tasks]="!isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
-                        [class.available-with-arrival]="!isHouseOccupied(house.house_id) && houseService.hasArrivalForToday(house.house_id)"
-                      
+                        [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
+                        [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
+                        [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
+                        [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.hasArrivalForToday(house.house_id)"
                         [class.expanded]="expandedHouseId === house.house_id" 
                         (click)="toggleExpand($event, house.house_id)">
                         <div class="house-content">
@@ -995,67 +994,6 @@ export class Home implements OnInit, OnDestroy {
                 (error) => console.error('Error creating extraordinary task:', error)
             );
         });
-    }
-
-    isHouseOccupied(houseId: number): boolean {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayTime = today.getTime();
-
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(0, 0, 0, 0);
-        const yesterdayTime = yesterday.getTime();
-
-        const houseAvailabilities = this.houseAvailabilities()
-            .filter((availability) => {
-                if (availability.house_id == houseId) {
-                    const start = new Date(availability.house_availability_start_date);
-                    start.setHours(0, 0, 0, 0);
-
-                    const end = new Date(availability.house_availability_end_date);
-                    end.setHours(23, 59, 59, 999);
-
-                    // Main case: today is in range
-                    const isTodayInRange = start.getTime() <= todayTime && end.getTime() >= todayTime;
-
-                    // Extra case: ended exactly yesterday
-                    const endedYesterday = end.getTime() >= yesterdayTime && end.getTime() < todayTime;
-
-                    return isTodayInRange || endedYesterday;
-                }
-
-                return false;
-            })
-            .sort((a, b) => {
-                const endA = new Date(a.house_availability_end_date).getTime();
-                const endB = new Date(b.house_availability_end_date).getTime();
-                return endA - endB;
-            });
-
-        if(houseId == 455){
-            console.log('aaa');
-        }
-
-        if (houseAvailabilities && houseAvailabilities.length == 1) {
-            if(this.houseService.hasArrivalForToday(houseId)){
-                return houseAvailabilities[0].has_arrived
-            } else if(this.houseService.hasDepartureForToday(houseId)){
-                return !houseAvailabilities[0].has_departed
-            } else {
-                return true;
-            }
-        } else if (houseAvailabilities && houseAvailabilities.length == 2) {
-            if (!houseAvailabilities[0].has_departed) {
-                return true;
-            } else if (houseAvailabilities[0].has_departed && !houseAvailabilities[1].has_arrived) {
-                return false;
-            } else if (houseAvailabilities[0].has_departed && houseAvailabilities[1].has_arrived) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     openTaskDetails(event: Event, task: any) {
