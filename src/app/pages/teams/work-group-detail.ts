@@ -44,7 +44,7 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                             } @else {
                                 @for (staff of assignedStaff; track staff.id) {
                                     <div class="staff-card">
-                                        <i class="pi pi-user"></i>
+                                        <i class="fa fa-user"></i>
                                         <span>{{getStaffFullName(staff)}}</span>
                                     </div>
                                 }
@@ -485,24 +485,32 @@ export class WorkGroupDetail implements OnInit {
     getTaskTypeIcon(taskTypeId: number): string {
         switch(taskTypeId){
             case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
-              return 'pi pi-home';
+              return 'fa fa-house';
             case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
-              return 'pi pi-table';
+              return 'fa fa-umbrella-beach';
             case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
-              return 'pi pi-inbox';
+              return 'fa fa-bed';
             case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
-              return 'pi pi-bookmark';
+              return 'fa fa-bookmark';
             case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
-              return 'pi pi-wrench';
+              return 'fa fa-wrench';
             default: 
-              return 'pi pi-file';
+              return 'fa fa-file';
           }
     }
 
     getTaskStatusIcon(task: Task): string {
-        if (this.taskService.isTaskCompleted(task)) return 'pi pi-check-circle';
-        if (this.taskService.isTaskInProgress(task)) return 'pi pi-clock';
-        return 'pi pi-circle';
+        if (this.taskService.isTaskCompleted(task)) {
+            return 'fa fa-check-circle';
+        } else if (this.taskService.isTaskInProgress(task)) {
+            return 'fa fa-spinner';
+        } else if (this.taskService.isTaskPaused(task)) {
+            return 'fa fa-pause-circle';
+        } else if (this.taskService.isTaskAssigned(task)) {
+            return 'fa fa-user-check';
+        } else {
+            return 'fa fa-clock';
+        }
     }
 
     getTaskStatusText(task: Task): string {

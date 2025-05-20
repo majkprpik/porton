@@ -61,7 +61,7 @@ import { CommonModule } from '@angular/common';
                             <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
                             <i class="task-icon" [class]="taskService.getTaskIcon(task.task_type_id)"></i>
                             @if (!workGroup?.is_locked) {
-                                <i class="remove-icon pi pi-times"></i>
+                                <i class="remove-icon fa fa-times"></i>
                             }
                         </div>
                       }

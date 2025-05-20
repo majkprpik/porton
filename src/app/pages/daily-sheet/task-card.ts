@@ -27,7 +27,7 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       @if(task?.is_unscheduled){
         @if(isUrgentIconVisible){
           <div class="urgent-task-icon">
-            <i class="pi pi-exclamation-triangle"></i>
+            <i class="fa fa-exclamation-triangle"></i>
           </div>
         } @else{
           <div class="task-icon">
@@ -154,7 +154,7 @@ export class TaskCardComponent {
   @Input() state: TaskState = 'not-assigned';
   @Input() houseNumber: number = 0;
   @Input() houseName: string = '';
-  @Input() taskIcon: string = 'pi-home';
+  @Input() taskIcon: string = 'fa fa-house';
   @Input() task?: Task;
   @Input() canBeAssigned: boolean = false;
   @Input() isInActiveGroup: boolean = false;
