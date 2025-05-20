@@ -517,7 +517,8 @@ td.selected-reservation {
     display: flex;
     flex-direction: row;
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 10px;
     box-sizing: border-box;
     padding: 0 10px 0 10px
 }
