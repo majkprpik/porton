@@ -174,17 +174,26 @@ export class AuthService {
 
   async createUser(newUser: UserToRegister){
     try {      
-      const { data, error } = await this.supabaseService.getAdminClient().auth.admin.createUser({
+      const userPayload: any = {
         email: this.normalizeEmail(newUser.name),
         password: newUser.password,
         email_confirm: true,
-        phone: '' ,
+        phone: '',
         user_metadata: {
           first_name: newUser.name,
           last_name: '',
           role: newUser.role
-        },
-      });
+        }
+      };
+
+      if (newUser.id) {
+        userPayload.id = newUser.id;
+      }
+
+      const { data, error } = await this.supabaseService
+        .getAdminClient()
+        .auth.admin
+        .createUser(userPayload);
 
       if (error) throw error;
 
@@ -242,6 +251,7 @@ export class AuthService {
 }
 
 export interface UserToRegister {
+  id?: string;
   normalized_email?: string;
   password: string;
   email_confirm?: boolean;

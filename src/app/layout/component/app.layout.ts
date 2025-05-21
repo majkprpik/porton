@@ -24,6 +24,7 @@ import { TabViewModule } from 'primeng/tabview';
 import { ChipModule } from 'primeng/chip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProfileService } from '../../pages/service/profile.service';
+import { AuthService } from '../../pages/service/auth.service';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -968,7 +969,8 @@ export class AppLayout {
         public taskService: TaskService,
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
-        public profileService: ProfileService
+        public profileService: ProfileService,
+        private authService: AuthService,
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
@@ -1019,6 +1021,10 @@ export class AppLayout {
                 this.profiles = profiles;
                 this.tempHouseAvailabilities = tempHouseAvailabilities;
 
+                if(this.profiles.length > 0 && this.isUserDeleted()){
+                    this.authService.logout();
+                }
+
                 if (houses) {
                     this.updateLocationOptions();
                 }
@@ -1064,6 +1070,8 @@ export class AppLayout {
         // Load initial data
         this.dataService.loadHouses().subscribe();
         this.dataService.getTaskTypes().subscribe();
+        this.createDeletedUser();
+
 
         if(this.router.url == '/home'){
             this.loadStoredWindowPositions();
@@ -1242,10 +1250,33 @@ export class AppLayout {
                     this.dataService.setProfiles(updatedProfiles);
                 }
             } else if (res && res.eventType == 'DELETE'){
+                if(res.old.id == this.authService.getStoredUserId()){
+                    this.authService.logout();
+                }
+
                 this.profiles = this.profiles.filter(profile => profile.id != res.old.id);
                 this.dataService.setProfiles(this.profiles);
             }
         })
+    }
+
+    async createDeletedUser(){
+        const deletedUser = await this.dataService.getDeletedUser();
+
+        if(!deletedUser || deletedUser.length <= 0){
+            this.authService.createUser({
+                id: '11111111-1111-1111-1111-111111111111',
+                normalized_email: this.authService.normalizeEmail('Deleted User'),
+                password: 'test123',
+                email_confirm: true,
+                name: 'Deleted User',
+                role: 'voditelj_recepcije'
+            });
+        }
+    }
+
+    isUserDeleted(){
+        return !this.profiles.find(profile => profile.id == this.authService.getStoredUserId());
     }
 
     loadStoredWindowPositions(){

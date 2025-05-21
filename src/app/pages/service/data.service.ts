@@ -1652,4 +1652,22 @@ export class DataService {
       return null;
     }
   }
+
+  async getDeletedUser(){
+    try {
+      const { data: deletedUser, error } = await this.supabaseService.getAdminClient()
+        .schema('porton')
+        .from('profiles')
+        .select('*')
+        .eq('id', '11111111-1111-1111-1111-111111111111')
+        .eq('first_name', 'Deleted User')
+
+      if(error) throw error
+
+      return deletedUser;
+    } catch (error) {
+      console.error('Error fetching Deleted User', error);
+      return null;
+    }
+  }
 }
