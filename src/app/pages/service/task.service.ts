@@ -199,7 +199,7 @@ export class TaskService {
           task_id: taskId,
           user_id: this.authService.getStoredUserId(),
           comment: repairTaskComment,
-          created_at: this.supabaseService.getFormattedDateTimeNowForSupabase(),
+          created_at: this.supabaseService.formatDateTimeForSupabase(new Date()),
         })
         .single();
 

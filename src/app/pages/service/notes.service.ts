@@ -14,7 +14,7 @@ export class NotesService {
 
   }
 
-  async createNote(note: string){
+  async createNote(note: string, date: Date){
     try{
       const { data: newNote, error: createNoteError } = await this.supabaseService.getClient()
         .schema('porton')
@@ -22,7 +22,7 @@ export class NotesService {
         .insert({ 
           profile_id: this.authService.getStoredUserId(),
           note: note,
-          time_sent: this.supabaseService.getFormattedDateTimeNowForSupabase(),
+          time_sent: this.supabaseService.formatDateTimeForSupabase(date),
          })
         .select()
         .single();

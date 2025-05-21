@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotesService } from '../../pages/service/notes.service';
-import { DataService, Note, Profile } from '../../pages/service/data.service';
+import { DataService, Note } from '../../pages/service/data.service';
 import { combineLatest } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ProfileService } from '../../pages/service/profile.service';
@@ -19,26 +19,23 @@ import { ProfileService } from '../../pages/service/profile.service';
     <div class="notes-container">
       <div class="header-container">
         <div class="notes-header">
-          <p-button [disabled]="daysIndex <= 0" (onClick)="decreaseIndex()" icon="pi pi-angle-left"></p-button>
+          <p-button [disabled]="daysIndex >= 365" (onClick)="increaseIndex()" icon="pi pi-angle-left"></p-button>
           <div class="notes-title">
             <span id="notes">Notes</span>
-            <span id="days">{{daysDisplay[daysIndex]}}</span>
+            <span id="days">{{ selectedDateDisplay }}</span>
           </div>
-          <p-button [disabled]="daysIndex >= 4" (onClick)="increaseIndex()" icon="pi pi-angle-right"></p-button>
+          <p-button [disabled]="daysIndex <= -365" (onClick)="decreaseIndex()" icon="pi pi-angle-right"></p-button>
         </div>
       </div>
 
       <div class="notes-content" #messagesContainer>
-        @if(!notes.length && !areNotesLoaded){
-          <span>Loading notes...</span>
-        }
-        @else if(!last5DaysNotes[daysIndex].length && areNotesLoaded){
-          <span>No notes for today</span>
-        } @else {
-          @for(note of last5DaysNotes[daysIndex]; track $index){
-            <span><b>{{profileService.findProfile(note.profile_id)?.first_name}} - {{note.time_sent | date: 'HH:mm'}}:</b> {{note.note}}</span>
-          }
-        }
+        <span *ngIf="!notes.length && !areNotesLoaded">Loading notes...</span>
+        <span *ngIf="areNotesLoaded && notesForSelectedDate.length === 0">No notes for this day</span>
+        <ng-container *ngIf="notesForSelectedDate.length > 0">
+          <span *ngFor="let note of notesForSelectedDate">
+            <b>{{profileService.findProfile(note.profile_id)?.first_name}} - {{note.time_sent | date:'HH:mm'}}:</b> {{note.note}}
+          </span>
+        </ng-container>
       </div>
 
       <div class="notes-footer">
@@ -46,7 +43,7 @@ import { ProfileService } from '../../pages/service/profile.service';
           placeholder="Add a note..."
           [(ngModel)]="note"
           (keydown.enter)="addNote($event)"
-          [disabled]="daysIndex != 4"
+          [disabled]="daysIndex > 0"
         ></textarea>
       </div>
     </div>
@@ -134,34 +131,57 @@ export class NotesComponent {
 
   note: string = '';
   notes: Note[] = [];
-  last5DaysNotes: { [key: number]: Note[] } = {};
-  daysIndex = 4;
-  daysDisplay = ['4 days ago', '3 days ago', '2 days ago', '1 day ago', 'Today'];
+  daysIndex = 0; 
   areNotesLoaded = false;
 
   constructor(
     private notesService: NotesService,
     private dataService: DataService,
     public profileService: ProfileService,
-  ) {
-  }
+  ) {}
 
   increaseIndex(){
-    if(this.daysIndex >= 4){
-      this.daysIndex = 4;
-    } else {
+    if(this.daysIndex < 365) {
       this.daysIndex++;
     }
   }
 
   decreaseIndex(){
-    if(this.daysIndex <= 0){
-      this.daysIndex = 0;
-    } else {
+    if(this.daysIndex > -365) {
       this.daysIndex--;
     }
   }
-  
+
+  get selectedDate(): Date {
+    const now = new Date();
+    const selected = new Date(now);
+    selected.setDate(now.getDate() - this.daysIndex);
+    return selected;
+  }
+
+  get selectedDateDisplay(): string {
+    if (this.daysIndex === 0) {
+      return 'Today';
+    }
+
+    const date = this.selectedDate;
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+  }
+
+  get notesForSelectedDate(): Note[] {
+    if(!this.notes.length) return [];
+    const day = this.selectedDate;
+    const startOfDay = new Date(day);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(day);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return this.notes.filter(note => {
+      const timeSent = new Date(note.time_sent);
+      return timeSent >= startOfDay && timeSent <= endOfDay;
+    });
+  }
+
   ngOnInit(){
     combineLatest([
       this.dataService.notes$,
@@ -169,25 +189,9 @@ export class NotesComponent {
     ]).subscribe({
       next: ([notes, areNotesLoaded]) => {
         this.notes = notes;
+        this.areNotesLoaded = areNotesLoaded;
 
-        if(notes && areNotesLoaded){
-          this.areNotesLoaded = true;
-          const now = new Date();
-          this.last5DaysNotes = {};
-
-          for (let i = 0; i < 5; i++) {
-            const day = new Date(now);
-            day.setDate(now.getDate() - (4 - i)); 
-
-            const startOfDay = new Date(day.setHours(0, 0, 0, 0));
-            const endOfDay = new Date(day.setHours(23, 59, 59, 999));
-
-            this.last5DaysNotes[i] = notes.filter(note => {
-              const timeSent = new Date(note.time_sent);
-              return timeSent >= startOfDay && timeSent <= endOfDay;
-            });
-          }
-
+        if(areNotesLoaded){
           setTimeout(() => {
             this.scrollToBottom();
           }, 0);
@@ -201,10 +205,8 @@ export class NotesComponent {
     this.dataService.$notesUpdate.subscribe(res => {
       if(res && res.eventType == 'INSERT'){
         let existingNote = this.notes.find(note => note.note_id == res.new.id);
-
         if(!existingNote){
           this.notes = [...this.notes, res.new];
-          this.last5DaysNotes[4] = [...this.last5DaysNotes[4], res.new];
         }
       }
     });
@@ -213,8 +215,14 @@ export class NotesComponent {
   async addNote(event: any){
     event.preventDefault();
     this.note = this.note.trim();
-    if(this.note){
-      this.notesService.createNote(this.note);
+
+    if(this.note && this.daysIndex <= 0){    
+      const now = new Date();
+      const selectedDate = new Date(this.selectedDate);
+
+      selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+
+      await this.notesService.createNote(this.note, selectedDate);
       this.note = '';
     }
   }
