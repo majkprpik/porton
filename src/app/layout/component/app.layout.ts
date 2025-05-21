@@ -1021,10 +1021,6 @@ export class AppLayout {
                 this.profiles = profiles;
                 this.tempHouseAvailabilities = tempHouseAvailabilities;
 
-                if(this.profiles.length > 0 && this.isUserDeleted()){
-                    this.authService.logout();
-                }
-
                 if (houses) {
                     this.updateLocationOptions();
                 }
