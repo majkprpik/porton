@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
-import { Subject, takeUntil, Subscription, forkJoin } from 'rxjs';
+import { Subject, takeUntil, forkJoin, combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ReservationFormComponent } from '../reservations/reservation-form/reservation-form.component';
 
@@ -87,7 +87,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
     private isFirstLoad = true;
 
     colors = ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA', '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'];
-    
+
     constructor(private dataService: DataService) {
         // Monitor grid matrix updates
         effect(() => {
@@ -141,6 +141,22 @@ export class Reservation2Component implements OnInit, OnDestroy {
             const combined = [...main, ...temp];
             this.houseAvailabilities.set(combined);
             this.updateGridMatrix();
+        });
+
+        combineLatest([
+            this.dataService.houseAvailabilities$,
+            this.dataService.tempHouseAvailabilities$
+        ]).subscribe({
+            next: ([houseAvailabilities, tempHouseAvailabilities]) => {
+                if(houseAvailabilities && tempHouseAvailabilities){
+                    const combined = [...houseAvailabilities, ...tempHouseAvailabilities];
+                    this.houseAvailabilities.set(combined);
+                    this.updateGridMatrix();
+                }
+            },
+            error: (error) => {
+                console.error(error);
+            }
         });
         
         // Subscribe to house availabilities updates from real-time database changes

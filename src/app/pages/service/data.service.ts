@@ -225,6 +225,7 @@ export class DataService {
   repairTaskComments$ = this.repairTaskCommentsSubject.asObservable();
   
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
+  $tempHouseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tasksUpdate = new BehaviorSubject<any>('');
   $workGroupTasksUpdate = new BehaviorSubject<any>('');
   $workGroupProfilesUpdate = new BehaviorSubject<any>('');
@@ -271,6 +272,12 @@ export class DataService {
   setHouseAvailabilites(houseAvailabilties: HouseAvailability[]){
     if(houseAvailabilties){
       this.houseAvailabilitiesSubject.next(houseAvailabilties);
+    }
+  }
+
+  setTempHouseAvailabilities(tempHouseAvailabilities: HouseAvailability[]){
+    if(tempHouseAvailabilities){
+      this.tempHouseAvailabilitiesSubject.next(tempHouseAvailabilities);
     }
   }
 
@@ -1338,15 +1345,24 @@ export class DataService {
     .on(
       'postgres_changes',
       { 
-        event: 'UPDATE',
+        event: '*',
         schema: 'porton',
         table: 'house_availabilities'
       },
       async (payload: any) => {
         this.$houseAvailabilitiesUpdate.next(payload);
       }
-    )
-    .on(
+    ).on(
+      'postgres_changes',
+      { 
+        event: '*',
+        schema: 'porton',
+        table: 'temp_house_availabilities'
+      },
+      async (payload: any) => {
+        this.$tempHouseAvailabilitiesUpdate.next(payload);
+      }
+    ).on(
       'postgres_changes',
       { 
         event: '*',

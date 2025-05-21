@@ -925,6 +925,7 @@ export class AppLayout {
 
     houseStatuses = signal<HouseStatus[]>([]);
     houseAvailabilities = signal<HouseAvailability[]>([]);
+    tempHouseAvailabilities: HouseAvailability[] = [];
 
     menuItems: MenuItem[] = [
         {
@@ -1000,9 +1001,10 @@ export class AppLayout {
             this.dataService.workGroupProfiles$,
             this.dataService.houseStatuses$,
             this.dataService.houseAvailabilities$,
-            this.dataService.profiles$
+            this.dataService.profiles$,
+            this.dataService.tempHouseAvailabilities$
         ]).subscribe({
-            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities, profiles]) => {
+            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities, profiles, tempHouseAvailabilities]) => {
                 this.comments = repairTaskComments;
                 this.houses = houses;
                 this.taskTypes = taskTypes;
@@ -1015,6 +1017,7 @@ export class AppLayout {
                 this.houseStatuses.set(houseStatuses);
                 this.houseAvailabilities.set(houseAvailabilities);
                 this.profiles = profiles;
+                this.tempHouseAvailabilities = tempHouseAvailabilities;
 
                 if (houses) {
                     this.updateLocationOptions();
@@ -1183,7 +1186,13 @@ export class AppLayout {
         });
 
         this.dataService.$houseAvailabilitiesUpdate.subscribe((res) => {
-            if (res && res.eventType == 'UPDATE') {
+            if(res && res.eventType == 'INSERT') {
+                if(!this.houseAvailabilities().find(ha => ha.house_availability_id == res.new.house_availability_id)){
+                    this.houseAvailabilities.update(current => [...current, res.new]);
+                    this.dataService.setHouseAvailabilites(this.houseAvailabilities());
+                }
+            }
+            else if (res && res.eventType == 'UPDATE') {
                 let houseAvailabilityIndex = this.houseAvailabilities().findIndex((ha) => ha.house_availability_id == res.new.house_availability_id);
 
                 if (houseAvailabilityIndex != -1) {
@@ -1191,6 +1200,30 @@ export class AppLayout {
                     updatedHouseAvailabilites[houseAvailabilityIndex] = res.new;
                     this.dataService.setHouseAvailabilites(updatedHouseAvailabilites);
                 }
+            } else if(res && res.eventType == 'DELETE'){
+                const filtered = this.houseAvailabilities().filter(ha => ha.house_availability_id !== res.old.house_availability_id);
+                this.houseAvailabilities.set(filtered);
+                this.dataService.setHouseAvailabilites(filtered);
+            }
+        });
+
+        this.dataService.$tempHouseAvailabilitiesUpdate.subscribe((res) => {
+            if(res && res.eventType == 'INSERT'){
+                if(!this.tempHouseAvailabilities.find(tha => tha.house_availability_id == res.new.house_availability_id)){
+                    this.tempHouseAvailabilities = [...this.tempHouseAvailabilities, res.new];
+                    this.dataService.setTempHouseAvailabilities(this.tempHouseAvailabilities);
+                }
+            } else if(res && res.eventType == 'UPDATE'){
+                const tempHouseAvailabilitiesIndex = this.tempHouseAvailabilities.findIndex(tha => tha.house_availability_id == res.new.house_availability_id);
+
+                if(tempHouseAvailabilitiesIndex != -1){
+                    const updatedTempHouseAvailabilities = [...this.tempHouseAvailabilities];
+                    updatedTempHouseAvailabilities[tempHouseAvailabilitiesIndex] = res.new;
+                    this.dataService.setTempHouseAvailabilities(updatedTempHouseAvailabilities);
+                }
+            } else if(res && res.eventType == 'DELETE'){
+                this.tempHouseAvailabilities = this.tempHouseAvailabilities.filter(tha => tha.house_availability_id != res.old.house_availability_id);
+                this.dataService.setTempHouseAvailabilities(this.tempHouseAvailabilities);
             }
         });
 
