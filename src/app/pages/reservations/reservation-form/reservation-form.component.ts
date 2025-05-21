@@ -9,6 +9,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { HouseAvailability } from '../../service/data.service';
 import { DropdownModule } from 'primeng/dropdown';
+import { DatePickerModule } from 'primeng/datepicker';
 
 @Component({
     selector: 'app-reservation-form',
@@ -25,6 +26,7 @@ import { DropdownModule } from 'primeng/dropdown';
         CalendarModule,
         DropdownModule,
         InputTextarea,
+        DatePickerModule
     ]
 })
 export class ReservationFormComponent implements OnInit, OnChanges {
@@ -80,6 +82,11 @@ export class ReservationFormComponent implements OnInit, OnChanges {
 
     ngOnInit() {
         console.log("Form initialized with dates:", this.startDate, this.endDate);
+        if(this.reservation){
+            this.reservation.arrival_time = this.reservation.arrival_time ? this.timeStringToDate(this.reservation.arrival_time) : this.timeStringToDate("16:00:00");
+            this.reservation.departure_time = this.reservation.departure_time ? this.timeStringToDate(this.reservation.departure_time) : this.timeStringToDate('10:00:00');
+        }
+
         if(this.reservation && this.reservation.color_theme != undefined){
             this.selectedColor = this.colors[this.reservation.color_theme];
         }
@@ -263,6 +270,17 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         this.updateMinEndDate();
         this.checkForDateConflicts();
     }
+
+    timeStringToDate(timeStr: any) {
+        const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+        const now = new Date();
+        now.setHours(hours, minutes, seconds || 0, 0);
+        return now;
+    }
+
+    dateToTimeString(date: Date): string {
+        return date.toTimeString().split(' ')[0]; // "HH:mm:ss"
+    }
     
     // Add this method to check if the selected dates conflict with existing reservations
     checkForDateConflicts(): void {
@@ -329,6 +347,8 @@ export class ReservationFormComponent implements OnInit, OnChanges {
             note: this.notes, // Add notes to the reservation
             color_theme: this.colors.findIndex(color => color == this.selectedColor),
             color_tint: this.reservation.color_tint || 0.5,
+            arrival_time: this.reservation.arrival_time ? this.dateToTimeString(this.reservation.arrival_time) : '16:00:00',
+            departure_time: this.reservation.departure_time ? this.dateToTimeString(this.reservation.departure_time): '10:00:00',
         } as HouseAvailability;
         this.save.emit(reservation);
         this.visibleChange.emit(false);

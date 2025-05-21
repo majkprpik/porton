@@ -128,8 +128,8 @@ export interface HouseAvailability {
   color_theme: number;
   color_tint: number;
   note?: string | null;
-  arrival_time?: string | null;
-  departure_time?: string | null;
+  arrival_time?: any;
+  departure_time?: any;
 }
 
 // Interface for house status task
@@ -790,7 +790,9 @@ export class DataService {
       'dogs_b',
       'color_theme',
       'color_tint',
-      'note'
+      'note',
+      'arrival_time',
+      'departure_time'
     ];
     
     // Create clean object with only valid fields
@@ -869,7 +871,9 @@ export class DataService {
       'dogs_b',
       'color_theme',
       'color_tint',
-      'note'
+      'note',
+      'arrival_time',
+      'departure_time'
     ];
     
     // Create clean object with only valid fields
