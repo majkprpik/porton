@@ -392,7 +392,6 @@ export class WorkGroups implements OnInit {
       if(res && res.eventType == 'UPDATE'){
         let lockedTeam = this.lockedTeams.find(lt => lt.tasks?.some(task => task.task_id == res.new.task_id));
         let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id) ?? -1;
-        let workGroup = this.workGroups.find(wg => wg.work_group_id == lockedTeam?.id);
         let updatedLockedTeam: any;
 
         if(taskIndex != -1 && lockedTeam?.tasks){
@@ -402,11 +401,6 @@ export class WorkGroups implements OnInit {
           this.lockedTeams = this.lockedTeams.map(lt =>
             lt.id === lockedTeam.id ? updatedLockedTeam : lt
           );
-        }
-
-        if(updatedLockedTeam && updatedLockedTeam?.tasks && updatedLockedTeam?.tasks.every((task: any) => this.taskService.isTaskCompleted(task)) && !workGroup.is_repair){
-          this.workGroupService.deleteWorkGroup(updatedLockedTeam.id);
-          this.lockedTeams = this.lockedTeams.filter(lt => lt.id != updatedLockedTeam.id);
         }
 
         this.workGroupService.setLockedTeams(this.lockedTeams);
