@@ -638,7 +638,7 @@ interface SpecialLocation {
 
                 .example-handle {
                     position: absolute;
-                    top: 8px;
+                    top: 12px;
                     left: 15px;
                     color: #ccc;
                     cursor: move;
@@ -648,7 +648,7 @@ interface SpecialLocation {
 
                 .close-arrivals-and-departures-window {
                     position: absolute;
-                    top: 4px;
+                    top: 8px;
                     right: 12px;
                     color: #ccc;
                     cursor: pointer;
@@ -727,62 +727,6 @@ interface SpecialLocation {
                 .close-notes-window {
                     position: absolute;
                     top: 8px;
-                    right: 12px;
-                    color: #ccc;
-                    cursor: pointer;
-                    width: 32px;
-                    height: 32px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 5px;
-                
-                    &:hover {
-                        background-color: red;
-                        cursor: pointer;
-                    
-                        i{
-                            color: white;
-                        }
-                    }
-                }
-            }
-
-            .arrivals-and-departures-window {
-                position: fixed !important;
-                top: 100px;
-                left: 100px;
-                z-index: 99999 !important;
-                width: 480px;
-                height: 340px;
-                box-sizing: border-box;
-                border: solid 1px #ccc;
-                color: rgba(0, 0, 0, 0.87);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                text-align: center;
-                background: #fff;
-                border-radius: 10px;
-                position: relative;
-                transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
-                box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
-                            0 2px 2px 0 rgba(0, 0, 0, 0.14),
-                            0 1px 5px 0 rgba(0, 0, 0, 0.12);
-
-                .example-handle {
-                    position: absolute;
-                    top: 8px;
-                    left: 15px;
-                    color: #ccc;
-                    cursor: move;
-                    width: 24px;
-                    height: 24px;
-                } 
-
-                .close-arrivals-and-departures-window {
-                    position: absolute;
-                    top: 4px;
                     right: 12px;
                     color: #ccc;
                     cursor: pointer;
