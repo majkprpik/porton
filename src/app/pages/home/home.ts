@@ -729,6 +729,14 @@ export class Home implements OnInit, OnDestroy {
                 return slot.startDate > today;
             });
 
+            const prevSlot = allSlots
+                .filter(slot => slot.endDate && slot.endDate < today) // slots that ended before today
+                .reduce((prev, curr) => {
+                    if (!prev) return curr; // first candidate
+                    // pick the one with the latest endDate before today
+                    return curr.endDate! > prev.endDate! ? curr : prev;
+                }, undefined as typeof allSlots[0] | undefined);
+
             if (nextSlot) {
                 const formatDate = (date: Date) => `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.`;
                 if (nextSlot.isGap) {
@@ -737,7 +745,13 @@ export class Home implements OnInit, OnDestroy {
                     endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
                     return `${formatDate(nextSlot.startDate)} - ${formatDate(endDatePlusOne)}`;
                 } else {
-                    return `----- - ${formatDate(nextSlot.startDate)}`;
+                    if(prevSlot?.endDate){
+                        prevSlot.endDate.setDate(prevSlot.endDate.getDate() + 1);
+                        
+                        return `${formatDate(prevSlot.endDate)} - ${formatDate(nextSlot.startDate)}`;
+                    } else {
+                        return `----- - ${formatDate(nextSlot.startDate)}`;
+                    }
                 }
             }
             return '----- - -----';
@@ -748,9 +762,7 @@ export class Home implements OnInit, OnDestroy {
         const formatDate = (date: Date) => `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.`;
 
         // Always add one day to end date for both gaps and reservations
-        const endDatePlusOne = new Date(slot.endDate!);
-        endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
-        return `${formatDate(slot.startDate)} - ${formatDate(endDatePlusOne)}`;
+        return `${formatDate(slot.startDate)} - ${formatDate(slot.endDate!)}`;
     }
 
     navigateReservation(houseId: number, direction: 'prev' | 'next') {
@@ -775,6 +787,19 @@ export class Home implements OnInit, OnDestroy {
             });
             if (nextIndex !== -1) {
                 this.currentReservationIndex.set(houseId, nextIndex);
+            }
+            return;
+        } else if (currentIndex === -1 && direction == 'prev'){
+            const prevIndex = allSlots
+                .map((slot, index) => ({ slot, index }))        // pair each slot with its index
+                .filter(({ slot }) => slot.endDate && slot.endDate < today) // only slots ended before today
+                .reduce((prev, curr) => {
+                    if (!prev) return curr;
+                    return curr.slot.endDate! > prev.slot.endDate! ? curr : prev;
+                }, undefined as { slot: typeof allSlots[0]; index: number } | undefined)?.index;
+
+            if(prevIndex !== -1 && prevIndex){
+                this.currentReservationIndex.set(houseId, prevIndex);
             }
             return;
         }
