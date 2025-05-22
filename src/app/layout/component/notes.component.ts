@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, Inject, LOCALE_ID, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotesService } from '../../pages/service/notes.service';
 import { DataService, Note } from '../../pages/service/data.service';
@@ -14,6 +14,9 @@ import { ProfileService } from '../../pages/service/profile.service';
     CommonModule,
     FormsModule,
     ButtonModule
+  ],
+  providers: [
+    { provide: LOCALE_ID, useValue: 'hr' }
   ],
   template: `
     <div class="notes-container">
@@ -144,6 +147,7 @@ export class NotesComponent {
   areNotesLoaded = false;
 
   constructor(
+    @Inject(LOCALE_ID) private locale: string,
     private notesService: NotesService,
     private dataService: DataService,
     public profileService: ProfileService,
@@ -170,11 +174,11 @@ export class NotesComponent {
 
   get selectedDateDisplay(): string {
     if (this.daysIndex === 0) {
-      return 'Today';
+      return 'Danas';
     }
 
     const date = this.selectedDate;
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    return date.toLocaleDateString(this.locale, { month: 'long', day: 'numeric', weekday: 'long' });
   }
 
   get notesForSelectedDate(): Note[] {
