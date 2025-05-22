@@ -1,11 +1,12 @@
 import { DataService, Profile, Task, WorkGroup } from './../../pages/service/data.service';
-import { Component, Input } from '@angular/core';
+import { Component, Input, SimpleChanges } from '@angular/core';
 import { TabViewModule } from 'primeng/tabview';
 import { TaskService } from '../../pages/service/task.service';
 import { HouseService } from '../../pages/service/house.service';
 import { Router } from '@angular/router';
 import { ChipModule } from 'primeng/chip';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-team-task-card',
@@ -59,9 +60,23 @@ import { CommonModule } from '@angular/common';
                             (click)="onTaskClick($event, task)"
                         >
                             <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
-                            <i class="task-icon" [class]="taskService.getTaskIcon(task.task_type_id)"></i>
+                            @if(task?.is_unscheduled){
+                              @if(isUrgentIconVisibleMap[task.task_id]){
+                                <div class="urgent-task-icon">
+                                  <i class="fa fa-exclamation-triangle"></i>
+                                </div>
+                              } @else{
+                                <div class="task-icon">
+                                  <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
+                                </div>
+                              }
+                            } @else {
+                              <div class="task-icon">
+                                <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
+                              </div>
+                            }
                             @if (!workGroup?.is_locked) {
-                                <i class="remove-icon fa fa-times"></i>
+                              <i class="remove-icon fa fa-times"></i>
                             }
                         </div>
                       }
@@ -247,6 +262,7 @@ import { CommonModule } from '@angular/common';
         display: flex;
         align-items: center;
         justify-content: center;
+        width: 15px;
   
         i {
           font-size: 0.875rem;
@@ -260,8 +276,19 @@ import { CommonModule } from '@angular/common';
             font-size: 0.875rem;
         }
       }
-    }
 
+      .urgent-task-icon{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 15px;
+
+        i {
+          color: red;
+          font-size: 0.875rem;
+        }
+      }
+    }
   `
 })
 export class TeamTaskCardComponent {
@@ -269,6 +296,10 @@ export class TeamTaskCardComponent {
   @Input() workGroupTasks: Task[] = [];
   @Input() workGroupStaff: Profile[] = [];
   @Input() isRepairGroup: boolean = false;
+  taskIcon: any;
+  isUrgentIconVisible: any;
+  isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
+  urgentIconSubscriptions: Subscription[] = [];
 
   constructor(
     private dataService: DataService,
@@ -277,6 +308,31 @@ export class TeamTaskCardComponent {
     private router: Router
   ) {
         
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['workGroupTasks'] && this.workGroupTasks.length > 0) {
+      this.setupUrgentIcons();
+    }
+  }
+
+  private setupUrgentIcons(): void {
+    // Unsubscribe from previous subscriptions
+    this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
+    this.urgentIconSubscriptions = [];
+
+    this.workGroupTasks.forEach(task => {
+      if (task.is_unscheduled) {
+        const sub = this.taskService.isUrgentIconVisible$.subscribe(visible => {
+          this.isUrgentIconVisibleMap[task.task_id] = visible;
+        });
+        this.urgentIconSubscriptions.push(sub);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
   }
 
   onTaskClick(event: MouseEvent, task: Task) {

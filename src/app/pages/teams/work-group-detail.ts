@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
 import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType, HouseAvailability, WorkGroupProfile } from '../service/data.service';
 import { ActivatedRoute } from '@angular/router';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subscription } from 'rxjs';
 import { HouseService } from '../service/house.service';
 import { TaskService } from '../service/task.service';
 import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
@@ -70,7 +70,21 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                                         <div class="task-info">
                                             <div class="house-info">
                                                 <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
-                                                <i class="task-icon" [class]="getTaskTypeIcon(task.task_type_id)"></i>
+                                                @if(task?.is_unscheduled){
+                                                    @if(isUrgentIconVisibleMap[task.task_id]){
+                                                        <div class="urgent-task-icon">
+                                                            <i class="fa fa-exclamation-triangle"></i>
+                                                        </div>
+                                                    } @else{
+                                                        <div class="task-icon">
+                                                            <i [class]="getTaskTypeIcon(task.task_type_id)"></i>
+                                                        </div>
+                                                    }
+                                                } @else{
+                                                    <div class="task-icon">
+                                                        <i [class]="getTaskTypeIcon(task.task_type_id)"></i>
+                                                    </div>
+                                                }
                                             </div>
                                             <div class="task-status">
                                                 <i class="status-icon" [class]="getTaskStatusIcon(task)"></i>
@@ -303,6 +317,37 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
             height: 100%;
             color: var(--text-color-secondary);
         }
+
+        .task-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 15px;
+                
+            i {
+              font-size: 1rem;
+            }
+        
+            .remove-icon {
+                display: none;
+                position: absolute;
+                right: 0.5rem;
+                color: var(--red-500);
+                font-size: 1rem;
+            }
+        }
+
+        .urgent-task-icon{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 15px;
+
+            i {
+              color: red;
+              font-size: 1rem;
+            }
+        }
     `
 })
 export class WorkGroupDetail implements OnInit {
@@ -320,6 +365,10 @@ export class WorkGroupDetail implements OnInit {
     tasks: any;
     houseAvailabilities: HouseAvailability[] = [];
     workGroupProfiles: WorkGroupProfile[] = [];
+    taskIcon: any;
+    isUrgentIconVisible: any;
+    isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
+    urgentIconSubscriptions: Subscription[] = [];
 
     constructor(
         private route: ActivatedRoute,
@@ -332,8 +381,8 @@ export class WorkGroupDetail implements OnInit {
       const workGroupId = Number(this.route.snapshot.paramMap.get('id'));
       
       if (!workGroupId) {
-          this.loading = false;
-          return;
+        this.loading = false;
+        return;
       }
 
       combineLatest([
@@ -386,6 +435,7 @@ export class WorkGroupDetail implements OnInit {
                 });
             }
 
+            this.setupUrgentIcons();
             this.loading = false;
           },
           error: (error) => {
@@ -480,6 +530,25 @@ export class WorkGroupDetail implements OnInit {
             }
         }
       });
+    }
+
+    private setupUrgentIcons(): void {
+      // Unsubscribe from previous
+      this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
+      this.urgentIconSubscriptions = [];
+
+      this.assignedTasks.forEach((task: any) => {
+        if (task.is_unscheduled) {
+          const sub = this.taskService.isUrgentIconVisible$.subscribe(visible => {
+            this.isUrgentIconVisibleMap[task.task_id] = visible;
+          });
+          this.urgentIconSubscriptions.push(sub);
+        }
+      });
+    }
+
+    ngOnDestroy() {
+      this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
     }
 
     getStaffFullName(staff: Profile): string {
