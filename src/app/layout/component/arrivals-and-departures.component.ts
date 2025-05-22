@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, LOCALE_ID } from '@angular/core';
 import { combineLatest, Subscription } from 'rxjs';
 import { HouseService } from '../../pages/service/house.service';
 import { DataService, House, HouseAvailability } from '../../pages/service/data.service';
@@ -12,6 +12,7 @@ import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { CommonModule } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-arrivals-and-departures',
@@ -25,102 +26,120 @@ import { CommonModule } from '@angular/common';
     CardModule,
     DividerModule,
     InputTextModule,
-    CommonModule
+    CommonModule,
+    ButtonModule,
   ],
-  providers: [ConfirmationService],
+  providers: [
+    ConfirmationService,
+    { provide: LOCALE_ID, useValue: 'hr' }
+  ],
   template: `
     <div class="arrivals-departures-container">
-      <div class="departures-side">
+      <div class="header">
         <div class="section-header">
-          <i class="pi pi-sign-out mr-2"></i>
-          <span>Odlasci</span>
+          <p-button icon="pi pi-angle-left" (click)="goToPreviousDay()"></p-button>
+          <div class="name-with-icon">
+            <i class="pi pi-sign-out mr-2"></i>
+            <span>Odlasci</span>
+          </div>
         </div>
-        <div class="section-content">
-          @if(!departures.length){
-            <div class="empty-message">
-              <i class="pi pi-info-circle"></i>
-              <span>Nema odlazaka za danas</span>
-            </div>
-          } @else{
-            @for(departure of departures; track departure.house_availability_id){
-              <div class="p-field-row">
-                <div class="status-container">
-                  <p-checkbox 
-                    inputId="departure-checkbox-{{ departure.house_number }}" 
-                    (click)="submitDepartures($event, departure)"
-                    binary="true"
-                    [(ngModel)]="departure.has_departed"
-                  ></p-checkbox>
-                </div>
-                <div class="house-container">
-                  <label for="departure-checkbox-{{ departure.house_number }}">
-                    House: <span class="house-number">{{ departure.house_number }}</span>
-                  </label>
-                </div>
-                <div class="time-container">
-                  <p-calendar 
-                    [(ngModel)]="departure.departureTimeObj" 
-                    [timeOnly]="true" 
-                    hourFormat="24"
-                    [showSeconds]="false"
-                    (onBlur)="updateDepartureTime(departure)"
-                    appendTo="body"
-                    placeholder="10:00"
-                    styleClass="w-full"
-                  ></p-calendar>
-                </div>
-              </div>
-              <p-divider *ngIf="!$last"></p-divider>
-            }
-          }
-        </div>
+
+        <span class="selected-date">
+          {{ isToday(selectedDate) ? 'Danas' : (selectedDate | date:'EEEE, d. MMMM') }}
+        </span>
+
+        <div class="section-header">
+          <div class="name-with-icon">
+            <i class="pi pi-sign-in mr-2"></i>
+            <span>Dolasci</span>
+          </div>
+          <p-button icon="pi pi-angle-right" (click)="goToNextDay()"></p-button>
+        </div>        
       </div>
 
-      <div class="vertical-divider"></div>
-
-      <div class="arrivals-side">
-        <div class="section-header">
-          <i class="pi pi-sign-in mr-2"></i>
-          <span>Dolasci</span>
-        </div>
-        <div class="section-content">
-          @if(!arrivals.length){
-            <div class="empty-message">
-              <i class="pi pi-info-circle"></i>
-              <span>Nema dolazaka za danas</span>
-            </div>
-          } @else{
-            @for(arrival of arrivals; track arrival.house_availability_id){
-              <div class="p-field-row">
-                <div class="status-container">
-                  <p-checkbox 
-                    inputId="arrival-checkbox-{{ arrival.house_number }}" 
-                    (click)="submitArrivals($event, arrival)"
-                    binary="true"
-                    [(ngModel)]="arrival.has_arrived"
-                  ></p-checkbox>
-                </div>
-                <div class="house-container">
-                  <label for="arrival-checkbox-{{ arrival.house_number }}">
-                    House: <span class="house-number">{{ arrival.house_number }}</span>
-                  </label>
-                </div>
-                <div class="time-container">
-                  <p-calendar 
-                    [(ngModel)]="arrival.arrivalTimeObj" 
-                    [timeOnly]="true" 
-                    hourFormat="24"
-                    [showSeconds]="false"
-                    (onBlur)="updateArrivalTime(arrival)"
-                    appendTo="body"
-                    placeholder="16:00"
-                    styleClass="w-full"
-                  ></p-calendar>
-                </div>
+      <div class="arrivals-and-departures">
+        <div class="departures-side">
+          <div class="section-content">
+            @if(!departures.length){
+              <div class="empty-message">
+                <i class="pi pi-info-circle"></i>
+                <span>Nema odlazaka za danas</span>
               </div>
-              <p-divider *ngIf="!$last"></p-divider>
+            } @else{
+              @for(departure of departures; track departure.house_availability_id){
+                <div class="p-field-row">
+                  <div class="status-container">
+                    <p-checkbox 
+                      inputId="departure-checkbox-{{ departure.house_number }}" 
+                      (click)="submitDepartures($event, departure)"
+                      binary="true"
+                      [(ngModel)]="departure.has_departed"
+                    ></p-checkbox>
+                  </div>
+                  <div class="house-container">
+                    <label for="departure-checkbox-{{ departure.house_number }}">
+                      House: <span class="house-number">{{ departure.house_number }}</span>
+                    </label>
+                  </div>
+                  <div class="time-container">
+                    <p-calendar 
+                      [(ngModel)]="departure.departureTimeObj" 
+                      [timeOnly]="true" 
+                      hourFormat="24"
+                      [showSeconds]="false"
+                      (onBlur)="updateDepartureTime(departure)"
+                      appendTo="body"
+                      placeholder="10:00"
+                      styleClass="w-full"
+                    ></p-calendar>
+                  </div>
+                </div>
+                <p-divider *ngIf="!$last"></p-divider>
+              }
             }
-          }
+          </div>
+        </div>
+
+        <div class="arrivals-side">
+          <div class="section-content" [ngStyle]="{'border-left': '1px solid var(--surface-border)'}">
+            @if(!arrivals.length){
+              <div class="empty-message">
+                <i class="pi pi-info-circle"></i>
+                <span>Nema dolazaka za danas</span>
+              </div>
+            } @else{
+              @for(arrival of arrivals; track arrival.house_availability_id){
+                <div class="p-field-row">
+                  <div class="status-container">
+                    <p-checkbox 
+                      inputId="arrival-checkbox-{{ arrival.house_number }}" 
+                      (click)="submitArrivals($event, arrival)"
+                      binary="true"
+                      [(ngModel)]="arrival.has_arrived"
+                    ></p-checkbox>
+                  </div>
+                  <div class="house-container">
+                    <label for="arrival-checkbox-{{ arrival.house_number }}">
+                      House: <span class="house-number">{{ arrival.house_number }}</span>
+                    </label>
+                  </div>
+                  <div class="time-container">
+                    <p-calendar 
+                      [(ngModel)]="arrival.arrivalTimeObj" 
+                      [timeOnly]="true" 
+                      hourFormat="24"
+                      [showSeconds]="false"
+                      (onBlur)="updateArrivalTime(arrival)"
+                      appendTo="body"
+                      placeholder="16:00"
+                      styleClass="w-full"
+                    ></p-calendar>
+                  </div>
+                </div>
+                <p-divider *ngIf="!$last"></p-divider>
+              }
+            }
+          </div>
         </div>
       </div>
     </div>
@@ -130,37 +149,64 @@ import { CommonModule } from '@angular/common';
   styles: `
     .arrivals-departures-container {
       display: flex;
+      flex-direction: column;
       border-radius: 8px;
       overflow: hidden;
       background-color: var(--surface-card);
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       height: 340px;
       width: 100%;
-    }
 
-    .departures-side, .arrivals-side {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+      .header{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        width: 100%;
+        background-color: var(--surface-ground);
+        height: 50px;
 
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
-      background-color: var(--surface-section);
-      border-bottom: 1px solid var(--surface-border);
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-color);
-    }
+        .selected-date{
+          width: 95px;
+        }
 
-    .section-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
+        .section-header {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 5px;
+          background-color: var(--surface-section);
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: var(--text-color);
+          gap: 15px;
+          height: 100%;
+        }
+      }
+
+      .arrivals-and-departures{
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+        border-top: 1px solid var(--surface-border);
+        height: 290px;
+
+        .departures-side, .arrivals-side {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+
+          .section-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            height: 100%;
+          }
+        }
+      }
     }
 
     .vertical-divider {
@@ -242,6 +288,7 @@ export class ArrivalsAndDeparturesComponent {
   checkedArrivalHouseIds: number[] = [];
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
+  selectedDate: Date = new Date();
 
   constructor(
     private houseService: HouseService,
@@ -307,8 +354,7 @@ export class ArrivalsAndDeparturesComponent {
   }
 
   getTodaysArrivals(){
-    const today = new Date();
-    const specificDateStr = today.toISOString().split('T')[0];
+    const specificDateStr = this.selectedDate.toISOString().split('T')[0];
 
     let todaysHouseAvailabilities = this.houseAvailabilities.filter(ha => ha.house_availability_start_date.split('T')[0] == specificDateStr);
 
@@ -327,10 +373,8 @@ export class ArrivalsAndDeparturesComponent {
   }
 
   getTodaysDepartures() {
-    const today = new Date(); 
-    today.setHours(0, 0, 0, 0);
     const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
+    yesterday.setDate(this.selectedDate.getDate() - 1);
     
     const specificDateStr = yesterday.toISOString().split('T')[0];
 
@@ -348,6 +392,27 @@ export class ArrivalsAndDeparturesComponent {
       if (a.house_number > b.house_number) return 1;
       return 0;
     });
+  }
+
+  goToPreviousDay() {
+    this.selectedDate.setDate(this.selectedDate.getDate() - 1);
+    this.selectedDate = new Date(this.selectedDate);
+    this.getTodaysArrivals();
+    this.getTodaysDepartures();
+  }
+
+  goToNextDay() {
+    this.selectedDate.setDate(this.selectedDate.getDate() + 1);
+    this.selectedDate = new Date(this.selectedDate);
+    this.getTodaysArrivals();
+    this.getTodaysDepartures();
+  }
+
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
   }
 
   getTimeObjFromTimeString(timeString: string): Date {
