@@ -32,9 +32,9 @@ import { ProfileService } from '../../pages/service/profile.service';
         <span *ngIf="!notes.length && !areNotesLoaded">Loading notes...</span>
         <span *ngIf="areNotesLoaded && notesForSelectedDate.length === 0">No notes for this day</span>
         <ng-container *ngIf="notesForSelectedDate.length > 0">
-          <span *ngFor="let note of notesForSelectedDate">
+          <div class="note-entry" *ngFor="let note of notesForSelectedDate">
             <b>{{profileService.findProfile(note.profile_id)?.first_name}} - {{note.time_sent | date:'HH:mm'}}:</b> {{note.note}}
-          </span>
+          </div>
         </ng-container>
       </div>
 
@@ -101,6 +101,15 @@ import { ProfileService } from '../../pages/service/profile.service';
         word-wrap: break-word;
         align-items: flex-start;
         background-color: white;
+
+        .note-entry {
+          display: block;
+          width: 100%;
+          text-align: left;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          white-space: normal;
+        }
       }
 
       .notes-footer{
