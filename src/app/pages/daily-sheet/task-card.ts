@@ -5,6 +5,7 @@ import { MenuItem } from 'primeng/api';
 import { Task } from '../service/data.service';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
+import { Subscription } from 'rxjs';
 
 export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed' | 'paused';
 
@@ -161,9 +162,9 @@ export class TaskCardComponent {
   @Input() canBeAssigned: boolean = false;
   @Input() isInActiveGroup: boolean = false;
   @Output() removeFromGroup = new EventEmitter<void>();
+  private urgentIconSubscription?: Subscription;
   
   isUrgentIconVisible = false;
-  private intervalId: any;
 
   menuItems: MenuItem[] = [
   ];
@@ -177,15 +178,15 @@ export class TaskCardComponent {
 
   ngOnInit(){
     if(this.task?.is_unscheduled){
-      this.taskService.isUrgentIconVisible$.subscribe((visible) => {
+      this.urgentIconSubscription = this.taskService.isUrgentIconVisible$.subscribe((visible) => {
         this.isUrgentIconVisible = visible;
       });
     }
   }
 
   ngOnDestroy(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
+    if (this.urgentIconSubscription) {
+      this.urgentIconSubscription.unsubscribe();
     }
   }
 
