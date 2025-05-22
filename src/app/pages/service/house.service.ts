@@ -40,62 +40,62 @@ export class HouseService {
     });
   }
 
-    isHouseOccupied(houseId: number): boolean {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayTime = today.getTime();
+  isHouseOccupied(houseId: number): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTime = today.getTime();
 
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(0, 0, 0, 0);
-        const yesterdayTime = yesterday.getTime();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    const yesterdayTime = yesterday.getTime();
 
-        const houseAvailabilities = this.houseAvailabilities
-            .filter((availability) => {
-                if (availability.house_id == houseId) {
-                    const start = new Date(availability.house_availability_start_date);
-                    start.setHours(0, 0, 0, 0);
+    const houseAvailabilities = this.houseAvailabilities
+        .filter((availability) => {
+            if (availability.house_id == houseId) {
+                const start = new Date(availability.house_availability_start_date);
+                start.setHours(0, 0, 0, 0);
 
-                    const end = new Date(availability.house_availability_end_date);
-                    end.setHours(23, 59, 59, 999);
+                const end = new Date(availability.house_availability_end_date);
+                end.setHours(23, 59, 59, 999);
 
-                    // Main case: today is in range
-                    const isTodayInRange = start.getTime() <= todayTime && end.getTime() >= todayTime;
+                // Main case: today is in range
+                const isTodayInRange = start.getTime() <= todayTime && end.getTime() >= todayTime;
 
-                    // Extra case: ended exactly yesterday
-                    const endedYesterday = end.getTime() >= yesterdayTime && end.getTime() < todayTime;
+                // Extra case: ended exactly yesterday
+                const endedYesterday = end.getTime() >= yesterdayTime && end.getTime() < todayTime;
 
-                    return isTodayInRange || endedYesterday;
-                }
-
-                return false;
-            })
-            .sort((a, b) => {
-                const endA = new Date(a.house_availability_end_date).getTime();
-                const endB = new Date(b.house_availability_end_date).getTime();
-                return endA - endB;
-            });
-
-        if (houseAvailabilities && houseAvailabilities.length == 1) {
-            if(this.hasArrivalForToday(houseId)){
-                return houseAvailabilities[0].has_arrived
-            } else if(this.hasDepartureForToday(houseId)){
-                return !houseAvailabilities[0].has_departed
-            } else {
-                return true;
+                return isTodayInRange || endedYesterday;
             }
-        } else if (houseAvailabilities && houseAvailabilities.length == 2) {
-            if (!houseAvailabilities[0].has_departed) {
-                return true;
-            } else if (houseAvailabilities[0].has_departed && !houseAvailabilities[1].has_arrived) {
-                return false;
-            } else if (houseAvailabilities[0].has_departed && houseAvailabilities[1].has_arrived) {
-                return true;
-            }
-        }
 
+            return false;
+        })
+        .sort((a, b) => {
+            const endA = new Date(a.house_availability_end_date).getTime();
+            const endB = new Date(b.house_availability_end_date).getTime();
+            return endA - endB;
+        });
+
+    if (houseAvailabilities && houseAvailabilities.length == 1) {
+      if(!houseAvailabilities[0].has_arrived){
         return false;
+      } else if(houseAvailabilities[0].has_arrived && !houseAvailabilities[0].has_departed){
+        return true;
+      } else if(houseAvailabilities[0].has_departed){
+        return false;
+      }
+    } else if (houseAvailabilities && houseAvailabilities.length == 2) {
+      if (!houseAvailabilities[0].has_departed) {
+        return true;
+      } else if (houseAvailabilities[0].has_departed && !houseAvailabilities[1].has_arrived) {
+        return false;
+      } else if (houseAvailabilities[0].has_departed && houseAvailabilities[1].has_arrived) {
+        return true;
+      }
     }
+
+    return false;
+  }
 
   hasCompletedTasks(houseId: number): boolean {
     const status = this.houseStatuses().find((s) => s.house_id === houseId);
@@ -170,11 +170,18 @@ export class HouseService {
     );
   }
 
-  hasArrivalForToday(houseId: number){
+  isHouseReservedToday(houseId: number){
     const today = new Date();
-    const specificDateStr = today.toISOString().split('T')[0];
+    today.setHours(0, 0, 0, 0);
 
-    return this.houseAvailabilities.find(ha => ha.house_availability_start_date.split('T')[0] == specificDateStr && ha.house_id == houseId);
+    return this.houseAvailabilities.find(ha => {
+      const start = new Date(ha.house_availability_start_date);
+      const end = new Date(ha.house_availability_end_date);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      return ha.house_id == houseId && today >= start && today <= end;
+    });
   } 
 
   hasDepartureForToday(houseId: number){
