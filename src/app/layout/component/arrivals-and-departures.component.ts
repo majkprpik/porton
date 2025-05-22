@@ -373,8 +373,8 @@ export class ArrivalsAndDeparturesComponent {
   }
 
   getTodaysDepartures() {
-    const yesterday = new Date();
-    yesterday.setDate(this.selectedDate.getDate() - 1);
+    const yesterday = new Date(this.selectedDate);
+    yesterday.setDate(yesterday.getDate() - 1);
     
     const specificDateStr = yesterday.toISOString().split('T')[0];
 
