@@ -32,13 +32,37 @@ import { ProfileService } from '../../pages/service/profile.service';
       </div>
 
       <div class="notes-content" #messagesContainer>
-        <span *ngIf="!notes.length && !areNotesLoaded">Loading notes...</span>
-        <span *ngIf="areNotesLoaded && notesForSelectedDate.length === 0">No notes for this day</span>
-        <ng-container *ngIf="notesForSelectedDate.length > 0">
-          <div class="note-entry" *ngFor="let note of notesForSelectedDate">
-            <b>{{profileService.findProfile(note.profile_id)?.first_name}} - {{note.time_sent | date:'HH:mm'}}:</b> {{note.note}}
-          </div>
-        </ng-container>
+        @if(!notes.length && !areNotesLoaded){
+          <span>Loading notes...</span>
+        }
+        @if(areNotesLoaded && notesForSelectedDate.length == 0){
+          <span>No notes for this day</span>
+        }
+        @if(notesForSelectedDate.length > 0){
+          @for(note of notesForSelectedDate; track note?.note_id || i; let i = $index) {
+            @if(i == 0 || !areDaysEqual(notesForSelectedDate[i].time_sent, notesForSelectedDate[i-1].time_sent)){
+              <div class="date-sent" [ngStyle]="{'padding-top': i != 0 ? '10px': '5px'}">
+                <div class="left-half-line"></div>
+                @if(isToday(note.time_sent)){
+                  <span>Danas</span>
+                } @else {
+                  <span>
+                    {{ note.time_sent | date: 'dd MMM YYYY' }}
+                  </span>
+                }
+                <div class="right-half-line"></div>
+              </div>
+            }
+            <div class="note-entry">
+              @if(i == 0 || notesForSelectedDate[i].profile_id != notesForSelectedDate[i-1].profile_id || hasMoreThan5MinutesPassedBetweenMessages(notesForSelectedDate[i], notesForSelectedDate[i-1])){
+                <br>
+                <b>{{profileService.findProfile(note.profile_id)?.first_name}} </b> <span [ngStyle]="{'color': 'gray'}">- {{note.time_sent | date:'HH:mm'}}</span>
+                <br>
+              }
+                {{note.note}}
+            </div>
+          }
+        }
       </div>
 
       <div class="notes-footer">
@@ -53,7 +77,7 @@ import { ProfileService } from '../../pages/service/profile.service';
   `,
   styles: `
     .notes-container{
-      height: 300px;
+      height: 350px;
       width: 500px;
       border-radius: 10px;
       border: 1px solid #e5e7eb;
@@ -104,6 +128,20 @@ import { ProfileService } from '../../pages/service/profile.service';
         word-wrap: break-word;
         align-items: flex-start;
         background-color: white;
+        scrollbar-gutter: stable;
+
+        .date-sent{
+          width: 100%;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+
+          span{
+            width: 200px;
+            color: gray;
+          }
+        }
 
         .note-entry {
           display: block;
@@ -112,6 +150,7 @@ import { ProfileService } from '../../pages/service/profile.service';
           word-wrap: break-word;
           overflow-wrap: break-word;
           white-space: normal;
+          font-size: 12px;
         }
       }
 
@@ -135,6 +174,18 @@ import { ProfileService } from '../../pages/service/profile.service';
           }
         }
       }
+    }
+
+    .left-half-line{
+      height: 1px;
+      background-color: lightgray; 
+      width: 100%;
+    }
+
+    .right-half-line{
+      height: 1px;
+      background-color: lightgray; 
+      width: 92%;
     }
   `
 })
@@ -190,8 +241,8 @@ export class NotesComponent {
     endOfDay.setHours(23, 59, 59, 999);
 
     return this.notes.filter(note => {
-      const timeSent = new Date(note.time_sent);
-      return timeSent >= startOfDay && timeSent <= endOfDay;
+      const forDate = new Date(note.for_date!);
+      return forDate >= startOfDay && forDate <= endOfDay;
     });
   }
 
@@ -204,6 +255,18 @@ export class NotesComponent {
         this.notes = notes;
         this.areNotesLoaded = areNotesLoaded;
 
+        this.notes = this.notes.map(note => {
+          if(!note.for_date){
+            return {
+              ...note, 
+              for_date: note.time_sent,
+            }
+          }
+
+          return note;
+        })
+        .sort((a, b) => new Date(a.time_sent).getTime() - new Date(b.time_sent).getTime());
+
         if(areNotesLoaded){
           setTimeout(() => {
             this.scrollToBottom();
@@ -212,15 +275,6 @@ export class NotesComponent {
       },
       error: (error) => {
         console.log(error);
-      }
-    });
-
-    this.dataService.$notesUpdate.subscribe(res => {
-      if(res && res.eventType == 'INSERT'){
-        let existingNote = this.notes.find(note => note.note_id == res.new.id);
-        if(!existingNote){
-          this.notes = [...this.notes, res.new];
-        }
       }
     });
   }
@@ -243,5 +297,34 @@ export class NotesComponent {
   private scrollToBottom(): void {
     const container = this.messagesContainer.nativeElement;
     container.scrollTop = container.scrollHeight;
+  }
+
+  areDaysEqual(date1: string | undefined, date2: string | undefined){
+    if(date1 && date2) {
+      return date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2];
+    }
+
+    return false;
+  }
+
+  hasMoreThan5MinutesPassedBetweenMessages(note1: Note, note2: Note){
+    if (!note1.time_sent || !note2.time_sent) return false;
+
+    const time1 = new Date(note1.time_sent).getTime();
+    const time2 = new Date(note2.time_sent).getTime();
+
+    const diffMs = Math.abs(time1 - time2); // difference in milliseconds
+    const fiveMinutesMs = 5 * 60 * 1000; // 5 minutes in ms
+
+    return diffMs > fiveMinutesMs;
+  }
+
+  isToday(time_sent: string | Date): boolean {
+    const date = new Date(time_sent);
+    const today = new Date();
+
+    return date.getFullYear() === today.getFullYear() &&
+           date.getMonth() === today.getMonth() &&
+           date.getDate() === today.getDate();
   }
 }

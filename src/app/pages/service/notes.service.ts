@@ -22,7 +22,8 @@ export class NotesService {
         .insert({ 
           profile_id: this.authService.getStoredUserId(),
           note: note,
-          time_sent: this.supabaseService.formatDateTimeForSupabase(date),
+          time_sent: this.supabaseService.formatDateTimeForSupabase(new Date()),
+          for_date: this.supabaseService.formatDateTimeForSupabase(date),
          })
         .select()
         .single();

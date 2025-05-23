@@ -1,4 +1,4 @@
-import { HouseAvailability, HouseStatus, Profile, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
+import { HouseAvailability, HouseStatus, Note, Profile, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
 import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -561,7 +561,7 @@ interface SpecialLocation {
                 left: 100px;
                 z-index: 99999 !important;
                 width: 500px;
-                height: 300px;
+                height: 350px;
                 padding: 10px;
                 box-sizing: border-box;
                 border: solid 1px #ccc;
@@ -691,63 +691,6 @@ interface SpecialLocation {
                 }
             }
 
-            .notes-window {
-                position: fixed !important;
-                top: 100px;
-                left: 100px;
-                z-index: 99999 !important;
-                width: 500px;
-                height: 300px;
-                padding: 10px;
-                box-sizing: border-box;
-                border: solid 1px #ccc;
-                color: rgba(0, 0, 0, 0.87);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                text-align: center;
-                background: #fff;
-                border-radius: 10px;
-                position: relative;
-                transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
-                box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
-                            0 2px 2px 0 rgba(0, 0, 0, 0.14),
-                            0 1px 5px 0 rgba(0, 0, 0, 0.12);
-
-                .example-handle {
-                    position: absolute;
-                    top: 12px;
-                    left: 15px;
-                    color: #ccc;
-                    cursor: move;
-                    width: 24px;
-                    height: 24px;
-                } 
-
-                .close-notes-window {
-                    position: absolute;
-                    top: 8px;
-                    right: 12px;
-                    color: #ccc;
-                    cursor: pointer;
-                    width: 32px;
-                    height: 32px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 5px;
-                
-                    &:hover {
-                        background-color: red;
-                        cursor: pointer;
-                    
-                        i{
-                            color: white;
-                        }
-                    }
-                }
-            }
-
             p-dialog{
                 .dialog-header {
                     display: flex;
@@ -872,6 +815,8 @@ export class AppLayout {
     houseAvailabilities = signal<HouseAvailability[]>([]);
     tempHouseAvailabilities: HouseAvailability[] = [];
 
+    notes: Note[] = [];
+
     menuItems: MenuItem[] = [
         {
             icon: 'pi pi-wrench',
@@ -948,9 +893,10 @@ export class AppLayout {
             this.dataService.houseStatuses$,
             this.dataService.houseAvailabilities$,
             this.dataService.profiles$,
-            this.dataService.tempHouseAvailabilities$
+            this.dataService.tempHouseAvailabilities$,
+            this.dataService.notes$,
         ]).subscribe({
-            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities, profiles, tempHouseAvailabilities]) => {
+            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities, profiles, tempHouseAvailabilities, notes]) => {
                 this.comments = repairTaskComments;
                 this.houses = houses;
                 this.taskTypes = taskTypes;
@@ -964,6 +910,7 @@ export class AppLayout {
                 this.houseAvailabilities.set(houseAvailabilities);
                 this.profiles = profiles;
                 this.tempHouseAvailabilities = tempHouseAvailabilities;
+                this.notes = notes;
 
                 if (houses) {
                     this.updateLocationOptions();
@@ -1197,7 +1144,16 @@ export class AppLayout {
                 this.profiles = this.profiles.filter(profile => profile.id != res.old.id);
                 this.dataService.setProfiles(this.profiles);
             }
-        })
+        });
+
+        this.dataService.$notesUpdate.subscribe(res => {
+            if(res && res.eventType == 'INSERT'){
+                if(!this.notes.find(note => note.note_id == res.new.id)){
+                    this.notes = [...this.notes, res.new];
+                    this.dataService.setNotes(this.notes);
+                }
+            }
+        });
     }
 
     async createDeletedUser(){

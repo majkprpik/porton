@@ -162,6 +162,7 @@ export interface Note {
   profile_id: string,
   note: string,
   time_sent: string,
+  for_date?: string,
 }
 
 export interface RepairTaskComment {
@@ -290,6 +291,12 @@ export class DataService {
   setProfiles(profiles: Profile[]){
     if(profiles){
       this.profilesSubject.next(profiles);
+    }
+  }
+
+  setNotes(notes: Note[]){
+    if(notes){
+      this.notesSubject.next(notes);
     }
   }
 
