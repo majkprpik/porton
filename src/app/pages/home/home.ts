@@ -36,10 +36,10 @@ interface SpecialLocation {
             <div class="legend-container">
                 <div class="legend-wrapper">
                     <div class="legend-items">
-                        <div class="legend-item"><span class="legend-color legend-green"></span> Zelena <span class="legend-desc">(slobodna, očišćena)</span></div>
-                        <div class="legend-item"><span class="legend-color legend-yellow"></span> Žuta <span class="legend-desc">(slobodna, neočišćena)</span></div>
-                        <div class="legend-item"><span class="legend-color legend-red"></span> Crvena <span class="legend-desc">(zauzeta)</span></div>
-                        <div class="legend-item"><span class="legend-color legend-lightred"></span> Svjetlocrvena <span class="legend-desc">(očišćena, dolazna)</span></div>
+                        <div class="legend-item"><span class="legend-color legend-green"></span> Slobodna (očišćena) </div>
+                        <div class="legend-item"><span class="legend-color legend-yellow"></span> Slobodna (neočišćena) </div>
+                        <div class="legend-item"><span class="legend-color legend-red"></span> Zauzeta </div>
+                        <div class="legend-item"><span class="legend-color legend-lightred"></span> Dolazna (očišćena) </div>
                     </div>
                     <div class="house-controls">
                         <div class="search-container">
