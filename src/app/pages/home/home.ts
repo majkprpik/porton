@@ -119,22 +119,29 @@ interface SpecialLocation {
                                         <span>{{ getCurrentReservationDates(house.house_id) }}</span>
                                         <i class="fa fa-chevron-right" (click)="navigateReservation(house.house_id, 'next')"></i>
                                     </div>
-                                    <div class="numbers">
-                                        <div class="number-item">
-                                            <i class="fa fa-user"></i>
-                                            <span>{{ getAdultsCount(house.house_id) }}</span>
+                                     @if(!isCurrentSlotGap(house.house_id)){
+                                        <div class="numbers">
+                                            <div class="number-item">
+                                                <span>{{ getAdultsCount(house.house_id) }}</span>
+                                                <i class="fa-solid fa-person"></i>
+                                            </div>
+                                            <span class="separator">|</span>
+                                            <div class="number-item">
+                                                <span>{{ getDogsCount(house.house_id) }}</span>
+                                                <i class="fa-solid fa-paw"></i>
+                                            </div>
+                                            <span class="separator">|</span>
+                                            <div class="number-item">
+                                                <span>{{ getBabiesCount(house.house_id) }}</span>
+                                                <i class="fa-solid fa-baby"></i>
+                                            </div>
+                                            <span class="separator">|</span>
+                                            <div class="number-item">
+                                                <span>{{ getBabyCribsCount(house.house_id) }}</span>
+                                                <i class="fa-solid fa-baby-carriage"></i>
+                                            </div>
                                         </div>
-                                        <span class="separator">|</span>
-                                        <div class="number-item">
-                                            <i class="fa fa-heart"></i>
-                                            <span>{{ getBabiesCount(house.house_id) }}</span>
-                                        </div>
-                                        <span class="separator">|</span>
-                                        <div class="number-item">
-                                            <i class="fa fa-star"></i>
-                                            <span>{{ getDogsCount(house.house_id) }}</span>
-                                        </div>
-                                    </div>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -1169,6 +1176,24 @@ export class Home implements OnInit, OnDestroy {
         const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter((s) => !s.isGap).length - 1];
         if (!reservation) return 0;
         return (reservation.dogs_d || 0) + (reservation.dogs_s || 0) + (reservation.dogs_b || 0);
+    }
+
+    getBabyCribsCount(houseId: number): number {
+        const allSlots = this.getSortedReservationsWithGaps(houseId);
+        const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
+
+        if (currentIndex === -1 || currentIndex >= allSlots.length) {
+            return 0;
+        }
+
+        const slot = allSlots[currentIndex];
+        if (slot.isGap) {
+            return 0;
+        }
+
+        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter((s) => !s.isGap).length - 1];
+        if (!reservation) return 0;
+        return reservation.cribs || 0;
     }
 
     isCurrentSlotGap(houseId: number): boolean {
