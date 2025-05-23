@@ -1148,7 +1148,7 @@ export class AppLayout {
 
         this.dataService.$notesUpdate.subscribe(res => {
             if(res && res.eventType == 'INSERT'){
-                if(!this.notes.find(note => note.note_id == res.new.id)){
+                if(!this.notes.find(note => note.id == res.new.id)){
                     this.notes = [...this.notes, res.new];
                     this.dataService.setNotes(this.notes);
                 }

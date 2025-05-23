@@ -39,7 +39,7 @@ import { ProfileService } from '../../pages/service/profile.service';
           <span>No notes for this day</span>
         }
         @if(notesForSelectedDate.length > 0){
-          @for(note of notesForSelectedDate; track note?.note_id || i; let i = $index) {
+          @for(note of notesForSelectedDate; track note?.id || i; let i = $index) {
             @if(i == 0 || !areDaysEqual(notesForSelectedDate[i].time_sent, notesForSelectedDate[i-1].time_sent)){
               <div class="date-sent" [ngStyle]="{'padding-top': i != 0 ? '10px': '5px'}">
                 <div class="left-half-line"></div>

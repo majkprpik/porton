@@ -158,7 +158,7 @@ export interface HouseStatus {
 }
 
 export interface Note {
-  note_id: string,
+  id: string,
   profile_id: string,
   note: string,
   time_sent: string,
