@@ -1075,8 +1075,17 @@ export class Home implements OnInit, OnDestroy {
         const slot = allSlots[currentIndex];
         const formatDate = (date: Date) => `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.`;
 
-        // Always add one day to end date for both gaps and reservations
-        return `${formatDate(slot.startDate)} - ${formatDate(slot.endDate!)}`;
+        if(!slot.endDate){
+            return `${formatDate(slot.startDate)} - ----- - -----`;
+        }
+
+        if (slot.isGap) {
+            return `${formatDate(slot.startDate)} - ${formatDate(slot.endDate)}`;
+        } else {
+            const nextDay = new Date(slot.endDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            return `${formatDate(slot.startDate)} - ${formatDate(nextDay)}`;
+        }
     }
 
     navigateReservation(houseId: number, direction: 'prev' | 'next') {
