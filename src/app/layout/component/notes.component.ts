@@ -27,18 +27,20 @@ import { Calendar } from 'primeng/calendar';
           <p-button [disabled]="daysIndex <= -365" (onClick)="decreaseIndex()" icon="pi pi-angle-left"></p-button>
           <div class="notes-title">
             <span id="notes">Notes</span>
-            <p-calendar 
-              [(ngModel)]="selectedDate" 
-              [showIcon]="true" 
-              dateFormat="dd/mm/yy"
-              [inputStyle]="{
-                height: '20px',
-                width: '100px',
-                'background-color': isToday(selectedDate) ? 'var(--p-green-200)' : '',
-                color: isToday(selectedDate) ? 'black' : ''
-              }"
-              (onSelect)="updateDaysIndexFromSelectedDate()"
-            ></p-calendar>
+            @if(isToday(selectedDate)){
+              <span [ngStyle]="{'height': '20px'}">Danas</span>
+            } @else {
+              <p-calendar 
+                [(ngModel)]="selectedDate" 
+                [showIcon]="true" 
+                dateFormat="dd/mm/yy"
+                [inputStyle]="{
+                  height: '20px',
+                  width: '100px',
+                }"
+                (onSelect)="updateDaysIndexFromSelectedDate()"
+              ></p-calendar>
+            }
           </div>
           <p-button [disabled]="daysIndex >= 365" (onClick)="increaseIndex()" icon="pi pi-angle-right"></p-button>
         </div>
@@ -154,7 +156,7 @@ import { Calendar } from 'primeng/calendar';
 
           span{
             width: 200px;
-            color: gray;
+            color: var(--text-color-secondary);
           }
         }
 
@@ -193,13 +195,13 @@ import { Calendar } from 'primeng/calendar';
 
     .left-half-line{
       height: 1px;
-      background-color: lightgray; 
+      background-color: var(--surface-ground); 
       width: 100%;
     }
 
     .right-half-line{
       height: 1px;
-      background-color: lightgray; 
+      background-color: var(--surface-ground); 
       width: 92%;
     }
   `
