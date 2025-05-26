@@ -1,5 +1,5 @@
 import { HouseAvailability, HouseStatus, Note, Profile, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
-import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, LOCALE_ID, Renderer2, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { combineLatest, filter, Subscription } from 'rxjs';
@@ -55,7 +55,7 @@ interface SpecialLocation {
         ChipModule,
         ConfirmDialogModule
     ],
-    providers: [MessageService, ConfirmationService],
+    providers: [MessageService, ConfirmationService, { provide: LOCALE_ID, useValue: 'hr' }],
     template: ` <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
@@ -134,9 +134,21 @@ interface SpecialLocation {
                                     <div>
                                         <span><b>Opis:</b> {{ task?.description }}</span>
                                     </div>
+
+                                    <div>
+                                        <span><b>Kreirano: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
+                                    </div>
                                 </div>
                             </p-tabPanel>
-                            <p-tabPanel header="Slike">
+                            <p-tabPanel>
+                                <ng-template pTemplate="header">
+                                    Slike 
+                                    @if(taskImages.length){
+                                        <span class="image-count">{{ taskImages.length }}</span>
+                                    }
+                                </ng-template>
+                                @if(taskImages.length){
+                                }
                                 @if (!capturedImage) {
                                     <div class="upload-a-photo">
                                         @if (!taskImages.length) {
@@ -212,6 +224,10 @@ interface SpecialLocation {
 
                                 <div>
                                     <span><b>Opis:</b> {{ task?.description }}</span>
+                                </div>
+
+                                <div>
+                                    <span><b>Kreirano: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
                                 </div>
                             </div>
                         }
@@ -463,6 +479,19 @@ interface SpecialLocation {
 
                 label {
                     color: var(--text-color);
+                }
+
+                .image-count{
+                    height: 20px;
+                    width: 20px;
+                    background-color: var(--p-tabs-tab-active-color);
+                    color: white;
+                    border-radius: 15px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 11px;
                 }
 
                 .upload-a-photo {
