@@ -1171,7 +1171,7 @@ export class AppLayout {
         }
     }
 
-    isUserDeleted(){
+    isLoggedUserDeleted(){
         return !this.profiles.find(profile => profile.id == this.authService.getStoredUserId());
     }
 
