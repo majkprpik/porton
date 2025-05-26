@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { Task, Profile, DataService, House, TaskType, TaskProgressType } from '../service/data.service';
+import { Task, Profile, DataService, House, TaskType, WorkGroup as WorkGroupObject } from '../service/data.service';
 import { TaskCardComponent } from './task-card';
 import { TagModule } from 'primeng/tag';
 import { StaffCardComponent } from './staff-card';
@@ -413,7 +413,7 @@ import { HouseService } from '../service/house.service';
   `
 })
 export class WorkGroup implements OnInit {
-  @Input() workGroup?: { work_group_id: number; is_locked: boolean };
+  @Input() workGroup?: WorkGroupObject;
   @Input() isActive: boolean = false;
   @Input() assignedTasks: Task[] = [];
   @Input() assignedStaff: Profile[] = [];
