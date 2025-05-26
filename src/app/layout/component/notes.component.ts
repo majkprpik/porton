@@ -31,7 +31,12 @@ import { Calendar } from 'primeng/calendar';
               [(ngModel)]="selectedDate" 
               [showIcon]="true" 
               dateFormat="dd/mm/yy"
-              [inputStyle]="isToday(selectedDate) ? {'background-color': 'var(--p-green-200)', 'color': 'black'} : {}"
+              [inputStyle]="{
+                height: '20px',
+                width: '100px',
+                'background-color': isToday(selectedDate) ? 'var(--p-green-200)' : '',
+                color: isToday(selectedDate) ? 'black' : ''
+              }"
               (onSelect)="updateDaysIndexFromSelectedDate()"
             ></p-calendar>
           </div>
@@ -97,7 +102,7 @@ import { Calendar } from 'primeng/calendar';
 
       .header-container{
         width: 100%;
-        height: 90px;
+        height: 60px;
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -118,7 +123,6 @@ import { Calendar } from 'primeng/calendar';
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
   
             #notes{
               font-size: 21px;

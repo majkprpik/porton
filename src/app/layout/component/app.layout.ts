@@ -581,7 +581,7 @@ interface SpecialLocation {
 
                 .example-handle {
                     position: absolute;
-                    top: 28px;
+                    top: 17px;
                     left: 15px;
                     color: #ccc;
                     cursor: move;
@@ -591,7 +591,7 @@ interface SpecialLocation {
 
                 .close-notes-window {
                     position: absolute;
-                    top: 23px;
+                    top: 13px;
                     right: 12px;
                     color: #ccc;
                     cursor: pointer;
