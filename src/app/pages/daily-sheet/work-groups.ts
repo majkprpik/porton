@@ -69,21 +69,30 @@ import { PanelModule } from 'primeng/panel';
               </div>
             } @else {
               <div class="groups-container">
-                @for (group of workGroups; track group.work_group_id) {
-                  @if(!group.is_repair){
-                    <div class="group-wrapper">
-                      <app-work-group
-                        [workGroup]="group"
-                        [isActive]="group.work_group_id == activeGroupId"
-                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
-                        [assignedStaff]="getAssignedStaff(group.work_group_id)"
-                        (groupSelected)="setActiveGroup(group.work_group_id)"
-                        (deleteClicked)="deleteWorkGroup(group.work_group_id)"
-                        (staffRemoved)="onStaffRemoved($event)"
-                        [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
-                      ></app-work-group>
+                @for (group of cleaningGroups; track group.work_group_id; let i = $index) {
+                  @if(i == 0 || !areDaysEqual(cleaningGroups[i].created_at, cleaningGroups[i-1].created_at)){
+                    <div class="date-separator">
+                      <div class="left-half-line"></div>
+                      @if(isToday(group.created_at)){
+                        <span>Danas</span>
+                      } @else {
+                        <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
+                      }
+                      <div class="right-half-line"></div>
                     </div>
                   }
+                  <div class="group-wrapper">
+                    <app-work-group
+                      [workGroup]="group"
+                      [isActive]="group.work_group_id == activeGroupId"
+                      [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                      [assignedStaff]="getAssignedStaff(group.work_group_id)"
+                      (groupSelected)="setActiveGroup(group.work_group_id)"
+                      (deleteClicked)="deleteWorkGroup(group.work_group_id)"
+                      (staffRemoved)="onStaffRemoved($event)"
+                      [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
+                    ></app-work-group>
+                  </div>
                 }
               </div>
             }
@@ -118,21 +127,30 @@ import { PanelModule } from 'primeng/panel';
               </div>
             } @else {
               <div class="groups-container">
-                @for (group of workGroups; track group.work_group_id) {
-                  @if(group.is_repair){
-                    <div class="group-wrapper">
-                      <app-work-group
-                        [workGroup]="group"
-                        [isActive]="group.work_group_id == activeGroupId"
-                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
-                        [assignedStaff]="getAssignedStaff(group.work_group_id)"
-                        (groupSelected)="setActiveGroup(group.work_group_id)"
-                        (deleteClicked)="deleteWorkGroup(group.work_group_id)"
-                        (staffRemoved)="onStaffRemoved($event)"
-                        [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
-                      ></app-work-group>
+                @for (group of repairGroups; track group.work_group_id; let i = $index) {
+                  @if(i == 0 || !areDaysEqual(repairGroups[i].created_at, repairGroups[i-1].created_at)){
+                    <div class="date-separator">
+                      <div class="left-half-line"></div>
+                      @if(isToday(group.created_at)){
+                        <span>Danas</span>
+                      } @else {
+                        <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
+                      }
+                      <div class="right-half-line"></div>
                     </div>
                   }
+                  <div class="group-wrapper">
+                    <app-work-group
+                      [workGroup]="group"
+                      [isActive]="group.work_group_id == activeGroupId"
+                      [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                      [assignedStaff]="getAssignedStaff(group.work_group_id)"
+                      (groupSelected)="setActiveGroup(group.work_group_id)"
+                      (deleteClicked)="deleteWorkGroup(group.work_group_id)"
+                      (staffRemoved)="onStaffRemoved($event)"
+                      [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
+                    ></app-work-group>
+                  </div>
                 }
               </div>
             }
@@ -273,6 +291,37 @@ import { PanelModule } from 'primeng/panel';
       display: flex;
       flex-direction: column;
       gap: 1rem;
+
+      .date-separator{
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        .left-half-line{
+          height: 1px;
+          background-color: var(--surface-ground); 
+          width: 100%;
+        }
+
+        span{
+          width: 210px;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          box-sizing: border-box;
+          padding: 0px 10px 0 10px;
+          color: var(--text-color-secondary);
+        }
+
+        .right-half-line{
+          height: 1px;
+          background-color: var(--surface-ground); 
+          width: 100%;
+        }
+      }
     }
 
     .group-wrapper {
@@ -312,6 +361,18 @@ export class WorkGroups implements OnInit {
   isRepairsCollapsed: boolean = true;
   isCleaningCollapsed: boolean = false;
   tasksToRemove: Task[] = [];
+
+  get cleaningGroups() {
+    return this.workGroups
+      .filter(g => !g.is_repair)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  get repairGroups() {
+    return this.workGroups
+      .filter(g => g.is_repair)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
 
   constructor(
     private dataService: DataService,
@@ -639,6 +700,11 @@ export class WorkGroups implements OnInit {
       window.location.reload();
     }
   }
+
+  areDaysEqual(date1: string, date2: string){
+    return date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2];
+  }
+
   is3DaysOld(workGroup: WorkGroupObject): boolean {
     const createdAt = new Date(workGroup.created_at);
     const threeDaysAgo = new Date();
@@ -648,4 +714,12 @@ export class WorkGroups implements OnInit {
     return createdAt < threeDaysAgo;
   }
   
+  isToday(time_sent: string | Date): boolean {
+    const date = new Date(time_sent);
+    const today = new Date();
+
+    return date.getFullYear() === today.getFullYear() &&
+           date.getMonth() === today.getMonth() &&
+           date.getDate() === today.getDate();
+  }
 } 
