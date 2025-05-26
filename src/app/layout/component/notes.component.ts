@@ -6,6 +6,7 @@ import { DataService, Note } from '../../pages/service/data.service';
 import { combineLatest } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ProfileService } from '../../pages/service/profile.service';
+import { Calendar } from 'primeng/calendar';
 
 @Component({
   selector: 'app-notes',
@@ -13,7 +14,8 @@ import { ProfileService } from '../../pages/service/profile.service';
   imports: [
     CommonModule,
     FormsModule,
-    ButtonModule
+    ButtonModule,
+    Calendar,
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'hr' }
@@ -22,12 +24,18 @@ import { ProfileService } from '../../pages/service/profile.service';
     <div class="notes-container">
       <div class="header-container">
         <div class="notes-header">
-          <p-button [disabled]="daysIndex >= 365" (onClick)="increaseIndex()" icon="pi pi-angle-left"></p-button>
+          <p-button [disabled]="daysIndex <= -365" (onClick)="decreaseIndex()" icon="pi pi-angle-left"></p-button>
           <div class="notes-title">
             <span id="notes">Notes</span>
-            <span id="days">{{ selectedDateDisplay }}</span>
+            <p-calendar 
+              [(ngModel)]="selectedDate" 
+              [showIcon]="true" 
+              dateFormat="dd/mm/yy"
+              [inputStyle]="isToday(selectedDate) ? {'background-color': 'var(--p-green-200)', 'color': 'black'} : {}"
+              (onSelect)="updateDaysIndexFromSelectedDate()"
+            ></p-calendar>
           </div>
-          <p-button [disabled]="daysIndex <= -365" (onClick)="decreaseIndex()" icon="pi pi-angle-right"></p-button>
+          <p-button [disabled]="daysIndex >= 365" (onClick)="increaseIndex()" icon="pi pi-angle-right"></p-button>
         </div>
       </div>
 
@@ -44,7 +52,9 @@ import { ProfileService } from '../../pages/service/profile.service';
               <div class="date-sent" [ngStyle]="{'padding-top': i != 0 ? '10px': '5px'}">
                 <div class="left-half-line"></div>
                 @if(isToday(note.time_sent)){
-                  <span>Danas</span>
+                  <span>
+                    Danas
+                  </span>
                 } @else {
                   <span>
                     {{ note.time_sent | date: 'dd MMM YYYY' }}
@@ -70,7 +80,7 @@ import { ProfileService } from '../../pages/service/profile.service';
           placeholder="Add a note..."
           [(ngModel)]="note"
           (keydown.enter)="addNote($event)"
-          [disabled]="daysIndex > 0"
+          [disabled]="daysIndex < 0"
         ></textarea>
       </div>
     </div>
@@ -87,7 +97,7 @@ import { ProfileService } from '../../pages/service/profile.service';
 
       .header-container{
         width: 100%;
-        height: 50px;
+        height: 90px;
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -108,6 +118,7 @@ import { ProfileService } from '../../pages/service/profile.service';
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 5px;
   
             #notes{
               font-size: 21px;
@@ -196,6 +207,7 @@ export class NotesComponent {
   notes: Note[] = [];
   daysIndex = 0; 
   areNotesLoaded = false;
+  selectedDate: Date = new Date();
 
   constructor(
     @Inject(LOCALE_ID) private locale: string,
@@ -207,20 +219,15 @@ export class NotesComponent {
   increaseIndex(){
     if(this.daysIndex < 365) {
       this.daysIndex++;
+      this.updateSelectedDate();
     }
   }
 
   decreaseIndex(){
     if(this.daysIndex > -365) {
       this.daysIndex--;
+      this.updateSelectedDate();
     }
-  }
-
-  get selectedDate(): Date {
-    const now = new Date();
-    const selected = new Date(now);
-    selected.setDate(now.getDate() - this.daysIndex);
-    return selected;
   }
 
   get selectedDateDisplay(): string {
@@ -277,13 +284,36 @@ export class NotesComponent {
         console.log(error);
       }
     });
+
+    this.updateSelectedDate();
+  }
+
+  updateSelectedDate() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const newSelected = new Date(today);
+    newSelected.setDate(today.getDate() + this.daysIndex);
+
+    this.selectedDate = newSelected;
+  }
+
+  updateDaysIndexFromSelectedDate() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const selected = new Date(this.selectedDate);
+    selected.setHours(0, 0, 0, 0);
+
+    const diffTime = selected.getTime() - today.getTime();
+    this.daysIndex = Math.round(diffTime / (1000 * 60 * 60 * 24));
   }
 
   async addNote(event: any){
     event.preventDefault();
     this.note = this.note.trim();
 
-    if(this.note && this.daysIndex <= 0){    
+    if(this.note && this.daysIndex >= 0){    
       const now = new Date();
       const selectedDate = new Date(this.selectedDate);
 
