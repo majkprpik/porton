@@ -37,7 +37,7 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
                         </div>
                     } @else {
                         <div class="teams-grid">
-                            @for (group of workGroups; track group.work_group_id) {
+                            @for (group of workGroups; track trackByGroupId($index, group)) {
                                 @if (!group.is_repair){
                                    <app-team-task-card
                                         [workGroup]="group"
@@ -61,7 +61,7 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
                         </div>
                     } @else {
                         <div class="teams-grid">
-                            @for (group of workGroups; track group.work_group_id) {
+                            @for (group of workGroups; track trackByGroupId($index, group)) {
                                 @if (group.is_repair){
                                     <app-team-task-card
                                         [workGroup]="group"
@@ -284,5 +284,9 @@ export class Teams implements OnInit {
         } catch (error) {
           console.error('Error fetching images:', error);
         }
-      }
+    }
+
+    trackByGroupId(index: number, group: { work_group_id: number }): number {
+        return group.work_group_id;
+    }
 } 

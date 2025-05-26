@@ -125,7 +125,7 @@ import { HouseService } from '../service/house.service';
       [draggable]="false"
     >
       <div cdkDropList class="sorted-tasks-list" (cdkDropListDropped)="drop($event)">
-        @for (task of assignedTasks; track task;) {
+        @for (task of assignedTasks; track trackByTaskId($index, task)) {
           <div class="task-box-container">
             <div class="task-index">
               ({{$index + 1}})
@@ -908,5 +908,9 @@ export class WorkGroup implements OnInit {
     }
 
     moveItemInArray(this.assignedTasks, event.previousIndex, event.currentIndex);
+  }
+
+  trackByTaskId(index: number, task: Task): number {
+    return task.task_id;
   }
 } 

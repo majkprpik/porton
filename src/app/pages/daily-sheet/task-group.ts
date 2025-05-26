@@ -29,7 +29,7 @@ import { HouseService } from '../service/house.service';
         </div>
       </ng-template>
       <div class="task-grid">
-        @for (task of filteredTasks; track task.task_id) {
+        @for (task of filteredTasks; track trackByTask($index, task)) {
           <app-task-card 
             [houseNumber]="houseService.getHouseNumber(task.house_id)"
             [houseName]="houseService.getHouseName(task.house_id)"
@@ -175,5 +175,9 @@ export class TaskGroupComponent implements OnInit {
 
   isTaskAvailable(task: Task): boolean {
     return !this.workGroupTasks.some(wgt => wgt.task_id === task.task_id);
+  }
+
+  trackByTask(index: number, task: Task) {
+    return task.task_id + '_' + index;  // combine id with index to guarantee uniqueness
   }
 } 
