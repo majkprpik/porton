@@ -1,3 +1,4 @@
+import { TaskProgressType, WorkGroup as WorkGroupObject, WorkGroupProfile, WorkGroupTask } from './../service/data.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -5,7 +6,7 @@ import { WorkGroup } from './work-group';
 import { DataService, Task, Profile, LockedTeam } from '../service/data.service';
 import { combineLatest, from, of } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, take } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { WorkGroupService } from '../service/work-group.service';
 import { TaskService } from '../service/task.service';
@@ -300,7 +301,7 @@ import { PanelModule } from 'primeng/panel';
 })
 export class WorkGroups implements OnInit {
   loading = true;
-  workGroups: any[] = [];
+  workGroups: WorkGroupObject[] = [];
   activeGroupId?: number;
   workGroupTasks: { [key: number]: Task[] } = {};
   workGroupStaff: { [key: number]: Profile[] } = {};
@@ -329,58 +330,11 @@ export class WorkGroups implements OnInit {
       this.dataService.profiles$,
       this.dataService.taskProgressTypes$
     ]).subscribe({
-      next: ([activeGroupId, workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, taskProgressTypes]) => {
-        this.activeGroupId = activeGroupId;
-        this.workGroups = workGroups;
-        this.allTasks = tasks;
-        this.taskProgressTypes = taskProgressTypes;
-        this.wgt = workGroupTasks;
-        
-        // Map work group tasks
-        this.workGroupTasks = {};
-        workGroupTasks.forEach(workGroupTask => {
-          if (!this.workGroupTasks[workGroupTask.work_group_id]) {
-            this.workGroupTasks[workGroupTask.work_group_id] = [];
-          }
-          const task = tasks.find(t => t.task_id === workGroupTask.task_id);
-          if (task) {
-            const taskCopy = { ...task };
-            if(task.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
-              taskCopy.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
-            }
-            this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], taskCopy];
-          }
+      next: (data) => {
+        this.handleDataAsync(data).catch(error => {
+          console.error('Error processing work groups data:', error);
+          this.loading = false;
         });
-
-        // Map work group staff
-        this.workGroupStaff = {};
-        workGroupProfiles.forEach(assignment => {
-          if (!this.workGroupStaff[assignment.work_group_id]) {
-            this.workGroupStaff[assignment.work_group_id] = [];
-          }
-          const profile = profiles.find(p => p.id === assignment.profile_id);
-          if (profile) {
-            this.workGroupStaff[assignment.work_group_id] = [...this.workGroupStaff[assignment.work_group_id], profile];
-          }
-        });
-
-        this.lockedTeams = [];
-        
-        if(workGroups){
-          this.workGroups.forEach(workGroup => {
-            this.lockedTeams.push({
-              id: workGroup.work_group_id.toString(),
-              name: "Team " + workGroup.work_group_id.toString(),
-              members: this.workGroupStaff[workGroup.work_group_id],
-              tasks: this.workGroupTasks[workGroup.work_group_id],
-              homes: [],
-              isLocked: workGroup.is_locked,       
-            });
-          });
-          this.workGroupService.setLockedTeams(this.lockedTeams);
-        }
-
-        this.loading = false;
       },
       error: (error) => {
         console.error('Error loading work groups data:', error);
@@ -441,6 +395,82 @@ export class WorkGroups implements OnInit {
         this.tasksToRemove = this.tasksToRemove.filter(ttrm => ttrm.task_id != res.task_id);
       }
     })
+  }
+
+  private async handleDataAsync([
+    activeGroupId,
+    workGroups,
+    workGroupTasks,
+    tasks,
+    workGroupProfiles,
+    profiles,
+    taskProgressTypes
+  ]: [
+    number | undefined,
+    WorkGroupObject[],
+    WorkGroupTask[],
+    Task[],
+    WorkGroupProfile[],
+    Profile[],
+    TaskProgressType[]
+  ]) {
+    this.activeGroupId = activeGroupId;
+    this.workGroups = workGroups;
+    this.allTasks = tasks;
+    this.taskProgressTypes = taskProgressTypes;
+    this.wgt = workGroupTasks;
+
+    // Map work group tasks
+    this.workGroupTasks = {};
+    workGroupTasks.forEach(workGroupTask => {
+      if (!this.workGroupTasks[workGroupTask.work_group_id]) {
+        this.workGroupTasks[workGroupTask.work_group_id] = [];
+      }
+      const task = tasks.find(t => t.task_id === workGroupTask.task_id);
+      if (task) {
+        const taskCopy = { ...task };
+        const notAssignedType = this.taskProgressTypes.find((type: any) => type.task_progress_type_name === "Nije dodijeljeno");
+        const assignedType = this.taskProgressTypes.find((type: any) => type.task_progress_type_name === "Dodijeljeno");
+        if (task.task_progress_type_id === notAssignedType?.task_progress_type_id) {
+          taskCopy.task_progress_type_id = assignedType?.task_progress_type_id;
+        }
+        this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], taskCopy];
+      }
+    });
+
+    // Map work group staff
+    this.workGroupStaff = {};
+    workGroupProfiles.forEach(assignment => {
+      if (!this.workGroupStaff[assignment.work_group_id]) {
+        this.workGroupStaff[assignment.work_group_id] = [];
+      }
+      const profile = profiles.find(p => p.id === assignment.profile_id);
+      if (profile) {
+        this.workGroupStaff[assignment.work_group_id] = [...this.workGroupStaff[assignment.work_group_id], profile];
+      }
+    });
+
+    this.lockedTeams = [];
+
+    if(workGroups){
+      for (const workGroup of this.workGroups) {
+        if (this.is3DaysOld(workGroup)) {
+          await this.workGroupService.deleteWorkGroup(workGroup.work_group_id.toString());
+        } else {
+          this.lockedTeams.push({
+            id: workGroup.work_group_id.toString(),
+            name: "Team " + workGroup.work_group_id.toString(),
+            members: this.workGroupStaff[workGroup.work_group_id],
+            tasks: this.workGroupTasks[workGroup.work_group_id],
+            homes: [],
+            isLocked: workGroup.is_locked,
+          });
+        }
+      }
+      this.workGroupService.setLockedTeams(this.lockedTeams);
+    }
+
+    this.loading = false;
   }
 
   getAssignedTasks(workGroupId: number): Task[] {
@@ -609,4 +639,13 @@ export class WorkGroups implements OnInit {
       window.location.reload();
     }
   }
+  is3DaysOld(workGroup: WorkGroupObject): boolean {
+    const createdAt = new Date(workGroup.created_at);
+    const threeDaysAgo = new Date();
+
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    return createdAt < threeDaysAgo;
+  }
+  
 } 
