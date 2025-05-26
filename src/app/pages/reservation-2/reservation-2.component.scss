@@ -211,11 +211,15 @@
         &.saturday-column {
             background-color: #f8f8f8;
             font-style: italic;
+            color: var(--p-red-400);
+            font-size: 15px;
         }
         
         &.sunday-column {
             background-color: #f8f8f8;
             font-style: italic;
+            color: var(--p-red-500);
+            font-size: 15px;
         }
     }
     
