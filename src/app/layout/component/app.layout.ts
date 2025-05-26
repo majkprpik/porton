@@ -1364,10 +1364,6 @@ export class AppLayout {
                         this.locationType = 'house';
                         this.faultDescription = '';
                         this.faultReportVisible = false;
-
-                        // Refresh tasks list
-                        this.tasks = [...this.tasks, result];
-                        this.dataService.setTasks(this.tasks);
                     } catch (imagesSaveError) {
                         console.error('Error saving images: ', imagesSaveError);
                     }
