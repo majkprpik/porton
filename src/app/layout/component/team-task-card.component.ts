@@ -24,8 +24,6 @@ import { Subscription } from 'rxjs';
           </span>
       </div>
       <div class="team-content">
-          <p>Kreirano: {{workGroup?.created_at | date:'dd.MM.yyyy'}}</p>
-          
           <div class="section">
             <h4>Članovi tima</h4>
             @if (workGroupStaff.length === 0) {
