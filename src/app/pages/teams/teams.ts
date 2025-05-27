@@ -8,6 +8,8 @@ import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
 import { TabViewModule } from 'primeng/tabview';
 import { TeamTaskCardComponent } from '../../layout/component/team-task-card.component';
+import { PanelModule } from 'primeng/panel';
+import { WorkGroupService } from '../service/work-group.service';
 
 @Component({
     selector: 'app-teams',
@@ -19,7 +21,8 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
         ChipModule, 
         CardModule,
         TabViewModule,
-        TeamTaskCardComponent
+        TeamTaskCardComponent,
+        PanelModule,
     ],
     template: `
         @if (loading) {
@@ -28,41 +31,82 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
                 <span>Učitavanje timova...</span>
             </div>
         } @else {
-            <div class="teams-container">
-                <h2>Čišćenje</h2>
-                <div class="teams-list">
-                    @if (workGroups.length === 0) {
-                        <div class="empty-state">
-                            <p>Nema kreiranih timova</p>
-                        </div>
-                    } @else {
-                        <div class="teams-grid">
-                            @for (group of workGroups; track trackByGroupId($index, group)) {
-                                @if (!group.is_repair){
-                                   <app-team-task-card
+            <p-panel
+                [toggleable]="true"
+                class="cleaning-group"
+                [(collapsed)]="isCleaningCollapsed"
+            >
+                <ng-template pTemplate="header" class="work-group-container-header">
+                    <div class="left-side">
+                    <h3 class="group-name">Čišćenje</h3>
+                    <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroups)}}</span>
+                    </div>
+                </ng-template>
+                <div class="teams-container">
+                    <div class="teams-list">
+                        @if (cleaningGroups.length === 0) {
+                            <div class="empty-state">
+                                <p>Nema kreiranih radnih grupa za čišćenje</p>
+                            </div>
+                        } @else {
+                            <div class="teams-grid">
+                                @for (group of cleaningGroups; track trackByGroupId($index, group); let i = $index) {
+                                    @if(i == 0 || !areDaysEqual(cleaningGroups[i].created_at, cleaningGroups[i-1].created_at)){
+                                        <div class="date-separator">
+                                            <div class="left-half-line"></div>
+                                            @if(isToday(group.created_at)){
+                                                <span>Danas</span>
+                                            } @else {
+                                                <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
+                                            }
+                                            <div class="right-half-line"></div>
+                                        </div>
+                                    }
+                                    <app-team-task-card
                                         [workGroup]="group"
                                         [workGroupTasks]="getAssignedTasks(group.work_group_id)"
                                         [workGroupStaff]="getAssignedStaff(group.work_group_id)"
                                         [isRepairGroup]="group.is_repair"
-                                   ></app-team-task-card> 
+                                    ></app-team-task-card> 
                                 }
-                            }
-                        </div>
-                    }
+                            </div>
+                        }
+                    </div>
                 </div>
-            </div>
+            </p-panel>
 
-            <div class="teams-container">
-                <h2>Popravci</h2>
-                <div class="teams-list">
-                    @if (workGroups.length === 0) {
-                        <div class="empty-state">
-                            <p>Nema kreiranih timova</p>
-                        </div>
-                    } @else {
-                        <div class="teams-grid">
-                            @for (group of workGroups; track trackByGroupId($index, group)) {
-                                @if (group.is_repair){
+            <p-panel
+                [toggleable]="true"
+                class="cleaning-group"
+                [(collapsed)]="isRepairsCollapsed"
+            >
+                <ng-template pTemplate="header" class="work-group-container-header">
+                    <div class="left-side">
+                    <h3 class="group-name">Popravci</h3>
+                    <span class="work-groups-count">{{workGroupService.getNumberOfRepairWorkGroups(workGroups)}}</span>
+                    </div>
+                </ng-template>
+
+                <div class="teams-container">
+                    <div class="teams-list">
+                        @if (repairGroups.length === 0) {
+                            <div class="empty-state">
+                                <p>Nema kreiranih radnih grupa za popravke</p>
+                            </div>
+                        } @else {
+                            <div class="teams-grid">
+                                @for (group of repairGroups; track trackByGroupId($index, group); let i = $index) {
+                                    @if(i == 0 || !areDaysEqual(repairGroups[i].created_at, repairGroups[i-1].created_at)){
+                                        <div class="date-separator">
+                                            <div class="left-half-line"></div>
+                                            @if(isToday(group.created_at)){
+                                                <span>Danas</span>
+                                            } @else {
+                                                <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
+                                            }
+                                            <div class="right-half-line"></div>
+                                        </div>
+                                    }
                                     <app-team-task-card
                                         [workGroup]="group"
                                         [workGroupTasks]="getAssignedTasks(group.work_group_id)"
@@ -70,14 +114,83 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
                                         [isRepairGroup]="group.is_repair"
                                    ></app-team-task-card> 
                                 }
-                            }
-                        </div>
-                    }
+                            </div>
+                        }
+                    </div>
                 </div>
-            </div>
+            </p-panel>
         }
     `,
     styles: `
+        :host ::ng-deep {
+            .cleaning-group {
+                .left-side{
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 10px;
+                    padding-top: 10px;
+                    padding-bottom: 10px;
+                }
+
+                .work-groups-count {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 1.75rem;
+                    height: 1.75rem;
+                    padding: 0 0.5rem;
+                    background: var(--primary-color);
+                    color: var(--primary-color-text);
+                    border-radius: 1rem;
+                    font-size: 0.9rem;
+                    font-weight: 700;
+                }
+
+                .work-group-header-actions{
+                    width: 100%;
+                    margin-bottom: 1rem;
+                }
+
+                .p-panel {
+                    background: transparent;
+                    margin-bottom: 10px;
+                }
+
+                .p-panel-header {
+                    padding: 0.75rem 1.25rem;
+                    border: none;
+                    border-radius: 6px;
+                    background: var(--surface-ground);
+                    height: 65px;
+                    
+                    h3{
+                        margin: 0;
+                    }
+                }
+
+                .p-panel-content {
+                    padding: 0;
+                    border: none;
+                    background: transparent !important;
+                }
+
+                .p-panel-icons {
+                    order: 2;
+                }
+            }
+
+            .group-icon {
+                font-size: 1.2rem;
+                color: var(--text-color);
+            }
+
+            .group-name {
+                font-weight: 500;
+                color: var(--text-color);
+            }
+        }
+
         .loading-container {
             display: flex;
             flex-direction: column;
@@ -91,11 +204,11 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
         .teams-container {
             display: flex;
             flex-direction: column;
-            min-height: 500px;
+            min-height: 320px;
             padding: 1rem;
             background-color: var(--surface-card);
             border-radius: 8px;
-            margin-bottom: 15px;
+            padding-bottom: 30px;
         }
 
         .teams-list {
@@ -111,6 +224,37 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
             margin-left: 10px;
             margin-top: 15px;
             align-items: stretch;
+
+            .date-separator{
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                
+                .left-half-line{
+                    height: 1px;
+                    background-color: var(--surface-ground); 
+                    width: 100%;
+                }
+
+                span{
+                    width: 210px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: center;
+                    box-sizing: border-box;
+                    padding: 0px 10px 0 10px;
+                    color: var(--text-color-secondary);
+                }
+
+                .right-half-line{
+                    height: 1px;
+                    background-color: var(--surface-ground); 
+                    width: 100%;
+                }
+            }
         }
 
         .empty-state {
@@ -142,9 +286,27 @@ export class Teams implements OnInit {
     allWorkGroupTasks: WorkGroupTask[] = [];
     taskImages: any[] = [];
 
+    isCleaningCollapsed = false;
+    isRepairsCollapsed = false;
+
+    get cleaningGroups() {
+        return this.workGroups
+            .filter(g => !g.is_repair)
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    get repairGroups() {
+        return this.workGroups
+            .filter(g => g.is_repair)
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
     constructor(
         private dataService: DataService,
-    ) {}
+        public workGroupService: WorkGroupService,
+    ) {
+
+    }
 
     ngOnInit() {
         // Use combineLatest to wait for all required data
@@ -288,5 +450,18 @@ export class Teams implements OnInit {
 
     trackByGroupId(index: number, group: { work_group_id: number }): number {
         return group.work_group_id;
+    }
+
+    areDaysEqual(date1: string, date2: string){
+        return date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2];
+    }
+
+    isToday(time_sent: string | Date): boolean {
+        const date = new Date(time_sent);
+        const today = new Date();
+
+        return date.getFullYear() === today.getFullYear() &&
+               date.getMonth() === today.getMonth() &&
+               date.getDate() === today.getDate();
     }
 } 
