@@ -577,7 +577,7 @@ export class WorkGroupDetail implements OnInit {
         if (this.taskService.isTaskCompleted(task)) {
             return 'fa fa-check-circle';
         } else if (this.taskService.isTaskInProgress(task)) {
-            return 'fa fa-spinner';
+            return 'fa fa-sync fa-spin';
         } else if (this.taskService.isTaskPaused(task)) {
             return 'fa fa-pause-circle';
         } else if (this.taskService.isTaskAssigned(task)) {
