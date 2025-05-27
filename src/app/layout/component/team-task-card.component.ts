@@ -90,7 +90,7 @@ import { Subscription } from 'rxjs';
     .team-card {
         border-radius: 4px;
         width: 350px;
-        height: 350px;
+        height: 100%;
         transition: transform 0.3s ease;
         cursor: pointer;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);

@@ -89,27 +89,28 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
         }
 
         .teams-container {
+            display: flex;
+            flex-direction: column;
             min-height: 500px;
             padding: 1rem;
             background-color: var(--surface-card);
             border-radius: 8px;
-            display: flex;
-            flex-direction: column;
             margin-bottom: 15px;
         }
 
         .teams-list {
             flex: 1;
-            overflow-y: auto;
             padding-right: 0.5rem;
         }
 
         .teams-grid {
             display: flex;
             flex-direction: row;
+            flex-wrap: wrap;
             gap: 20px;
             margin-left: 10px;
             margin-top: 15px;
+            align-items: stretch;
         }
 
         .empty-state {
