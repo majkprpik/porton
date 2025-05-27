@@ -48,56 +48,45 @@ import { Subscription } from 'rxjs';
             @if (workGroupTasks.length === 0) {
                 <p class="empty-section">Nema dodijeljenih zadataka</p>
             } @else {
-                <div class="tasks-list">
-                    @for (task of workGroupTasks; track task.task_id) {
-                        <div 
-                            class="task-card" 
-                            [class.assigned]="taskService.isTaskAssigned(task)"
-                            [class.not-assigned]="taskService.isTaskNotAssigned(task)"
-                            [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
-                            [class.completed]="taskService.isTaskCompleted(task)"
-                            [class.removable]="!workGroup?.is_locked" 
-                            (click)="onTaskClick($event, task)"
-                        >
-                            <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
-                            @if(task?.is_unscheduled){
-                              @if(isUrgentIconVisibleMap[task.task_id]){
-                                <div class="urgent-task-icon">
-                                  <i class="fa fa-exclamation-triangle"></i>
-                                </div>
-                              } @else{
-                                <div class="task-icon">
-                                  <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
-                                </div>
-                              }
-                            } @else {
-                              <div class="task-icon">
-                                <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
-                              </div>
-                            }
-                            @if (!workGroup?.is_locked) {
-                              <i class="remove-icon fa fa-times"></i>
-                            }
+              <div class="tasks-list">
+                @for (task of workGroupTasks; track task.task_id) {
+                    <div 
+                      class="task-card" 
+                      [class.assigned]="taskService.isTaskAssigned(task)"
+                      [class.not-assigned]="taskService.isTaskNotAssigned(task)"
+                      [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
+                      [class.completed]="taskService.isTaskCompleted(task)"
+                      [class.removable]="!workGroup?.is_locked" 
+                      (click)="onTaskClick($event, task)"
+                    >
+                      <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
+                      @if(task?.is_unscheduled){
+                        @if(isUrgentIconVisibleMap[task.task_id]){
+                          <div class="urgent-task-icon">
+                            <i class="fa fa-exclamation-triangle"></i>
+                          </div>
+                        } @else{
+                          <div class="task-icon">
+                            <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
+                          </div>
+                        }
+                      } @else {
+                        <div class="task-icon">
+                          <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
                         </div>
                       }
-                </div>
+                      @if (!workGroup?.is_locked) {
+                        <i class="remove-icon fa fa-times"></i>
+                      }
+                    </div>
+                  }
+              </div>
             }
           </div>
       </div>
     </div>
   `,
   styles: `
-    // ::ng-deep .p-tablist-tab-list {
-    //     justify-content: space-evenly;
-    // }
- 
-    // ::ng-deep .p-tabview-panel {
-    //     height: 300px; /* Set your desired height */
-    //     border-radius: 4px;
-    //     transition: transform 0.3s ease;
-    //     border-radius: 4px;
-    // }
-  
     .team-card {
         border-radius: 4px;
         width: 350px;
