@@ -683,9 +683,3 @@ export class WorkGroupDetail implements OnInit {
         this.taskService.$taskModalData.next(task);
     }
 } 
-
-enum LocalTaskProgressType {
-    ASSIGNED = 'Dodijeljeno',
-    IN_PROGRESS = 'U progresu',
-    COMPLETED = 'Završeno',
-}
