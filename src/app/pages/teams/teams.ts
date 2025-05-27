@@ -156,14 +156,16 @@ export class Teams implements OnInit {
             this.dataService.houses$,
             this.dataService.taskProgressTypes$,
             this.dataService.taskTypes$,
+            this.dataService.workGroupTasks$
         ]).subscribe({
-            next: ([workGroups, tasks, workGroupProfiles, profiles, houses, taskProgressTypes, taskTypes]) => {
+            next: ([workGroups, tasks, workGroupProfiles, profiles, houses, taskProgressTypes, taskTypes, workGroupTasks]) => {
                 this.workGroups = workGroups;
                 this.allTasks = tasks;
                 this.allProfiles = profiles;
                 this.houses = houses;
                 this.taskProgressTypes = taskProgressTypes;
                 this.taskTypes = taskTypes;
+                this.allWorkGroupTasks = workGroupTasks;
                 
                 // Map work group staff
                 this.workGroupStaff = {};
@@ -177,6 +179,17 @@ export class Teams implements OnInit {
                     }
                 });
 
+                this.workGroupTasks = {};
+                workGroupTasks.forEach(workGroupTask => {
+                    if (!this.workGroupTasks[workGroupTask.work_group_id]) {
+                        this.workGroupTasks[workGroupTask.work_group_id] = [];
+                    }
+                    const task = this.allTasks.find(t => t.task_id === workGroupTask.task_id);
+                    if (task) {
+                        this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], task];
+                    }
+                });
+
                 this.loading = false;
             },
             error: (error) => {
@@ -185,20 +198,6 @@ export class Teams implements OnInit {
             }
         });
 
-        this.dataService.workGroupTasks$.subscribe(workGroupTasks => {
-            this.allWorkGroupTasks = workGroupTasks;
-            this.workGroupTasks = {};
-
-            workGroupTasks.forEach(workGroupTask => {
-                if (!this.workGroupTasks[workGroupTask.work_group_id]) {
-                    this.workGroupTasks[workGroupTask.work_group_id] = [];
-                }
-                const task = this.allTasks.find(t => t.task_id === workGroupTask.task_id);
-                if (task) {
-                    this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], task];
-                }
-            });
-        });
 
         this.dataService.$workGroupsUpdate.subscribe(res => {
           if(res && res.eventType == 'INSERT') {
