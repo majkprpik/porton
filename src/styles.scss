@@ -72,5 +72,9 @@ html {
   margin: 0;
 }
 
+.p-datepicker-panel {
+  z-index: 99999 !important; /* or higher if needed */
+}
+
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

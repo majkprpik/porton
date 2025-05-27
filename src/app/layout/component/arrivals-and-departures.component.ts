@@ -7,12 +7,12 @@ import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
-import { CalendarModule } from 'primeng/calendar';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
+import { DatePickerModule } from 'primeng/datepicker';
 
 @Component({
   selector: 'app-arrivals-and-departures',
@@ -22,12 +22,12 @@ import { ButtonModule } from 'primeng/button';
     FormsModule,
     ConfirmDialogModule,
     ToastModule,
-    CalendarModule,
     CardModule,
     DividerModule,
     InputTextModule,
     CommonModule,
     ButtonModule,
+    DatePickerModule,
   ],
   providers: [
     ConfirmationService,
@@ -45,7 +45,20 @@ import { ButtonModule } from 'primeng/button';
         </div>
 
         <span class="selected-date">
-          {{ isToday(selectedDate) ? 'Danas' : (selectedDate | date:'EEEE, d. MMMM') }}
+            @if(isToday(selectedDate)){
+              <span [ngStyle]="{'height': '20px'}">Danas</span>
+            } @else {
+              <p-datepicker 
+                [(ngModel)]="selectedDate"
+                [showIcon]="false" 
+                dateFormat="dd/mm/yy"
+                [inputStyle]="{
+                  height: '20px',
+                  width: '100px',
+                }" 
+                (onSelect)="updateSelectedDate()"
+              />
+            }
         </span>
 
         <div class="section-header">
@@ -82,7 +95,7 @@ import { ButtonModule } from 'primeng/button';
                     </label>
                   </div>
                   <div class="time-container">
-                    <p-calendar 
+                    <p-datepicker 
                       [(ngModel)]="departure.departureTimeObj" 
                       [timeOnly]="true" 
                       hourFormat="24"
@@ -91,10 +104,12 @@ import { ButtonModule } from 'primeng/button';
                       appendTo="body"
                       placeholder="10:00"
                       styleClass="w-full"
-                    ></p-calendar>
+                    />
                   </div>
                 </div>
-                <p-divider *ngIf="!$last"></p-divider>
+                @if(!$last){
+                  <p-divider></p-divider>
+                }
               }
             }
           </div>
@@ -124,7 +139,7 @@ import { ButtonModule } from 'primeng/button';
                     </label>
                   </div>
                   <div class="time-container">
-                    <p-calendar 
+                    <p-datepicker 
                       [(ngModel)]="arrival.arrivalTimeObj" 
                       [timeOnly]="true" 
                       hourFormat="24"
@@ -133,10 +148,12 @@ import { ButtonModule } from 'primeng/button';
                       appendTo="body"
                       placeholder="16:00"
                       styleClass="w-full"
-                    ></p-calendar>
+                    />
                   </div>
                 </div>
-                <p-divider *ngIf="!$last"></p-divider>
+                @if(!$last){
+                  <p-divider></p-divider>
+                }
               }
             }
           </div>
@@ -162,7 +179,7 @@ import { ButtonModule } from 'primeng/button';
         flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 15px;
+        gap: 5px;
         width: 100%;
         background-color: var(--surface-ground);
         height: 50px;
@@ -180,7 +197,7 @@ import { ButtonModule } from 'primeng/button';
           font-size: 1.1rem;
           font-weight: 600;
           color: var(--text-color);
-          gap: 15px;
+          gap: 10px;
           height: 100%;
         }
       }
@@ -204,6 +221,7 @@ import { ButtonModule } from 'primeng/button';
             overflow-y: auto;
             padding: 12px;
             height: 100%;
+            scrollbar-gutter: stable;
           }
         }
       }
@@ -234,7 +252,7 @@ import { ButtonModule } from 'primeng/button';
     }
 
     .time-container {
-      flex: 0 0 120px;
+      flex: 0 0 80px;
     }
 
     .house-number {
@@ -247,10 +265,11 @@ import { ButtonModule } from 'primeng/button';
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 2rem 0;
       color: var(--text-color-secondary);
       height: 100%;
-      width: 215px;
+      width: 183px;
+      box-sizing: border-box;
+      padding-left: 20px;
       
       i {
         font-size: 2rem;
@@ -577,5 +596,13 @@ export class ArrivalsAndDeparturesComponent {
         }
       }
     }
+  }
+
+  updateSelectedDate() {
+    const now = new Date();
+    this.selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+
+    this.getTodaysArrivals();
+    this.getTodaysDepartures();
   }
 }

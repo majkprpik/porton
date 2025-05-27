@@ -647,7 +647,7 @@ interface SpecialLocation {
                 top: 100px;
                 left: 100px;
                 z-index: 99999 !important;
-                width: 480px;
+                width: 450px;
                 height: 340px;
                 box-sizing: border-box;
                 border: solid 1px #ccc;
@@ -668,7 +668,7 @@ interface SpecialLocation {
                 .example-handle {
                     position: absolute;
                     top: 12px;
-                    left: 15px;
+                    left: 12px;
                     color: #ccc;
                     cursor: move;
                     width: 24px;
@@ -678,7 +678,7 @@ interface SpecialLocation {
                 .close-arrivals-and-departures-window {
                     position: absolute;
                     top: 8px;
-                    right: 12px;
+                    right: 8px;
                     color: #ccc;
                     cursor: pointer;
                     width: 32px;
