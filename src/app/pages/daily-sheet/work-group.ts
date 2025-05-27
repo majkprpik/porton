@@ -753,7 +753,7 @@ export class WorkGroup implements OnInit {
     }
 
     this.confirmationService.confirm({
-      message: `Jeste li sigurni da želite obrisati ovu radnu grupu? <br> <b>Završeni zadaci bit će arhivirani, a nezavršeni vraćeni u status "Nije dodijeljeno".</b>`,
+      message: `Jeste li sigurni da želite obrisati ovu radnu grupu? <br> <b>Završeni zadaci biti će arhivirani, a nezavršeni vraćeni u status "Nije dodijeljeno".</b>`,
       header: 'Upozorenje',
       acceptLabel: 'Da',
       rejectLabel: 'Ne',
