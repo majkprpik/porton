@@ -986,8 +986,6 @@ export class AppLayout {
         // Load initial data
         this.dataService.loadHouses().subscribe();
         this.dataService.getTaskTypes().subscribe();
-        this.createDeletedUser();
-
 
         if(this.router.url == '/home'){
             this.loadStoredWindowPositions();
@@ -1183,21 +1181,6 @@ export class AppLayout {
                 }
             }
         });
-    }
-
-    async createDeletedUser(){
-        const deletedUser = await this.dataService.getDeletedUser();
-
-        if(!deletedUser || deletedUser.length <= 0){
-            this.authService.createUser({
-                id: '11111111-1111-1111-1111-111111111111',
-                normalized_email: this.authService.normalizeEmail('Deleted User'),
-                password: 'test123',
-                email_confirm: true,
-                name: 'Deleted User',
-                role: 'voditelj_recepcije'
-            });
-        }
     }
 
     isLoggedUserDeleted(){

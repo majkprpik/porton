@@ -165,6 +165,7 @@ export class AuthService {
       { name: 'Dražen Pendeš', role: 'kucni_majstor', password: 'h5Kr0C' },
       { name: 'Ivo Pranjić', role: 'odrzavanje', password: 'i4Ls1D' },
       { name: 'Daniel Begzić', role: 'odrzavanje', password: 'j3Mt2E' },
+      { name: 'Deleted User', role: 'voditelj_recepcije', password: 'test123', id: '11111111-1111-1111-1111-111111111111' },
     ];
   
     for (const user of users) {
