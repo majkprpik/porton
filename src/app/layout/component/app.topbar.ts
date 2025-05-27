@@ -70,6 +70,7 @@ import { ButtonModule } from 'primeng/button';
             </div>
             
             <div class="relative">
+                <span [ngStyle]="{'margin-right': '10px'}">{{ authService.getStoredUsername() }}</span>
                 <button
                     pButton
                     label="Odjava"
