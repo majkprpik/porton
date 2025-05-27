@@ -200,7 +200,6 @@ import { PanelModule } from 'primeng/panel';
     }
 
     :host ::ng-deep {
-      
       .cleaning-group {
         margin-bottom: 0.5rem;
 
@@ -600,12 +599,6 @@ export class WorkGroups implements OnInit {
         .map(task => 
           from(this.dataService.updateTaskProgressType1(task.task_id, nijeDodijeljenoType.task_progress_type_id))
         );
-
-      // this.allTasks.forEach(task => {
-      //   if(tasksToReturn.find(ttr => ttr.task_id == task.task_id)){
-      //     task.task_progress_type_id = nijeDodijeljenoType.task_progress_type_id;
-      //   }
-      // });
       
       forkJoin(updateObservables.length > 0 ? updateObservables : [of(null)]).pipe(
         switchMap(() => this.dataService.deleteWorkGroup(workGroupId)),
