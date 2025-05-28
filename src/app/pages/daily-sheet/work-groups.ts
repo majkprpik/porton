@@ -640,7 +640,7 @@ export class WorkGroups implements OnInit {
     let lockedWorkGroups = this.workGroupService.getLockedTeams();
     let assignedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Dodijeljeno");
     let notAssignedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Nije dodijeljeno");
-    let inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "U progresu");
+    let inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "U tijeku");
     let completedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Završeno');
     let unlockedWorkGroups = lockedWorkGroups.filter(lwg => !lwg.isLocked);
 

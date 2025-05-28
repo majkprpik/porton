@@ -596,7 +596,7 @@ export class WorkGroupDetail implements OnInit {
         
         // Fallback
         if (this.taskService.isTaskCompleted(task)) return 'Završeno';
-        if (this.taskService.isTaskInProgress(task)) return 'U progresu';
+        if (this.taskService.isTaskInProgress(task)) return 'U tijeku';
         if (this.taskService.isTaskPaused(task)) return 'Pauzirano';
         return 'Nije dodijeljeno';
     }
@@ -631,9 +631,9 @@ export class WorkGroupDetail implements OnInit {
         if (this.taskService.isTaskInProgress(task)) {
             newProgressTypeName = "Završeno";
         } else if (this.taskService.isTaskPaused(task)) {
-            newProgressTypeName = "U progresu";
+            newProgressTypeName = "U tijeku";
         } else {
-            newProgressTypeName = "U progresu";
+            newProgressTypeName = "U tijeku";
         }
         
         // Get progress type ID from name

@@ -736,7 +736,7 @@ export class WorkGroup implements OnInit {
     event.stopPropagation();
 
     if(this.assignedTasks && this.assignedTasks.length > 0){
-      const inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "U progresu");
+      const inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "U tijeku");
       const pausedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Pauzirano");
 
       if(this.assignedTasks.find(task => task.task_progress_type_id == inProgressTaskProgressType.task_progress_type_id || task.task_progress_type_id == pausedTaskProgressType.task_progress_type_id)){
@@ -772,7 +772,7 @@ export class WorkGroup implements OnInit {
 
   onRemoveTask(taskToRemove: Task) {
     let completedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Završeno');
-    let inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'U progresu');
+    let inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'U tijeku');
 
     if(
       taskToRemove.task_progress_type_id == completedTaskProgressType.task_progress_type_id || 
