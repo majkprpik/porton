@@ -150,11 +150,11 @@ export class StaffGroups implements OnInit {
   activeWorkGroupId?: number;
 
   // Role categories, matching the ones in ProfilesComponent
-  managementRoles = ['Voditelj kampa', 'Savjetnik uprave'];
+  managementRoles = ['Voditelj kampa', 'Savjetnik uprave', 'Uprava'];
   receptionRoles = ['Voditelj recepcije', 'Recepcija', 'Korisnicka sluzba', 'Nocna recepcija', 'Prodaja'];
   housekeepingRoles = ['Voditelj domacinstva', 'Sobarica', 'Terasar'];
   technicalRoles = ['Kucni majstor', 'Odrzavanje'];
-  otherRoles: string[] = [];
+  otherRoles: string[] = ['Ostalo'];
   profileRoles: ProfileRole[] = [];
 
   constructor(
@@ -187,7 +187,7 @@ export class StaffGroups implements OnInit {
   }
 
   getProfilesByRoles(roles: string[]): Profile[] {
-    if (roles === this.otherRoles) {
+    if (roles.some(role => this.otherRoles.includes(role))) {
       // For "Other" category, get profiles that don't match any of the defined categories
       return this.profiles.filter(profile => {
         if (!profile.role_id) return true;
