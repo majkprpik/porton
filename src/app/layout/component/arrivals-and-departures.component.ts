@@ -12,6 +12,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-arrivals-and-departures',
@@ -26,6 +27,7 @@ import { DatePickerModule } from 'primeng/datepicker';
     CommonModule,
     ButtonModule,
     DatePickerModule,
+    ConfirmDialogModule,
   ],
   providers: [
     ConfirmationService,
@@ -159,6 +161,7 @@ import { DatePickerModule } from 'primeng/datepicker';
       </div>
     </div>
 
+    <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
   `,
   styles: `
     .arrivals-departures-container {

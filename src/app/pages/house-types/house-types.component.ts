@@ -11,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subject, takeUntil } from 'rxjs';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-house-types',
@@ -23,7 +24,8 @@ import { Subject, takeUntil } from 'rxjs';
     InputTextModule, 
     FormsModule,
     ToastModule,
-    TooltipModule
+    TooltipModule,
+    ConfirmDialogModule,
   ],
   providers: [MessageService, ConfirmationService],
   template: `
@@ -95,7 +97,7 @@ import { Subject, takeUntil } from 'rxjs';
       </div>
     </p-dialog>
 
-    
+    <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
     <p-toast></p-toast>
   `,
   styles: [

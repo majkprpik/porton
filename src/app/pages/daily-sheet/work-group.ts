@@ -17,6 +17,7 @@ import { ProfileService } from '../service/profile.service';
 import { DialogModule } from 'primeng/dialog';
 import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { HouseService } from '../service/house.service';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-work-group',
@@ -32,7 +33,8 @@ import { HouseService } from '../service/house.service';
     DragDropModule,
     DialogModule,
     CdkDropList, 
-    CdkDrag
+    CdkDrag,
+    ConfirmDialogModule,
   ],
   providers: [ConfirmationService],
   template: `
@@ -151,6 +153,7 @@ import { HouseService } from '../service/house.service';
     </p-dialog>
 
     <p-contextMenu #staffContextMenu [model]="staffMenuItems"></p-contextMenu>
+    <p-confirmDialog header="Potvrda" icon="pi pi-exclamation-triangle"></p-confirmDialog>
   `,
   styles: `
     @keyframes borderDance {

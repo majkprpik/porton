@@ -10,6 +10,7 @@ import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subject } from 'rxjs';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 interface Role {
   role_id: string;
@@ -27,7 +28,8 @@ interface Role {
     InputTextModule, 
     FormsModule,
     ToastModule,
-    TooltipModule
+    TooltipModule,
+    ConfirmDialogModule,
   ],
   providers: [MessageService, ConfirmationService],
   template: `
@@ -107,7 +109,7 @@ interface Role {
       </div>
     </p-dialog>
 
-    
+    <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
     <p-toast></p-toast>
   `,
   styles: [
