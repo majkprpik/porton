@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { MenuItem } from 'primeng/api';
+import { ConfirmationService, MenuItem } from 'primeng/api';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { StyleClassModule } from 'primeng/styleclass';
@@ -9,6 +9,7 @@ import { MenuModule } from 'primeng/menu';
 import { Menu } from 'primeng/menu';
 import { AuthService } from '../../pages/service/auth.service';
 import { ButtonModule } from 'primeng/button';
+import { DataService, Profile, ProfileRole } from '../../pages/service/data.service';
 
 @Component({
     selector: 'app-topbar',
@@ -19,7 +20,7 @@ import { ButtonModule } from 'primeng/button';
         StyleClassModule, 
         AppConfigurator, 
         MenuModule,
-        ButtonModule
+        ButtonModule,
     ],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
@@ -68,17 +69,15 @@ import { ButtonModule } from 'primeng/button';
                     <app-configurator />
                 </div>
             </div>
-            
+
             <div class="relative">
-                <span [ngStyle]="{'margin-right': '10px'}">{{ authService.getStoredUsername() }}</span>
                 <button
+                    class="logged-user p-button-secondary"
                     pButton
-                    label="Odjava"
-                    icon="pi pi-sign-out"
                     iconPos="right"
-                    class="p-button-secondary"
-                    (click)="authService.logout()"
+                    (click)="confirm1($event)"
                 >
+                    <i class="pi pi-user"></i>
                 </button>
             </div>
         </div>
@@ -101,13 +100,56 @@ export class AppTopbar {
             }
         }
     ];
+    profiles: Profile[] = [];
+    profileRoles: ProfileRole[] = [];
 
     constructor(
         public layoutService: LayoutService,
-        public authService: AuthService
-    ) {}
+        public authService: AuthService,
+        public confirmationService: ConfirmationService,
+        private dataService: DataService,
+    ) {
+
+    }
+
+    ngOnInit(){
+        this.dataService.profiles$.subscribe(profiles => {
+            this.profiles = profiles;
+        });
+
+        this.dataService.profileRoles$.subscribe(profileRoles => {
+            this.profileRoles = profileRoles;
+        });
+    }
 
     toggleDarkMode() {
         this.layoutService.layoutConfig.update((state) => ({ ...state, darkTheme: !state.darkTheme }));
+    }
+
+    confirm1(event: Event) {    
+        const userId = this.authService.getStoredUserId();
+        const profile = this.profiles.find(p => p.id == userId);
+        const email = this.authService.getStoredUsername() || '';
+        const name = profile ? `${profile.first_name} ${profile.last_name}` : '';
+        const phone = profile?.phone_number || '';
+        const role = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id)?.name || '';
+
+        this.confirmationService.confirm({
+            target: event.target as EventTarget,
+            header: 'Profil',
+            message: 
+                `<div class="new-profile-row"><b>Ime:</b> ${name}</div>` +
+                `<div class="new-profile-row"><b>Email:</b> ${email}</div>` +
+                `<div class="new-profile-row"><b>Mobitel:</b> ${phone}</div>` +
+                `<div class="new-profile-row"><b>Pozicija:</b> ${role}</div>`,
+            acceptButtonProps: {
+                label: 'Odjava',
+                severity: 'danger',
+            },
+            rejectVisible: false,
+            accept: () => {
+                this.authService.logout();
+            }
+        });
     }
 }
