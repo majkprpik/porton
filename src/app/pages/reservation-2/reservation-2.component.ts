@@ -517,11 +517,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     // Normal case - just show the form
                     this.showReservationForm.set(true);
                 }
-                
-                // Set up calendar date restrictions
-                setTimeout(() => {
-                    this.setupCalendarDateRestrictions();
-                }, 300);
             }, 0);
         }
     }
@@ -795,20 +790,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             // If form is being shown, check if we need to update for next reservation
             // And set up date restrictions
             this.updateNextReservationDate();
-            
-            // Give the form time to initialize and render the calendar components
-            setTimeout(() => {
-                this.setupCalendarDateRestrictions();
-            }, 300);
         }
-    }
-    
-    // Set up calendar date restrictions with MutationObserver to avoid event listener errors
-    private setupCalendarDateRestrictions(): void {
-    }
-    
-    // Apply restrictions to the end date calendar
-    private restrictEndDateCalendar(): void {
     }
 
     // Update the next reservation date signal
