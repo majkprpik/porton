@@ -297,7 +297,7 @@ export class DataService {
 
   setProfiles(profiles: Profile[]){
     if(profiles){
-      this.profilesSubject.next(profiles);
+      this.profilesSubject.next(profiles.filter(profile => profile.id != '11111111-1111-1111-1111-111111111111'));
     }
   }
 
@@ -604,7 +604,7 @@ export class DataService {
     return from(this.supabaseService.getData('profiles', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          this.profilesSubject.next(data);
+          this.setProfiles(data);
           this.logData('Profiles', data);
         }
       }),
@@ -757,7 +757,7 @@ export class DataService {
       tap((data) => {
         if (data) {
           const currentProfiles = this.profilesSubject.value;
-          this.profilesSubject.next([...currentProfiles, data[0]]);
+          this.setProfiles([...currentProfiles, data[0]]);
           this.logData('Created Profile', data[0]);
         }
       }),
@@ -778,7 +778,7 @@ export class DataService {
           const updatedProfiles = currentProfiles.map(profile => 
             profile.id === id ? { ...profile, ...data[0] } : profile
           );
-          this.profilesSubject.next(updatedProfiles);
+          this.setProfiles(updatedProfiles);
         }
       }),
       map((data) => (data ? data[0] : null)),
