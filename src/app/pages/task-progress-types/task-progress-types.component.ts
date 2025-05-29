@@ -8,7 +8,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subject, takeUntil } from 'rxjs';
@@ -24,7 +23,6 @@ import { Subject, takeUntil } from 'rxjs';
     InputTextModule, 
     FormsModule,
     ToastModule,
-    ConfirmDialogModule,
     TooltipModule
   ],
   providers: [MessageService, ConfirmationService],
@@ -96,9 +94,6 @@ import { Subject, takeUntil } from 'rxjs';
                  [disabled]="!selectedType?.task_progress_type_name"></p-button>
       </div>
     </p-dialog>
-
-    <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
-    
     <p-toast></p-toast>
   `,
   styles: [

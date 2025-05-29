@@ -53,7 +53,7 @@ interface SpecialLocation {
         CdkDragHandle,
         TabViewModule,
         ChipModule,
-        ConfirmDialogModule
+        ConfirmDialogModule,
     ],
     providers: [MessageService, ConfirmationService, { provide: LOCALE_ID, useValue: 'hr' }],
     template: ` <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
@@ -358,8 +358,7 @@ interface SpecialLocation {
         </p-dialog>
 
         <p-toast></p-toast>
-
-        <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+        <p-confirmdialog />
     </div>`,
     styles: [
         `

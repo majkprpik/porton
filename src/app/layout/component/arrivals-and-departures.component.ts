@@ -5,7 +5,6 @@ import { DataService, House, HouseAvailability } from '../../pages/service/data.
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
@@ -20,7 +19,6 @@ import { DatePickerModule } from 'primeng/datepicker';
   imports: [
     CheckboxModule,
     FormsModule,
-    ConfirmDialogModule,
     ToastModule,
     CardModule,
     DividerModule,
@@ -161,7 +159,6 @@ import { DatePickerModule } from 'primeng/datepicker';
       </div>
     </div>
 
-    <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
   `,
   styles: `
     .arrivals-departures-container {

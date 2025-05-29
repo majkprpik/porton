@@ -17,7 +17,6 @@ import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Product, ProductService } from '../service/product.service';
 
 interface Column {
@@ -52,7 +51,6 @@ interface ExportColumn {
         TagModule,
         InputIconModule,
         IconFieldModule,
-        ConfirmDialogModule
     ],
     template: `
         <p-toolbar styleClass="mb-6">
@@ -206,7 +204,6 @@ interface ExportColumn {
             </ng-template>
         </p-dialog>
 
-        <p-confirmdialog [style]="{ width: '450px' }" />
     `,
     providers: [MessageService, ProductService, ConfirmationService]
 })

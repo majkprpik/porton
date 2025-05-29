@@ -12,7 +12,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { DragDropModule } from 'primeng/dragdrop';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { ProfileService } from '../service/profile.service';
 import { DialogModule } from 'primeng/dialog';
@@ -31,7 +30,6 @@ import { HouseService } from '../service/house.service';
     ContextMenuModule,
     TooltipModule,
     DragDropModule,
-    ConfirmDialogModule,
     DialogModule,
     CdkDropList, 
     CdkDrag
@@ -153,7 +151,6 @@ import { HouseService } from '../service/house.service';
     </p-dialog>
 
     <p-contextMenu #staffContextMenu [model]="staffMenuItems"></p-contextMenu>
-    <p-confirmDialog header="Potvrda" icon="pi pi-exclamation-triangle"></p-confirmDialog>
   `,
   styles: `
     @keyframes borderDance {

@@ -5,7 +5,6 @@ import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { DrawerModule } from 'primeng/drawer';
 import { Popover, PopoverModule } from 'primeng/popover';
-import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
@@ -15,7 +14,7 @@ import { Product, ProductService } from '../service/product.service';
 @Component({
     selector: 'app-overlay-demo',
     standalone: true,
-    imports: [ToastModule, DialogModule, ButtonModule, DrawerModule, PopoverModule, ConfirmPopupModule, InputTextModule, FormsModule, TooltipModule, TableModule, ToastModule],
+    imports: [ToastModule, DialogModule, ButtonModule, DrawerModule, PopoverModule, InputTextModule, FormsModule, TooltipModule, TableModule, ToastModule],
     template: ` <div class="flex flex-col md:flex-row gap-8">
         <div class="md:w-1/2">
             <div class="card">
@@ -113,7 +112,6 @@ import { Product, ProductService } from '../service/product.service';
 
             <div class="card">
                 <div class="font-semibold text-xl mb-4">ConfirmPopup</div>
-                <p-confirmpopup></p-confirmpopup>
                 <p-button #popup (click)="confirm($event)" icon="pi pi-check" label="Confirm" class="mr-2"></p-button>
             </div>
 
