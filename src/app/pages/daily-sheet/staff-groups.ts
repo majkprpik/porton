@@ -215,16 +215,4 @@ export class StaffGroups implements OnInit {
     const nameB = `${b.first_name || ''} ${b.last_name || ''}`.toLowerCase();
     return nameA.localeCompare(nameB);
   }
-
-  getProfilesByRole(role: string): Profile[] {
-    const filteredProfiles = this.profiles.filter(profile => 
-      this.profileRoles.find(role => role.id == profile.role_id)?.name?.toLowerCase() === role.toLowerCase()
-    );
-    //console.log(`Profiles for role ${role}:`, filteredProfiles);
-    return filteredProfiles;
-  }
-
-  getUniqueRoles(): (string | null | undefined)[] {
-    return Array.from(new Set(this.profiles.map(profile => this.profileRoles.find(role => role.id == profile.role_id)?.name)));
-  }
 } 
