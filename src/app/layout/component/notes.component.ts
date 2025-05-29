@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, Inject, LOCALE_ID, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotesService } from '../../pages/service/notes.service';
-import { DataService, Note } from '../../pages/service/data.service';
+import { DataService, Note, Profile } from '../../pages/service/data.service';
 import { combineLatest } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ProfileService } from '../../pages/service/profile.service';
@@ -73,7 +73,7 @@ import { Calendar } from 'primeng/calendar';
             <div class="note-entry">
               @if(i == 0 || notesForSelectedDate[i].profile_id != notesForSelectedDate[i-1].profile_id || hasMoreThan5MinutesPassedBetweenMessages(notesForSelectedDate[i], notesForSelectedDate[i-1])){
                 <br>
-                <b>{{profileService.findProfile(note.profile_id)?.first_name}} </b> <span [ngStyle]="{'color': 'gray'}">- {{note.time_sent | date:'HH:mm'}}</span>
+                <b>{{ findProfileNameForNote(note)}} </b> <span [ngStyle]="{'color': 'gray'}">- {{note.time_sent | date:'HH:mm'}}</span>
                 <br>
               }
                 {{note.note}}
@@ -214,6 +214,7 @@ export class NotesComponent {
   daysIndex = 0; 
   areNotesLoaded = false;
   selectedDate: Date = new Date();
+  profiles: Profile[] = [];
 
   constructor(
     @Inject(LOCALE_ID) private locale: string,
@@ -263,10 +264,12 @@ export class NotesComponent {
     combineLatest([
       this.dataService.notes$,
       this.dataService.$areNotesLoaded,
+      this.dataService.profiles$,
     ]).subscribe({
-      next: ([notes, areNotesLoaded]) => {
+      next: ([notes, areNotesLoaded, profiles]) => {
         this.notes = notes;
         this.areNotesLoaded = areNotesLoaded;
+        this.profiles = profiles;
 
         this.notes = this.notes.map(note => {
           if(!note.for_date){
@@ -362,5 +365,9 @@ export class NotesComponent {
     return date.getFullYear() === today.getFullYear() &&
            date.getMonth() === today.getMonth() &&
            date.getDate() === today.getDate();
+  }
+
+  findProfileNameForNote(note: Note){
+    return this.profiles.find(profile => profile.id == note.profile_id)?.first_name;
   }
 }

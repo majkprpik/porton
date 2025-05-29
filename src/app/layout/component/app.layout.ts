@@ -198,7 +198,7 @@ interface SpecialLocation {
                                     } @else {
                                         @for (comment of commentsForTask; track $index) {
                                             <span
-                                                ><b>{{ profileService.findProfile(comment.user_id)?.first_name }} - {{ comment.created_at | date: 'HH:mm' : 'UTC' }}:</b> {{ comment.comment }}</span
+                                                ><b>{{ findProfileNameForComment(comment) }} - {{ comment.created_at | date: 'HH:mm' : 'UTC' }}:</b> {{ comment.comment }}</span
                                             >
                                         }
                                     }
@@ -1794,5 +1794,9 @@ export class AppLayout {
                     this.messageService.add({ severity: 'warn', summary: 'Cancelled', detail: 'Change was cancelled' });
                 }
             });
+    }
+
+    findProfileNameForComment(comment: RepairTaskComment){
+        return this.profiles.find(profile => profile.id == comment.user_id)?.first_name;
     }
 }
