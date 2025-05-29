@@ -36,10 +36,10 @@ import { WorkGroupService } from '../service/work-group.service';
         ></app-staff-group>
         
         <app-staff-group
-        groupName="ODJEL RECEPCIJA"
-        groupIcon="pi pi-users"
-        [isExpanded]="false"
-        [staffMembers]="getProfilesByRoles(receptionRoles)"
+          groupName="ODJEL RECEPCIJA"
+          groupIcon="pi pi-users"
+          [isExpanded]="false"
+          [staffMembers]="getProfilesByRoles(receptionRoles)"
         ></app-staff-group>
         
         <app-staff-group
@@ -202,11 +202,12 @@ export class StaffGroups implements OnInit {
       })
       .sort(this.sortByName);
     }
-    
-    return this.profiles.filter(profile => {
-      const roleName = this.profileRoles.find(role => role.id == profile.role_id)?.name;
-      return roleName !== undefined && this.managementRoles.includes(roleName);
-    }).sort(this.sortByName);
+
+    return this.profiles.filter(profile =>
+      roles.some(roleName =>
+        this.profileRoles.find(role => role.name === roleName)?.id === profile.role_id
+      )
+    ).sort(this.sortByName);
   }
 
   sortByName(a: Profile, b: Profile): number {
