@@ -167,7 +167,7 @@ import { Calendar } from 'primeng/calendar';
           word-wrap: break-word;
           overflow-wrap: break-word;
           white-space: normal;
-          font-size: 12px;
+          font-size: 14px;
         }
       }
 
