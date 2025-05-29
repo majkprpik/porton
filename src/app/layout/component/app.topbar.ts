@@ -130,7 +130,7 @@ export class AppTopbar {
         const userId = this.authService.getStoredUserId();
         const profile = this.profiles.find(p => p.id == userId);
         const email = this.authService.getStoredUsername() || '';
-        const name = profile ? `${profile.first_name} ${profile.last_name}` : '';
+        const name = profile ? `${profile.first_name} ${profile.last_name ? profile.last_name : ''}` : '';
         const phone = profile?.phone_number || '';
         const role = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id)?.name || '';
 
