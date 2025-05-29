@@ -18,8 +18,8 @@ export class RoleGuard implements CanActivate {
             const userProfile = JSON.parse(userProfileStr);
             const userRole = userProfile.user_metadata?.role;
 
-            // Special handling for sobarica and terase roles
-            if (userRole === 'sobarica' || userRole === 'terase') {
+            // Special handling for Sobarica and Terasar roles
+            if (userRole === 'Sobarica' || userRole === 'Terasar') {
                 // Skip the redirect if already on teams page
                 if (state.url === '/teams' || state.url.startsWith('/teams/')) {
                     return true;

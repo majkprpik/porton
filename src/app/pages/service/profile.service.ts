@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { WorkGroupService } from './work-group.service';
 import { BehaviorSubject, catchError, from, Observable, throwError } from 'rxjs';
-import { DataService, Profile } from './data.service';
+import { DataService, Profile, ProfileRole } from './data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,22 +10,30 @@ export class ProfileService {
   $staffToAdd = new BehaviorSubject<any>(null);
   $staffToRemove = new BehaviorSubject<any>(null);
   profiles: Profile[] = [];
+  profileRoles: ProfileRole[] = [];
 
   constructor(
     private supabase: SupabaseService,
-    private workGroupService: WorkGroupService,
     private dataService: DataService
   ) {
+
+  }
+
+  ngOnInit(){
     this.dataService.profiles$.subscribe(profiles => {
       this.profiles = profiles;
     }); 
+
+    this.dataService.profileRoles$.subscribe(profileRole => {
+      this.profileRoles = profileRole;
+    });
   }
 
   findProfile(profileId: string){
     let foundUser = this.profiles.find(profile => profile.id == profileId);
     
     if(foundUser && !foundUser?.first_name){
-      foundUser.first_name = foundUser?.role + ' ' + 'user'
+      foundUser.first_name = this.profileRoles.find(profileRole => profileRole.id == foundUser.role_id)?.name + ' ' + 'user'
     }
 
     return foundUser

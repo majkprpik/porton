@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DataService } from '../service/data.service';
+import { DataService, ProfileRole } from '../service/data.service';
 import { Profile } from '../service/data.service';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
@@ -12,6 +12,7 @@ import { MessageService } from 'primeng/api';
 import { AuthService, UserToRegister } from '../service/auth.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { ProfileService } from '../service/profile.service';
+import { combineLatest } from 'rxjs';
 
 // Extended Profile interface to include the isDivider property
 interface ExtendedProfile extends Profile {
@@ -60,7 +61,7 @@ interface ExtendedProfile extends Profile {
             <td *ngIf="profile.isDivider" colspan="5" class="divider-cell">{{ profile.first_name }}</td>
             <ng-container *ngIf="!profile.isDivider">
               <td>{{ profile.first_name }} {{ profile.last_name }}</td>
-              <td>{{ getRoleLabel(profile.role || '') }}</td>
+              <td>{{ getProfileRoleNameById(profile.role_id) }}</td>
               <td>{{ profile.email }}</td>
               <td>{{ profile.password }}</td>
               <td>
@@ -85,13 +86,13 @@ interface ExtendedProfile extends Profile {
       <div class="p-field" *ngIf="selectedProfile">
         <label for="role">Role</label>
         <p-dropdown 
-          [options]="availableRoles" 
-          [(ngModel)]="selectedProfile.role" 
+          [options]="profileRoles" 
+          [(ngModel)]="selectedProfile.role_id" 
           placeholder="Select a Role" 
           [showClear]="true"
           [style]="{'width':'100%'}"
-          optionLabel="label"
-          optionValue="value"
+          optionLabel="name"
+          optionValue="id"
           appendTo="body"
           id="role">
         </p-dropdown>
@@ -104,33 +105,33 @@ interface ExtendedProfile extends Profile {
 
     <p-dialog [(visible)]="showDeleteProfileDialog" [style]="{width: '450px'}" header="Delete Profile" [modal]="true" [contentStyle]="{overflow: 'visible'}">
       <label>
-        Are you sure you want to delete {{selectedProfile?.first_name}}'s profile?
+        Are you sure you want to delete {{selectedProfile.first_name}}'s profile?
       </label>
       <div class="p-dialog-footer">
         <p-button label="Cancel" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
-        <p-button label="Delete" icon="pi pi-trash" (click)="deleteProfile(selectedProfile?.id)" styleClass="p-button-danger" [disabled]="!selectedProfile"></p-button>
+        <p-button label="Delete" icon="pi pi-trash" (click)="deleteProfile(selectedProfile.id)" styleClass="p-button-danger" [disabled]="!selectedProfile"></p-button>
       </div>
     </p-dialog>
 
-     <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" header="Create New Profile" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+     <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" header="Dodaj novi profil" [modal]="true" [contentStyle]="{overflow: 'visible'}">
        <div class="field">
-          <label for="firstName">Full Name</label>
+          <label for="firstName">Ime i prezime</label>
           <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.name" />
        </div>
        <div class="field">
-          <label for="firstName">Password</label>
+          <label for="firstName">Lozinka</label>
           <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.password" />
        </div>
       <div class="p-field">
-        <label for="role">Role</label>
+        <label for="role">Pozicija</label>
         <p-dropdown 
-          [options]="availableRoles" 
-          [(ngModel)]="newProfile.role" 
-          placeholder="Select a Role" 
+          [options]="profileRoles" 
+          [(ngModel)]="newProfile.role_id" 
+          placeholder="Odaberi poziciju" 
           [showClear]="true"
           [style]="{'width':'100%'}"
-          optionLabel="label"
-          optionValue="value"
+          optionLabel="name"
+          optionValue="id"
           appendTo="body"
           id="role">
         </p-dropdown>
@@ -225,31 +226,17 @@ export class ProfilesComponent implements OnInit {
   profileDialog: boolean = false;
   showNewProfileDialog: boolean = false;
   showDeleteProfileDialog: boolean = false;
-  selectedProfile: ExtendedProfile | null = null;
+  selectedProfile: ExtendedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
   userPasswordMap: { [name: string]: string } = {};
   newProfileRole: string = '';
-  newProfile: UserToRegister = { name: '', password: '', role: '' };
-  
-  availableRoles = [
-    { label: 'voditelj kampa', value: 'voditelj_kampa' },
-    { label: 'savjetnik uprave', value: 'savjetnik_uprave' },
-    { label: 'Voditelj recepcije', value: 'voditelj_recepcije' },
-    { label: 'recepcija', value: 'recepcija' },
-    { label: 'customer service', value: 'customer_service' },
-    { label: 'noćni recepcioner', value: 'nocni_recepcioner' },
-    { label: 'prodaja', value: 'prodaja' },
-    { label: 'voditelj domaćinstva', value: 'voditelj_domacinstva' },
-    { label: 'sobarica', value: 'sobarica' },
-    { label: 'terase', value: 'terase' },
-    { label: 'kućni majstor', value: 'kucni_majstor' },
-    { label: 'održavanje', value: 'odrzavanje' }
-  ];
+  newProfile: UserToRegister = { name: '', password: '', role_id: -1 };
+  profileRoles: ProfileRole[] = [];
 
   constructor(
     private dataService: DataService,
     private messageService: MessageService,
     private authService: AuthService,
-    private profileService: ProfileService
+    public profileService: ProfileService
   ) {
     // Create a map of user names to passwords from the auth service
     // this.initializePasswordMap();
@@ -290,65 +277,92 @@ export class ProfilesComponent implements OnInit {
   // }
 
   ngOnInit() {
-    this.dataService.profiles$.subscribe(profiles => {
-      // Group profiles by role categories
-      const managementRoles = ['voditelj_kampa', 'savjetnik_uprave'];
-      const receptionRoles = ['voditelj_recepcije', 'recepcija', 'customer_service', 'nocni_recepcioner', 'prodaja'];
-      const housekeepingRoles = ['voditelj_domacinstva', 'sobarica', 'terase'];
-      const technicalRoles = ['kucni_majstor', 'odrzavanje'];
-      
-      const sortedProfiles: ExtendedProfile[] = [];
-      
-      // Add management profiles
-      const managementProfiles = profiles
-        .filter(p => p.role && managementRoles.includes(p.role))
-        .sort(this.sortByName);
-      if (managementProfiles.length > 0) {
-        sortedProfiles.push(this.createDividerProfile('UPRAVA'));
-        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(managementProfiles));
+    combineLatest([
+      this.dataService.profileRoles$,
+      this.dataService.profiles$,
+    ]).subscribe({
+      next: ([profileRoles, profiles]) => {
+        this.profileRoles = profileRoles;
+
+        const managementRoles = ['Uprava', 'Voditelj kampa', 'Savjetnik uprave'];
+        const receptionRoles = ['Voditelj recepcije', 'Recepcija', 'Korisnicka sluzba', 'Nocna recepcija', 'Prodaja'];
+        const housekeepingRoles = ['Voditelj domacinstva', 'Sobarica', 'Terasar'];
+        const technicalRoles = ['Kucni majstor', 'Odrzavanje'];
+        
+        const sortedProfiles: ExtendedProfile[] = [];
+        
+        // Add management profiles
+        const managementProfiles = profiles 
+          .filter(profile => {
+            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
+            return roleName !== undefined && managementRoles.includes(roleName);
+          })
+          .sort(this.sortByName);
+        if (managementProfiles.length > 0) {
+          sortedProfiles.push(this.createDividerProfile('UPRAVA'));
+          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(managementProfiles));
+        }
+        
+        // Add reception profiles
+        const receptionProfiles = profiles
+          .filter(profile => {
+            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
+            return roleName !== undefined && receptionRoles.includes(roleName);
+          })
+          .sort(this.sortByName);
+        if (receptionProfiles.length > 0) {
+          sortedProfiles.push(this.createDividerProfile('ODJEL RECEPCIJA'));
+          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(receptionProfiles));
+        }
+        
+        // Add housekeeping profiles
+        const housekeepingProfiles = profiles
+          .filter(profile => {
+            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
+            return roleName !== undefined && housekeepingRoles.includes(roleName);
+          })
+          .sort(this.sortByName);
+        if (housekeepingProfiles.length > 0) {
+          sortedProfiles.push(this.createDividerProfile('ODJEL DOMAĆINSTVA'));
+          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(housekeepingProfiles));
+        }
+        
+        // Add technical profiles
+        const technicalProfiles = profiles
+          .filter(profile => {
+            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
+            return roleName !== undefined && technicalRoles.includes(roleName);
+          })
+          .sort(this.sortByName);
+        if (technicalProfiles.length > 0) {
+          sortedProfiles.push(this.createDividerProfile('ODJEL TEHNIKA'));
+          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(technicalProfiles));
+        }
+        
+        // Add any other profiles that don't fit the categories
+        const otherProfiles = profiles
+          .filter(profile => {
+            if (!profile.role_id) return true;
+
+            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
+            if (!roleName) return true; // Treat undefined as "other"
+
+            return !managementRoles.includes(roleName) &&
+                  !receptionRoles.includes(roleName) &&
+                  !housekeepingRoles.includes(roleName) &&
+                  !technicalRoles.includes(roleName);
+          })
+          .sort(this.sortByName);
+        if (otherProfiles.length > 0) {
+          sortedProfiles.push(this.createDividerProfile('OSTALO'));
+          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(otherProfiles));
+        }
+        
+        this.profiles = sortedProfiles;
+      },
+      error: (error) => {
+        console.error(error);
       }
-      
-      // Add reception profiles
-      const receptionProfiles = profiles
-        .filter(p => p.role && receptionRoles.includes(p.role))
-        .sort(this.sortByName);
-      if (receptionProfiles.length > 0) {
-        sortedProfiles.push(this.createDividerProfile('ODJEL RECEPCIJA'));
-        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(receptionProfiles));
-      }
-      
-      // Add housekeeping profiles
-      const housekeepingProfiles = profiles
-        .filter(p => p.role && housekeepingRoles.includes(p.role))
-        .sort(this.sortByName);
-      if (housekeepingProfiles.length > 0) {
-        sortedProfiles.push(this.createDividerProfile('ODJEL DOMAĆINSTVA'));
-        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(housekeepingProfiles));
-      }
-      
-      // Add technical profiles
-      const technicalProfiles = profiles
-        .filter(p => p.role && technicalRoles.includes(p.role))
-        .sort(this.sortByName);
-      if (technicalProfiles.length > 0) {
-        sortedProfiles.push(this.createDividerProfile('ODJEL TEHNIKA'));
-        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(technicalProfiles));
-      }
-      
-      // Add any other profiles that don't fit the categories
-      const otherProfiles = profiles
-        .filter(p => !p.role || 
-                    (!managementRoles.includes(p.role) && 
-                     !receptionRoles.includes(p.role) && 
-                     !housekeepingRoles.includes(p.role) && 
-                     !technicalRoles.includes(p.role)))
-        .sort(this.sortByName);
-      if (otherProfiles.length > 0) {
-        sortedProfiles.push(this.createDividerProfile('OSTALO'));
-        sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(otherProfiles));
-      }
-      
-      this.profiles = sortedProfiles;
     });
   }
 
@@ -387,7 +401,7 @@ export class ProfilesComponent implements OnInit {
       id: `divider-${title}`,
       first_name: title,
       last_name: '',
-      role: '',
+      role_id: -1,
       isDivider: true
     };
   }
@@ -407,23 +421,23 @@ export class ProfilesComponent implements OnInit {
       this.profileService.deleteProfile(profileId);
     }
 
-    this.selectedProfile = null;
+    this.selectedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
     this.showDeleteProfileDialog = false;
   }
 
   hideDialog() {
     this.profileDialog = false;
     this.showDeleteProfileDialog = false;
-    this.selectedProfile = null;
+    this.selectedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
 
     this.showNewProfileDialog = false;
-    this.newProfile = { name: '', password: '', role: '' };
+    this.newProfile = { name: '', password: '', role_id: -1 };
   }
 
   saveProfile() {
     if (this.selectedProfile && this.selectedProfile.id) {
       this.dataService.updateProfile(this.selectedProfile.id, { 
-        role: this.selectedProfile.role 
+        role_id: this.selectedProfile.role_id
       }).subscribe({
         next: (updatedProfile) => {
           this.messageService.add({ 
@@ -433,7 +447,7 @@ export class ProfilesComponent implements OnInit {
             life: 3000 
           });
           this.profileDialog = false;
-          this.selectedProfile = null;
+          this.selectedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
         },
         error: (error) => {
           this.messageService.add({ 
@@ -460,7 +474,7 @@ export class ProfilesComponent implements OnInit {
               life: 3000 
             });
             this.showNewProfileDialog = false;
-            this.newProfile = { name: '', password: '', role: '' };
+            this.newProfile = { name: '', password: '', role_id: -1 };
           }
         })
         .catch(error => {
@@ -477,16 +491,15 @@ export class ProfilesComponent implements OnInit {
   }
 
   isNewProfileValid(){
-    return this.newProfile.name?.trim() && this.newProfile.password?.trim() && this.newProfile.role && this.newProfile.role?.trim();
-  }
-
-  getRoleLabel(roleValue: string): string {
-    const role = this.availableRoles.find(r => r.value === roleValue);
-    return role ? role.label : roleValue;
+    return this.newProfile.name?.trim() && this.newProfile.password?.length >= 6 && this.newProfile.role_id;
   }
 
   openCreateProfileWindow(){
     this.showNewProfileDialog = true;
     this.newProfile.password = this.authService.generateRandomPassword();
+  }
+
+  getProfileRoleNameById(roleId: number){
+    return this.profileRoles.find(role => role.id == roleId)?.name;
   }
 }

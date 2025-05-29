@@ -1,5 +1,4 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { DataService } from '../service/data.service';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -10,7 +9,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 
 interface Role {
   role_id: string;
@@ -200,22 +199,21 @@ export class RolesComponent implements OnInit, OnDestroy {
 
   // Pre-defined roles from the existing profiles component
   availableRoles = [
-    { role_id: 'voditelj_kampa', role_name: 'Voditelj kampa' },
-    { role_id: 'savjetnik_uprave', role_name: 'Savjetnik uprave' },
-    { role_id: 'voditelj_recepcije', role_name: 'Voditelj recepcije' },
-    { role_id: 'recepcija', role_name: 'Recepcija' },
-    { role_id: 'customer_service', role_name: 'Customer service' },
-    { role_id: 'nocni_recepcioner', role_name: 'Noćni recepcioner' },
-    { role_id: 'prodaja', role_name: 'Prodaja' },
-    { role_id: 'voditelj_domacinstva', role_name: 'Voditelj domaćinstva' },
-    { role_id: 'sobarica', role_name: 'Sobarica' },
-    { role_id: 'terase', role_name: 'Terase' },
-    { role_id: 'kucni_majstor', role_name: 'Kućni majstor' },
-    { role_id: 'odrzavanje', role_name: 'Održavanje' }
+    { role_id: 'Voditelj kampa', role_name: 'Voditelj kampa' },
+    { role_id: 'Savjetnik uprave', role_name: 'Savjetnik uprave' },
+    { role_id: 'Voditelj recepcije', role_name: 'Voditelj recepcije' },
+    { role_id: 'Recepcija', role_name: 'Recepcija' },
+    { role_id: 'Korisnicka sluzba', role_name: 'Customer service' },
+    { role_id: 'Nocna recepcija', role_name: 'Noćni recepcioner' },
+    { role_id: 'Prodaja', role_name: 'Prodaja' },
+    { role_id: 'Voditelj domacinstva', role_name: 'Voditelj domaćinstva' },
+    { role_id: 'Sobarica', role_name: 'Sobarica' },
+    { role_id: 'Terasar', role_name: 'Terasar' },
+    { role_id: 'Kucni majstor', role_name: 'Kućni majstor' },
+    { role_id: 'Odrzavanje', role_name: 'Održavanje' }
   ];
 
   constructor(
-    private dataService: DataService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}

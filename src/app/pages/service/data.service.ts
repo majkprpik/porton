@@ -44,7 +44,7 @@ export interface House {
 // Interface for profiles
 export interface Profile {
   id: string; // uuid
-  role?: string | null;
+  role_id: number | null;
   first_name: string | null;
   last_name: string | null;
   phone_number?: string | null;
@@ -173,6 +173,11 @@ export interface RepairTaskComment {
   created_at: string;
 }
 
+export interface ProfileRole{
+  id: number;
+  name: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -203,6 +208,7 @@ export class DataService {
   private authUsersSubject = new BehaviorSubject<Profile[]>([]);
   private notesSubject = new BehaviorSubject<Note[]>([]);
   private repairTaskCommentsSubject = new BehaviorSubject<RepairTaskComment[]>([]);
+  private profileRolesSubject = new BehaviorSubject<ProfileRole[]>([]);
 
   // Public Observables
   loading$ = this.loadingSubject.asObservable();
@@ -224,6 +230,7 @@ export class DataService {
   authUsers$ = this.authUsersSubject.asObservable();
   notes$ = this.notesSubject.asObservable();
   repairTaskComments$ = this.repairTaskCommentsSubject.asObservable();
+  profileRoles$ = this.profileRolesSubject.asObservable();
   
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tempHouseAvailabilitiesUpdate = new BehaviorSubject<any>('');
@@ -336,6 +343,7 @@ export class DataService {
     this.loadWorkGroupProfiles().subscribe();
     this.loadWorkGroupTasks().subscribe();
     this.loadProfiles().subscribe();
+    this.loadProfileRoles().subscribe();
     this.loadHouses().subscribe();
     this.loadTempHouses().subscribe();
     this.loadNotes().subscribe();
@@ -598,6 +606,22 @@ export class DataService {
         if (data) {
           this.profilesSubject.next(data);
           this.logData('Profiles', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  loadProfileRoles(): Observable<ProfileRole[]> {
+    this.loadingSubject.next(true);
+
+     return from(this.supabaseService.getData('profile_roles', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.profileRolesSubject.next(data);
+          this.logData('Profile roles', data);
         }
       }),
       map((data) => data || []),

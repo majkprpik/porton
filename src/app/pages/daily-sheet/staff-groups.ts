@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { StaffGroup } from './staff-group';
 import { ChipModule } from 'primeng/chip';
-import { DataService, Profile } from '../service/data.service';
+import { DataService, Profile, ProfileRole } from '../service/data.service';
 import { CommonModule } from '@angular/common';
 import { WorkGroupService } from '../service/work-group.service';
 
@@ -150,15 +150,16 @@ export class StaffGroups implements OnInit {
   activeWorkGroupId?: number;
 
   // Role categories, matching the ones in ProfilesComponent
-  managementRoles = ['voditelj_kampa', 'savjetnik_uprave'];
-  receptionRoles = ['voditelj_recepcije', 'recepcija', 'customer_service', 'nocni_recepcioner', 'prodaja'];
-  housekeepingRoles = ['voditelj_domacinstva', 'sobarica', 'terase'];
-  technicalRoles = ['kucni_majstor', 'odrzavanje'];
+  managementRoles = ['Voditelj kampa', 'Savjetnik uprave'];
+  receptionRoles = ['Voditelj recepcije', 'Recepcija', 'Korisnicka sluzba', 'Nocna recepcija', 'Prodaja'];
+  housekeepingRoles = ['Voditelj domacinstva', 'Sobarica', 'Terasar'];
+  technicalRoles = ['Kucni majstor', 'Odrzavanje'];
   otherRoles: string[] = [];
+  profileRoles: ProfileRole[] = [];
 
   constructor(
     private dataService: DataService,
-    private workGroupService: WorkGroupService
+    private workGroupService: WorkGroupService,
   ) {}
 
   ngOnInit() {
@@ -167,6 +168,10 @@ export class StaffGroups implements OnInit {
         this.activeWorkGroupId = groupId;
       }
     );
+
+    this.dataService.profileRoles$.subscribe(profileRoles => {
+      this.profileRoles = profileRoles;
+    })
 
     this.dataService.profiles$.subscribe({
       next: profiles => {
@@ -184,18 +189,24 @@ export class StaffGroups implements OnInit {
   getProfilesByRoles(roles: string[]): Profile[] {
     if (roles === this.otherRoles) {
       // For "Other" category, get profiles that don't match any of the defined categories
-      return this.profiles.filter(profile => 
-        !profile.role || 
-        (!this.managementRoles.includes(profile.role) && 
-         !this.receptionRoles.includes(profile.role) && 
-         !this.housekeepingRoles.includes(profile.role) && 
-         !this.technicalRoles.includes(profile.role))
-      );
+      return this.profiles.filter(profile => {
+        if (!profile.role_id) return true;
+
+        const roleName = this.profileRoles.find(role => role.id == profile.role_id)?.name;
+        if (!roleName) return true; // Treat undefined as "other"
+
+        return !this.managementRoles.includes(roleName) &&
+              !this.receptionRoles.includes(roleName) &&
+              !this.housekeepingRoles.includes(roleName) &&
+              !this.technicalRoles.includes(roleName);
+      })
+      .sort(this.sortByName);
     }
     
-    return this.profiles.filter(profile => 
-      profile.role && roles.includes(profile.role)
-    ).sort(this.sortByName);
+    return this.profiles.filter(profile => {
+      const roleName = this.profileRoles.find(role => role.id == profile.role_id)?.name;
+      return roleName !== undefined && this.managementRoles.includes(roleName);
+    }).sort(this.sortByName);
   }
 
   sortByName(a: Profile, b: Profile): number {
@@ -206,13 +217,13 @@ export class StaffGroups implements OnInit {
 
   getProfilesByRole(role: string): Profile[] {
     const filteredProfiles = this.profiles.filter(profile => 
-      profile.role?.toLowerCase() === role.toLowerCase()
+      this.profileRoles.find(role => role.id == profile.role_id)?.name?.toLowerCase() === role.toLowerCase()
     );
     //console.log(`Profiles for role ${role}:`, filteredProfiles);
     return filteredProfiles;
   }
 
   getUniqueRoles(): (string | null | undefined)[] {
-    return Array.from(new Set(this.profiles.map(profile => profile.role)));
+    return Array.from(new Set(this.profiles.map(profile => this.profileRoles.find(role => role.id == profile.role_id)?.name)));
   }
 } 
