@@ -108,7 +108,7 @@ export class AppMenu implements OnInit {
             profileRole.name == 'Voditelj domacinstva'
         );
         
-        return allowedRoles.some(allowedRole => allowedRole.name = role);
+        return allowedRoles.some(allowedRole => allowedRole.name == role);
     }
 
     private buildMenu() {
