@@ -323,8 +323,8 @@ interface SpecialLocation {
             </ng-template>
         </p-dialog>
 
-        <!-- Extraordinary Task Dialog -->
-        <p-dialog header="Prijava izvanrednog zadatka" [(visible)]="extraordinaryTaskVisible" [modal]="true" [style]="{ width: '30rem' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }">
+        <!-- Unscheduled Task Dialog -->
+        <p-dialog header="Prijava izvanrednog zadatka" [(visible)]="isUnscheduledTaskVisible" [modal]="true" [style]="{ width: '30rem' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }">
             <div class="task-form">
                 <div class="field">
                     <label for="location" class="font-bold block mb-2">Lokacija*</label>
@@ -351,8 +351,8 @@ interface SpecialLocation {
 
             <ng-template pTemplate="footer">
                 <div class="flex justify-content-end gap-2">
-                    <button pButton label="Odustani" class="p-button-text" (click)="extraordinaryTaskVisible = false"></button>
-                    <button pButton label="Prijavi zadatak" (click)="submitExtraordinaryTask()" [disabled]="!isTaskFormValid()"></button>
+                    <button pButton label="Odustani" class="p-button-text" (click)="isUnscheduledTaskVisible = false"></button>
+                    <button pButton label="Prijavi zadatak" (click)="submitUnscheduledTask()" [disabled]="!isTaskFormValid()"></button>
                 </div>
             </ng-template>
         </p-dialog>
@@ -797,7 +797,7 @@ export class AppLayout {
 
     // Dialog visibility flags
     faultReportVisible: boolean = false;
-    extraordinaryTaskVisible: boolean = false;
+    isUnscheduledTaskVisible: boolean = false;
     isNotesWindowVisible: boolean = false;
     isArrivalsAndDeparturesWindowVisible: boolean = false;
     isTaskDetailsWindowVisible: boolean = false;
@@ -808,7 +808,7 @@ export class AppLayout {
     faultDescription: string = '';
     locationType: string = 'house';
 
-    // Form fields for extraordinary task
+    // Form fields for Unscheduled task
     selectedLocationForTask: House | null = null;
     selectedHouseForTask: House | null = null;
     locationTypeForTask: string = 'house';
@@ -857,7 +857,7 @@ export class AppLayout {
         {
             icon: 'pi pi-file-edit',
             command: () => {
-                this.extraordinaryTaskVisible = true;
+                this.isUnscheduledTaskVisible = true;
             }
         },
         {
@@ -1239,7 +1239,7 @@ export class AppLayout {
         }
     }
 
-    // Handle location change in extraordinary task dialog
+    // Handle location change in Unscheduled task dialog
     onLocationChangeForTask(event: any) {
         const selection = event.value;
         let house = this.houses.find(house => house.house_id == selection.house_id);
@@ -1475,7 +1475,7 @@ export class AppLayout {
         }
     }
 
-    submitExtraordinaryTask() {
+    submitUnscheduledTask() {
         if (!this.isTaskFormValid()) return;
 
         if (this.locationTypeForTask === 'house' && this.selectedHouseForTask) {
@@ -1494,7 +1494,7 @@ export class AppLayout {
                     this.locationTypeForTask = 'house';
                     this.selectedTaskType = null;
                     this.taskDescription = '';
-                    this.extraordinaryTaskVisible = false;
+                    this.isUnscheduledTaskVisible = false;
 
                     // Refresh tasks list
                     this.dataService.loadTasksFromDb();
@@ -1563,7 +1563,7 @@ export class AppLayout {
                             this.locationTypeForTask = 'house';
                             this.selectedTaskType = null;
                             this.taskDescription = '';
-                            this.extraordinaryTaskVisible = false;
+                            this.isUnscheduledTaskVisible = false;
 
                             // Refresh tasks list
                             this.dataService.loadTasksFromDb();

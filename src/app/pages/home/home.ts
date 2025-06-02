@@ -781,7 +781,7 @@ export class Home implements OnInit, OnDestroy {
 
     // Dialog visibility flags
     faultReportVisible: boolean = false;
-    extraordinaryTaskVisible: boolean = false;
+    isUnscheduledTaskVisible: boolean = false;
     phoneDialogVisible: boolean = false;
 
     // Form fields
@@ -790,7 +790,7 @@ export class Home implements OnInit, OnDestroy {
     faultDescription: string = '';
     locationType: string = 'house';
 
-    // Form fields for extraordinary task
+    // Form fields for Unscheduled task
     selectedLocationForTask: House | SpecialLocation | null = null;
     selectedHouseForTask: House | null = null;
     locationTypeForTask: string = 'house';
@@ -809,7 +809,7 @@ export class Home implements OnInit, OnDestroy {
         {
             icon: 'pi pi-plus-circle',
             command: () => {
-                this.extraordinaryTaskVisible = true;
+                this.isUnscheduledTaskVisible = true;
             }
         },
         {
@@ -920,7 +920,7 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
-    // Handle location change in extraordinary task dialog
+    // Handle location change in Unscheduled task dialog
     onLocationChangeForTask(event: any) {
         const selection = event.value;
         if (selection && 'type' in selection) {
@@ -1250,116 +1250,8 @@ export class Home implements OnInit, OnDestroy {
         return !!this.selectedLocation;
     }
 
-    submitFaultReport() {
-        if (!this.isFormValid()) return;
-
-        // Get fault report task type (assuming it's "Popravak")
-        this.dataService.getTaskTypeIdByTaskName('Popravak').then((taskTypeId) => {
-            if (!taskTypeId) {
-                console.error('Failed to get task type ID for "Popravak"');
-                return;
-            }
-
-            // Get "U tijeku" (In Progress) task progress type
-            this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('U tijeku').then((progressTypeId) => {
-                if (!progressTypeId) {
-                    console.error('Failed to get task progress type ID for "U tijeku"');
-                    return;
-                }
-
-                // Create task object based on location type
-                const taskData: any = {
-                    task_type_id: taskTypeId,
-                    task_progress_type_id: progressTypeId,
-                    description: this.faultDescription,
-                    created_by: 'user', // Replace with actual user ID
-                    is_unscheduled: true,
-                    location_type: this.locationType
-                };
-
-                // Add appropriate location fields based on location type
-                if (this.locationType === 'house' && this.selectedHouse) {
-                    taskData.house_id = this.selectedHouse.house_id;
-                    taskData.house_number = this.selectedHouse.house_number;
-                } else {
-                    // For buildings and parcels, add the location name
-                    if (this.selectedLocation && 'name' in this.selectedLocation) {
-                        taskData.location_name = this.selectedLocation.name;
-                    }
-                }
-
-                // Create task
-                this.dataService.createTask(taskData).subscribe(
-                    (result) => {
-                        console.log('Fault report created:', result);
-
-                        // Reset form and close dialog
-                        this.selectedLocation = null;
-                        this.selectedHouse = null;
-                        this.locationType = 'house';
-                        this.faultDescription = '';
-                        this.faultReportVisible = false;
-                    },
-                    (error) => console.error('Error creating fault report:', error)
-                );
-            });
-        });
-    }
-
     isTaskFormValid(): boolean {
         return !!this.selectedLocationForTask && !!this.selectedTaskType;
-    }
-
-    submitExtraordinaryTask() {
-        if (!this.isTaskFormValid()) return;
-
-        // Ensure we have selected a task type
-        if (!this.selectedTaskType) return;
-
-        // Get "U tijeku" (In Progress) task progress type
-        this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('U tijeku').then((progressTypeId) => {
-            if (!progressTypeId) {
-                console.error('Failed to get task progress type ID for "U tijeku"');
-                return;
-            }
-
-            // Create task object based on location type
-            const taskData: any = {
-                task_type_id: this.selectedTaskType!.task_type_id,
-                task_progress_type_id: progressTypeId,
-                description: this.taskDescription,
-                created_by: 'user', // Replace with actual user ID
-                is_unscheduled: true,
-                location_type: this.locationTypeForTask
-            };
-
-            // Add appropriate location fields based on location type
-            if (this.locationTypeForTask === 'house' && this.selectedHouseForTask) {
-                taskData.house_id = this.selectedHouseForTask.house_id;
-                taskData.house_number = this.selectedHouseForTask.house_number;
-            } else {
-                // For buildings and parcels, add the location name
-                if (this.selectedLocationForTask && 'name' in this.selectedLocationForTask) {
-                    taskData.location_name = this.selectedLocationForTask.name;
-                }
-            }
-
-            // Create task
-            this.dataService.createTask(taskData).subscribe(
-                (result) => {
-                    console.log('Extraordinary task created:', result);
-
-                    // Reset form and close dialog
-                    this.selectedLocationForTask = null;
-                    this.selectedHouseForTask = null;
-                    this.locationTypeForTask = 'house';
-                    this.selectedTaskType = null;
-                    this.taskDescription = '';
-                    this.extraordinaryTaskVisible = false;
-                },
-                (error) => console.error('Error creating extraordinary task:', error)
-            );
-        });
     }
 
     openTaskDetails(event: Event, task: any) {
