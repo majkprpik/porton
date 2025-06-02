@@ -430,9 +430,17 @@ interface SpecialLocation {
 
             .team-card {
                 padding: 0 !important;
+                min-height: 250px;
+                max-height: 500px;
+
+                .upload-a-photo{
+                    .task-images-container{
+                        min-height: 150px;
+                    }
+                }
 
                 .comments-content {
-                    min-height: 150px;
+                    height: 140px;
                     box-sizing: border-box;
                     padding: 10px;
                     display: flex;
@@ -446,7 +454,7 @@ interface SpecialLocation {
                 }
 
                 .comments-footer {
-                    height: 50px;
+                    height: 30px;
                     width: 100%;
                     border-radius: 0 0 10px 10px;
                     border-top: 1px solid #e5e7eb;
@@ -457,12 +465,22 @@ interface SpecialLocation {
                         border-radius: 0 0 10px 10px;
                         resize: none;
                         box-sizing: border-box;
-                        padding: 10px;
+                        padding: 10px 10px 0 10px;
                         outline: none;
 
                         &:disabled {
                             background-color: var(--surface-ground);
                         }
+                    }
+                }
+            }
+
+            .fault-report-form{
+                min-height: 300px;
+
+                .upload-a-photo{
+                    .task-images-container{
+                        min-height: 150px;
                     }
                 }
             }
@@ -563,6 +581,7 @@ interface SpecialLocation {
 
                 .save-captured-image {
                     width: 100%;
+                    max-height: 500px;
 
                     .captured-image-container {
                         width: 100%;
@@ -759,7 +778,7 @@ interface SpecialLocation {
                 .details{
                   display: flex;
                   flex-direction: column;
-                  gap: 15px;
+                  gap: 10px;
                   margin-top: 10px;
 
                   span{

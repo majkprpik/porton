@@ -54,6 +54,7 @@ import { PanelModule } from 'primeng/panel';
             
             @if(!isCleaningCollapsed){
               <p-button 
+                class="add-new-group-button"
                 label="Nova Grupa" 
                 icon="pi pi-plus"
                 severity="secondary"
@@ -112,6 +113,7 @@ import { PanelModule } from 'primeng/panel';
             
             @if(!isRepairsCollapsed){
               <p-button 
+                class="add-new-group-button"
                 label="Nova Grupa" 
                 icon="pi pi-plus"
                 severity="secondary"
@@ -173,11 +175,13 @@ import { PanelModule } from 'primeng/panel';
     .work-groups-container {
       height: 100%;
       padding: 1rem;
+      padding-left: 30px;
       background-color: var(--surface-card);
       border-radius: 8px;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
+      scrollbar-gutter: stable;
     }
 
     .work-groups-header {
@@ -208,20 +212,20 @@ import { PanelModule } from 'primeng/panel';
           flex-direction: row;
           align-items: center;
           gap: 10px;
-        }
 
-        .work-groups-count {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 1.5rem;
-          height: 1.5rem;
-          padding: 0 0.5rem;
-          background: var(--primary-color);
-          color: var(--primary-color-text);
-          border-radius: 1rem;
-          font-size: 0.75rem;
-          font-weight: 700;
+          .work-groups-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.5rem;
+            height: 1.5rem;
+            padding: 0 0.5rem;
+            background: var(--primary-color);
+            color: var(--primary-color-text);
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+          }
         }
 
         .work-group-header-actions{
@@ -240,6 +244,10 @@ import { PanelModule } from 'primeng/panel';
           border-radius: 6px;
           background: var(--surface-ground);
           height: 45px;
+
+          .add-new-group-button{
+            margin-right: 70px;
+          }
         }
 
         .p-panel-content {

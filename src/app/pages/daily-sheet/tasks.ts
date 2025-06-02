@@ -54,6 +54,7 @@ import { WorkGroupService } from '../service/work-group.service';
       flex-direction: column;
       gap: 0.5rem;
       padding: 1rem;
+      scrollbar-gutter: stable;
     }
   `]
 })
