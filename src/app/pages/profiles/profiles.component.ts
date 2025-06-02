@@ -71,9 +71,10 @@ interface ExtendedProfile extends Profile {
                   (click)="editProfile(profile)">
                 </p-button>
                 <p-button 
+                  [disabled]="profile.id == authService.getStoredUserId()"
                   icon="pi pi-trash" 
                   styleClass="p-button-rounded p-button-danger mr-2" 
-                  (click)="showDeleteProfile(profile)">
+                  (click)="profile.id !== authService.getStoredUserId() && showDeleteProfile(profile)">
                 </p-button>
               </td>
             </ng-container>
@@ -235,7 +236,7 @@ export class ProfilesComponent implements OnInit {
   constructor(
     private dataService: DataService,
     private messageService: MessageService,
-    private authService: AuthService,
+    public authService: AuthService,
     public profileService: ProfileService
   ) {
     // Create a map of user names to passwords from the auth service
