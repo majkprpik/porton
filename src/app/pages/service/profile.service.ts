@@ -9,6 +9,7 @@ import { DataService, Profile, ProfileRole } from './data.service';
 export class ProfileService {
   $staffToAdd = new BehaviorSubject<any>(null);
   $staffToRemove = new BehaviorSubject<any>(null);
+  $profileForLocalStorage = new BehaviorSubject<any>(null);
   profiles: Profile[] = [];
   profileRoles: ProfileRole[] = [];
 
@@ -16,10 +17,6 @@ export class ProfileService {
     private supabase: SupabaseService,
     private dataService: DataService
   ) {
-
-  }
-
-  ngOnInit(){
     this.dataService.profiles$.subscribe(profiles => {
       this.profiles = profiles;
     }); 

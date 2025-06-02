@@ -5,6 +5,7 @@ import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { combineLatest } from 'rxjs';
 import { DataService, ProfileRole } from '../../pages/service/data.service';
+import { ProfileService } from '../../pages/service/profile.service';
 
 @Component({
     selector: 'app-menu',
@@ -23,6 +24,7 @@ export class AppMenu implements OnInit {
 
     constructor(
         private dataService: DataService,
+        private profileService: ProfileService,
     ) {
         
     }
@@ -42,6 +44,12 @@ export class AppMenu implements OnInit {
                 console.error(error);
             }
         });
+
+        this.profileService.$profileForLocalStorage.subscribe(profile => {
+            if(profile){
+                this.buildMenu();
+            }
+        })
     }
 
     private isRoleAllowedForPregled(role?: string): boolean {
