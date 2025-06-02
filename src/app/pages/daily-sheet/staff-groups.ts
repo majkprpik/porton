@@ -4,46 +4,52 @@ import { ChipModule } from 'primeng/chip';
 import { DataService, Profile, ProfileRole } from '../service/data.service';
 import { CommonModule } from '@angular/common';
 import { WorkGroupService } from '../service/work-group.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-staff-groups',
   standalone: true,
-  imports: [CommonModule, StaffGroup, ChipModule],
+  imports: [
+    CommonModule, 
+    StaffGroup, 
+    ChipModule,
+    TranslateModule,
+  ],
   template: `
     <div class="staff-groups-container">
       @if (loading) {
         <div class="loading-state">
           <i class="pi pi-spin pi-spinner"></i>
-          <span>Loading staff...</span>
+          <span>{{ 'DAILY-SHEET.STAFF.LOADING' | translate }}</span>
         </div>
       } @else {
         @if (activeWorkGroupId) {
           <div class="staff-groups-header">
-            <h3>Available Staff for Team {{activeWorkGroupId}}</h3>
+            <h3>{{ 'DAILY-SHEET.STAFF.AVAILABLE-STAFF' | translate }}{{activeWorkGroupId}}</h3>
           </div>
         }
 
         <app-staff-group
-          groupName="ODJEL DOMAĆINSTVA"
+          [groupName]="'DAILY-SHEET.STAFF.HOUSEKEEPING' | translate"
           groupIcon="pi pi-home"
           [staffMembers]="getProfilesByRoles(housekeepingRoles)"
         ></app-staff-group>
 
         <app-staff-group
-          groupName="ODJEL TEHNIKA"
+          [groupName]="'DAILY-SHEET.STAFF.TECHNICAL-DEPARTMENT' | translate"
           groupIcon="pi pi-wrench"
           [staffMembers]="getProfilesByRoles(technicalRoles)"
         ></app-staff-group>
         
         <app-staff-group
-          groupName="ODJEL RECEPCIJA"
+          [groupName]="'DAILY-SHEET.STAFF.RECEPTION' | translate"
           groupIcon="pi pi-users"
           [isExpanded]="false"
           [staffMembers]="getProfilesByRoles(receptionRoles)"
         ></app-staff-group>
         
         <app-staff-group
-          groupName="UPRAVA"
+          [groupName]="'DAILY-SHEET.STAFF.MANAGEMENT' | translate"
           groupIcon="pi pi-briefcase"
           [isExpanded]="false"
           [staffMembers]="getProfilesByRoles(managementRoles)"

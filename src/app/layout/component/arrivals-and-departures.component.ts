@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-arrivals-and-departures',
@@ -28,6 +29,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     ButtonModule,
     DatePickerModule,
     ConfirmDialogModule,
+    TranslateModule,
   ],
   providers: [
     ConfirmationService,
@@ -40,13 +42,13 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
           <p-button icon="pi pi-angle-left" (click)="goToPreviousDay()"></p-button>
           <div class="name-with-icon">
             <i class="pi pi-sign-out mr-2"></i>
-            <span>Odlasci</span>
+            <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.DEPARTURES' | translate }}</span>
           </div>
         </div>
 
         <span class="selected-date">
             @if(isToday(selectedDate)){
-              <span [ngStyle]="{'height': '20px'}">Danas</span>
+              <span [ngStyle]="{'height': '20px'}">{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.TODAY' | translate }}</span>
             } @else {
               <p-datepicker 
                 [(ngModel)]="selectedDate"
@@ -64,7 +66,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
         <div class="section-header">
           <div class="name-with-icon">
             <i class="pi pi-sign-in mr-2"></i>
-            <span>Dolasci</span>
+            <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.ARRIVALS' | translate }}</span>
           </div>
           <p-button icon="pi pi-angle-right" (click)="goToNextDay()"></p-button>
         </div>        
@@ -76,7 +78,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
             @if(!departures.length){
               <div class="empty-message">
                 <i class="pi pi-info-circle"></i>
-                <span>Nema odlazaka za danas</span>
+                <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.NO-DEPARTURES' | translate }}</span>
               </div>
             } @else{
               @for(departure of departures; track departure.house_availability_id){
@@ -120,7 +122,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
             @if(!arrivals.length){
               <div class="empty-message">
                 <i class="pi pi-info-circle"></i>
-                <span>Nema dolazaka za danas</span>
+                <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.NO-ARRIVALS' | translate }}</span>
               </div>
             } @else{
               @for(arrival of arrivals; track arrival.house_availability_id){
@@ -135,7 +137,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
                   </div>
                   <div class="house-container">
                     <label for="arrival-checkbox-{{ arrival.house_number }}">
-                      House: <span class="house-number">{{ arrival.house_number }}</span>
+                      {{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.HOUSE' | translate }}: <span class="house-number">{{ arrival.house_number }}</span>
                     </label>
                   </div>
                   <div class="time-container">
@@ -199,6 +201,12 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
           color: var(--text-color);
           gap: 10px;
           height: 100%;
+
+          .name-with-icon{
+            span{
+              font-size: 13px;
+            }
+          }
         }
       }
 

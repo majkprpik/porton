@@ -1,0 +1,87 @@
+{
+    "BUTTONS": {
+        "REPORT": "Prijavi",
+        "REPORT-TASK": "Prijavi zadatak",
+        "SAVE": "Spremi",
+        "CANCEL": "Odustani",
+        "DELETE": "Obriši",
+        "CONFIRM": "Potvrdi"
+    },
+    "DAILY-SHEET": {
+        "TITLE": "Dnevni list",
+        "TASKS": {
+            "TITLE": "Zadaci",
+            "LOADING-TASKS": "Učitavanje zadataka...",
+            "HOUSE-CLEANING": "Čišćenje kućice",
+            "DECK-CLEANING": "Čišćenje terase",
+            "REPAIR": "Popravak",
+            "SHEET-CHANGE": "Mijenjanje posteljine",
+            "TOWEL-CHANGE": "Mijenjenje ručnika"
+        },
+        "WORK-GROUPS": {
+            "TITLE": "Radne grupe",
+            "LOADING": "Učitavanje radnih grupa...",
+            "PUBLISH": "OBJAVI",
+            "PUBLISHED": "OBJAVLJENO",
+            "NEW-GROUP": "NOVA GRUPA",
+            "TODAY": "Danas",
+            "NOT-PUBLISHED": "NEOBJAVLJENO",
+            "START-CHANGES": "ZAPOČNI PROMJENE",
+            "FINISH-CHANGES": "ZAVRŠI PROMJENE",
+            "CLICK-TASKS": "Kliknite zadatke za dodjelu",
+            "CLICK-STAFF": "Kliknite osoblje za dodjelu",
+            "SORT-TASKS": "Sortiraj zadatke",
+            "CLEANING": "ČIŠĆENJE",
+            "NO-CLEANING-GROUPS": "Nema kreiranih radnih grupa za čišćenje",
+            "REPAIRS": "POPRAVCI",
+            "NO-REPAIR-GROUPS": "Nema kreiranih radnih grupa za popravke"
+        },
+        "STAFF": {
+            "TITLE": "Osoblje",
+            "LOADING": "Učitavanje osoblja...",
+            "AVAILABLE-STAFF": "Dostupno osoblje za Tim",
+            "HOUSEKEEPING": "ODJEL DOMAĆINSTVA",
+            "TECHNICAL-DEPARTMENT": "ODJEL TEHNIKA",
+            "RECEPTION": "ODJEL RECEPCIJA",
+            "MANAGEMENT": "UPRAVA"
+        }
+    },
+    "APP-LAYOUT": {
+        "ARRIVALS-AND-DEPARTURES": {
+            "TITLE": "Dolasci i odlasci",
+            "TODAY": "Danas",
+            "ARRIVALS": "Dolasci",
+            "DEPARTURES": "Odlasci",
+            "HOUSE": "Kućica",
+            "NO-ARRIVALS": "Nema dolazaka za danas",
+            "NO-DEPARTURES": "Nema odlazaka za danas"
+        },
+        "NOTES": {
+            "TITLE": "Bilješke",
+            "TODAY": "Danas",
+            "LOADING-NOTES": "Učitavanje bilješki...",
+            "NO-NOTES": "Nema bilješki za ovaj dan",
+            "ADD-NOTE": "Dodaj bilješku..."
+        },
+        "UNSCHEDULED-TASK-REPORT": {
+            "TITLE": "Prijavi izvanredan zadatak",
+            "LOCATION": "Lokacija",
+            "SELECT-LOCATION": "Odaberi lokaciju",
+            "TASK-TYPE": "Tip zadatka",
+            "SELECT-TASK-TYPE": "Odaberi tip zadatka",
+            "DESCRIPTION": "Opis",
+            "ADD-DESCRIPTION": "Dodaj opis"
+        },
+        "REPAIR-TASK-REPORT": {
+            "TITLE": "Prijavi popravak",
+            "LOCATION": "Lokacija",
+            "SELECT-LOCATION": "Odaberi lokaciju",
+            "DESCRIPTION": "Opis",
+            "ADD-DESCRIPTION": "Dodaj opis",
+            "ADD-IMAGE": "Dodaj slike",
+            "ADDED-IMAGES": "Dodane slike",
+            "CAPTURE-IMAGE": "Dodaj sliku...",
+            "SAVE-IMAGE": "Spremi sliku?"
+        }
+    }
+}

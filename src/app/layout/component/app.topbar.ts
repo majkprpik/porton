@@ -9,7 +9,10 @@ import { MenuModule } from 'primeng/menu';
 import { Menu } from 'primeng/menu';
 import { AuthService } from '../../pages/service/auth.service';
 import { ButtonModule } from 'primeng/button';
-import { DataService, Profile, ProfileRole } from '../../pages/service/data.service';
+import { DataService, Language, Profile, ProfileRole } from '../../pages/service/data.service';
+import { DropdownModule } from 'primeng/dropdown';
+import { LanguageService } from '../../pages/language/language.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-topbar',
@@ -21,6 +24,8 @@ import { DataService, Profile, ProfileRole } from '../../pages/service/data.serv
         AppConfigurator, 
         MenuModule,
         ButtonModule,
+        DropdownModule,
+        FormsModule,
     ],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
@@ -51,6 +56,13 @@ import { DataService, Profile, ProfileRole } from '../../pages/service/data.serv
 
         <div class="layout-topbar-actions">
             <div class="layout-config-menu">
+                <p-dropdown 
+                    [options]="languageService.languages" 
+                    [(ngModel)]="selectedLanguage" 
+                    optionLabel="name"
+                    (onChange)="changeLanguage()"
+                />
+            
                 <button type="button" class="layout-topbar-action" (click)="toggleDarkMode()">
                     <i [ngClass]="{ 'pi ': true, 'pi-moon': layoutService.isDarkTheme(), 'pi-sun': !layoutService.isDarkTheme() }"></i>
                 </button>
@@ -103,13 +115,18 @@ export class AppTopbar {
     profiles: Profile[] = [];
     profileRoles: ProfileRole[] = [];
 
+    selectedLanguage: Language = { code: '', name: ''};
+
     constructor(
         public layoutService: LayoutService,
         public authService: AuthService,
         public confirmationService: ConfirmationService,
         private dataService: DataService,
+        public languageService: LanguageService,
     ) {
-
+        this.languageService.$selectedLanguage.subscribe(selectedLanguage => {
+            this.selectedLanguage = selectedLanguage;
+        });
     }
 
     ngOnInit(){
@@ -120,6 +137,10 @@ export class AppTopbar {
         this.dataService.profileRoles$.subscribe(profileRoles => {
             this.profileRoles = profileRoles;
         });
+    }
+
+    changeLanguage(){
+        this.languageService.setLanguage(this.selectedLanguage);
     }
 
     toggleDarkMode() {

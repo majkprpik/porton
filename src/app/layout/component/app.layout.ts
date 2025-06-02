@@ -25,6 +25,8 @@ import { ChipModule } from 'primeng/chip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProfileService } from '../../pages/service/profile.service';
 import { AuthService } from '../../pages/service/auth.service';
+import { LanguageService } from '../../pages/language/language.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -54,6 +56,7 @@ interface SpecialLocation {
         TabViewModule,
         ChipModule,
         ConfirmDialogModule,
+        TranslateModule,
     ],
     providers: [MessageService, ConfirmationService, { provide: LOCALE_ID, useValue: 'hr' }],
     template: ` <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
@@ -251,11 +254,17 @@ interface SpecialLocation {
         ></p-speedDial>
 
         <!-- Fault Report Dialog -->
-        <p-dialog header="Prijava kvara" [(visible)]="faultReportVisible" [modal]="true" [style]="{ width: '30rem' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }" (onHide)="resetForm('fault-report')">
+        <p-dialog [header]="'APP-LAYOUT.REPAIR-TASK-REPORT.TITLE' | translate" [(visible)]="faultReportVisible" [modal]="true" [style]="{ width: '30rem' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }" (onHide)="resetForm('fault-report')">
             <div class="fault-report-form">
                 <div class="field">
-                    <label for="location" class="font-bold block mb-2">Lokacija*</label>
-                    <p-dropdown id="location" [options]="locationOptions" [(ngModel)]="selectedLocation" placeholder="Odaberi lokaciju" [style]="{ width: '100%' }" (onChange)="onLocationChange($event)">
+                    <label for="location" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.LOCATION' | translate }}*</label>
+                    <p-dropdown id="location" 
+                        [options]="locationOptions" 
+                        [(ngModel)]="selectedLocation" 
+                        [placeholder]="'APP-LAYOUT.REPAIR-TASK-REPORT.SELECT-LOCATION' | translate" 
+                        [style]="{ width: '100%' }" 
+                        (onChange)="onLocationChange($event)"
+                    >
                         <ng-template let-item pTemplate="item">
                             <span>{{ item.name || item.house_name }}</span>
                         </ng-template>
@@ -266,16 +275,23 @@ interface SpecialLocation {
                 </div>
 
                 <div class="field mt-4">
-                    <label for="description" class="font-bold block mb-2">Opis</label>
-                    <textarea id="description" pInputTextarea [(ngModel)]="faultDescription" [rows]="5" [style]="{ width: '100%' }" placeholder="Unesite opis kvara"></textarea>
+                    <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.DESCRIPTION' | translate }}</label>
+                    <textarea 
+                        id="description" 
+                        pInputTextarea 
+                        [(ngModel)]="faultDescription" 
+                        [rows]="5" 
+                        [style]="{ width: '100%' }" 
+                        [placeholder]="'APP-LAYOUT.REPAIR-TASK-REPORT.ADD-DESCRIPTION' | translate"
+                    ></textarea>
                 </div>
 
                 @if (!capturedImage) {
                     <div class="upload-a-photo">
                         @if (!taskImages.length) {
-                            <label for="description" class="font-bold block mb-2">Učitaj sliku</label>
+                            <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.ADD-IMAGE' | translate }}</label>
                         } @else {
-                            <label for="description" class="font-bold block mb-2">Učitane slike</label>
+                            <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.ADDED-IMAGES' | translate }}</label>
                         }
 
                         <div class="task-images-container" [ngStyle]="{ 'justify-content': taskImages.length ? 'flex-start' : 'center' }">
@@ -294,13 +310,13 @@ interface SpecialLocation {
 
                             <div class="camera-icon-container" (click)="openCamera()">
                                 <span class="camera-icon">📷</span>
-                                <span class="camera-icon-label">Capture an image...</span>
+                                <span class="camera-icon-label">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.CAPTURE-IMAGE' | translate }}</span>
                             </div>
                         </div>
                     </div>
                 } @else {
                     <div class="save-captured-image">
-                        <label for="description" class="font-bold block mb-2">Spremi fotografiju?</label>
+                        <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.SAVE-IMAGE' | translate }}</label>
                         <div class="captured-image-container">
                             <img [src]="capturedImage" alt="Captured Photo" />
                             <div class="save-captured-image-buttons">
@@ -316,19 +332,26 @@ interface SpecialLocation {
             <ng-template pTemplate="footer">
                 @if (!capturedImage) {
                     <div class="flex justify-content-end gap-2">
-                        <button pButton label="Odustani" class="p-button-text" (click)="faultReportVisible = false"></button>
-                        <button pButton label="Prijavi" (click)="submitFaultReport()" [disabled]="!isFormValid()"></button>
+                        <button pButton [label]="'BUTTONS.CANCEL' | translate" class="p-button-text" (click)="faultReportVisible = false"></button>
+                        <button pButton [label]="'BUTTONS.REPORT' | translate" (click)="submitFaultReport()" [disabled]="!isFormValid()"></button>
                     </div>
                 }
             </ng-template>
         </p-dialog>
 
         <!-- Unscheduled Task Dialog -->
-        <p-dialog header="Prijava izvanrednog zadatka" [(visible)]="isUnscheduledTaskVisible" [modal]="true" [style]="{ width: '30rem' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }">
+        <p-dialog [header]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.TITLE' | translate" [(visible)]="isUnscheduledTaskVisible" [modal]="true" [style]="{ width: '30rem' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }">
             <div class="task-form">
                 <div class="field">
-                    <label for="location" class="font-bold block mb-2">Lokacija*</label>
-                    <p-dropdown id="location" [options]="locationOptions" [(ngModel)]="selectedLocationForTask" placeholder="Odaberi lokaciju" [style]="{ width: '100%' }" (onChange)="onLocationChangeForTask($event)">
+                    <label for="location" class="font-bold block mb-2">{{ 'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.LOCATION' | translate }}*</label>
+                    <p-dropdown 
+                        id="location" 
+                        [options]="locationOptions" 
+                        [(ngModel)]="selectedLocationForTask" 
+                        [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-LOCATION' | translate" 
+                        [style]="{ width: '100%' }" 
+                        (onChange)="onLocationChangeForTask($event)"
+                    >
                         <ng-template let-item pTemplate="item">
                             <span>{{ item.name || item.house_name }}</span>
                         </ng-template>
@@ -339,20 +362,34 @@ interface SpecialLocation {
                 </div>
 
                 <div class="field mt-4">
-                    <label for="taskType" class="font-bold block mb-2">Vrsta zadatka*</label>
-                    <p-dropdown id="taskType" [options]="taskTypes" [(ngModel)]="selectedTaskType" optionLabel="task_type_name" placeholder="Odaberi vrstu zadatka" [style]="{ width: '100%' }"></p-dropdown>
+                    <label for="taskType" class="font-bold block mb-2">{{ 'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.TASK-TYPE' | translate }}*</label>
+                    <p-dropdown 
+                        id="taskType" 
+                        [options]="taskTypes" 
+                        [(ngModel)]="selectedTaskType" 
+                        optionLabel="task_type_name" 
+                        [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-TASK-TYPE' | translate" 
+                        [style]="{ width: '100%' }"
+                    ></p-dropdown>
                 </div>
 
                 <div class="field mt-4">
-                    <label for="taskDescription" class="font-bold block mb-2">Opis</label>
-                    <textarea id="taskDescription" pInputTextarea [(ngModel)]="taskDescription" [rows]="5" [style]="{ width: '100%' }" placeholder="Unesite opis zadatka"></textarea>
+                    <label for="taskDescription" class="font-bold block mb-2">{{ 'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.DESCRIPTION' | translate }}</label>
+                    <textarea 
+                        id="taskDescription" 
+                        pInputTextarea 
+                        [(ngModel)]="taskDescription" 
+                        [rows]="5" 
+                        [style]="{ width: '100%' }" 
+                        [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.ADD-DESCRIPTION' | translate"
+                    ></textarea>
                 </div>
             </div>
 
             <ng-template pTemplate="footer">
                 <div class="flex justify-content-end gap-2">
-                    <button pButton label="Odustani" class="p-button-text" (click)="isUnscheduledTaskVisible = false"></button>
-                    <button pButton label="Prijavi zadatak" (click)="submitUnscheduledTask()" [disabled]="!isTaskFormValid()"></button>
+                    <button pButton [label]="'BUTTONS.CANCEL' | translate" class="p-button-text" (click)="isUnscheduledTaskVisible = false"></button>
+                    <button pButton [label]="'BUTTONS.REPORT' | translate" (click)="submitUnscheduledTask()" [disabled]="!isTaskFormValid()"></button>
                 </div>
             </ng-template>
         </p-dialog>

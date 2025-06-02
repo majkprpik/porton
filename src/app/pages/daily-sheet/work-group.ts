@@ -18,6 +18,7 @@ import { DialogModule } from 'primeng/dialog';
 import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { HouseService } from '../service/house.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-work-group',
@@ -35,6 +36,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     CdkDropList, 
     CdkDrag,
     ConfirmDialogModule,
+    TranslateModule,
   ],
   providers: [ConfirmationService],
   template: `
@@ -44,12 +46,12 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
         <div class="work-group-title-area">
           <span class="work-group-title">{{getGroupColorName()}}</span>
           <p-tag 
-            [value]="workGroup?.is_locked ? 'OBJAVLJENO' : 'NEOBJAVLJENO'"
+            [value]="(workGroup?.is_locked ? 'DAILY-SHEET.WORK-GROUPS.PUBLISHED' : 'DAILY-SHEET.WORK-GROUPS.NOT-PUBLISHED') | translate"
             [severity]="workGroup?.is_locked ? 'success' : 'secondary'"
           ></p-tag>
         </div>
         <p-button 
-          [label]="isActive ? 'ZAVRŠI IZMJENE' : 'ZAPOČNI IZMJENE'"
+          [label]="(isActive ? 'DAILY-SHEET.WORK-GROUPS.FINISH-CHANGES' : 'DAILY-SHEET.WORK-GROUPS.START-CHANGES') | translate"
           [severity]="isActive ? 'secondary' : 'success'"
           (onClick)="onGroupClick()"
           class="activate-button"
@@ -68,7 +70,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
       <div class="work-group-content">
         <div class="tasks-area">
           @if (assignedTasks.length === 0) {
-            <div class="drop-area">Kliknite zadatke za dodjelu</div>
+            <div class="drop-area">{{ 'DAILY-SHEET.WORK-GROUPS.CLICK-TASKS' | translate }}</div>
           } @else {
             <div class="tasks-list" pDroppable="tasks" (onDrop)="onDrop($event)">
               @for (task of assignedTasks; track task.task_id; let i = $index) {
@@ -100,7 +102,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
         </div>
         <div class="staff-area">
           @if (assignedStaff.length === 0) {
-            <div class="drop-area">Kliknite osoblje za dodjelu</div>
+            <div class="drop-area">{{ 'DAILY-SHEET.WORK-GROUPS.CLICK-STAFF' | translate }}</div>
           } @else {
             <div class="staff-list">
               @for (staff of assignedStaff; track staff.id) {
@@ -118,7 +120,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     </div>
 
     <p-dialog 
-      header="Poredaj zadatke" 
+      [header]="'DAILY-SHEET.WORK-GROUPS.SORT-TASKS' | translate" 
       [modal]="true" 
       [(visible)]="isSortDialogVisible" 
       [style]="{ width: '25rem' }"

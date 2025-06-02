@@ -7,6 +7,7 @@ import { combineLatest } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ProfileService } from '../../pages/service/profile.service';
 import { Calendar } from 'primeng/calendar';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-notes',
@@ -16,6 +17,7 @@ import { Calendar } from 'primeng/calendar';
     FormsModule,
     ButtonModule,
     Calendar,
+    TranslateModule,
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'hr' }
@@ -26,9 +28,9 @@ import { Calendar } from 'primeng/calendar';
         <div class="notes-header">
           <p-button [disabled]="daysIndex <= -365" (onClick)="decreaseIndex()" icon="pi pi-angle-left"></p-button>
           <div class="notes-title">
-            <span id="notes">Notes</span>
+            <span id="notes">{{ 'APP-LAYOUT.NOTES.TITLE' | translate }}</span>
             @if(isToday(selectedDate)){
-              <span [ngStyle]="{'height': '20px'}">Danas</span>
+              <span [ngStyle]="{'height': '20px'}">{{ 'APP-LAYOUT.NOTES.TODAY' | translate }}</span>
             } @else {
               <p-calendar 
                 [(ngModel)]="selectedDate" 
@@ -48,10 +50,10 @@ import { Calendar } from 'primeng/calendar';
 
       <div class="notes-content" #messagesContainer>
         @if(!notes.length && !areNotesLoaded){
-          <span>Loading notes...</span>
+          <span>{{ 'APP-LAYOUT.NOTES.LOADING-NOTES' | translate }}</span>
         }
         @if(areNotesLoaded && notesForSelectedDate.length == 0){
-          <span>No notes for this day</span>
+          <span>{{ 'APP-LAYOUT.NOTES.NO-NOTES' | translate }}</span>
         }
         @if(notesForSelectedDate.length > 0){
           @for(note of notesForSelectedDate; track note?.id || i; let i = $index) {
@@ -60,7 +62,7 @@ import { Calendar } from 'primeng/calendar';
                 <div class="left-half-line"></div>
                 @if(isToday(note.time_sent)){
                   <span>
-                    Danas
+                    {{ 'APP-LAYOUT.NOTES.TODAY' | translate }}
                   </span>
                 } @else {
                   <span>
@@ -84,7 +86,7 @@ import { Calendar } from 'primeng/calendar';
 
       <div class="notes-footer">
         <textarea 
-          placeholder="Add a note..."
+          [placeholder]="'APP-LAYOUT.NOTES.ADD-NOTE' | translate"
           [(ngModel)]="note"
           (keydown.enter)="addNote($event)"
           [disabled]="daysIndex < 0"

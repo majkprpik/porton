@@ -1,0 +1,87 @@
+{
+    "BUTTONS": {
+        "REPORT": "Report",
+        "REPORT-TASK": "Report task",
+        "SAVE": "Save",
+        "CANCEL": "Cancel",
+        "DELETE": "Delete",
+        "CONFIRM": "Confirm"
+    },
+    "DAILY-SHEET": {
+        "TITLE": "Daily sheet",
+        "TASKS": {
+            "TITLE": "Tasks",
+            "LOADING-TASKS": "Loading tasks...",
+            "HOUSE-CLEANING": "House cleaning",
+            "DECK-CLEANING": "Deck cleaning",
+            "REPAIR": "Repair",
+            "SHEET-CHANGE": "Sheet change",
+            "TOWEL-CHANGE": "Towel change"
+        },
+        "WORK-GROUPS": {
+            "TITLE": "Work groups",
+            "LOADING": "Loading work groups...",
+            "PUBLISH": "PUBLISH",
+            "PUBLISHED": "PUBLISHED",
+            "NEW-GROUP": "New group",
+            "TODAY": "Today",
+            "NOT-PUBLISHED": "NOT PUBLISHED",
+            "START-CHANGES": "START CHANGES",
+            "FINISH-CHANGES": "FINISH CHANGES",
+            "CLICK-TASKS": "Click tasks to assign",
+            "CLICK-STAFF": "Click staff to assign",
+            "SORT-TASKS": "Sort tasks",
+            "CLEANING": "CLEANING",
+            "NO-CLEANING-GROUPS": "No created work groups for cleaning",
+            "REPAIRS": "REPAIRS",
+            "NO-REPAIR-GROUPS": "No created work groups for repairs"
+        },
+        "STAFF": {
+            "TITLE": "Staff",
+            "LOADING": "Loading staff...",
+            "AVAILABLE-STAFF": "Available Staff for Team",
+            "HOUSEKEEPING": "HOUSEKEEPING",
+            "TECHNICAL-DEPARTMENT": "TECHNICAL DEPARTMENT",
+            "RECEPTION": "RECEPTION",
+            "MANAGEMENT": "MANAGEMENT"
+        }
+    },
+    "APP-LAYOUT": {
+        "ARRIVALS-AND-DEPARTURES": {
+            "TITLE": "Arrivals and departures",
+            "TODAY": "Today",
+            "ARRIVALS": "Arrivals",
+            "DEPARTURES": "Departures",
+            "HOUSE": "House",
+            "NO-ARRIVALS": "No arrivals for today",
+            "NO-DEPARTURES": "No departures for today"
+        },
+        "NOTES": {
+            "TITLE": "Notes",
+            "TODAY": "Today",
+            "LOADING-NOTES": "Loading notes...",
+            "NO-NOTES": "No notes for this day",
+            "ADD-NOTE": "Add a note..."
+        },
+        "UNSCHEDULED-TASK-REPORT": {
+            "TITLE": "Report an unscheduled task",
+            "LOCATION": "Location",
+            "SELECT-LOCATION": "Select a location",
+            "TASK-TYPE": "Task type",
+            "SELECT-TASK-TYPE": "Select a task type",
+            "DESCRIPTION": "Description",
+            "ADD-DESCRIPTION": "Add description for task"
+        },
+        "REPAIR-TASK-REPORT": {
+            "TITLE": "Report a repair task",
+            "LOCATION": "Location",
+            "SELECT-LOCATION": "Select a location",
+            "DESCRIPTION": "Description",
+            "ADD-DESCRIPTION": "Add description for task",
+            "ADD-IMAGE": "Add images",
+            "ADDED-IMAGES": "Added images",
+            "CAPTURE-IMAGE": "Capture an image...",
+            "SAVE-IMAGE": "Save image?"
+        }
+    }
+}

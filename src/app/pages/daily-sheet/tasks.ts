@@ -6,16 +6,17 @@ import { combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-tasks',
   standalone: true,
-  imports: [CommonModule, TaskGroupComponent, ProgressSpinnerModule],
+  imports: [CommonModule, TaskGroupComponent, ProgressSpinnerModule, TranslateModule],
   template: `
     @if (loading) {
       <div class="loading-container">
         <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
-        <span>Loading tasks...</span>
+        <span>{{ 'DAILY-SHEET.WORK-GROUPS.LOADING-TASKS' | translate }}</span>
       </div>
     } @else {
       <div class="tasks-container">

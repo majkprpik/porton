@@ -11,6 +11,7 @@ import { forkJoin } from 'rxjs';
 import { WorkGroupService } from '../service/work-group.service';
 import { TaskService } from '../service/task.service';
 import { PanelModule } from 'primeng/panel';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-work-groups',
@@ -21,20 +22,21 @@ import { PanelModule } from 'primeng/panel';
     WorkGroup, 
     ProgressSpinnerModule,
     PanelModule,
+    TranslateModule
   ],
   template: `
     @if (loading) {
       <div class="loading-container">
         <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
-        <span>Učitavanje radnih grupa...</span>
+        <span>{{ 'DAILY-SHEET.WORK-GROUPS.LOADING' | translate }}</span>
       </div>
     } @else {
       <div class="work-groups-container">
         <div class="work-groups-header">
-          <h2>Radne Grupe</h2>
+          <h2>{{ 'DAILY-SHEET.WORK-GROUPS.TITLE' | translate }}</h2>
           <div class="header-actions">
             <p-button 
-              label="OBJAVI" 
+              [label]="'DAILY-SHEET.WORK-GROUPS.PUBLISH' | translate" 
               icon="pi pi-check"
               (onClick)="publishWorkGroups()"
             ></p-button>
@@ -48,14 +50,14 @@ import { PanelModule } from 'primeng/panel';
         >
           <ng-template pTemplate="header" class="work-group-container-header">
             <div class="left-side">
-              <span class="group-name">ČIŠĆENJE</span>
+              <span class="group-name">{{ 'DAILY-SHEET.WORK-GROUPS.CLEANING' | translate }}</span>
               <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroups)}}</span>
             </div>
             
             @if(!isCleaningCollapsed){
               <p-button 
                 class="add-new-group-button"
-                label="Nova Grupa" 
+                [label]="'DAILY-SHEET.WORK-GROUPS.NEW-GROUP' | translate" 
                 icon="pi pi-plus"
                 severity="secondary"
                 (onClick)="createWorkGroup(false)"
@@ -66,7 +68,7 @@ import { PanelModule } from 'primeng/panel';
           <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
             @if (!workGroupService.getNumberOfCleaningWorkGroups(workGroups)) {
               <div class="empty-state">
-                <p>Nema kreiranih radnih grupa za čišćenje</p>
+                <p>{{ 'DAILY-SHEET.WORK-GROUPS.NO-CLEANING-GROUPS' | translate }}</p>
               </div>
             } @else {
               <div class="groups-container">
@@ -75,7 +77,7 @@ import { PanelModule } from 'primeng/panel';
                     <div class="date-separator">
                       <div class="left-half-line"></div>
                       @if(isToday(group.created_at)){
-                        <span>Danas</span>
+                        <span>{{ 'DAILY-SHEET.WORK-GROUPS.TODAY' | translate }}</span>
                       } @else {
                         <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
                       }
@@ -107,14 +109,14 @@ import { PanelModule } from 'primeng/panel';
         >
           <ng-template pTemplate="header" class="work-group-container-header">
             <div class="left-side">
-              <span class="group-name">POPRAVCI</span>
+              <span class="group-name">{{ 'DAILY-SHEET.WORK-GROUPS.REPAIRS' | translate }}</span>
               <span class="work-groups-count">{{workGroupService.getNumberOfRepairWorkGroups(workGroups)}}</span>
             </div>
             
             @if(!isRepairsCollapsed){
               <p-button 
                 class="add-new-group-button"
-                label="Nova Grupa" 
+                [label]="'DAILY-SHEET.WORK-GROUPS.NEW-GROUP' | translate" 
                 icon="pi pi-plus"
                 severity="secondary"
                 (onClick)="createWorkGroup(true)"
@@ -125,7 +127,7 @@ import { PanelModule } from 'primeng/panel';
           <div class="work-groups-list" [class.has-active-group]="activeGroupId !== undefined">
             @if (!workGroupService.getNumberOfRepairWorkGroups(workGroups)) {
               <div class="empty-state">
-                <p>Nema kreiranih radnih grupa za popravke</p>
+                <p>{{ 'DAILY-SHEET.WORK-GROUPS.NO-REPAIR-GROUPS' | translate }}</p>
               </div>
             } @else {
               <div class="groups-container">

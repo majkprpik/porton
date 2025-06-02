@@ -178,6 +178,11 @@ export interface ProfileRole{
   name: string;
 }
 
+export interface Language {
+  code: string;
+  name: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })

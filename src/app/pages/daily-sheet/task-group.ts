@@ -8,11 +8,18 @@ import { BadgeModule } from 'primeng/badge';
 import { combineLatest } from 'rxjs';
 import { TaskService } from '../service/task.service';
 import { HouseService } from '../service/house.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-task-group',
   standalone: true,
-  imports: [CommonModule, TaskCardComponent, PanelModule, BadgeModule],
+  imports: [
+    CommonModule, 
+    TaskCardComponent, 
+    PanelModule, 
+    BadgeModule,
+    TranslateModule,
+  ],
   template: `
     <p-panel 
       [toggleable]="true" 
