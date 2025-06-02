@@ -301,6 +301,12 @@ export class DataService {
     }
   }
 
+  setProfileRoles(profileRoles: ProfileRole[]){
+    if(profileRoles){
+      this.profileRolesSubject.next(profileRoles);
+    }
+  }
+
   setNotes(notes: Note[]){
     if(notes){
       this.notesSubject.next(notes);
@@ -620,7 +626,7 @@ export class DataService {
      return from(this.supabaseService.getData('profile_roles', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          this.profileRolesSubject.next(data);
+          this.setProfileRoles(data);
           this.logData('Profile roles', data);
         }
       }),
