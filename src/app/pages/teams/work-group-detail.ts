@@ -570,7 +570,7 @@ export class WorkGroupDetail implements OnInit {
               return 'fa fa-wrench';
             default: 
               return 'fa fa-file';
-          }
+        }
     }
 
     getTaskStatusIcon(task: Task): string {

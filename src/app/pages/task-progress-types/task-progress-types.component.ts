@@ -39,9 +39,12 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
         </button>
       </div>
       
-      <p-table [value]="taskProgressTypes" [tableStyle]="{'min-width': '50rem'}"
-               [paginator]="true" [rows]="10"
-               [rowHover]="true" dataKey="task_progress_type_id">
+      <p-table 
+        [value]="taskProgressTypes" 
+        [tableStyle]="{'min-width': '50rem'}"
+        [paginator]="true" [rows]="10"
+        [rowHover]="true" dataKey="task_progress_type_id"
+      >
         <ng-template pTemplate="header">
           <tr>
             <th class="text-left w-2">ID</th>

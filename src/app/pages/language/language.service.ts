@@ -24,7 +24,7 @@ export class LanguageService {
     }
   }
 
-  getSelectedLanguageFromLocalStorage(): string | null{
+  getSelectedLanguageFromLocalStorage(): string | null {
     return localStorage.getItem('portonSelectedLanguage');
   }
 

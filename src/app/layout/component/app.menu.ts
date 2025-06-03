@@ -12,10 +12,13 @@ import { ProfileService } from '../../pages/service/profile.service';
     standalone: true,
     imports: [CommonModule, AppMenuitem, RouterModule],
     template: `<ul class="layout-menu">
-        <ng-container *ngFor="let item of model; let i = index">
-            <li app-menuitem *ngIf="!item.separator" [item]="item" [index]="i" [root]="true"></li>
-            <li *ngIf="item.separator" class="menu-separator"></li>
-        </ng-container>
+        @for(item of model; track item.badge; let i = $index){
+            @if(!item.separator){
+                <li app-menuitem [item]="item" [index]="i" [root]="true"></li>
+            } @else {
+                <li class="menu-separator"></li>
+            }
+        }
     </ul> `
 })
 export class AppMenu implements OnInit {
