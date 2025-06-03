@@ -33,7 +33,6 @@ import { TranslateModule } from '@ngx-translate/core';
   ],
   providers: [
     ConfirmationService,
-    { provide: LOCALE_ID, useValue: 'hr' }
   ],
   template: `
     <div class="arrivals-departures-container">

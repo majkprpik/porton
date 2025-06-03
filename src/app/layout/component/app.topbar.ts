@@ -140,7 +140,7 @@ export class AppTopbar {
     }
 
     changeLanguage(){
-        this.languageService.setLanguage(this.selectedLanguage);
+        this.languageService.setLanguage(this.selectedLanguage, true);
     }
 
     toggleDarkMode() {

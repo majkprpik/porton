@@ -58,7 +58,7 @@ interface SpecialLocation {
         ConfirmDialogModule,
         TranslateModule,
     ],
-    providers: [MessageService, ConfirmationService, { provide: LOCALE_ID, useValue: 'hr' }],
+    providers: [MessageService, ConfirmationService],
     template: ` <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>

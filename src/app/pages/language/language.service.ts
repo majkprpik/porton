@@ -34,11 +34,15 @@ export class LanguageService {
     }
   }
 
-  setLanguage(selectedLanguage: Language | undefined) {
+  setLanguage(selectedLanguage: Language | undefined, reload: boolean = false) {
     if(selectedLanguage){
       this.$selectedLanguage.next(selectedLanguage);
       this.translateService.use(selectedLanguage.code);
       this.setSelectedLanguageToLocalStorage(JSON.stringify(selectedLanguage));
+
+      if(reload){
+        window.location.reload();
+      }
     }
   }
 }

@@ -19,9 +19,6 @@ import { TranslateModule } from '@ngx-translate/core';
     Calendar,
     TranslateModule,
   ],
-  providers: [
-    { provide: LOCALE_ID, useValue: 'hr' }
-  ],
   template: `
     <div class="notes-container">
       <div class="header-container">
