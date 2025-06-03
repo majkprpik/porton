@@ -12,6 +12,7 @@ import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subject, takeUntil } from 'rxjs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-task-progress-types',
@@ -26,16 +27,17 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     ToastModule,
     TooltipModule,
     ConfirmDialogModule,
+    TranslateModule,
   ],
   providers: [MessageService, ConfirmationService],
   template: `
     <div class="card">
       <div class="task-statuses-management-header">
-        <h1>Upravljanje statusima zadataka</h1>
+        <h1>{{ 'TASK-STATUSES-MANAGEMENT.TITLE' | translate }}</h1>
         <button 
           class="add-button p-button-success"
           (click)="openNew()">
-          <i class="pi pi-plus mr-2"></i> Dodaj novi status
+          <i class="pi pi-plus mr-2"></i> {{ 'TASK-STATUSES-MANAGEMENT.ADD-NEW-STATUS' | translate }}
         </button>
       </div>
       
@@ -47,15 +49,15 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
       >
         <ng-template pTemplate="header">
           <tr>
-            <th class="text-left w-2">ID</th>
-            <th class="text-left">Naziv statusa</th>
-            <th class="w-2 text-center">Akcije</th>
+            <th class="text-left w-2">{{ 'TASK-STATUSES-MANAGEMENT.TABLE-COLUMNS.ID' | translate }}</th>
+            <th class="text-left">{{ 'TASK-STATUSES-MANAGEMENT.TABLE-COLUMNS.STATUS-NAME' | translate }}</th>
+            <th class="w-2 text-center">{{ 'TASK-STATUSES-MANAGEMENT.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-type>
           <tr>
             <td>{{ type.task_progress_type_id }}</td>
-            <td>{{ type.task_progress_type_name }}</td>
+            <td>{{ 'TASK-PROGRESS-TYPES.' + type.task_progress_type_name | translate }}</td>
             <td>
               <div class="flex justify-content-center gap-2">
                 <button 
@@ -74,29 +76,39 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="3" class="text-center">Nema dostupnih statusa zadataka.</td>
+            <td colspan="3" class="text-center">{{ 'TASK-STATUSES-MANAGEMENT.NO-TASK-STATUSES' | translate }}</td>
           </tr>
         </ng-template>
       </p-table>
     </div>
 
-    <p-dialog [(visible)]="typeDialog" [style]="{width: '450px'}" 
-              [header]="editMode ? 'Uredi status zadatka' : 'Dodaj novi status zadatka'" 
-              [modal]="true" 
-              [contentStyle]="{overflow: 'visible'}"
-              [draggable]="false" [resizable]="false">
+    <p-dialog 
+      [(visible)]="typeDialog" [style]="{width: '450px'}" 
+      [header]="editMode ? ('TASK-STATUSES-MANAGEMENT.EDIT.TITLE' | translate) : ('TASK-STATUSES-MANAGEMENT.ADD.TITLE' | translate)"
+      [modal]="true" 
+      [contentStyle]="{overflow: 'visible'}"
+      [draggable]="false" [resizable]="false"
+    >
       <div class="p-field mb-4" *ngIf="selectedType">
-        <label for="name" class="font-medium mb-2 block">Naziv statusa*</label>
-        <input type="text" pInputText id="name" [(ngModel)]="selectedType.task_progress_type_name" 
-               required autofocus class="w-full" 
-               placeholder="Unesite naziv statusa" />
-        <small *ngIf="submitted && !selectedType.task_progress_type_name" class="p-error">Naziv statusa je obavezan.</small>
+        <label for="name" class="font-medium mb-2 block">{{ 'TASK-STATUSES-MANAGEMENT.ADD.STATUS-NAME' | translate }}*</label>
+        <input 
+          type="text" pInputText id="name" [(ngModel)]="selectedType.task_progress_type_name" 
+          required autofocus class="w-full" 
+          [placeholder]="'TASK-STATUSES-MANAGEMENT.ADD.ENTER-STATUS-NAME' | translate" 
+        />
+        <small *ngIf="submitted && !selectedType.task_progress_type_name" class="p-error">{{ 'TASK-STATUSES-MANAGEMENT.ADD.STATUS-ERROR' | translate }}</small>
       </div>
       <div class="flex justify-content-end mt-4">
-        <p-button label="Odustani" icon="pi pi-times" (click)="hideDialog()" 
-                 styleClass="p-button-text"></p-button>
-        <p-button label="Spremi" icon="pi pi-check" (click)="saveType()" 
-                 [disabled]="!selectedType?.task_progress_type_name"></p-button>
+        <p-button 
+          [label]="'BUTTONS.CANCEL' | translate" 
+          icon="pi pi-times" 
+          (click)="hideDialog()" 
+          styleClass="p-button-text"></p-button>
+        <p-button 
+          [label]="'BUTTONS.SAVE' | translate" 
+          icon="pi pi-check" 
+          (click)="saveType()" 
+          [disabled]="!selectedType?.task_progress_type_name"></p-button>
       </div>
     </p-dialog>
 
@@ -214,7 +226,8 @@ export class TaskProgressTypesComponent implements OnInit, OnDestroy {
   constructor(
     private dataService: DataService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private translateService: TranslateService,
   ) {}
 
   ngOnInit() {
@@ -266,19 +279,16 @@ export class TaskProgressTypesComponent implements OnInit, OnDestroy {
 
   deleteType(type: TaskProgressType) {
     this.confirmationService.confirm({
-      message: `Jeste li sigurni da želite obrisati status "${type.task_progress_type_name}"?`,
-      header: 'Potvrda brisanja',
+      message: this.translateService.instant('TASK-STATUSES-MANAGEMENT.DELETE.MESSAGE', { name: type.task_progress_type_name }),
+      header: this.translateService.instant('TASK-STATUSES-MANAGEMENT.DELETE.HEADER'),
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.dataService.deleteTaskProgressType(type.task_progress_type_id).subscribe({
           next: () => {
-            // Let the BehaviorSubject handle the update
-            // No need to modify local array here
-            
             this.messageService.add({
               severity: 'success',
-              summary: 'Uspješno',
-              detail: 'Status zadatka je obrisan',
+              summary: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.SUCCESS'),
+              detail: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.DELETE-SUCCESS'),
               life: 3000
             });
           },
@@ -286,8 +296,8 @@ export class TaskProgressTypesComponent implements OnInit, OnDestroy {
             console.error('Error deleting task progress type:', error);
             this.messageService.add({
               severity: 'error',
-              summary: 'Greška',
-              detail: 'Neuspješno brisanje statusa zadatka',
+              summary: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.ERROR'),
+              detail: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.DELETE-ERROR'),
               life: 3000
             });
           }
@@ -308,14 +318,10 @@ export class TaskProgressTypesComponent implements OnInit, OnDestroy {
       if (this.editMode && this.selectedType.task_progress_type_id) {
         // Update existing status
         this.dataService.updateTaskProgressType2(this.selectedType).subscribe({
-          next: () => {
-            // Let the BehaviorSubject handle the update
-            // No need to modify local array here
-            
-            this.messageService.add({
+          next: () => {this.messageService.add({
               severity: 'success',
-              summary: 'Uspješno',
-              detail: 'Status zadatka je ažuriran',
+              summary: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.SUCCESS'),
+              detail: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.EDIT-SUCCESS'),
               life: 3000
             });
           },
@@ -323,8 +329,8 @@ export class TaskProgressTypesComponent implements OnInit, OnDestroy {
             console.error('Error updating task progress type:', error);
             this.messageService.add({
               severity: 'error',
-              summary: 'Greška',
-              detail: 'Neuspješno ažuriranje statusa zadatka',
+              summary: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.ERROR'),
+              detail: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.EDIT-ERROR'),
               life: 3000
             });
           }
@@ -333,13 +339,10 @@ export class TaskProgressTypesComponent implements OnInit, OnDestroy {
         // Create new status
         this.dataService.createTaskProgressType(this.selectedType).subscribe({
           next: () => {
-            // Let the BehaviorSubject handle the update
-            // No need to modify local array here
-            
             this.messageService.add({
               severity: 'success',
-              summary: 'Uspješno',
-              detail: 'Status zadatka je kreiran',
+              summary: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.SUCCESS'),
+              detail: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.CREATE-SUCCESS'),
               life: 3000
             });
           },
@@ -347,8 +350,8 @@ export class TaskProgressTypesComponent implements OnInit, OnDestroy {
             console.error('Error creating task progress type:', error);
             this.messageService.add({
               severity: 'error',
-              summary: 'Greška',
-              detail: 'Neuspješno kreiranje statusa zadatka',
+              summary: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.ERROR'),
+              detail: this.translateService.instant('TASK-STATUSES-MANAGEMENT.MESSAGES.CREATE-ERROR'),
               life: 3000
             });
           }

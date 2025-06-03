@@ -30,7 +30,7 @@ import { TranslateModule } from '@ngx-translate/core';
         <div class="flex align-items-center justify-content-between w-full">
           <div class="left-side">
             <i class="group-icon" [class]="taskService.getTaskIcon(taskType?.task_type_id || 0)"></i>
-            <span class="group-name">{{taskType?.task_type_name}}</span>
+            <span class="group-name">{{ 'TASK-TYPES.' + taskType?.task_type_name | translate }}</span>
             <span class="task-count">{{filteredTasks.length}}</span>
           </div>
         </div>

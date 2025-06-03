@@ -13,6 +13,7 @@ import { AuthService, UserToRegister } from '../service/auth.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { ProfileService } from '../service/profile.service';
 import { combineLatest } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // Extended Profile interface to include the isDivider property
 interface ExtendedProfile extends Profile {
@@ -32,36 +33,37 @@ interface ExtendedProfile extends Profile {
     DropdownModule, 
     FormsModule,
     ToastModule,
-    InputTextModule
+    InputTextModule,
+    TranslateModule,
   ],
   providers: [MessageService],
   template: `
     <div class="card">
       <div class="title">
-        <h1>Upravljanje profilima</h1>
+        <h1>{{ 'PROFILE-MANAGEMENT.TITLE' | translate }}</h1>
         <button 
           class="add-button p-button-success"
           (click)="openCreateProfileWindow()"
         >
-          <i class="pi pi-plus mr-2"></i> Dodaj novi profil
+          <i class="pi pi-plus mr-2"></i> {{ 'PROFILE-MANAGEMENT.ADD-NEW-PROFILE' | translate }}
         </button>
       </div>
       <p-table [value]="profiles" [tableStyle]="{'min-width': '50rem'}">
         <ng-template pTemplate="header">
           <tr>
-            <th>Ime</th>
-            <th>Pozicija</th>
-            <th>Email</th>
-            <th>Lozinka</th>
-            <th>Akcije</th>
+            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.NAME' | translate }}</th>
+            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.POSITION' | translate }}</th>
+            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.EMAIL' | translate }}</th>
+            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.PASSWORD' | translate }}</th>
+            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-profile>
           <tr [ngClass]="{'divider-row': profile.isDivider}">
-            <td *ngIf="profile.isDivider" colspan="5" class="divider-cell">{{ profile.first_name }}</td>
+            <td *ngIf="profile.isDivider" colspan="5" class="divider-cell">{{ 'PROFILE-DEPARTMENTS.' + profile.first_name | translate }}</td>
             <ng-container *ngIf="!profile.isDivider">
               <td>{{ profile.first_name }} {{ profile.last_name }}</td>
-              <td>{{ getProfileRoleNameById(profile.role_id) }}</td>
+              <td>{{ 'PROFILE-ROLES.' + getProfileRoleNameById(profile.role_id) | translate }}</td>
               <td>{{ profile.email }}</td>
               <td>{{ profile.password }}</td>
               <td>
@@ -99,36 +101,36 @@ interface ExtendedProfile extends Profile {
         </p-dropdown>
       </div>
       <div class="p-dialog-footer">
-        <p-button label="Cancel" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
-        <p-button label="Save" icon="pi pi-check" (click)="saveProfile()" [disabled]="!selectedProfile"></p-button>
+        <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
+        <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="saveProfile()" [disabled]="!selectedProfile"></p-button>
       </div>
     </p-dialog>
 
-    <p-dialog [(visible)]="showDeleteProfileDialog" [style]="{width: '450px'}" header="Delete Profile" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+    <p-dialog [(visible)]="showDeleteProfileDialog" [style]="{width: '450px'}" [header]="'PROFILE-MANAGEMENT.DELETE.HEADER' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
       <label>
-        Are you sure you want to delete {{selectedProfile.first_name}}'s profile?
+        {{ 'PROFILE-MANAGEMENT.DELETE.MESSAGE' | translate }} {{ selectedProfile.first_name }}?
       </label>
       <div class="p-dialog-footer">
-        <p-button label="Cancel" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
-        <p-button label="Delete" icon="pi pi-trash" (click)="deleteProfile(selectedProfile.id)" styleClass="p-button-danger" [disabled]="!selectedProfile"></p-button>
+        <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
+        <p-button [label]="'BUTTONS.DELETE' | translate" icon="pi pi-trash" (click)="deleteProfile(selectedProfile.id)" styleClass="p-button-danger" [disabled]="!selectedProfile"></p-button>
       </div>
     </p-dialog>
 
-     <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" header="Dodaj novi profil" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+    <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" [header]="'PROFILE-MANAGEMENT.ADD.ADD-NEW-PROFILE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
        <div class="field">
-          <label for="firstName">Ime i prezime</label>
+          <label for="firstName">{{ 'PROFILE-MANAGEMENT.ADD.FULL-NAME' | translate }}</label>
           <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.name" />
        </div>
        <div class="field">
-          <label for="firstName">Lozinka</label>
+          <label for="firstName">{{ 'PROFILE-MANAGEMENT.ADD.PASSWORD' | translate }}</label>
           <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.password" />
        </div>
       <div class="p-field">
-        <label for="role">Pozicija</label>
+        <label for="role">{{ 'PROFILE-MANAGEMENT.ADD.POSITION' | translate }}</label>
         <p-dropdown 
           [options]="profileRoles" 
           [(ngModel)]="newProfile.role_id" 
-          placeholder="Odaberi poziciju" 
+          [placeholder]="'PROFILE-MANAGEMENT.ADD.SELECT-POSITION' | translate" 
           [showClear]="true"
           [style]="{'width':'100%'}"
           optionLabel="name"
@@ -138,8 +140,8 @@ interface ExtendedProfile extends Profile {
         </p-dropdown>
       </div>
       <div class="p-dialog-footer">
-        <p-button label="Cancel" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
-        <p-button label="Save" icon="pi pi-check" (click)="createProfile()" [disabled]="!isNewProfileValid()"></p-button>
+        <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
+        <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="createProfile()" [disabled]="!isNewProfileValid()"></p-button>
       </div>
     </p-dialog>
     <p-toast></p-toast>
@@ -237,7 +239,8 @@ export class ProfilesComponent implements OnInit {
     private dataService: DataService,
     private messageService: MessageService,
     public authService: AuthService,
-    public profileService: ProfileService
+    public profileService: ProfileService,
+    private translateService: TranslateService,
   ) {
     // Create a map of user names to passwords from the auth service
     // this.initializePasswordMap();
@@ -443,8 +446,8 @@ export class ProfilesComponent implements OnInit {
         next: (updatedProfile) => {
           this.messageService.add({ 
             severity: 'success', 
-            summary: 'Success', 
-            detail: 'Profile updated successfully', 
+            summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.SUCCESS'), 
+            detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.EDIT-SUCCESS'), 
             life: 3000 
           });
           if(this.authService.getStoredUserId() == updatedProfile?.id){
@@ -457,8 +460,8 @@ export class ProfilesComponent implements OnInit {
         error: (error) => {
           this.messageService.add({ 
             severity: 'error', 
-            summary: 'Error', 
-            detail: 'Failed to update profile', 
+            summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.ERROR'), 
+            detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.EDIT-ERROR'),
             life: 3000 
           });
           console.error('Error updating profile:', error);
@@ -474,8 +477,8 @@ export class ProfilesComponent implements OnInit {
           if(res) {
             this.messageService.add({ 
               severity: 'success', 
-              summary: 'Success', 
-              detail: 'Profile created successfully', 
+              summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.SUCCESS'), 
+              detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.CREATE-SUCCESS'), 
               life: 3000 
             });
             this.showNewProfileDialog = false;
@@ -485,8 +488,8 @@ export class ProfilesComponent implements OnInit {
         .catch(error => {
           this.messageService.add({ 
             severity: 'error', 
-            summary: 'Error', 
-            detail: 'Failed to create profile', 
+            summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.ERROR'),  
+            detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.CREATE-ERROR'), 
             life: 3000 
           });
           console.error('Error creating profile:', error);

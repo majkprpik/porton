@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { ChipModule } from 'primeng/chip';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-team-task-card',
@@ -14,20 +15,21 @@ import { Subscription } from 'rxjs';
     CommonModule,
     TabViewModule,
     ChipModule, 
+    TranslateModule,
   ],
   template: `
     <div class="team-card" [class.locked]="workGroup?.is_locked" (click)="navigateToDetail(workGroup?.work_group_id)">
         <div class="team-header">
-          <h3>Tim {{workGroup?.work_group_id}}</h3>
+          <h3>{{ 'TEAMS.TEAM-TASK-CARD.TEAM' | translate }} {{workGroup?.work_group_id}}</h3>
           <span class="status-badge" [class.locked]="workGroup?.is_locked">
-              {{workGroup?.is_locked ? 'Objavljeno' : 'Neobjavljeno'}}
+            {{ workGroup?.is_locked ? ('TEAMS.TEAM-TASK-CARD.PUBLISHED' | translate) : ('TEAMS.TEAM-TASK-CARD.NOT-PUBLISHED' | translate) }}
           </span>
       </div>
       <div class="team-content">
           <div class="section">
-            <h4>Članovi tima</h4>
+            <h4>{{ 'TEAMS.TEAM-TASK-CARD.TEAM-MEMBERS' | translate }}</h4>
             @if (workGroupStaff.length === 0) {
-                <p class="empty-section">Nema dodijeljenih članova</p>
+                <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-STAFF' | translate }}</p>
             } @else {
                 <div class="staff-list">
                     @for (staff of workGroupStaff; track staff.id) {
@@ -42,9 +44,9 @@ import { Subscription } from 'rxjs';
           </div>
 
           <div class="section">
-            <h4>Zadaci</h4>
+            <h4>{{ 'TEAMS.TEAM-TASK-CARD.TASKS' | translate }}</h4>
             @if (workGroupTasks.length === 0) {
-                <p class="empty-section">Nema dodijeljenih zadataka</p>
+                <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-TASKS' | translate }}</p>
             } @else {
               <div class="tasks-list">
                 @for (task of workGroupTasks; track task.task_id) {

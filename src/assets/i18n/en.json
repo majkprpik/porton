@@ -1,22 +1,70 @@
 {
+    "MENU": {
+        "HOME": "Home",
+        "RESERVATIONS": "Reservations",
+        "TEAMS": "Teams",
+        "DAILY-SHEET": "Daily Sheet",
+        "PROFILES": "Profiles",
+        "TASK-STATUSES": "Task Statuses",
+        "HOUSE-TYPES": "House Types"
+    },
     "BUTTONS": {
         "REPORT": "Report",
         "REPORT-TASK": "Report task",
         "SAVE": "Save",
         "CANCEL": "Cancel",
         "DELETE": "Delete",
-        "CONFIRM": "Confirm"
+        "CONFIRM": "Confirm",
+        "CONTINUE": "Continue",
+        "FINISH": "Finish",
+        "YES": "Yes",
+        "NO": "No",
+        "OK": "OK"
+    },
+    "TASK-PROGRESS-TYPES": {
+        "Dodijeljeno": "Assigned",
+        "Nije dodijeljeno": "Not assigned",
+        "U tijeku": "In progress",
+        "Pauzirano": "Paused",
+        "Završeno": "Finished"
+    },
+    "TASK-TYPES": { 
+        "Čišćenje kućice": "House cleaning",
+        "Čišćenje terase": "Deck cleaning",
+        "Popravak": "Repair",
+        "Mijenjanje posteljine": "Sheet change",
+        "Mijenjanje ručnika": "Towel change"
+    },
+    "PROFILE-DEPARTMENTS": {
+        "UPRAVA": "MANAGEMENT",
+        "ODJEL RECEPCIJA": "RECEPTION DEPARTMENT",
+        "ODJEL DOMAĆINSTVA": "HOUSEKEEPING DEPARTMENT",
+        "ODJEL TEHNIKA": "TECHNICAL DEPARTMENT"
+    },
+    "PROFILE-ROLES": {
+        "Uprava": "Management",
+        "Savjetnik uprave": "Management consultant",
+        "Voditelj recepcije": "Reception manager",
+        "Recepcija": "Reception",
+        "Voditelj kampa": "Camp manager",
+        "Voditelj domacinstva": "Household manager",
+        "Sobarica": "Housekeeper",
+        "Odrzavanje": "Maintenance",
+        "Prodaja": "Sales",
+        "Terasar": "Deck maintenance",
+        "Kucni majstor": "House technician",
+        "Nocna recepcija": "Night reception",
+        "Korisnicka sluzba": "Customer service",
+        "Ostalo": "Other"
+    },
+    "TASK-STATUSES": {
+
     },
     "DAILY-SHEET": {
         "TITLE": "Daily sheet",
         "TASKS": {
             "TITLE": "Tasks",
-            "LOADING-TASKS": "Loading tasks...",
-            "HOUSE-CLEANING": "House cleaning",
-            "DECK-CLEANING": "Deck cleaning",
-            "REPAIR": "Repair",
-            "SHEET-CHANGE": "Sheet change",
-            "TOWEL-CHANGE": "Towel change"
+            "LOADING-TASKS": "Loading tasks..."
         },
         "WORK-GROUPS": {
             "TITLE": "Work groups",
@@ -34,15 +82,25 @@
             "CLEANING": "CLEANING",
             "NO-CLEANING-GROUPS": "No created work groups for cleaning",
             "REPAIRS": "REPAIRS",
-            "NO-REPAIR-GROUPS": "No created work groups for repairs"
+            "NO-REPAIR-GROUPS": "No created work groups for repairs",
+            "DELETE": {
+                "HEADER" : "Warning",
+                "DELETE": "Are you sure you want to delete this work group? Finished tasks will be archived, and assigned tasks will be returned to 'Not assigned' status.",
+                "TASK-IN-PROGRESS": "On of the tasks is 'In Progress'. Error deleting work group."
+            },
+            "MESSAGES": {
+                "SUCCESS": "Success",
+                "ERROR": "Error",
+                "WARNING": "Warning"
+            }
         },
         "STAFF": {
             "TITLE": "Staff",
             "LOADING": "Loading staff...",
             "AVAILABLE-STAFF": "Available Staff for Team",
-            "HOUSEKEEPING": "HOUSEKEEPING",
+            "HOUSEKEEPING": "HOUSEKEEPING DEPARTMENT",
             "TECHNICAL-DEPARTMENT": "TECHNICAL DEPARTMENT",
-            "RECEPTION": "RECEPTION",
+            "RECEPTION": "RECEPTION DEPARTMENT",
             "MANAGEMENT": "MANAGEMENT"
         }
     },
@@ -78,10 +136,136 @@
             "SELECT-LOCATION": "Select a location",
             "DESCRIPTION": "Description",
             "ADD-DESCRIPTION": "Add description for task",
-            "ADD-IMAGE": "Add images",
+            "IMAGES": "Images",
             "ADDED-IMAGES": "Added images",
             "CAPTURE-IMAGE": "Capture an image...",
             "SAVE-IMAGE": "Save image?"
+        }
+    },
+    "TEAMS": {
+        "TITLE": "Teams",
+        "TODAY": "Today",
+        "CLEANING": "Cleaning",
+        "REPAIRS": "Repairs",
+        "NO-CLEANING-GROUPS": "No created work groups for cleaning",
+        "NO-REPAIR-GROUPS": "No created work groups for repairs",
+        "LOADING-TEAMS": "Loading teams...",
+        "TEAM-TASK-CARD": {
+            "TEAM": "Team",
+            "LOADING-TEAM": "Loading team...",
+            "TEAM-NOT-FOUND": "Team not found",
+            "TASKS": "Tasks",
+            "PUBLISHED": "Published",
+            "NOT-PUBLISHED": "Not published",
+            "TEAM-MEMBERS": "Team members",
+            "NO-ASSIGNED-TASKS": "No assigned tasks",
+            "NO-ASSIGNED-STAFF": "No assigned staff"
+        }
+    },
+    "PROFILE-MANAGEMENT": {
+        "TITLE": "Profile management",
+        "ADD-NEW-PROFILE": "Add new profile",
+        "TABLE-COLUMNS": {
+            "NAME": "Name",
+            "POSITION": "Position",
+            "EMAIL": "Email",
+            "PASSWORD": "Password",
+            "ACTIONS": "Actions"
+        },
+        "ADD": {
+            "ADD-NEW-PROFILE": "Add new profile",
+            "FULL-NAME": "Full name",
+            "PASSWORD": "Password",
+            "POSITION": "Position",
+            "SELECT-POSITION": "Select a position"
+        },
+        "EDIT": {
+            "TITLE": "Edit profile",
+            "STATUS-NAME": "Position"
+        },
+        "DELETE": {
+           "HEADER" : "Delete profile",
+           "MESSAGE": "Are you sure you want to delete profile "
+        },
+        "MESSAGES": {
+            "SUCCESS": "Success",
+            "ERROR": "Error",
+            "DELETE-SUCCESS": "Profile deleted",
+            "DELETE-ERROR": "Error deleting profile",
+            "EDIT-SUCCESS": "Profile updated",
+            "EDIT-ERROR": "Error updating profile",
+            "CREATE-SUCCESS": "Profile created",
+            "CREATE-ERROR": "Error creating profile"
+        }
+    },
+    "TASK-STATUSES-MANAGEMENT": {
+        "TITLE": "Task statuses management",
+        "ADD-NEW-STATUS": "Add new task status",
+        "NO-TASK-STATUSES": "No available task statuses",
+        "TABLE-COLUMNS": {
+            "ID": "ID",
+            "STATUS-NAME": "Status name",
+            "ACTIONS": "Actions"
+        },
+        "ADD": {
+            "TITLE": "Add task status",
+            "STATUS-NAME": "Status name",
+            "ENTER-STATUS-NAME": "Enter status name",
+            "STATUS-ERROR": "Status name is required"
+        },
+        "EDIT": {
+            "TITLE": "Edit task status",
+            "STATUS-NAME": "Status name",
+            "ENTER-STATUS-NAME": "Enter status name"
+        },
+        "DELETE": {
+           "HEADER" : "Confirm delete",
+           "MESSAGE": "Are you sure you want to delete status \"{{name}}\"?"
+        },
+        "MESSAGES": {
+            "SUCCESS": "Success",
+            "ERROR": "Error",
+            "DELETE-SUCCESS": "Task status deleted",
+            "DELETE-ERROR": "Error deleting task status",
+            "EDIT-SUCCESS": "Task status updated",
+            "EDIT-ERROR": "Error updating task status",
+            "CREATE-SUCCESS": "Task status created",
+            "CREATE-ERROR": "Error creating task status"
+        }
+    }, 
+    "HOUSE-TYPES": {
+        "TITLE": "House types management",
+        "ADD-HOUSE-TYPE": "Add new house type",
+        "NO-HOUSE-TYPES": "No available house types",
+        "TABLE-COLUMNS": {
+            "ID": "ID",
+            "TYPE-NAME": "Type name",
+            "ACTIONS": "Actions"
+        },  
+        "ADD": {
+            "TITLE": "Add house type",
+            "TYPE-NAME": "Type name",
+            "ENTER-TYPE-NAME": "Enter type name",
+            "TYPE-ERROR": "Type name is required"
+        },
+        "EDIT": {
+            "TITLE": "Edit house type",
+            "TYPE-NAME": "Type name",
+            "ENTER-TYPE-NAME": "Enter type name"
+        },
+        "DELETE": {
+           "HEADER" : "Confirm delete",
+           "MESSAGE": "Are you sure you want to delete house type \"{{name}}\"?"
+        },
+        "MESSAGES": {
+            "SUCCESS": "Success",
+            "ERROR": "Error",
+            "DELETE-SUCCESS": "House type deleted",
+            "DELETE-ERROR": "Error deleting house type",
+            "EDIT-SUCCESS": "House type deleted",
+            "EDIT-ERROR": "Error updating house type",
+            "CREATE-SUCCESS": "House type created",
+            "CREATE-ERROR": "Error creating house type"
         }
     }
 }

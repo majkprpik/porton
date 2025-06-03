@@ -12,6 +12,7 @@ import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subject, takeUntil } from 'rxjs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-house-types',
@@ -26,16 +27,17 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     ToastModule,
     TooltipModule,
     ConfirmDialogModule,
+    TranslateModule,
   ],
   providers: [MessageService, ConfirmationService],
   template: `
     <div class="card">
       <div class="house-types-management-header">
-        <h1>Upravljanje tipovima kuća</h1>
+        <h1>{{ 'HOUSE-TYPES.TITLE' | translate }}</h1>
         <button 
           class="add-button p-button-success"
           (click)="openNew()">
-          <i class="pi pi-plus mr-2"></i> Dodaj novi tip
+          <i class="pi pi-plus mr-2"></i> {{ 'HOUSE-TYPES.ADD-HOUSE-TYPE' | translate }}
         </button>
       </div>
       
@@ -44,9 +46,9 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
                [rowHover]="true" dataKey="house_type_id">
         <ng-template pTemplate="header">
           <tr>
-            <th class="text-left w-2">ID</th>
-            <th class="text-left">Naziv tipa</th>
-            <th class="w-2 text-center">Akcije</th>
+            <th class="text-left w-2">{{ 'HOUSE-TYPES.TABLE-COLUMNS.ID' | translate }}</th>
+            <th class="text-left">{{ 'HOUSE-TYPES.TABLE-COLUMNS.TYPE-NAME' | translate }}</th>
+            <th class="w-2 text-center">{{ 'HOUSE-TYPES.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-type>
@@ -71,29 +73,35 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="3" class="text-center">Nema dostupnih tipova kuća.</td>
+            <td colspan="3" class="text-center">{{ 'HOUSE-TYPES.NO-HOUSE-TYPES' | translate }}</td>
           </tr>
         </ng-template>
       </p-table>
     </div>
 
     <p-dialog [(visible)]="typeDialog" [style]="{width: '450px'}" 
-              [header]="editMode ? 'Uredi tip kuće' : 'Dodaj novi tip kuće'" 
+              [header]="editMode ? ('HOUSE-TYPES.EDIT.TITLE' | translate) : ('HOUSE-TYPES.EDIT.TITLE' | translate)"
               [modal]="true" 
               [contentStyle]="{overflow: 'visible'}"
               [draggable]="false" [resizable]="false">
       <div class="p-field mb-4" *ngIf="selectedType">
-        <label for="name" class="font-medium mb-2 block">Naziv tipa*</label>
+        <label for="name" class="font-medium mb-2 block">{{ 'HOUSE-TYPES.ADD.ENTER-TYPE-NAME' | translate }}*</label>
         <input type="text" pInputText id="name" [(ngModel)]="selectedType.house_type_name" 
                required autofocus class="w-full" 
-               placeholder="Unesite naziv tipa" />
-        <small *ngIf="submitted && !selectedType.house_type_name" class="p-error">Naziv tipa je obavezan.</small>
+               [placeholder]="'HOUSE-TYPES.ADD.ENTER-TYPE-NAME' | translate" />
+        <small *ngIf="submitted && !selectedType.house_type_name" class="p-error">{{ 'HOUSE-TYPES.ADD.TYPE-ERROR' | translate }}</small>
       </div>
       <div class="flex justify-content-end mt-4">
-        <p-button label="Odustani" icon="pi pi-times" (click)="hideDialog()" 
-                 styleClass="p-button-text"></p-button>
-        <p-button label="Spremi" icon="pi pi-check" (click)="saveType()" 
-                 [disabled]="!selectedType?.house_type_name"></p-button>
+        <p-button 
+          [label]="'BUTTONS.CANCEL' | translate" 
+          icon="pi pi-times" 
+          (click)="hideDialog()" 
+          styleClass="p-button-text"></p-button>
+        <p-button 
+          [label]="'BUTTONS.SAVE' | translate" 
+          icon="pi pi-check" 
+          (click)="saveType()" 
+          [disabled]="!selectedType?.house_type_name"></p-button>
       </div>
     </p-dialog>
 
@@ -211,7 +219,8 @@ export class HouseTypesComponent implements OnInit, OnDestroy {
   constructor(
     private dataService: DataService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private translateService: TranslateService,
   ) {}
 
   ngOnInit() {
@@ -264,21 +273,18 @@ export class HouseTypesComponent implements OnInit, OnDestroy {
     this.typeDialog = true;
   }
 
-  deleteType(type: HouseType) {
+  deleteType(type: HouseType) {    
     this.confirmationService.confirm({
-      message: `Jeste li sigurni da želite obrisati tip "${type.house_type_name}"?`,
-      header: 'Potvrda brisanja',
+      message: this.translateService.instant('HOUSE-TYPES.DELETE.MESSAGE', { name: type.house_type_name }),
+      header: this.translateService.instant('HOUSE-TYPES.DELETE.HEADER'),
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.dataService.deleteHouseType(type.house_type_id).subscribe({
           next: () => {
-            // Let the BehaviorSubject handle the update
-            // No need to modify local array here
-            
             this.messageService.add({
               severity: 'success',
-              summary: 'Uspješno',
-              detail: 'Tip kuće je obrisan',
+              summary: this.translateService.instant('HOUSE-TYPES.MESSAGES.SUCCESS'),
+              detail: this.translateService.instant('HOUSE-TYPES.MESSAGES.DELETE-SUCCESS'),
               life: 3000
             });
           },
@@ -286,8 +292,8 @@ export class HouseTypesComponent implements OnInit, OnDestroy {
             console.error('Error deleting house type:', error);
             this.messageService.add({
               severity: 'error',
-              summary: 'Greška',
-              detail: 'Neuspješno brisanje tipa kuće',
+              summary: this.translateService.instant('HOUSE-TYPES.MESSAGES.ERROR'),
+              detail: this.translateService.instant('HOUSE-TYPES.MESSAGES.DELETE-ERROR'),
               life: 3000
             });
           }
@@ -313,13 +319,10 @@ export class HouseTypesComponent implements OnInit, OnDestroy {
         this.dataService.updateHouseType(this.selectedType).subscribe({
           next: () => {
             console.log('Update completed successfully');
-            // Let the BehaviorSubject handle the update
-            // No need to modify local array here
-            
             this.messageService.add({
               severity: 'success',
-              summary: 'Uspješno',
-              detail: 'Tip kuće je ažuriran',
+              summary: this.translateService.instant('HOUSE-TYPES.MESSAGES.SUCCESS'),
+              detail: this.translateService.instant('HOUSE-TYPES.MESSAGES.EDIT-SUCCESS'),
               life: 3000
             });
           },
@@ -327,8 +330,8 @@ export class HouseTypesComponent implements OnInit, OnDestroy {
             console.error('Error updating house type:', error);
             this.messageService.add({
               severity: 'error',
-              summary: 'Greška',
-              detail: 'Neuspješno ažuriranje tipa kuće',
+              summary: this.translateService.instant('HOUSE-TYPES.MESSAGES.ERROR'),
+              detail: this.translateService.instant('HOUSE-TYPES.MESSAGES.EDIT-ERROR'),
               life: 3000
             });
           }
@@ -339,13 +342,10 @@ export class HouseTypesComponent implements OnInit, OnDestroy {
         this.dataService.createHouseType(this.selectedType).subscribe({
           next: () => {
             console.log('Create completed successfully');
-            // Let the BehaviorSubject handle the update
-            // No need to modify local array here
-            
             this.messageService.add({
               severity: 'success',
-              summary: 'Uspješno',
-              detail: 'Tip kuće je kreiran',
+              summary: this.translateService.instant('HOUSE-TYPES.MESSAGES.SUCCESS'),
+              detail: this.translateService.instant('HOUSE-TYPES.MESSAGES.CREATE-SUCCESS'),
               life: 3000
             });
           },
@@ -353,8 +353,8 @@ export class HouseTypesComponent implements OnInit, OnDestroy {
             console.error('Error creating house type:', error);
             this.messageService.add({
               severity: 'error',
-              summary: 'Greška',
-              detail: 'Neuspješno kreiranje tipa kuće',
+              summary: this.translateService.instant('HOUSE-TYPES.MESSAGES.ERROR'),
+              detail: this.translateService.instant('HOUSE-TYPES.MESSAGES.CREATE-ERROR'),
               life: 3000
             });
           }

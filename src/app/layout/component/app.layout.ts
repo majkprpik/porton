@@ -289,7 +289,7 @@ interface SpecialLocation {
                 @if (!capturedImage) {
                     <div class="upload-a-photo">
                         @if (!taskImages.length) {
-                            <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.ADD-IMAGE' | translate }}</label>
+                            <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.IMAGES' | translate }}</label>
                         } @else {
                             <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.ADDED-IMAGES' | translate }}</label>
                         }

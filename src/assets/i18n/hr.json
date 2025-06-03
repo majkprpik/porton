@@ -1,22 +1,70 @@
 {
+    "MENU": {
+        "HOME": "Pregled",
+        "RESERVATIONS": "Rezervacije",
+        "TEAMS": "Timovi",
+        "DAILY-SHEET": "Dnevni list",
+        "PROFILES": "Profili",
+        "TASK-STATUSES": "Statusi zadataka",
+        "HOUSE-TYPES": "Tipovi kućica"
+    },
     "BUTTONS": {
         "REPORT": "Prijavi",
         "REPORT-TASK": "Prijavi zadatak",
         "SAVE": "Spremi",
         "CANCEL": "Odustani",
         "DELETE": "Obriši",
-        "CONFIRM": "Potvrdi"
+        "CONFIRM": "Potvrdi",
+        "CONTINUE": "Nastavi",
+        "FINISH": "Završi",
+        "YES": "Da",
+        "NO": "Ne",
+        "OK": "OK"
+    },
+    "TASK-PROGRESS-TYPES": {
+        "Dodijeljeno": "Dodijeljeno",
+        "Nije dodijeljeno": "Nije dodijeljeno",
+        "U tijeku": "U tijeku",
+        "Pauzirano": "Pauzirano",
+        "Završeno": "Završeno"
+    },
+    "TASK-TYPES": { 
+        "Čišćenje kućice": "Čišćenje kućice",
+        "Čišćenje terase": "Čišćenje terase",
+        "Popravak": "Popravak",
+        "Mijenjanje posteljine": "Mijenjanje posteljine",
+        "Mijenjanje ručnika": "Mijenjanje ručnika"
+    },
+    "PROFILE-DEPARTMENTS": {
+        "UPRAVA": "UPRAVA",
+        "ODJEL RECEPCIJA": "ODJEL RECEPCIJA",
+        "ODJEL DOMAĆINSTVA": "ODJEL DOMAĆINSTVA",
+        "ODJEL TEHNIKA": "ODJEL TEHNIKA"
+    },
+    "PROFILE-ROLES": {
+        "Uprava": "Uprava",
+        "Savjetnik uprave": "Savjetnik uprave",
+        "Voditelj recepcije": "Voditelj recepcije",
+        "Recepcija": "Recepcija",
+        "Voditelj kampa": "Voditelj kampa",
+        "Voditelj domacinstva": "Voditelj domacinstva",
+        "Sobarica": "Sobarica",
+        "Odrzavanje": "Odrzavanje",
+        "Prodaja": "Prodaja",
+        "Terasar": "Terasar",
+        "Kucni majstor": "Kucni majstor",
+        "Nocna recepcija": "Nocna recepcija",
+        "Korisnicka sluzba": "Korisnicka sluzba",
+        "Ostalo": "Ostalo"
+    },
+    "TASK-STATUSES": {
+
     },
     "DAILY-SHEET": {
         "TITLE": "Dnevni list",
         "TASKS": {
             "TITLE": "Zadaci",
-            "LOADING-TASKS": "Učitavanje zadataka...",
-            "HOUSE-CLEANING": "Čišćenje kućice",
-            "DECK-CLEANING": "Čišćenje terase",
-            "REPAIR": "Popravak",
-            "SHEET-CHANGE": "Mijenjanje posteljine",
-            "TOWEL-CHANGE": "Mijenjenje ručnika"
+            "LOADING-TASKS": "Učitavanje zadataka..."
         },
         "WORK-GROUPS": {
             "TITLE": "Radne grupe",
@@ -34,7 +82,17 @@
             "CLEANING": "ČIŠĆENJE",
             "NO-CLEANING-GROUPS": "Nema kreiranih radnih grupa za čišćenje",
             "REPAIRS": "POPRAVCI",
-            "NO-REPAIR-GROUPS": "Nema kreiranih radnih grupa za popravke"
+            "NO-REPAIR-GROUPS": "Nema kreiranih radnih grupa za popravke",
+            "DELETE": {
+                "HEADER" : "Upozorenje",
+                "DELETE": "Jeste li sigurni da želite obrisati ovu grupu? Završeni zadaci će biti arhivirani, a dodijeljeni zadaci će biti vraćeni u status 'Nije dodijeljeno'.",
+                "TASK-IN-PROGRESS": "Jedan od zadataka je 'U tijeku'. Greška tijekom brisanja grupe."
+            },
+            "MESSAGES": {
+                "SUCCESS": "Uspjeh",
+                "ERROR": "Greška",
+                "WARNING": "Upozorenje"
+            }
         },
         "STAFF": {
             "TITLE": "Osoblje",
@@ -78,10 +136,136 @@
             "SELECT-LOCATION": "Odaberi lokaciju",
             "DESCRIPTION": "Opis",
             "ADD-DESCRIPTION": "Dodaj opis",
-            "ADD-IMAGE": "Dodaj slike",
+            "IMAGES": "Slike",
             "ADDED-IMAGES": "Dodane slike",
             "CAPTURE-IMAGE": "Dodaj sliku...",
             "SAVE-IMAGE": "Spremi sliku?"
+        }
+    },
+    "TEAMS": {
+        "TITLE": "Timovi",
+        "TODAY": "Danas",
+        "CLEANING": "Čišćenje",
+        "REPAIRS": "Popravci",
+        "NO-CLEANING-GROUPS": "Nema kreiranih radnih grupa za čišćenje",
+        "NO-REPAIR-GROUPS": "Nema kreiranih radnih grupa za popravke",
+        "LOADING-TEAMS": "Učitavanje timova...",
+        "TEAM-TASK-CARD": {
+            "TEAM": "Tim",
+            "LOADING-TEAM": "Učitavanje tima...",
+            "TEAM-NOT-FOUND": "Tim nije pronađen",
+            "TASKS": "Zadaci",
+            "PUBLISHED": "Objavljeno",
+            "NOT-PUBLISHED": "Neobjavljeno",
+            "TEAM-MEMBERS": "Članovi tima",
+            "NO-ASSIGNED-TASKS": "Nema dodijeljenih zadataka",
+            "NO-ASSIGNED-STAFF": "Nema dodijeljenih članova"
+        }
+    },
+    "PROFILE-MANAGEMENT": {
+        "TITLE": "Upravljanje profilima",
+        "ADD-NEW-PROFILE": "Dodaj novi profil",
+        "TABLE-COLUMNS": {
+            "NAME": "Ime",
+            "POSITION": "Pozicija",
+            "EMAIL": "Email",
+            "PASSWORD": "Lozinka",
+            "ACTIONS": "Akcije"
+        },
+        "ADD": {
+            "ADD-NEW-PROFILE": "Dodaj novi profil",
+            "FULL-NAME": "Ime i prezime",
+            "PASSWORD": "Lozinka",
+            "POSITION": "Pozicija",
+            "SELECT-POSITION": "Odaberi poziciju"
+        },
+        "EDIT": {
+            "TITLE": "Uredi profil",
+            "STATUS-NAME": "Pozicija"
+        },
+        "DELETE": {
+           "HEADER" : "Potvrdi brisanje",
+           "MESSAGE": "Jeste li sigurni da želite obrisati profil "
+        },
+        "MESSAGES": {
+            "SUCCESS": "Uspjeh",
+            "ERROR": "Greška",
+            "DELETE-SUCCESS": "Profil obrisan",
+            "DELETE-ERROR": "Greška tijekom brisanja profila",
+            "EDIT-SUCCESS": "Profil uređen",
+            "EDIT-ERROR": "Greška tijekom uređivanja profila",
+            "CREATE-SUCCESS": "Profil kreiran",
+            "CREATE-ERROR": "Greška tijekom kreiranja profila"
+        }
+    },
+    "TASK-STATUSES-MANAGEMENT": {
+        "TITLE": "Upravljanje statusima zadataka",
+        "ADD-NEW-STATUS": "Dodaj novi status zadatka",
+        "NO-TASK-STATUSES": "Nema dostupnih statusa zadataka",
+        "TABLE-COLUMNS": {
+            "ID": "ID",
+            "STATUS-NAME": "Ime statusa",
+            "ACTIONS": "Akcije"
+        },
+        "ADD": {
+            "TITLE": "Dodaj status zadatka",
+            "STATUS-NAME": "Ime statusa",
+            "ENTER-STATUS-NAME": "Unesi ime statusa",
+            "STATUS-ERROR": "Ime statusa je obavezno"
+        },
+        "EDIT": {
+            "TITLE": "Uredi status zadatka",
+            "STATUS-NAME": "Ime statusa",
+            "ENTER-STATUS-NAME": "Unesi ime statusa"
+        },
+        "DELETE": {
+           "HEADER" : "Potvrdi brisanje",
+           "MESSAGE": "Jeste li sigurni da želite obrisati status \"{{name}}\"?"
+        },
+        "MESSAGES": {
+            "SUCCESS": "Uspjeh",
+            "ERROR": "Greška",
+            "DELETE-SUCCESS": "Status zadatka obrisan",
+            "DELETE-ERROR": "Greška tijekom brisanja statusa zadatka",
+            "EDIT-SUCCESS": "Status zadatka uređen",
+            "EDIT-ERROR": "Greška tijekom uređivanja statusa zadatka",
+            "CREATE-SUCCESS": "Status zadatka kreiran",
+            "CREATE-ERROR": "Greška tijekom kreiranja statusa zadatka"
+        }
+    }, 
+    "HOUSE-TYPES": {
+        "TITLE": "Upravljanje tipovima kućica",
+        "ADD-HOUSE-TYPE": "Dodaj novi tip kućice",
+        "NO-HOUSE-TYPES": "Nema dostupnih tipova kuićica",
+        "TABLE-COLUMNS": {
+            "ID": "ID",
+            "TYPE-NAME": "Naziv tipa",
+            "ACTIONS": "Akcije"
+        },  
+        "ADD": {
+            "TITLE": "Dodaj tip kućice",
+            "TYPE-NAME": "Naziv tipa",
+            "ENTER-TYPE-NAME": "Unesite naziv tipa",
+            "TYPE-ERROR": "Naziv tipa je obavezan"
+        },
+        "EDIT": {
+            "TITLE": "Uredi tip kućice",
+            "TYPE-NAME": "Naziv tipa",
+            "ENTER-TYPE-NAME": "Unesi naziv tipa"
+        },
+        "DELETE": {
+           "HEADER" : "Potvrdi brisanje",
+           "MESSAGE": "Jeste li sigurni da želite obrisati tip kućice \"{{name}}\"?"
+        },
+        "MESSAGES": {
+            "SUCCESS": "Uspjeh",
+            "ERROR": "Greška",
+            "DELETE-SUCCESS": "Tip kućice obrisan",
+            "DELETE-ERROR": "Greška tijekom brisanja tipa kućice",
+            "EDIT-SUCCESS": "Tip kućice uređen",
+            "EDIT-ERROR": "Greška tijekom uređivanja tipa kućice",
+            "CREATE-SUCCESS": "Tip kućice kreiran",
+            "CREATE-ERROR": "Greška tijekom tipa kućice"
         }
     }
 }

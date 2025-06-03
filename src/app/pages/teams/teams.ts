@@ -10,6 +10,7 @@ import { TabViewModule } from 'primeng/tabview';
 import { TeamTaskCardComponent } from '../../layout/component/team-task-card.component';
 import { PanelModule } from 'primeng/panel';
 import { WorkGroupService } from '../service/work-group.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-teams',
@@ -23,12 +24,13 @@ import { WorkGroupService } from '../service/work-group.service';
         TabViewModule,
         TeamTaskCardComponent,
         PanelModule,
+        TranslateModule,
     ],
     template: `
         @if (loading) {
             <div class="loading-container">
                 <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
-                <span>Učitavanje timova...</span>
+                <span>{{ 'TEAMS.LOADING-TEAMS' | translate }}</span>
             </div>
         } @else {
             <p-panel
@@ -38,7 +40,7 @@ import { WorkGroupService } from '../service/work-group.service';
             >
                 <ng-template pTemplate="header" class="work-group-container-header">
                     <div class="left-side">
-                    <h3 class="group-name">Čišćenje</h3>
+                    <h3 class="group-name">{{ 'TEAMS.CLEANING' | translate }}</h3>
                     <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroups)}}</span>
                     </div>
                 </ng-template>
@@ -46,7 +48,7 @@ import { WorkGroupService } from '../service/work-group.service';
                     <div class="teams-list">
                         @if (cleaningGroups.length === 0) {
                             <div class="empty-state">
-                                <p>Nema kreiranih radnih grupa za čišćenje</p>
+                                <p>{{ 'TEAMS.NO-CLEANING-GROUPS' | translate }}</p>
                             </div>
                         } @else {
                             <div class="teams-grid">
@@ -55,7 +57,7 @@ import { WorkGroupService } from '../service/work-group.service';
                                         <div class="date-separator">
                                             <div class="left-half-line"></div>
                                             @if(isToday(group.created_at)){
-                                                <span>Danas</span>
+                                                <span>{{ 'TEAMS.TODAY' | translate }}</span>
                                             } @else {
                                                 <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
                                             }
@@ -82,7 +84,7 @@ import { WorkGroupService } from '../service/work-group.service';
             >
                 <ng-template pTemplate="header" class="work-group-container-header">
                     <div class="left-side">
-                    <h3 class="group-name">Popravci</h3>
+                    <h3 class="group-name">{{ 'TEAMS.REPAIRS' | translate }}</h3>
                     <span class="work-groups-count">{{workGroupService.getNumberOfRepairWorkGroups(workGroups)}}</span>
                     </div>
                 </ng-template>
@@ -91,7 +93,7 @@ import { WorkGroupService } from '../service/work-group.service';
                     <div class="teams-list">
                         @if (repairGroups.length === 0) {
                             <div class="empty-state">
-                                <p>Nema kreiranih radnih grupa za popravke</p>
+                                <p>{{ 'TEAMS.NO-REPAIR-GROUPS' | translate }}</p>
                             </div>
                         } @else {
                             <div class="teams-grid">
@@ -100,7 +102,7 @@ import { WorkGroupService } from '../service/work-group.service';
                                         <div class="date-separator">
                                             <div class="left-half-line"></div>
                                             @if(isToday(group.created_at)){
-                                                <span>Danas</span>
+                                                <span>{{ 'TEAMS.TODAY' | translate }}</span>
                                             } @else {
                                                 <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
                                             }

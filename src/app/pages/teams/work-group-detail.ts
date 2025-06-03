@@ -9,6 +9,7 @@ import { combineLatest, Subscription } from 'rxjs';
 import { HouseService } from '../service/house.service';
 import { TaskService } from '../service/task.service';
 import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-work-group-detail',
@@ -18,29 +19,30 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
         ButtonModule, 
         ProgressSpinnerModule, 
         CardModule,
-        TasksIndexSortPipe
+        TasksIndexSortPipe,
+        TranslateModule,
     ],
     template: `
         @if (loading) {
             <div class="loading-container">
                 <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
-                <span>Učitavanje tima...</span>
+                <span>{{ 'TEAMS.TEAM-TASK-CARD.LOADING-TEAM' | translate }}</span>
             </div>
         } @else if (workGroup) {
             <div class="work-group-container">
                 <div class="work-group-header">
-                    <h2>Tim {{workGroup.work_group_id}}</h2>
+                    <h2>{{ 'TEAMS.TEAM-TASK-CARD.TEAM' | translate }} {{workGroup.work_group_id}}</h2>
                     <span class="status-badge" [class.locked]="workGroup.is_locked">
-                        {{workGroup.is_locked ? 'Zaključano' : 'Aktivno'}}
+                        {{ workGroup.is_locked ? ('TEAMS.TEAM-TASK-CARD.PUBLISHED' | translate) : ('TEAMS.TEAM-TASK-CARD.NOT-PUBLISHED' | translate) }}
                     </span>
                 </div>
 
                 <div class="work-group-content">
                     <div class="section staff-section">
-                        <h3>Članovi tima</h3>
+                        <h3>{{ 'TEAMS.TEAM-TASK-CARD.TEAM-MEMBERS' | translate }}</h3>
                         <div class="staff-list">
                             @if (assignedStaff.length === 0) {
-                                <p class="empty-section">Nema dodijeljenih članova</p>
+                                <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-STAFF' | translate }}</p>
                             } @else {
                                 @for (staff of assignedStaff; track staff.id) {
                                     <div class="staff-card">
@@ -53,10 +55,10 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                     </div>
 
                     <div class="section tasks-section">
-                        <h3>Zadaci</h3>
+                        <h3>{{ 'TEAMS.TEAM-TASK-CARD.TASKS' | translate }}</h3>
                         <div class="tasks-list">
                             @if (assignedTasks.length === 0) {
-                                <p class="empty-section">Nema dodijeljenih zadataka</p>
+                                <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-TASKS' | translate }}</p>
                             } @else {
                                 @for (task of assignedTasks | tasksIndexSort; track task.task_id) {
                                     <div class="task-card" 

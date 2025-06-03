@@ -6,6 +6,7 @@ import { AppMenuitem } from './app.menuitem';
 import { combineLatest } from 'rxjs';
 import { DataService, ProfileRole } from '../../pages/service/data.service';
 import { ProfileService } from '../../pages/service/profile.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-menu',
@@ -28,6 +29,7 @@ export class AppMenu implements OnInit {
     constructor(
         private dataService: DataService,
         private profileService: ProfileService,
+        private translateService: TranslateService,
     ) {
         
     }
@@ -52,7 +54,11 @@ export class AppMenu implements OnInit {
             if(profile){
                 this.buildMenu();
             }
-        })
+        });
+
+        this.translateService.onLangChange.subscribe(() => {
+            this.buildMenu();
+        });
     }
 
     private isRoleAllowedForPregled(role?: string): boolean {
@@ -135,28 +141,28 @@ export class AppMenu implements OnInit {
         
         // Items that need role check
         if (this.isRoleAllowedForPregled(userRole?.name)) {
-            menuItems.push({ label: 'Pregled', icon: 'pi pi-fw pi-home', routerLink: ['/home'] });
+            menuItems.push({ label: this.translateService.instant('MENU.HOME'), icon: 'pi pi-fw pi-home', routerLink: ['/home'] });
         }
         
         // Conditionally add Rezervacije 2
         if (this.isRoleAllowedForRezervacije2(userRole?.name)) {
-            menuItems.push({ label: 'Rezervacije', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/reservations-2'] });
+            menuItems.push({ label: this.translateService.instant('MENU.RESERVATIONS'), icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/reservations-2'] });
         }
 
         if(this.canViewTimovi(userRole?.name)){
-            menuItems.push({ label: 'Timovi', icon: 'pi pi-fw pi-users', routerLink: ['/teams'] });
+            menuItems.push({ label: this.translateService.instant('MENU.TEAMS'), icon: 'pi pi-fw pi-users', routerLink: ['/teams'] });
         }
 
         if(this.canViewDnevniList(userRole?.name)){
-            menuItems.push({ label: 'Dnevni list', icon: 'pi pi-fw pi-file', routerLink: ['/daily-sheet'] });
+            menuItems.push({ label: this.translateService.instant('MENU.DAILY-SHEET'), icon: 'pi pi-fw pi-file', routerLink: ['/daily-sheet'] });
         }
         
         // Add Voditelj kampa only menu items
         if (this.isVoditeljKampa(userRole?.name)) {
             menuItems.push(
-                { label: 'Profili', icon: 'pi pi-fw pi-user', routerLink: ['/profiles'] },
-                { label: 'Statusi zadataka', icon: 'pi pi-fw pi-check-square', routerLink: ['/task-progress-types'] },
-                { label: 'Tipovi kuća', icon: 'pi pi-fw pi-home', routerLink: ['/house-types'] }
+                { label: this.translateService.instant('MENU.PROFILES'), icon: 'pi pi-fw pi-user', routerLink: ['/profiles'] },
+                { label: this.translateService.instant('MENU.TASK-STATUSES'), icon: 'pi pi-fw pi-check-square', routerLink: ['/task-progress-types'] },
+                { label: this.translateService.instant('MENU.HOUSE-TYPES'), icon: 'pi pi-fw pi-home', routerLink: ['/house-types'] }
             );
         }
         

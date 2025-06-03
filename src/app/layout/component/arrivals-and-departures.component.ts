@@ -93,7 +93,7 @@ import { TranslateModule } from '@ngx-translate/core';
                   </div>
                   <div class="house-container">
                     <label for="departure-checkbox-{{ departure.house_number }}">
-                      House: <span class="house-number">{{ departure.house_number }}</span>
+                      {{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.HOUSE' | translate }}: <span class="house-number">{{ departure.house_number }}</span>
                     </label>
                   </div>
                   <div class="time-container">

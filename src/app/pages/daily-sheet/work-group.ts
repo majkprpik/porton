@@ -18,7 +18,7 @@ import { DialogModule } from 'primeng/dialog';
 import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { HouseService } from '../service/house.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-work-group',
@@ -521,6 +521,7 @@ export class WorkGroup implements OnInit {
     private confirmationService: ConfirmationService,
     private profileService: ProfileService,
     public houseService: HouseService,
+    private translateService: TranslateService,
   ) {}
 
   ngOnInit() {
@@ -743,10 +744,10 @@ export class WorkGroup implements OnInit {
 
       if(this.assignedTasks.find(task => task.task_progress_type_id == inProgressTaskProgressType.task_progress_type_id || task.task_progress_type_id == pausedTaskProgressType.task_progress_type_id)){
         this.confirmationService.confirm({
-          message: `Jedan od zadataka je u tijeku. Greška prilikom brisanja grupe.`,
-          header: 'Upozorenje',
+          message: this.translateService.instant('DAILY-SHEET.WORK-GROUPS.DELETE.TASK-IN-PROGRESS'),
+          header: this.translateService.instant('DAILY-SHEET.WORK-GROUPS.DELETE.HEADER'),
           icon: 'pi pi-exclamation-triangle',
-          acceptLabel: 'OK',
+          acceptLabel: this.translateService.instant('BUTTONS.OK'),
           rejectVisible: false,
         });
 
@@ -755,10 +756,10 @@ export class WorkGroup implements OnInit {
     }
 
     this.confirmationService.confirm({
-      message: `Jeste li sigurni da želite obrisati ovu radnu grupu? <br> <b>Završeni zadaci biti će arhivirani, a nezavršeni vraćeni u status "Nije dodijeljeno".</b>`,
-      header: 'Upozorenje',
-      acceptLabel: 'Da',
-      rejectLabel: 'Ne',
+      message: this.translateService.instant('DAILY-SHEET.WORK-GROUPS.DELETE.DELETE'),
+      header: this.translateService.instant('DAILY-SHEET.WORK-GROUPS.DELETE.HEADER'),
+      acceptLabel: this.translateService.instant('BUTTONS.YES'),
+      rejectLabel: this.translateService.instant('BUTTONS.NO'),
       accept: () => {
         this.deleteClicked.emit();
       }
