@@ -155,14 +155,14 @@ import { TranslateModule } from '@ngx-translate/core';
                 }
 
                 .p-panel {
-                    background: transparent;
                     margin-bottom: 10px;
+                    border-radius: 12px;
                 }
 
                 .p-panel-header {
                     padding: 0.75rem 1.25rem;
                     border: none;
-                    border-radius: 6px;
+                    border-radius: 12px;
                     background: var(--surface-ground);
                     height: 65px;
                     
@@ -209,7 +209,7 @@ import { TranslateModule } from '@ngx-translate/core';
             min-height: 320px;
             padding: 1rem;
             background-color: var(--surface-card);
-            border-radius: 8px;
+            border-radius: 12px;
             padding-bottom: 30px;
         }
 
