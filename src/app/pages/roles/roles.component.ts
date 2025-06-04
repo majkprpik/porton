@@ -81,31 +81,52 @@ interface Role {
       </p-table>
     </div>
 
-    <p-dialog [(visible)]="roleDialog" [style]="{width: '450px'}" 
-              [header]="editMode ? 'Uredi ulogu' : 'Dodaj novu ulogu'" 
-              [modal]="true" 
-              [contentStyle]="{overflow: 'visible'}"
-              [draggable]="false" [resizable]="false">
-      <div class="p-field mb-4" *ngIf="selectedRole">
-        <label for="id" class="font-medium mb-2 block">Identifikator uloge*</label>
-        <input type="text" pInputText id="id" [(ngModel)]="selectedRole.role_id" 
-               required autofocus class="w-full" 
-               placeholder="Unesite identifikator uloge" 
-               [disabled]="editMode" />
-        <small *ngIf="submitted && !selectedRole.role_id" class="p-error">Identifikator uloge je obavezan.</small>
-      </div>
-      <div class="p-field mb-4" *ngIf="selectedRole">
-        <label for="name" class="font-medium mb-2 block">Naziv uloge*</label>
-        <input type="text" pInputText id="name" [(ngModel)]="selectedRole.role_name" 
-               required class="w-full" 
-               placeholder="Unesite naziv uloge" />
-        <small *ngIf="submitted && !selectedRole.role_name" class="p-error">Naziv uloge je obavezan.</small>
-      </div>
+    <p-dialog 
+      [(visible)]="roleDialog" [style]="{width: '450px'}" 
+      [header]="editMode ? 'Uredi ulogu' : 'Dodaj novu ulogu'" 
+      [modal]="true" 
+      [contentStyle]="{overflow: 'visible'}"
+      [draggable]="false" [resizable]="false"
+    >
+      @if(selectedRole){
+        <div class="p-field mb-4">
+          <label for="id" class="font-medium mb-2 block">Identifikator uloge*</label>
+          <input 
+            type="text" pInputText id="id" 
+            [(ngModel)]="selectedRole.role_id" 
+            required autofocus class="w-full" 
+            placeholder="Unesite identifikator uloge" 
+            [disabled]="editMode" 
+          />
+          @if(submitted && !selectedRole.role_id){
+            <small class="p-error">Identifikator uloge je obavezan.</small>
+          }
+        </div>
+        <div class="p-field mb-4">
+          <label for="name" class="font-medium mb-2 block">Naziv uloge*</label>
+          <input 
+            type="text" pInputText id="name" 
+            [(ngModel)]="selectedRole.role_name" 
+            required class="w-full" 
+            placeholder="Unesite naziv uloge" 
+          />
+          @if(submitted && !selectedRole.role_name){
+            <small class="p-error">Naziv uloge je obavezan.</small>
+          }
+        </div>
+      }
       <div class="flex justify-content-end mt-4">
-        <p-button label="Odustani" icon="pi pi-times" (click)="hideDialog()" 
-                 styleClass="p-button-text"></p-button>
-        <p-button label="Spremi" icon="pi pi-check" (click)="saveRole()" 
-                 [disabled]="!selectedRole?.role_id || !selectedRole?.role_name"></p-button>
+        <p-button 
+          label="Odustani" 
+          icon="pi pi-times" 
+          (click)="hideDialog()" 
+          styleClass="p-button-text"></p-button>
+        <p-button 
+          label="Spremi" 
+          icon="pi pi-check" 
+          (click)="saveRole()" 
+          [disabled]="!selectedRole?.role_id || !selectedRole?.role_name">
+        </p-button>
       </div>
     </p-dialog>
 

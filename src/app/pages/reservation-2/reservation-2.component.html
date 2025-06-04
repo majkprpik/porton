@@ -31,7 +31,6 @@
                                     }"
                                     [title]="day.toLocaleDateString()">
                                     <div>{{ formatDate(day) }}</div>
-                                    <!-- <div *ngIf="isToday(day)" class="today-indicator">TODAY</div> -->
                                 </th>
                             }
                         </tr>
@@ -110,17 +109,18 @@
     </div>
 
     <!-- Reservation Form -->
-    <app-reservation-form 
-        *ngIf="showReservationForm()"
-        [houseId]="selectedHouseId()"
-        [startDate]="selectedStartDate()"
-        [endDate]="selectedEndDate()"
-        [reservation]="editingReservation()"
-        [visible]="showReservationForm()"
-        [colors]="colors"
-        (save)="handleReservationSave($event)"
-        (delete)="handleDeleteReservation($event)"
-        (cancel)="handleReservationCancel()"
-        (visibleChange)="handleVisibilityChange($event)">
-    </app-reservation-form>
+    @if(showReservationForm()){
+        <app-reservation-form 
+            [houseId]="selectedHouseId()"
+            [startDate]="selectedStartDate()"
+            [endDate]="selectedEndDate()"
+            [reservation]="editingReservation()"
+            [visible]="showReservationForm()"
+            [colors]="colors"
+            (save)="handleReservationSave($event)"
+            (delete)="handleDeleteReservation($event)"
+            (cancel)="handleReservationCancel()"
+            (visibleChange)="handleVisibilityChange($event)">
+        </app-reservation-form>
+    }
 </div> 

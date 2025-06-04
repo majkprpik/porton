@@ -1,5 +1,5 @@
 <div class="reservations-container">
-    <ng-container *ngIf="houses().length > 0 && houseAvailabilities().length > 0">
+    @if(houses().length > 0 && houseAvailabilities().length > 0){
         <div class="card">
             <table class="reservations-table">
                 <thead>
@@ -7,9 +7,9 @@
                         <th></th>
                         @for (day of days(); track dayIndex; let dayIndex = $index) {
                         <th [ngClass]="getColumnClasses(day)">
-                            <ng-container *ngIf="isToday(day)">
+                            @if(isToday(day)){
                                 <div class="today-label">TODAY</div>
-                            </ng-container>
+                            }
                             {{day | date:'d.M'}}
                         </th>
                         }
@@ -44,5 +44,5 @@
                 </tbody>
             </table>
         </div>
-    </ng-container>
+    }
 </div>

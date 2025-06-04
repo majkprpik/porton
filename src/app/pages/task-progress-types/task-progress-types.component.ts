@@ -89,15 +89,19 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
       [contentStyle]="{overflow: 'visible'}"
       [draggable]="false" [resizable]="false"
     >
-      <div class="p-field mb-4" *ngIf="selectedType">
-        <label for="name" class="font-medium mb-2 block">{{ 'TASK-STATUSES-MANAGEMENT.ADD.STATUS-NAME' | translate }}*</label>
-        <input 
-          type="text" pInputText id="name" [(ngModel)]="selectedType.task_progress_type_name" 
-          required autofocus class="w-full" 
-          [placeholder]="'TASK-STATUSES-MANAGEMENT.ADD.ENTER-STATUS-NAME' | translate" 
-        />
-        <small *ngIf="submitted && !selectedType.task_progress_type_name" class="p-error">{{ 'TASK-STATUSES-MANAGEMENT.ADD.STATUS-ERROR' | translate }}</small>
-      </div>
+      @if(selectedType){
+        <div class="p-field mb-4">
+          <label for="name" class="font-medium mb-2 block">{{ 'TASK-STATUSES-MANAGEMENT.ADD.STATUS-NAME' | translate }}*</label>
+          <input 
+            type="text" pInputText id="name" [(ngModel)]="selectedType.task_progress_type_name" 
+            required autofocus class="w-full" 
+            [placeholder]="'TASK-STATUSES-MANAGEMENT.ADD.ENTER-STATUS-NAME' | translate" 
+          />
+          @if(submitted && !selectedType.task_progress_type_name){
+            <small class="p-error">{{ 'TASK-STATUSES-MANAGEMENT.ADD.STATUS-ERROR' | translate }}</small>
+          }
+        </div>
+      }
       <div class="flex justify-content-end mt-4">
         <p-button 
           [label]="'BUTTONS.CANCEL' | translate" 

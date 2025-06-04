@@ -60,8 +60,10 @@ interface ExtendedProfile extends Profile {
         </ng-template>
         <ng-template pTemplate="body" let-profile>
           <tr [ngClass]="{'divider-row': profile.isDivider}">
-            <td *ngIf="profile.isDivider" colspan="5" class="divider-cell">{{ 'PROFILE-DEPARTMENTS.' + profile.first_name | translate }}</td>
-            <ng-container *ngIf="!profile.isDivider">
+            @if(profile.isDivider){
+              <td colspan="5" class="divider-cell">{{ 'PROFILE-DEPARTMENTS.' + profile.first_name | translate }}</td>
+            }
+            @if(!profile.isDivider){
               <td>{{ profile.first_name }} {{ profile.last_name }}</td>
               <td>{{ 'PROFILE-ROLES.' + getProfileRoleNameById(profile.role_id) | translate }}</td>
               <td>{{ profile.email }}</td>
@@ -79,27 +81,29 @@ interface ExtendedProfile extends Profile {
                   (click)="profile.id !== authService.getStoredUserId() && showDeleteProfile(profile)">
                 </p-button>
               </td>
-            </ng-container>
+            }
           </tr>
         </ng-template>
       </p-table>
     </div>
 
     <p-dialog [(visible)]="profileDialog" [style]="{width: '450px'}" header="Edit Profile" [modal]="true" [contentStyle]="{overflow: 'visible'}">
-      <div class="p-field" *ngIf="selectedProfile">
-        <label for="role">Role</label>
-        <p-dropdown 
-          [options]="profileRoles" 
-          [(ngModel)]="selectedProfile.role_id" 
-          placeholder="Select a Role" 
-          [showClear]="true"
-          [style]="{'width':'100%'}"
-          optionLabel="name"
-          optionValue="id"
-          appendTo="body"
-          id="role">
-        </p-dropdown>
-      </div>
+      @if(selectedProfile){
+        <div class="p-field">
+          <label for="role">Role</label>
+          <p-dropdown 
+            [options]="profileRoles" 
+            [(ngModel)]="selectedProfile.role_id" 
+            placeholder="Select a Role" 
+            [showClear]="true"
+            [style]="{'width':'100%'}"
+            optionLabel="name"
+            optionValue="id"
+            appendTo="body"
+            id="role">
+          </p-dropdown>
+        </div>
+      }
       <div class="p-dialog-footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
         <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="saveProfile()" [disabled]="!selectedProfile"></p-button>

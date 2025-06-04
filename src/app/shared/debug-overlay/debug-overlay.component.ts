@@ -7,15 +7,19 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div *ngIf="true" class="debug-overlay">
-      <div class="debug-content">
-        <h3>Performance Logs</h3>
-        <div class="log-entry" *ngFor="let log of logs">
-          <span class="timestamp">{{log.timestamp | date:'HH:mm:ss.SSS'}}</span>
-          <span class="message">{{log.message}}</span>
+    @if(true){
+      <div class="debug-overlay">
+        <div class="debug-content">
+          <h3>Performance Logs</h3>
+          @for(log of logs; track log.timestamp){
+            <div class="log-entry">
+              <span class="timestamp">{{log.timestamp | date:'HH:mm:ss.SSS'}}</span>
+              <span class="message">{{log.message}}</span>
+            </div>
+          }
         </div>
       </div>
-    </div>
+    }
   `,
   styles: [`
     .debug-overlay {

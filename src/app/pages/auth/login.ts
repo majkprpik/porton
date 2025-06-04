@@ -58,7 +58,9 @@ import { AuthService } from '../service/auth.service';
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
                             </div> -->
 
-                            <div *ngIf="errorMessage" class="text-red-500 mb-4">{{ errorMessage }}</div>
+                            @if(errorMessage){
+                                <div class="text-red-500 mb-4">{{ errorMessage }}</div>
+                            }
                             
                             <p-button 
                                 label="Sign In" 

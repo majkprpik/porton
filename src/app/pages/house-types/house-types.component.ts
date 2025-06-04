@@ -41,9 +41,14 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         </button>
       </div>
       
-      <p-table [value]="houseTypes" [tableStyle]="{'min-width': '50rem'}"
-               [paginator]="true" [rows]="10"
-               [rowHover]="true" dataKey="house_type_id">
+      <p-table 
+        [value]="houseTypes" 
+        [tableStyle]="{'min-width': '50rem'}"
+        [paginator]="true" 
+        [rows]="10"
+        [rowHover]="true" 
+        dataKey="house_type_id"
+      >
         <ng-template pTemplate="header">
           <tr>
             <th class="text-left w-2">{{ 'HOUSE-TYPES.TABLE-COLUMNS.ID' | translate }}</th>
@@ -79,18 +84,32 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
       </p-table>
     </div>
 
-    <p-dialog [(visible)]="typeDialog" [style]="{width: '450px'}" 
-              [header]="editMode ? ('HOUSE-TYPES.EDIT.TITLE' | translate) : ('HOUSE-TYPES.EDIT.TITLE' | translate)"
-              [modal]="true" 
-              [contentStyle]="{overflow: 'visible'}"
-              [draggable]="false" [resizable]="false">
-      <div class="p-field mb-4" *ngIf="selectedType">
-        <label for="name" class="font-medium mb-2 block">{{ 'HOUSE-TYPES.ADD.ENTER-TYPE-NAME' | translate }}*</label>
-        <input type="text" pInputText id="name" [(ngModel)]="selectedType.house_type_name" 
-               required autofocus class="w-full" 
-               [placeholder]="'HOUSE-TYPES.ADD.ENTER-TYPE-NAME' | translate" />
-        <small *ngIf="submitted && !selectedType.house_type_name" class="p-error">{{ 'HOUSE-TYPES.ADD.TYPE-ERROR' | translate }}</small>
-      </div>
+    <p-dialog 
+      [(visible)]="typeDialog" [style]="{width: '450px'}" 
+      [header]="editMode ? ('HOUSE-TYPES.EDIT.TITLE' | translate) : ('HOUSE-TYPES.ADD.TITLE' | translate)"
+      [modal]="true" 
+      [contentStyle]="{overflow: 'visible'}"
+      [draggable]="false" 
+      [resizable]="false"
+    >
+      @if(selectedType){
+        <div class="p-field mb-4">
+          <label for="name" class="font-medium mb-2 block">{{ 'HOUSE-TYPES.ADD.TYPE-NAME' | translate }}*</label>
+          <input 
+            type="text" 
+            pInputText 
+            id="name" 
+            [(ngModel)]="selectedType.house_type_name" 
+            required 
+            autofocus 
+            class="w-full" 
+            [placeholder]="'HOUSE-TYPES.ADD.ENTER-TYPE-NAME' | translate" 
+          />
+          @if(submitted && !selectedType.house_type_name){
+            <small class="p-error">{{ 'HOUSE-TYPES.ADD.TYPE-ERROR' | translate }}</small>
+          }
+        </div>
+      }
       <div class="flex justify-content-end mt-4">
         <p-button 
           [label]="'BUTTONS.CANCEL' | translate" 

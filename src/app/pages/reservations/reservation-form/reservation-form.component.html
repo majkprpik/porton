@@ -126,19 +126,23 @@
             </textarea>
         </div>
         
-        <div *ngIf="dateConflictError" class="field">
-            <div class="p-error">{{dateConflictError}}</div>
-        </div>
+        @if(dateConflictError){
+            <div class="field">
+                <div class="p-error">{{dateConflictError}}</div>
+            </div>
+        }
     </div>
     <ng-template pTemplate="footer">
         <div class="form-footer">
             <div class="left-buttons">
-                <p-button 
-                    *ngIf="isEditMode" 
-                    [label]="'BUTTONS.DELETE' | translate"
-                    icon="pi pi-trash" 
-                    (click)="onDelete()" 
-                    styleClass="p-button-danger p-button-text"></p-button>
+                @if(isEditMode){
+                    <p-button
+                        [label]="'BUTTONS.DELETE' | translate"
+                        icon="pi pi-trash" 
+                        (click)="onDelete()" 
+                        styleClass="p-button-danger p-button-text">
+                    </p-button>
+                }
             </div>
             <div class="right-buttons">
                 <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
