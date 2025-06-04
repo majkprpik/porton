@@ -33,7 +33,8 @@
         "Čišćenje terase": "Deck cleaning",
         "Popravak": "Repair",
         "Mijenjanje posteljine": "Sheet change",
-        "Mijenjanje ručnika": "Towel change"
+        "Mijenjanje ručnika": "Towel change",
+        "Ostalo": "Other"
     },
     "PROFILE-DEPARTMENTS": {
         "UPRAVA": "MANAGEMENT",
