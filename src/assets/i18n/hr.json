@@ -129,10 +129,19 @@
             "TASK-TYPE": "Tip zadatka",
             "SELECT-TASK-TYPE": "Odaberi tip zadatka",
             "DESCRIPTION": "Opis",
-            "ADD-DESCRIPTION": "Dodaj opis"
+            "ADD-DESCRIPTION": "Dodaj opis",
+            "MESSAGES": {
+                "SUCCESS": "Uspjeh",
+                "ERROR": "Greška",
+                "TASK-REPORT": {
+                    "SUCCESS": "Izvanredan zadatak prijavljen",
+                    "ERROR": "Greška tijekom prijave izvanrednog zadatka",
+                    "TASK-TYPE-NOT-SELECTED": "Molimo odaberite tip zadatka"
+                }
+            }
         },
         "REPAIR-TASK-REPORT": {
-            "TITLE": "Prijavi popravak",
+            "TITLE": "Prijavi kvar",
             "LOCATION": "Lokacija",
             "SELECT-LOCATION": "Odaberi lokaciju",
             "DESCRIPTION": "Opis",
@@ -140,7 +149,50 @@
             "IMAGES": "Slike",
             "ADDED-IMAGES": "Dodane slike",
             "CAPTURE-IMAGE": "Dodaj sliku...",
-            "SAVE-IMAGE": "Spremi sliku?"
+            "SAVE-IMAGE": "Spremi sliku?",
+            "MESSAGES": {
+                "SUCCESS": "Uspjeh",
+                "ERROR": "Greška",
+                "REPAIR-REPORT": {
+                    "SUCCESS": "Kvar prijavljen",
+                    "ERROR": "Greška tijekom prijave kvara"
+                }
+            }
+        },
+        "TASK-DETAILS": {
+            "TITLE": "Detalji zadatka",
+            "HOUSE": "Kućica",
+            "TYPE": "Tip",
+            "STATUS": "Status",
+            "DESCRIPTION": "Opis",
+            "CREATED-AT": "Kreirano",
+            "IMAGES": "Slike",                
+            "NO-COMMENTS": "Nema komentara za ovaj zadatak",
+            "LOADING-COMMENTS": "Učitavanje komentara...",
+            "ADD-COMMENT": "Dodaj komentar...",
+            "CAPTURE-IMAGE": "Dodaj sliku...",
+            "SAVE-IMAGE":"Spremi sliku?",
+            "TABS": {
+                "DETAILS": "Detalji",
+                "IMAGES": "Slike",
+                "COMMENTS": "Komentari"
+            },
+            "MESSAGES": {
+                "UPDATED": "Promjena",
+                "CANCELLED": "Otkazano",
+                "REMOVE-IMAGE": {
+                    "HEADER": "Potvrdi brisanje slike",
+                    "WARNING": "Jeste li sigurni da želite obrisati ovu sliku?",
+                    "SUCCESS": "Slika obrisana",
+                    "CANCELLED": "Promjena otkazana"
+                },
+                "TASK-DELETE": {
+                    "HEADER": "Potvrdi brisanje zadatka",
+                    "WARNING": "Jeste li sigurni da želite obrisati ovaj zadatak?",
+                    "SUCCESS": "Zadatak obrisan",
+                    "CANCELLED": "Promjena otkazana"
+                }
+            }
         }
     },
     "TEAMS": {
@@ -267,6 +319,53 @@
             "EDIT-ERROR": "Greška tijekom uređivanja tipa kućice",
             "CREATE-SUCCESS": "Tip kućice kreiran",
             "CREATE-ERROR": "Greška tijekom tipa kućice"
+        }
+    },
+    "RESERVATIONS": {
+        "HOUSE": "Kućica",
+        "MODAL": {
+            "CREATE-RESERVATION": "Kreiraj rezervaciju",
+            "CREATE-TEMP-RESERVATION": "Kreiraj privremenu rezervaciju",
+            "EDIT-RESERVATION": "Uredi rezervaciju",
+            "EDIT-TEMP-RESERVATION": "Uredi privremenu rezervaciju",
+            "LAST-NAME": "Prezime",
+            "ADULTS": "Odrasli",
+            "RESERVATION-NUMBER": "Broj rezervacije",
+            "BABIES": "Bebe",
+            "BABY-CRIBS": "Krevetići",
+            "PETS": "Ljubimci",
+            "CHECK-IN": "Dolazak",
+            "CHECK-OUT": "Odlazak",
+            "COLOR": "Boja",
+            "SELECT-A-COLOR": "Odaberi boju",
+            "START-DATE": "Početak",
+            "END-DATE": "Kraj",
+            "SELECT-START-DATE": "Odaberi početak",
+            "SELECT-END-DATE": "Odaberi kraj",
+            "NOTES": "Dodatne informacije",
+            "NOTES-ENTER-INFO": "Unesi dodatne informacije o rezervaciji"
+        },
+        "MESSAGES": {
+            "UPDATED": "Promjena",
+            "CANCELLED": "Otkazano",
+            "DELETED-SUCCESS": "Rezervacija obrisana",
+            "HEADER": "Potvrdi brisanje rezervacije",
+            "CONFIRM-DELETE": "Jeste li sigurni da želite obrisati rezervaciju?",
+            "CANCELLED-DELETE": "Promjena otkazana"
+        }
+    },
+    "HOME": {
+        "SEARCH": {
+            "SEARCH-HOUSES": "Pretraži kućice",
+            "BY-NUMBER": "Po broju",
+            "BY-TYPE": "Po tipu"
+        },
+        "HOUSE-STATUS": {
+            "FREE": "Slobodna",
+            "OCCUPIED": "Zauzeta",
+            "ARRIVAL-DAY": "Dolazna",
+            "CLEANED": "Očišćena",
+            "NOT-CLEANED": "Neočišćena"
         }
     }
 }

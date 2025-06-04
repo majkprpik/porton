@@ -129,7 +129,16 @@
             "TASK-TYPE": "Task type",
             "SELECT-TASK-TYPE": "Select a task type",
             "DESCRIPTION": "Description",
-            "ADD-DESCRIPTION": "Add description for task"
+            "ADD-DESCRIPTION": "Add description for task",
+            "MESSAGES": {
+                "SUCCESS": "Success",
+                "ERROR": "Error",
+                "TASK-REPORT": {
+                    "SUCCESS": "Unscheduled task reported",
+                    "ERROR": "Error reporting unscheduled task",
+                    "TASK-TYPE-NOT-SELECTED": "Please select a task type"
+                }
+            }
         },
         "REPAIR-TASK-REPORT": {
             "TITLE": "Report a repair task",
@@ -140,7 +149,50 @@
             "IMAGES": "Images",
             "ADDED-IMAGES": "Added images",
             "CAPTURE-IMAGE": "Capture an image...",
-            "SAVE-IMAGE": "Save image?"
+            "SAVE-IMAGE": "Save image?",
+            "MESSAGES": {
+                "SUCCESS": "Success",
+                "ERROR": "Error",
+                "REPAIR-REPORT": {
+                    "SUCCESS": "Repair task reported",
+                    "ERROR": "Error reporting repair task"
+                }
+            }
+        },
+        "TASK-DETAILS": {
+            "TITLE": "Task details",
+            "HOUSE": "House",
+            "TYPE": "Type",
+            "STATUS": "Status",
+            "DESCRIPTION": "Description",
+            "CREATED-AT": "Created at",
+            "IMAGES": "Images",
+            "NO-COMMENTS": "No comments for this task",
+            "LOADING-COMMENTS": "Loading comments...",
+            "ADD-COMMENT": "Add a comment...",
+            "CAPTURE-IMAGE": "Upload an image...",
+            "SAVE-IMAGE":"Save image?",
+            "TABS": {
+                "DETAILS": "Details",
+                "IMAGES": "Images",
+                "COMMENTS": "Comments"
+            },
+            "MESSAGES": {
+                "UPDATED": "Updated",
+                "CANCELLED": "Cancelled",
+                "REMOVE-IMAGE": {
+                    "HEADER": "Confirm image delete",
+                    "WARNING": "Are you sure you want to remove this image?",
+                    "SUCCESS": "Image removed",
+                    "CANCELLED": "Change was cancelled"
+                },
+                "TASK-DELETE": {
+                    "HEADER": "Confirm task delete",
+                    "WARNING": "Are you sure you want to remove this task?",
+                    "SUCCESS": "Task deleted",
+                    "CANCELLED": "Change was cancelled"
+                }
+            }
         }
     },
     "TEAMS": {
@@ -267,6 +319,53 @@
             "EDIT-ERROR": "Error updating house type",
             "CREATE-SUCCESS": "House type created",
             "CREATE-ERROR": "Error creating house type"
+        }
+    },
+    "RESERVATIONS": {
+        "HOUSE": "House",
+        "MODAL": {
+            "CREATE-RESERVATION": "Create reservation",
+            "CREATE-TEMP-RESERVATION": "Create temporary reservation",
+            "EDIT-RESERVATION": "Edit reservation",
+            "EDIT-TEMP-RESERVATION": "Edit temporary reservation",
+            "LAST-NAME": "Last name",
+            "ADULTS": "Adults",
+            "RESERVATION-NUMBER": "Reservation number",
+            "BABIES": "Babies",
+            "BABY-CRIBS": "Baby cribs",
+            "PETS": "Pets",
+            "CHECK-IN": "Check in",
+            "CHECK-OUT": "Check out",
+            "COLOR": "Color",
+            "SELECT-A-COLOR": "Select a color",
+            "START-DATE": "Start date",
+            "END-DATE": "End date",
+            "SELECT-START-DATE": "Select start date",
+            "SELECT-END-DATE": "Select end date",
+            "NOTES": "Notes",
+            "NOTES-ENTER-INFO": "Enter any additional information about this reservation"
+        },
+        "MESSAGES": {
+            "UPDATED": "Update",
+            "CANCELLED": "Cancelled",
+            "DELETED-SUCCESS": "Reservation deleted",
+            "HEADER": "Confirm reservation delete",
+            "CONFIRM-DELETE": "Are you sure you want to delete this reservation?",
+            "CANCELLED-DELETE": "Delete cancelled"
+        }
+    },
+    "HOME": {
+        "SEARCH": {
+            "SEARCH-HOUSES": "Search houses",
+            "BY-NUMBER": "By number",
+            "BY-TYPE": "By type"
+        },
+        "HOUSE-STATUS": {
+            "FREE": "Free",
+            "OCCUPIED": "Occupied",
+            "ARRIVAL-DAY": "Arrival day",
+            "CLEANED": "Cleaned",
+            "NOT-CLEANED": "Not cleaned"
         }
     }
 }

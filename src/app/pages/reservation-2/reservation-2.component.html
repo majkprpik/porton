@@ -21,7 +21,7 @@
                 <table class="reservation-table">
                     <thead>
                         <tr>
-                            <th class="house-header corner-header">House</th>
+                            <th class="house-header corner-header">{{ 'RESERVATIONS.HOUSE' | translate }}</th>
                             @for (day of days(); track day.getTime()) {
                                 <th class="day-header" 
                                     [ngClass]="{

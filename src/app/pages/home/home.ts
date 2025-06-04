@@ -12,6 +12,7 @@ import { signal } from '@angular/core';
 import { TaskService } from '../service/task.service';
 import { HouseService } from '../service/house.service';
 import { InputTextModule } from 'primeng/inputtext';
+import { TranslateModule } from '@ngx-translate/core';
 
 // Define the special location option interface
 interface SpecialLocation {
@@ -29,17 +30,18 @@ interface SpecialLocation {
         DialogModule, 
         DropdownModule, 
         FormsModule,
-        InputTextModule
+        InputTextModule,
+        TranslateModule,
     ],
     template: `
         <div class="home-container" (click)="handleContainerClick($event)">
             <div class="legend-container">
                 <div class="legend-wrapper">
                     <div class="legend-items">
-                        <div class="legend-item"><span class="legend-color legend-green"></span> Slobodna (očišćena) </div>
-                        <div class="legend-item"><span class="legend-color legend-yellow"></span> Slobodna (neočišćena) </div>
-                        <div class="legend-item"><span class="legend-color legend-red"></span> Zauzeta </div>
-                        <div class="legend-item"><span class="legend-color legend-lightred"></span> Dolazna (očišćena) </div>
+                        <div class="legend-item"><span class="legend-color legend-green"></span> {{ 'HOME.HOUSE-STATUS.FREE' | translate }} ({{ 'HOME.HOUSE-STATUS.CLEANED' | translate }}) </div>
+                        <div class="legend-item"><span class="legend-color legend-yellow"></span> {{ 'HOME.HOUSE-STATUS.FREE' | translate }} ({{ 'HOME.HOUSE-STATUS.NOT-CLEANED' | translate }}) </div>
+                        <div class="legend-item"><span class="legend-color legend-red"></span> {{ 'HOME.HOUSE-STATUS.OCCUPIED' | translate }} </div>
+                        <div class="legend-item"><span class="legend-color legend-lightred"></span> {{ 'HOME.HOUSE-STATUS.ARRIVAL-DAY' | translate }} ({{ 'HOME.HOUSE-STATUS.CLEANED' | translate }}) </div>
                     </div>
                     <div class="house-controls">
                         <div class="search-container">
@@ -47,7 +49,7 @@ interface SpecialLocation {
                                 type="text" 
                                 pInputText 
                                 class="w-full"
-                                placeholder="Pretraži kućice..." 
+                                [placeholder]="'HOME.SEARCH.SEARCH-HOUSES' | translate" 
                                 [(ngModel)]="searchTerm"
                                 (input)="applyFilters()">
                         </div>
@@ -56,7 +58,7 @@ interface SpecialLocation {
                                 [outlined]="sortType !== 'number'"
                                 [raised]="sortType === 'number'"
                                 icon="pi pi-sort-numeric-up" 
-                                label="Po broju"
+                                [label]="'HOME.SEARCH.BY-NUMBER' | translate"
                                 (onClick)="sortBy('number')"
                                 styleClass="p-button-sm">
                             </p-button>
@@ -64,7 +66,7 @@ interface SpecialLocation {
                                 [outlined]="sortType !== 'type'"
                                 [raised]="sortType === 'type'"
                                 icon="pi pi-sort-alpha-up" 
-                                label="Po tipu"
+                                [label]="'HOME.SEARCH.BY-TYPE' | translate"
                                 (onClick)="sortBy('type')"
                                 styleClass="p-button-sm">
                             </p-button>

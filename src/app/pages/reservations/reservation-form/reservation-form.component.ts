@@ -10,6 +10,8 @@ import { InputTextarea } from 'primeng/inputtextarea';
 import { HouseAvailability } from '../../service/data.service';
 import { DropdownModule } from 'primeng/dropdown';
 import { DatePickerModule } from 'primeng/datepicker';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 @Component({
     selector: 'app-reservation-form',
@@ -26,7 +28,8 @@ import { DatePickerModule } from 'primeng/datepicker';
         CalendarModule,
         DropdownModule,
         InputTextarea,
-        DatePickerModule
+        DatePickerModule,
+        TranslateModule,
     ]
 })
 export class ReservationFormComponent implements OnInit, OnChanges {
@@ -79,6 +82,14 @@ export class ReservationFormComponent implements OnInit, OnChanges {
     @Output() save = new EventEmitter<HouseAvailability>();
     @Output() cancel = new EventEmitter<void>();
     @Output() delete = new EventEmitter<{ availabilityId: number; houseId: number }>();
+
+    constructor(
+        private confirmationService: ConfirmationService,
+        private translateService: TranslateService,
+        private messageService: MessageService,
+    ) {
+
+    }
 
     ngOnInit() {
         console.log("Form initialized with dates:", this.startDate, this.endDate);
@@ -364,10 +375,41 @@ export class ReservationFormComponent implements OnInit, OnChanges {
     onDelete(): void {
         if (this.isEditMode && this.reservation.house_availability_id) {
             // Confirm deletion
-            if (confirm('Are you sure you want to delete this reservation?')) {
-                this.delete.emit({ availabilityId: this.reservation.house_availability_id, houseId: this.houseId });
-                this.visibleChange.emit(false);
-            }
+            this.confirmationService.confirm({
+                message: this.translateService.instant('RESERVATIONS.MESSAGES.CONFIRM-DELETE'),
+                header: this.translateService.instant('RESERVATIONS.MESSAGES.HEADER'),
+                icon: 'pi pi-exclamation-triangle',
+                rejectLabel: 'Cancel',
+                rejectButtonProps: {
+                    label: this.translateService.instant('BUTTONS.CANCEL'),
+                    severity: 'secondary',
+                    outlined: true
+                },
+                acceptButtonProps: {
+                    label: this.translateService.instant('BUTTONS.CONFIRM'),
+                    severity: 'danger'
+                },
+                accept: async () => {
+                    this.delete.emit({ 
+                        availabilityId: this.reservation.house_availability_id!, 
+                        houseId: this.houseId 
+                    });
+                    
+                    this.visibleChange.emit(false);
+                    this.messageService.add({ 
+                        severity: 'info', 
+                        summary: this.translateService.instant('RESERVATIONS.MESSAGES.UPDATED'), 
+                        detail: this.translateService.instant('RESERVATIONS.MESSAGES.DELETED-SUCCESS') 
+                    });
+                },
+                reject: () => {
+                    this.messageService.add({ 
+                        severity: 'warn', 
+                        summary: this.translateService.instant('RESERVATIONS.MESSAGES.CANCELLED'), 
+                        detail: this.translateService.instant('RESERVATIONS.MESSAGES.CANCELLED-DELETE') 
+                    });
+                }
+            })
         }
     }
-} 
+}

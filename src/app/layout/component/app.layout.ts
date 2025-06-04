@@ -25,8 +25,7 @@ import { ChipModule } from 'primeng/chip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProfileService } from '../../pages/service/profile.service';
 import { AuthService } from '../../pages/service/auth.service';
-import { LanguageService } from '../../pages/language/language.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -101,7 +100,7 @@ interface SpecialLocation {
                 }
 
                 <p-dialog
-                    header="Detalji zadatka" 
+                    [header]="'APP-LAYOUT.TASK-DETAILS.TITLE' | translate" 
                     [(visible)]="isTaskDetailsWindowVisible"
                     [modal]="true"
                     [style]="{ width: '30rem' }"
@@ -110,7 +109,7 @@ interface SpecialLocation {
                 >
                     <ng-template pTemplate="header">
                         <div class="dialog-header">
-                        <span>Detalji zadatka</span>
+                        <span>{{ 'APP-LAYOUT.TASK-DETAILS.TITLE' | translate }}</span>
                         <div class="header-icons">
                             <div class="trash-icon" (click)="deleteTask($event, task)">
                                 <i class="pi pi-trash"></i>
@@ -120,42 +119,40 @@ interface SpecialLocation {
                     </ng-template>
                     <p-tabView class="team-card">
                         @if (getTaskTypeName(task) == 'Popravak') {
-                            <p-tabPanel header="Detalji">
+                            <p-tabPanel [header]="'APP-LAYOUT.TASK-DETAILS.TABS.DETAILS' | translate">
                                 <div class="details">
                                     <div>
-                                        <span><b>Kućica:</b> {{ getHouseForTask(task)?.house_name }}</span>
+                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.HOUSE' | translate }}:</b> {{ getHouseForTask(task)?.house_name }}</span>
                                     </div>
 
                                     <div>
-                                        <span><b>Tip:</b> {{ getTaskTypeName(task) }}</span>
+                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.TYPE' | translate }}:</b> {{ getTaskTypeName(task) }}</span>
                                     </div>
 
                                     <div>
-                                        <span><b>Status:</b> {{ getTaskProgressTypeName(task) }}</span>
+                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.STATUS' | translate }}:</b> {{ getTaskProgressTypeName(task) }}</span>
                                     </div>
 
                                     <div>
-                                        <span><b>Opis:</b> {{ task?.description }}</span>
+                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.DESCRIPTION' | translate }}:</b> {{ task?.description }}</span>
                                     </div>
 
                                     <div>
-                                        <span><b>Kreirano: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
+                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.CREATED-AT' | translate }}: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
                                     </div>
                                 </div>
                             </p-tabPanel>
                             <p-tabPanel>
                                 <ng-template pTemplate="header">
-                                    Slike 
+                                    {{ 'APP-LAYOUT.TASK-DETAILS.IMAGES' | translate }} 
                                     @if(taskImages.length){
                                         <span class="image-count">{{ taskImages.length }}</span>
                                     }
                                 </ng-template>
-                                @if(taskImages.length){
-                                }
                                 @if (!capturedImage) {
                                     <div class="upload-a-photo">
                                         @if (!taskImages.length) {
-                                            <label for="description" class="font-bold block mb-2">Učitaj sliku</label>
+                                            <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.TASK-DETAILS.IMAGES' | translate }}</label>
                                         }
 
                                         <div class="task-images-container" [ngStyle]="{ 'justify-content': taskImages.length ? 'flex-start' : 'center' }">
@@ -174,13 +171,13 @@ interface SpecialLocation {
 
                                             <div class="camera-icon-container" (click)="openCamera()">
                                                 <span class="camera-icon">📷</span>
-                                                <span class="camera-icon-label">Capture an image...</span>
+                                                <span class="camera-icon-label">{{ 'APP-LAYOUT.TASK-DETAILS.CAPTURE-IMAGE' | translate }}</span>
                                             </div>
                                         </div>
                                     </div>
                                 } @else {
                                     <div class="save-captured-image">
-                                        <label for="description" class="font-bold block mb-2">Spremi fotografiju?</label>
+                                        <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.TASK-DETAILS.SAVE-IMAGE' | translate }}</label>
                                         <div class="captured-image-container">
                                             <img [src]="capturedImage" alt="Captured Photo" />
                                             <div class="save-captured-image-buttons">
@@ -192,45 +189,45 @@ interface SpecialLocation {
                                     </div>
                                 }
                             </p-tabPanel>
-                            <p-tabPanel header="Komentari">
+                            <p-tabPanel [header]="'APP-LAYOUT.TASK-DETAILS.TABS.COMMENTS' | translate">
                                 <div class="comments-content" #commentsContainer>
                                     @if (!commentsForTask.length && !areCommentsLoaded) {
-                                        <span>Loading comments...</span>
+                                        <span>{{ 'APP-LAYOUT.TASK-DETAILS.LOADING-COMMENTS' | translate }}</span>
                                     } @else if (!commentsForTask.length && areCommentsLoaded) {
-                                        <span>No comments for this task.</span>
+                                        <span>{{ 'APP-LAYOUT.TASK-DETAILS.NO-COMMENTS' | translate }}</span>
                                     } @else {
                                         @for (comment of commentsForTask; track $index) {
-                                            <span
-                                                ><b>{{ findProfileNameForComment(comment) }} - {{ comment.created_at | date: 'HH:mm' : 'UTC' }}:</b> {{ comment.comment }}</span
-                                            >
+                                            <span>
+                                                <b>{{ findProfileNameForComment(comment) }} - {{ comment.created_at | date: 'HH:mm' : 'UTC' }}:</b> {{ comment.comment }}
+                                            </span>
                                         }
                                     }
                                 </div>
 
                                 <div class="comments-footer">
-                                    <textarea placeholder="Add a comment..." [(ngModel)]="comment" (keydown.enter)="addComment($event)"></textarea>
+                                    <textarea [placeholder]="'APP-LAYOUT.TASK-DETAILS.ADD-COMMENT' | translate" [(ngModel)]="comment" (keydown.enter)="addComment($event)"></textarea>
                                 </div>
                             </p-tabPanel>
                         } @else {
                             <div class="details">
                                 <div>
-                                    <span><b>Kućica:</b> {{ getHouseForTask(task)?.house_name }}</span>
+                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.HOUSE' | translate }}:</b> {{ getHouseForTask(task)?.house_name }}</span>
                                 </div>
 
                                 <div>
-                                    <span><b>Tip:</b> {{ getTaskTypeName(task) }}</span>
+                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.TYPE' | translate }}:</b> {{ getTaskTypeName(task) }}</span>
                                 </div>
 
                                 <div>
-                                    <span><b>Status:</b> {{ getTaskProgressTypeName(task) }}</span>
+                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.STATUS' | translate }}:</b> {{ getTaskProgressTypeName(task) }}</span>
                                 </div>
 
                                 <div>
-                                    <span><b>Opis:</b> {{ task?.description }}</span>
+                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.DESCRIPTION' | translate }}:</b> {{ task?.description }}</span>
                                 </div>
 
                                 <div>
-                                    <span><b>Kreirano: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
+                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.CREATED-AT' | translate }}: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
                                 </div>
                             </div>
                         }
@@ -944,6 +941,7 @@ export class AppLayout {
         private confirmationService: ConfirmationService,
         public profileService: ProfileService,
         private authService: AuthService,
+        private translateService: TranslateService,
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
@@ -1421,8 +1419,8 @@ export class AppLayout {
 
                         this.messageService.add({
                             severity: 'success',
-                            summary: 'Uspjeh',
-                            detail: 'Kvar je uspješno prijavljen'
+                            summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.SUCCESS'),
+                            detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.SUCCESS'),
                         });
 
                         // Reset form and close dialog
@@ -1437,8 +1435,8 @@ export class AppLayout {
                 } else {
                     this.messageService.add({
                         severity: 'error',
-                        summary: 'Greška',
-                        detail: 'Došlo je do greške prilikom prijave kvara'
+                        summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.ERROR'),
+                        detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.ERORR'),
                     });
                 }
             });
@@ -1460,22 +1458,14 @@ export class AppLayout {
             // Get the task type ID for "Popravak" (repair)
             this.dataService.getTaskTypeIdByTaskName('Popravak').then((taskTypeId) => {
                 if (!taskTypeId) {
-                    this.messageService.add({
-                        severity: 'error',
-                        summary: 'Greška',
-                        detail: 'Nije moguće pronaći tip zadatka "Popravak"'
-                    });
+                    console.error('Couldn\'t find "Popravak" task type');
                     return;
                 }
 
                 // Get the "Nije dodijeljeno" (not assigned) task progress type
                 this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('Nije dodijeljeno').then((progressTypeId) => {
                     if (!progressTypeId) {
-                        this.messageService.add({
-                            severity: 'error',
-                            summary: 'Greška',
-                            detail: 'Nije moguće pronaći status zadatka "Nije dodijeljeno"'
-                        });
+                        console.error('Couldn\'t find "Nije dodijeljeno" task progress type');
                         return;
                     }
 
@@ -1493,8 +1483,8 @@ export class AppLayout {
                                     await this.taskService.storeImagesForTask(this.imagesToUpload, result.task_id);
                                     this.messageService.add({
                                         severity: 'success',
-                                        summary: 'Uspjeh',
-                                        detail: `Kvar na lokaciji "${locationName}" je uspješno prijavljen`
+                                        summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.SUCCESS'),
+                                        detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.SUCCESS'),
                                     });
 
                                     // Reset form and close dialog
@@ -1512,16 +1502,16 @@ export class AppLayout {
                             } else {
                                 this.messageService.add({
                                     severity: 'error',
-                                    summary: 'Greška',
-                                    detail: 'Došlo je do greške prilikom prijave kvara'
+                                    summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.ERORR'),
+                                    detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.ERORR'),
                                 });
                             }
                         },
                         (error) => {
                             this.messageService.add({
                                 severity: 'error',
-                                summary: 'Greška',
-                                detail: 'Došlo je do greške prilikom prijave kvara'
+                                summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.ERORR'),
+                                detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.ERORR'),
                             });
                             console.error('Error creating task:', error);
                         }
@@ -1540,8 +1530,8 @@ export class AppLayout {
                 if (result) {
                     this.messageService.add({
                         severity: 'success',
-                        summary: 'Uspjeh',
-                        detail: 'Zadatak je uspješno prijavljen'
+                        summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.SUCCESS'),
+                        detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.SUCCESS'),
                     });
 
                     // Reset form and close dialog
@@ -1557,8 +1547,8 @@ export class AppLayout {
                 } else {
                     this.messageService.add({
                         severity: 'error',
-                        summary: 'Greška',
-                        detail: 'Došlo je do greške prilikom prijave zadatka'
+                        summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.ERROR'),
+                        detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.ERROR'),
                     });
                 }
             });
@@ -1570,8 +1560,8 @@ export class AppLayout {
             if (!this.selectedTaskType) {
                 this.messageService.add({
                     severity: 'error',
-                    summary: 'Greška',
-                    detail: 'Molimo odaberite vrstu zadatka'
+                    summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.ERROR'),
+                    detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.TASK-TYPE-NOT-SELECTED'),
                 });
                 return;
             }
@@ -1590,11 +1580,7 @@ export class AppLayout {
             // Get the "Nije dodijeljeno" (not assigned) task progress type
             this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('Nije dodijeljeno').then((progressTypeId) => {
                 if (!progressTypeId) {
-                    this.messageService.add({
-                        severity: 'error',
-                        summary: 'Greška',
-                        detail: 'Nije moguće pronaći status zadatka "Nije dodijeljeno"'
-                    });
+                    console.error('Couldn\'t find "Nije dodijeljeno" task type');
                     return;
                 }
 
@@ -1609,8 +1595,8 @@ export class AppLayout {
                         if (result) {
                             this.messageService.add({
                                 severity: 'success',
-                                summary: 'Uspjeh',
-                                detail: `Zadatak za lokaciju "${locationName}" je uspješno prijavljen`
+                                summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.SUCCESS'),
+                                detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.SUCCESS'),
                             });
 
                             // Reset form and close dialog
@@ -1626,16 +1612,16 @@ export class AppLayout {
                         } else {
                             this.messageService.add({
                                 severity: 'error',
-                                summary: 'Greška',
-                                detail: 'Došlo je do greške prilikom prijave zadatka'
+                                summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.ERROR'),
+                                detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.ERROR'),
                             });
                         }
                     },
                     (error) => {
                         this.messageService.add({
                             severity: 'error',
-                            summary: 'Greška',
-                            detail: 'Došlo je do greške prilikom prijave zadatka'
+                            summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.ERROR'),
+                            detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.ERROR'),
                         });
                         console.error('Error creating task:', error);
                     }
@@ -1728,26 +1714,26 @@ export class AppLayout {
         if (window == 'task-details') {
             this.confirmationService.confirm({
                 target: event.target,
-                message: `Are you sure you want to remove this image?`,
-                header: 'Confirm Image Delete',
+                message: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.REMOVE-IMAGE.WARNING'),
+                header: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.REMOVE-IMAGE.HEADER'),
                 icon: 'pi pi-exclamation-triangle',
                 rejectLabel: 'Cancel',
                 rejectButtonProps: {
-                    label: 'Cancel',
+                    label: this.translateService.instant('BUTTONS.CANCEL'),
                     severity: 'secondary',
                     outlined: true
                 },
                 acceptButtonProps: {
-                    label: 'Confirm',
+                    label: this.translateService.instant('BUTTONS.CONFIRM'),
                     severity: 'danger'
                 },
                 accept: async () => {
                     this.taskService.removeImageForTask(imageToRemove, this.task.task_id);
-                    this.messageService.add({ severity: 'info', summary: 'Updated', detail: 'Image removed' });
+                    this.messageService.add({ severity: 'info', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.UPDATED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.REMOVE-IMAGE.SUCCESS') });
                     this.taskImages = this.taskImages.filter((ti) => ti.url != imageToRemove.url);
                 },
                 reject: () => {
-                    this.messageService.add({ severity: 'warn', summary: 'Cancelled', detail: 'Change was cancelled' });
+                    this.messageService.add({ severity: 'warn', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.CANCELLED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.REMOVE-IMAGE.CANCELLED') });
                 }
             });
         } else {
@@ -1821,17 +1807,17 @@ export class AppLayout {
     deleteTask(event: any, task: Task){
         this.confirmationService.confirm({
                 target: event.target,
-                message: `Are you sure you want to delete this task?`,
-                header: 'Confirm Task Delete',
+                message: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.WARNING'),
+                header: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.HEADER'),
                 icon: 'pi pi-exclamation-triangle',
                 rejectLabel: 'Cancel',
                 rejectButtonProps: {
-                    label: 'Cancel',
+                    label: this.translateService.instant('BUTTONS.CANCEL'),
                     severity: 'secondary',
                     outlined: true
                 },
                 acceptButtonProps: {
-                    label: 'Confirm',
+                    label: this.translateService.instant('BUTTONS.CONFIRM'),
                     severity: 'danger'
                 },
                 accept: async () => {
@@ -1844,10 +1830,10 @@ export class AppLayout {
                         .catch(error => {
                             console.error('Error deleting task: ', error);
                         });
-                    this.messageService.add({ severity: 'info', summary: 'Updated', detail: 'Task deleted' });
+                    this.messageService.add({ severity: 'info', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.UPDATED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.SUCCESS') });
                 },
                 reject: () => {
-                    this.messageService.add({ severity: 'warn', summary: 'Cancelled', detail: 'Change was cancelled' });
+                    this.messageService.add({ severity: 'warn', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.CANCELLED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.CANCELLED') });
                 }
             });
     }

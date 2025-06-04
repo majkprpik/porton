@@ -1,6 +1,15 @@
 <p-dialog [(visible)]="visible" [modal]="true" [style]="{width: '700px'}" [draggable]="false" [resizable]="false">
     <ng-template pTemplate="header">
-        <h3>{{ reservation.house_availability_id ? 'Edit Reservation' : 'New Reservation' }}</h3>
+        <h3>
+            {{ reservation.house_availability_id ? 
+                reservation.house_id && reservation.house_id < 0 ? 
+                ('RESERVATIONS.MODAL.EDIT-TEMP-RESERVATION' | translate) : 
+                ('RESERVATIONS.MODAL.EDIT-RESERVATION' | translate) : 
+                reservation.house_id && reservation.house_id > 0 ? 
+                    ('RESERVATIONS.MODAL.CREATE-RESERVATION' | translate) : 
+                    ('RESERVATIONS.MODAL.CREATE-TEMP-RESERVATION' | translate)
+            }}
+        </h3>
     </ng-template>
     <div class="p-fluid">
         <!-- Two-column layout -->
@@ -8,21 +17,21 @@
             <!-- Left column -->
             <div class="form-col">
                 <div class="field">
-                    <label for="lastName">Last Name</label>
+                    <label for="lastName">{{ 'RESERVATIONS.MODAL.LAST-NAME' | translate }}</label>
                     <input id="lastName" type="text" pInputText [(ngModel)]="reservation.last_name" />
                 </div>
                 <div class="field">
-                    <label for="reservationNumber">Reservation Number</label>
+                    <label for="reservationNumber">{{ 'RESERVATIONS.MODAL.RESERVATION-NUMBER' | translate }}</label>
                     <input id="reservationNumber" type="text" pInputText [(ngModel)]="reservation.reservation_number" />
                 </div>
                 <div class="field">
                     <div class="pets-row">
                         <div class="half-field">
-                            <label for="defaultPets">Pets</label>
+                            <label for="defaultPets">{{ 'RESERVATIONS.MODAL.PETS' | translate }}</label>
                             <p-inputNumber class="small-input" id="defaultPets" [(ngModel)]="reservation.dogs_d" [min]="0" [max]="10"></p-inputNumber>
                         </div>
                         <div class="half-field">
-                            <label for="smallPets">Check in</label>
+                            <label for="smallPets">{{ 'RESERVATIONS.MODAL.CHECK-IN' | translate }}</label>
                             <p-datepicker [(ngModel)]="reservation.arrival_time" [iconDisplay]="'input'" [showIcon]="true" [timeOnly]="true" inputId="arrivalTime">
                                 <ng-template #inputicon let-clickCallBack="clickCallBack">
                                     <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
@@ -31,7 +40,7 @@
 
                         </div>
                         <div class="half-field">
-                            <label for="bigPets">Check out</label>
+                            <label for="bigPets">{{ 'RESERVATIONS.MODAL.CHECK-OUT' | translate }}</label>
                             <p-datepicker [(ngModel)]="reservation.departure_time" [iconDisplay]="'input'" [showIcon]="true" [timeOnly]="true" inputId="departureTime">
                                 <ng-template #inputicon let-clickCallBack="clickCallBack">
                                     <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
@@ -41,7 +50,7 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label for="startDate">Start Date</label>
+                    <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
                     <p-calendar 
                         id="startDate" 
                         [(ngModel)]="startDate" 
@@ -50,7 +59,7 @@
                         [minDate]="minStartDate" 
                         [maxDate]="maxDate" 
                         [showIcon]="true"
-                        placeholder="Select start date" 
+                        [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
                         (onSelect)="onStartDateChange()">
                     </p-calendar>
                 </div>
@@ -59,29 +68,29 @@
             <!-- Right column -->
             <div class="form-col">
                 <div class="field">
-                    <label for="adults">Adults</label>
+                    <label for="adults">{{ 'RESERVATIONS.MODAL.ADULTS' | translate }}</label>
                     <p-inputNumber id="adults" [(ngModel)]="reservation.adults" [min]="0" [max]="10"></p-inputNumber>
                 </div>
                 <div class="field">
                     <div class="babies-cribs-row">
                         <div class="half-field">
-                            <label for="babies">Babies</label>
+                            <label for="babies">{{ 'RESERVATIONS.MODAL.BABIES' | translate }}</label>
                             <p-inputNumber class="small-input" id="babies" [(ngModel)]="reservation.babies" [min]="0" [max]="10"></p-inputNumber>
                         </div>
                         <div class="half-field">
-                            <label for="cribs">Baby cribs</label>
+                            <label for="cribs">{{ 'RESERVATIONS.MODAL.BABY-CRIBS' | translate }}</label>
                             <p-inputNumber class="small-input" id="cribs" [(ngModel)]="reservation.cribs" [min]="0" [max]="10"></p-inputNumber>
                         </div>
                     </div>
                 </div>
                 <div class="field">
-                    <label for="colors">Color</label>
+                    <label for="colors">{{ 'RESERVATIONS.MODAL.COLOR' | translate }}</label>
                     <p-dropdown 
                         [options]="colors" 
                         [(ngModel)]="selectedColor"
                         [ngStyle]="{ 'width': '210px'}"
                         [panelStyle]="{ 'max-height': '200px' }"
-                        placeholder="Select a color"
+                        [placeholder]="'RESERVATIONS.MODAL.SELECT-A-COLOR' | translate"
                         appendTo="body"
                     >
                         <ng-template let-option pTemplate="item">
@@ -93,7 +102,7 @@
                     </p-dropdown>
                 </div>
                 <div class="field">
-                    <label for="endDate">End Date</label>
+                    <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
                     <p-calendar 
                         id="endDate" 
                         [(ngModel)]="endDate" 
@@ -102,7 +111,7 @@
                         [minDate]="minEndDate" 
                         [maxDate]="maxDate" 
                         [showIcon]="true"
-                        placeholder="Select end date" 
+                        [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
                         (onSelect)="checkForDateConflicts()">
                     </p-calendar>
                 </div>
@@ -111,9 +120,10 @@
 
         <!-- Full width notes field -->
         <div class="field mt-3">
-            <label for="notes">Notes</label>
+            <label for="notes">{{ 'RESERVATIONS.MODAL.NOTES' | translate }}</label>
             <textarea id="notes" rows="4" pInputTextarea [(ngModel)]="notes" 
-                placeholder="Enter any additional information about this reservation"></textarea>
+                [placeholder]="'RESERVATIONS.MODAL.NOTES-ENTER-INFO' | translate">
+            </textarea>
         </div>
         
         <div *ngIf="dateConflictError" class="field">
@@ -123,13 +133,16 @@
     <ng-template pTemplate="footer">
         <div class="form-footer">
             <div class="left-buttons">
-                <p-button *ngIf="isEditMode" label="Delete" icon="pi pi-trash" 
-                          (click)="onDelete()" 
-                          styleClass="p-button-danger p-button-text"></p-button>
+                <p-button 
+                    *ngIf="isEditMode" 
+                    [label]="'BUTTONS.DELETE' | translate"
+                    icon="pi pi-trash" 
+                    (click)="onDelete()" 
+                    styleClass="p-button-danger p-button-text"></p-button>
             </div>
             <div class="right-buttons">
-                <p-button label="Cancel" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
-                <p-button label="Save" icon="pi pi-check" (click)="onSave()" [disabled]="!!dateConflictError" styleClass="p-button-text"></p-button>
+                <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
+                <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="onSave()" [disabled]="!!dateConflictError" styleClass="p-button-text"></p-button>
             </div>
         </div>
     </ng-template>

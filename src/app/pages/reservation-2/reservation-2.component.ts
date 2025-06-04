@@ -4,6 +4,7 @@ import { DataService, House, HouseAvailability, HouseType } from '../service/dat
 import { Subject, takeUntil, forkJoin, combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ReservationFormComponent } from '../reservations/reservation-form/reservation-form.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface CellData {
     isReserved: boolean;
@@ -24,7 +25,12 @@ interface CellData {
     templateUrl: './reservation-2.component.html',
     styleUrls: ['./reservation-2.component.scss'],
     standalone: true,
-    imports: [CommonModule, ProgressSpinnerModule, ReservationFormComponent],
+    imports: [
+        CommonModule, 
+        ProgressSpinnerModule,
+        ReservationFormComponent,
+        TranslateModule,
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush
 }) 
 export class Reservation2Component implements OnInit, OnDestroy {
