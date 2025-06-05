@@ -5,7 +5,6 @@ import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { DropdownModule } from 'primeng/dropdown';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -14,6 +13,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ProfileService } from '../service/profile.service';
 import { combineLatest } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { SelectModule } from 'primeng/select';
 
 // Extended Profile interface to include the isDivider property
 interface ExtendedProfile extends Profile {
@@ -30,11 +30,11 @@ interface ExtendedProfile extends Profile {
     TableModule, 
     ButtonModule, 
     DialogModule, 
-    DropdownModule, 
     FormsModule,
     ToastModule,
     InputTextModule,
     TranslateModule,
+    SelectModule,
   ],
   providers: [MessageService],
   template: `
@@ -91,7 +91,7 @@ interface ExtendedProfile extends Profile {
       @if(selectedProfile){
         <div class="p-field">
           <label for="role">Role</label>
-          <p-dropdown 
+          <p-select 
             [options]="profileRoles" 
             [(ngModel)]="selectedProfile.role_id" 
             placeholder="Select a Role" 
@@ -101,7 +101,7 @@ interface ExtendedProfile extends Profile {
             optionValue="id"
             appendTo="body"
             id="role">
-          </p-dropdown>
+          </p-select>
         </div>
       }
       <div class="p-dialog-footer">
@@ -131,7 +131,7 @@ interface ExtendedProfile extends Profile {
        </div>
       <div class="p-field">
         <label for="role">{{ 'PROFILE-MANAGEMENT.ADD.POSITION' | translate }}</label>
-        <p-dropdown 
+        <p-select 
           [options]="profileRoles" 
           [(ngModel)]="newProfile.role_id" 
           [placeholder]="'PROFILE-MANAGEMENT.ADD.SELECT-POSITION' | translate" 
@@ -141,7 +141,7 @@ interface ExtendedProfile extends Profile {
           optionValue="id"
           appendTo="body"
           id="role">
-        </p-dropdown>
+        </p-select>
       </div>
       <div class="p-dialog-footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>

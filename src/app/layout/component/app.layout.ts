@@ -8,8 +8,6 @@ import { AppSidebar } from './app.sidebar';
 import { LayoutService } from '../service/layout.service';
 import { SpeedDialModule } from 'primeng/speeddial';
 import { DialogModule } from 'primeng/dialog';
-import { DropdownModule } from 'primeng/dropdown';
-import { InputTextarea } from 'primeng/inputtextarea';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MenuItem } from 'primeng/api';
@@ -20,13 +18,14 @@ import { ToastModule } from 'primeng/toast';
 import { NotesComponent } from './notes.component';
 import { CdkDrag, CdkDragEnd, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { ArrivalsAndDeparturesComponent } from './arrivals-and-departures.component';
-import { TabViewModule } from 'primeng/tabview';
 import { ChipModule } from 'primeng/chip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProfileService } from '../../pages/service/profile.service';
 import { AuthService } from '../../pages/service/auth.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { WorkGroupService } from '../../pages/service/work-group.service';
+import { TabsModule } from 'primeng/tabs';
+import { SelectModule } from 'primeng/select';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -44,8 +43,6 @@ interface SpecialLocation {
         RouterModule,
         SpeedDialModule,
         DialogModule,
-        DropdownModule,
-        InputTextarea,
         ButtonModule,
         FormsModule,
         ToastModule,
@@ -53,10 +50,11 @@ interface SpecialLocation {
         ArrivalsAndDeparturesComponent,
         CdkDrag,
         CdkDragHandle,
-        TabViewModule,
         ChipModule,
         ConfirmDialogModule,
         TranslateModule,
+        TabsModule,
+        SelectModule,
     ],
     providers: [MessageService, ConfirmationService],
     template: ` <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
@@ -118,121 +116,106 @@ interface SpecialLocation {
                         </div>
                         </div>
                     </ng-template>
-                    <p-tabView class="team-card">
-                        @if (getTaskTypeName(task) == 'Popravak') {
-                            <p-tabPanel [header]="'APP-LAYOUT.TASK-DETAILS.TABS.DETAILS' | translate">
+                    <p-tabs [(value)]="selectedTabIndex">
+                        @if (getTaskTypeName(task) == 'Popravak'){
+                            <p-tablist>
+                                <p-tab value="0">{{ 'APP-LAYOUT.TASK-DETAILS.TABS.DETAILS' | translate }}</p-tab>
+                                <p-tab value="1">
+                                    {{ 'APP-LAYOUT.TASK-DETAILS.IMAGES' | translate }}
+                                    @if(taskImages.length){
+                                        <span class="image-count">{{ taskImages.length }}</span>
+                                    }
+                                </p-tab>
+                                <p-tab value="2">{{ 'APP-LAYOUT.TASK-DETAILS.TABS.COMMENTS' | translate }}</p-tab>
+                            </p-tablist>
+                        }
+                        <p-tabpanels>
+                            <p-tabpanel value="0">
                                 <div class="details">
                                     <div>
                                         <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.HOUSE' | translate }}:</b> {{ getHouseForTask(task)?.house_name }}</span>
                                     </div>
-
+    
                                     <div>
                                         <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.TYPE' | translate }}:</b> {{ getTaskTypeName(task) }}</span>
                                     </div>
-
+    
                                     <div>
                                         <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.STATUS' | translate }}:</b> {{ getTaskProgressTypeName(task) }}</span>
                                     </div>
-
+    
                                     <div>
                                         <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.DESCRIPTION' | translate }}:</b> {{ task?.description }}</span>
                                     </div>
-
+    
                                     <div>
                                         <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.CREATED-AT' | translate }}: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
                                     </div>
                                 </div>
-                            </p-tabPanel>
-                            <p-tabPanel>
-                                <ng-template pTemplate="header">
-                                    {{ 'APP-LAYOUT.TASK-DETAILS.IMAGES' | translate }} 
-                                    @if(taskImages.length){
-                                        <span class="image-count">{{ taskImages.length }}</span>
-                                    }
-                                </ng-template>
-                                @if (!capturedImage) {
-                                    <div class="upload-a-photo">
-                                        @if (!taskImages.length) {
-                                            <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.TASK-DETAILS.IMAGES' | translate }}</label>
-                                        }
-
-                                        <div class="task-images-container" [ngStyle]="{ 'justify-content': taskImages.length ? 'flex-start' : 'center' }">
-                                            <input type="file" accept="image/*" capture="environment" (change)="handleImageCapture($event)" hidden #fileInput />
-
-                                            @for (image of taskImages; track image.url) {
-                                                <div class="task-images">
-                                                    <div class="image-wrapper">
-                                                        <div class="close-icon-container">
-                                                            <i (click)="removeImage(image, $event, 'task-details')" class="pi pi-trash"></i>
-                                                        </div>
-                                                        <img #imgElement (click)="onOpenImage(imgElement)" [src]="image.url" [alt]="image.url" />
-                                                    </div>
-                                                </div>
+                            </p-tabpanel>
+                            @if (getTaskTypeName(task) == 'Popravak'){
+                                <p-tabpanel value="1">
+                                    @if (!capturedImage) {
+                                        <div class="upload-a-photo">
+                                            @if (!taskImages.length) {
+                                                <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.TASK-DETAILS.IMAGES' | translate }}</label>
                                             }
 
-                                            <div class="camera-icon-container" (click)="openCamera()">
-                                                <span class="camera-icon">📷</span>
-                                                <span class="camera-icon-label">{{ 'APP-LAYOUT.TASK-DETAILS.CAPTURE-IMAGE' | translate }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                } @else {
-                                    <div class="save-captured-image">
-                                        <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.TASK-DETAILS.SAVE-IMAGE' | translate }}</label>
-                                        <div class="captured-image-container">
-                                            <img [src]="capturedImage" alt="Captured Photo" />
-                                            <div class="save-captured-image-buttons">
-                                                <button pButton label="Odbaci" class="p-button-text" (click)="discardImage()"></button>
+                                            <div class="task-images-container" [ngStyle]="{ 'justify-content': taskImages.length ? 'flex-start' : 'center' }">
+                                                <input type="file" accept="image/*" capture="environment" (change)="handleImageCapture($event)" hidden #fileInput />
 
-                                                <button pButton label="Spremi" (click)="saveImage()"></button>
+                                                @for (image of taskImages; track image.url) {
+                                                    <div class="task-images">
+                                                        <div class="image-wrapper">
+                                                            <div class="close-icon-container">
+                                                                <i (click)="removeImage(image, $event, 'task-details')" class="pi pi-trash"></i>
+                                                            </div>
+                                                            <img #imgElement (click)="onOpenImage(imgElement)" [src]="image.url" [alt]="image.url" />
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                <div class="camera-icon-container" (click)="openCamera()">
+                                                    <span class="camera-icon">📷</span>
+                                                    <span class="camera-icon-label">{{ 'APP-LAYOUT.TASK-DETAILS.CAPTURE-IMAGE' | translate }}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                }
-                            </p-tabPanel>
-                            <p-tabPanel [header]="'APP-LAYOUT.TASK-DETAILS.TABS.COMMENTS' | translate">
-                                <div class="comments-content" #commentsContainer>
-                                    @if (!commentsForTask.length && !areCommentsLoaded) {
-                                        <span>{{ 'APP-LAYOUT.TASK-DETAILS.LOADING-COMMENTS' | translate }}</span>
-                                    } @else if (!commentsForTask.length && areCommentsLoaded) {
-                                        <span>{{ 'APP-LAYOUT.TASK-DETAILS.NO-COMMENTS' | translate }}</span>
                                     } @else {
-                                        @for (comment of commentsForTask; track $index) {
-                                            <span>
-                                                <b>{{ findProfileNameForComment(comment) }} - {{ comment.created_at | date: 'HH:mm' : 'UTC' }}:</b> {{ comment.comment }}
-                                            </span>
-                                        }
+                                        <div class="save-captured-image">
+                                            <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.TASK-DETAILS.SAVE-IMAGE' | translate }}</label>
+                                            <div class="captured-image-container">
+                                                <img [src]="capturedImage" alt="Captured Photo" />
+                                                <div class="save-captured-image-buttons">
+                                                    <button pButton label="Odbaci" class="p-button-text" (click)="discardImage()"></button>
+                                                    <button pButton label="Spremi" (click)="saveImage()"></button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     }
-                                </div>
+                                </p-tabpanel>
+                                <p-tabpanel value="2">
+                                    <div class="comments-content" #commentsContainer>
+                                        @if (!commentsForTask.length && !areCommentsLoaded) {
+                                            <span>{{ 'APP-LAYOUT.TASK-DETAILS.LOADING-COMMENTS' | translate }}</span>
+                                        } @else if (!commentsForTask.length && areCommentsLoaded) {
+                                            <span>{{ 'APP-LAYOUT.TASK-DETAILS.NO-COMMENTS' | translate }}</span>
+                                        } @else {
+                                            @for (comment of commentsForTask; track $index) {
+                                                <span>
+                                                    <b>{{ findProfileNameForComment(comment) }} - {{ comment.created_at | date: 'HH:mm' : 'UTC' }}:</b> {{ comment.comment }}
+                                                </span>
+                                            }
+                                        }
+                                    </div>
 
-                                <div class="comments-footer">
-                                    <textarea [placeholder]="'APP-LAYOUT.TASK-DETAILS.ADD-COMMENT' | translate" [(ngModel)]="comment" (keydown.enter)="addComment($event)"></textarea>
-                                </div>
-                            </p-tabPanel>
-                        } @else {
-                            <div class="details">
-                                <div>
-                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.HOUSE' | translate }}:</b> {{ getHouseForTask(task)?.house_name }}</span>
-                                </div>
-
-                                <div>
-                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.TYPE' | translate }}:</b> {{ getTaskTypeName(task) }}</span>
-                                </div>
-
-                                <div>
-                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.STATUS' | translate }}:</b> {{ getTaskProgressTypeName(task) }}</span>
-                                </div>
-
-                                <div>
-                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.DESCRIPTION' | translate }}:</b> {{ task?.description }}</span>
-                                </div>
-
-                                <div>
-                                    <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.CREATED-AT' | translate }}: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
-                                </div>
-                            </div>
-                        }
-                    </p-tabView>
+                                    <div class="comments-footer">
+                                        <textarea [placeholder]="'APP-LAYOUT.TASK-DETAILS.ADD-COMMENT' | translate" [(ngModel)]="comment" (keydown.enter)="addComment($event)"></textarea>
+                                    </div>
+                                </p-tabpanel>
+                            }
+                        </p-tabpanels>
+                    </p-tabs>
                 </p-dialog>
             </div>
         </div>
@@ -256,7 +239,7 @@ interface SpecialLocation {
             <div class="fault-report-form">
                 <div class="field">
                     <label for="location" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.LOCATION' | translate }}*</label>
-                    <p-dropdown id="location" 
+                    <p-select id="location" 
                         [options]="locationOptions" 
                         [(ngModel)]="selectedLocation" 
                         [placeholder]="'APP-LAYOUT.REPAIR-TASK-REPORT.SELECT-LOCATION' | translate" 
@@ -269,14 +252,15 @@ interface SpecialLocation {
                         <ng-template let-item pTemplate="selectedItem">
                             <span>{{ item.name || item.house_name }}</span>
                         </ng-template>
-                    </p-dropdown>
+                    </p-select>
                 </div>
 
                 <div class="field mt-4">
                     <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.DESCRIPTION' | translate }}</label>
                     <textarea 
                         id="description" 
-                        pInputTextarea 
+                        class="p-inputtext"
+                        pTextarea  
                         [(ngModel)]="faultDescription" 
                         [rows]="5" 
                         [style]="{ width: '100%' }" 
@@ -342,7 +326,7 @@ interface SpecialLocation {
             <div class="task-form">
                 <div class="field">
                     <label for="location" class="font-bold block mb-2">{{ 'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.LOCATION' | translate }}*</label>
-                    <p-dropdown 
+                    <p-select 
                         id="location" 
                         [options]="locationOptions" 
                         [(ngModel)]="selectedLocationForTask" 
@@ -356,26 +340,27 @@ interface SpecialLocation {
                         <ng-template let-item pTemplate="selectedItem">
                             <span>{{ item.name || item.house_name }}</span>
                         </ng-template>
-                    </p-dropdown>
+                    </p-select>
                 </div>
 
                 <div class="field mt-4">
                     <label for="taskType" class="font-bold block mb-2">{{ 'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.TASK-TYPE' | translate }}*</label>
-                    <p-dropdown 
+                    <p-select 
                         id="taskType" 
                         [options]="taskTypes" 
                         [(ngModel)]="selectedTaskType" 
                         optionLabel="task_type_name" 
                         [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-TASK-TYPE' | translate" 
                         [style]="{ width: '100%' }"
-                    ></p-dropdown>
+                    ></p-select>
                 </div>
 
                 <div class="field mt-4">
                     <label for="taskDescription" class="font-bold block mb-2">{{ 'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.DESCRIPTION' | translate }}</label>
                     <textarea 
                         id="taskDescription" 
-                        pInputTextarea 
+                        class="p-inputtext"
+                        pTextarea  
                         [(ngModel)]="taskDescription" 
                         [rows]="5" 
                         [style]="{ width: '100%' }" 
@@ -457,54 +442,133 @@ interface SpecialLocation {
                         z-index: inherit !important;
                     }
                 }
+            }
 
-                .layout-main-container {
-                    // padding-bottom: 6rem; /* Add space at bottom to prevent SpeedDial from covering content */
+            .upload-a-photo{
+                .task-images-container{
+                    min-height: 150px;
                 }
             }
 
-            .team-card {
-                padding: 0 !important;
-                min-height: 250px;
-                max-height: 500px;
+            .comments-content {
+                height: 140px;
+                box-sizing: border-box;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+                overflow-x: hidden;
+                word-break: break-word;
+                white-space: normal;
+                align-items: flex-start;
+                background-color: white;
+            }
 
-                .upload-a-photo{
-                    .task-images-container{
-                        min-height: 150px;
+            .comments-footer {
+                height: 30px;
+                width: 100%;
+                border-radius: 0 0 10px 10px;
+                border-top: 1px solid #e5e7eb;
+
+                textarea {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 0 0 10px 10px;
+                    resize: none;
+                    box-sizing: border-box;
+                    padding: 10px 10px 0 10px;
+                    outline: none;
+
+                    &:disabled {
+                        background-color: var(--surface-ground);
                     }
                 }
+            }
 
-                .comments-content {
-                    height: 140px;
-                    box-sizing: border-box;
-                    padding: 10px;
+            .field {
+                margin-bottom: 1rem;
+            }
+
+            label {
+                color: var(--text-color);
+            }
+
+            .image-count{
+                height: 20px;
+                width: 20px;
+                background-color: var(--p-tabs-tab-active-color);
+                color: white;
+                border-radius: 15px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                font-size: 11px;
+            }
+
+            .upload-a-photo {
+                overflow-x: auto;
+
+                .task-images-container {
+                    border: 1px solid var(--surface-border);
+                    border-radius: 5px;
                     display: flex;
-                    flex-direction: column;
-                    overflow-y: auto;
-                    overflow-x: hidden;
-                    word-break: break-word;
-                    white-space: normal;
-                    align-items: flex-start;
-                    background-color: white;
-                }
+                    flex-direction: row;
+                    align-items: center;
+                    overflow-x: auto;
+                    gap: 5px;
 
-                .comments-footer {
-                    height: 30px;
-                    width: 100%;
-                    border-radius: 0 0 10px 10px;
-                    border-top: 1px solid #e5e7eb;
+                    .task-images {
+                        flex: 0 0 auto;
+                        position: relative;
 
-                    textarea {
-                        width: 100%;
-                        height: 100%;
-                        border-radius: 0 0 10px 10px;
-                        resize: none;
-                        box-sizing: border-box;
-                        padding: 10px 10px 0 10px;
-                        outline: none;
+                        .image-wrapper {
+                            .close-icon-container {
+                                background-color: orangered;
+                                border-radius: 30px;
+                                height: 25px;
+                                width: 25px;
+                                position: absolute;
+                                right: 10px;
+                                top: 10px;
+                                transition: transform 0.3s ease;
 
-                        &:disabled {
-                            background-color: var(--surface-ground);
+                                display: flex;
+                                flex-direction: row;
+                                align-items: center;
+                                justify-content: center;
+
+                                i {
+                                    color: white;
+                                }
+
+                                &:hover {
+                                    cursor: pointer;
+                                }
+                            }
+
+                            img {
+                                border-radius: 5px;
+                                height: 200px;
+                            }
+                        }
+                    }
+
+                    .camera-icon-container {
+                        margin: 10px 10px 10px 10px;
+                        flex: 0 0 auto;
+                        width: 150px;
+                        height: 50px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        color: gray;
+                        background-color: var(--surface-border);
+                        border-radius: 5px;
+
+                        &:hover {
+                            cursor: pointer;
                         }
                     }
                 }
@@ -520,99 +584,32 @@ interface SpecialLocation {
                 }
             }
 
+            .save-captured-image {
+                width: 100%;
+                max-height: 500px;
+
+                .captured-image-container {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+
+                    .save-captured-image-buttons {
+                        padding-top: 10px;
+                        width: 100%;
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: space-evenly;
+                    }
+                }
+            }
+
             .fault-report-form,
             .task-form,
             .team-card {
                 padding: 1.5rem 0;
-
-                .field {
-                    margin-bottom: 1rem;
-                }
-
-                label {
-                    color: var(--text-color);
-                }
-
-                .image-count{
-                    height: 20px;
-                    width: 20px;
-                    background-color: var(--p-tabs-tab-active-color);
-                    color: white;
-                    border-radius: 15px;
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 11px;
-                }
-
-                .upload-a-photo {
-                    overflow-x: auto;
-
-                    .task-images-container {
-                        border: 1px solid var(--surface-border);
-                        border-radius: 5px;
-                        display: flex;
-                        flex-direction: row;
-                        align-items: center;
-                        overflow-x: auto;
-                        gap: 5px;
-
-                        .task-images {
-                            flex: 0 0 auto;
-                            position: relative;
-
-                            .image-wrapper {
-                                .close-icon-container {
-                                    background-color: orangered;
-                                    border-radius: 30px;
-                                    height: 25px;
-                                    width: 25px;
-                                    position: absolute;
-                                    right: 10px;
-                                    top: 10px;
-                                    transition: transform 0.3s ease;
-
-                                    display: flex;
-                                    flex-direction: row;
-                                    align-items: center;
-                                    justify-content: center;
-
-                                    i {
-                                        color: white;
-                                    }
-
-                                    &:hover {
-                                        cursor: pointer;
-                                    }
-                                }
-
-                                img {
-                                    border-radius: 5px;
-                                    height: 200px;
-                                }
-                            }
-                        }
-
-                        .camera-icon-container {
-                            margin: 10px 10px 10px 10px;
-                            flex: 0 0 auto;
-                            width: 150px;
-                            height: 50px;
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            justify-content: center;
-                            color: gray;
-                            background-color: var(--surface-border);
-                            border-radius: 5px;
-
-                            &:hover {
-                                cursor: pointer;
-                            }
-                        }
-                    }
-                }
 
                 .save-captured-image {
                     width: 100%;
@@ -899,6 +896,8 @@ export class AppLayout {
 
     notes: Note[] = [];
 
+    selectedTabIndex: string = "0";
+
     menuItems: MenuItem[] = [
         {
             icon: 'pi pi-wrench',
@@ -1009,7 +1008,7 @@ export class AppLayout {
             .pipe(filter(e => e instanceof NavigationEnd))
         	.subscribe((e: NavigationEnd) => {
                 this.workGroupService.setActiveGroup(undefined);
-                
+
                 if(e.urlAfterRedirects === '/home'){
                     this.loadStoredWindowPositions();
                 } else {
@@ -1027,13 +1026,15 @@ export class AppLayout {
                 this.isTaskDetailsWindowVisible = true;
                 this.faultReportVisible = false;
 
-                this.commentsForTask = this.comments.filter((comments) => comments.task_id == this.task.task_id);
-                this.areCommentsLoaded = true;
-
+                
                 if (this.getTaskTypeName(this.task) == 'Popravak') {
                     this.getStoredImagesForTask(this.task);
+                    this.commentsForTask = this.comments.filter((comments) => comments.task_id == this.task.task_id);
+                    this.areCommentsLoaded = true;
                 } else {
                     this.taskImages = [];
+                    this.commentsForTask = [];
+                    this.areCommentsLoaded = false;
                 }
             } else {
                 this.isTaskDetailsWindowVisible = false;
@@ -1708,6 +1709,7 @@ export class AppLayout {
         this.taskImages = [];
         this.imagesToUpload = [];
         this.task = {};
+        this.selectedTabIndex = "0";
 
         if (window == 'task-details') {
             this.taskService.$taskModalData.next(null);

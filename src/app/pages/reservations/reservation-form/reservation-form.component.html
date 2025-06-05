@@ -51,7 +51,7 @@
                 </div>
                 <div class="field">
                     <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
-                    <p-calendar 
+                    <p-datePicker  
                         id="startDate" 
                         [(ngModel)]="startDate" 
                         [readonlyInput]="true" 
@@ -60,8 +60,10 @@
                         [maxDate]="maxDate" 
                         [showIcon]="true"
                         [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
-                        (onSelect)="onStartDateChange()">
-                    </p-calendar>
+                        (onSelect)="onStartDateChange()"
+                        appendTo="body"
+                    >
+                    </p-datePicker>
                 </div>
             </div>
             
@@ -85,7 +87,7 @@
                 </div>
                 <div class="field">
                     <label for="colors">{{ 'RESERVATIONS.MODAL.COLOR' | translate }}</label>
-                    <p-dropdown 
+                    <p-select 
                         [options]="colors" 
                         [(ngModel)]="selectedColor"
                         [ngStyle]="{ 'width': '210px'}"
@@ -99,11 +101,11 @@
                         <ng-template let-selectedOption pTemplate="selectedItem">
                             <div class="color-item" [style.background]="selectedOption"></div>
                         </ng-template>
-                    </p-dropdown>
+                    </p-select>
                 </div>
                 <div class="field">
                     <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
-                    <p-calendar 
+                    <p-datePicker  
                         id="endDate" 
                         [(ngModel)]="endDate" 
                         [readonlyInput]="true" 
@@ -112,8 +114,10 @@
                         [maxDate]="maxDate" 
                         [showIcon]="true"
                         [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
-                        (onSelect)="checkForDateConflicts()">
-                    </p-calendar>
+                        (onSelect)="checkForDateConflicts()"
+                        appendTo="body"
+                    >
+                    </p-datePicker>
                 </div>
             </div>
         </div>
@@ -121,7 +125,12 @@
         <!-- Full width notes field -->
         <div class="field mt-3">
             <label for="notes">{{ 'RESERVATIONS.MODAL.NOTES' | translate }}</label>
-            <textarea id="notes" rows="4" pInputTextarea [(ngModel)]="notes" 
+            <textarea 
+                id="notes" 
+                rows="4" 
+                class="p-inputtext"
+                pTextarea  
+                [(ngModel)]="notes" 
                 [placeholder]="'RESERVATIONS.MODAL.NOTES-ENTER-INFO' | translate">
             </textarea>
         </div>

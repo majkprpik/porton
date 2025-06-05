@@ -10,9 +10,9 @@ import { Menu } from 'primeng/menu';
 import { AuthService } from '../../pages/service/auth.service';
 import { ButtonModule } from 'primeng/button';
 import { DataService, Language, Profile, ProfileRole } from '../../pages/service/data.service';
-import { DropdownModule } from 'primeng/dropdown';
 import { LanguageService } from '../../pages/language/language.service';
 import { FormsModule } from '@angular/forms';
+import { SelectModule } from 'primeng/select';
 
 @Component({
     selector: 'app-topbar',
@@ -24,8 +24,8 @@ import { FormsModule } from '@angular/forms';
         AppConfigurator, 
         MenuModule,
         ButtonModule,
-        DropdownModule,
         FormsModule,
+        SelectModule,
     ],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
@@ -56,7 +56,7 @@ import { FormsModule } from '@angular/forms';
 
         <div class="layout-topbar-actions">
             <div class="layout-config-menu">
-                <p-dropdown 
+                <p-select 
                     [options]="languageService.languages" 
                     [(ngModel)]="selectedLanguage" 
                     optionLabel="name"

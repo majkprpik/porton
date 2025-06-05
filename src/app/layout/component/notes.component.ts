@@ -6,8 +6,8 @@ import { DataService, Note, Profile } from '../../pages/service/data.service';
 import { combineLatest } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ProfileService } from '../../pages/service/profile.service';
-import { Calendar } from 'primeng/calendar';
 import { TranslateModule } from '@ngx-translate/core';
+import { DatePickerModule } from 'primeng/datepicker';
 
 @Component({
   selector: 'app-notes',
@@ -16,8 +16,8 @@ import { TranslateModule } from '@ngx-translate/core';
     CommonModule,
     FormsModule,
     ButtonModule,
-    Calendar,
     TranslateModule,
+    DatePickerModule,
   ],
   template: `
     <div class="notes-container">
@@ -29,7 +29,7 @@ import { TranslateModule } from '@ngx-translate/core';
             @if(isToday(selectedDate)){
               <span [ngStyle]="{'height': '20px'}">{{ 'APP-LAYOUT.NOTES.TODAY' | translate }}</span>
             } @else {
-              <p-calendar 
+              <p-datePicker 
                 [(ngModel)]="selectedDate" 
                 [showIcon]="true" 
                 dateFormat="dd/mm/yy"
@@ -38,7 +38,7 @@ import { TranslateModule } from '@ngx-translate/core';
                   width: '100px',
                 }"
                 (onSelect)="updateDaysIndexFromSelectedDate()"
-              ></p-calendar>
+              ></p-datePicker>
             }
           </div>
           <p-button [disabled]="daysIndex >= 365" (onClick)="increaseIndex()" icon="pi pi-angle-right"></p-button>
