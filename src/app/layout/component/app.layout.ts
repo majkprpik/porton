@@ -26,6 +26,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProfileService } from '../../pages/service/profile.service';
 import { AuthService } from '../../pages/service/auth.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { WorkGroupService } from '../../pages/service/work-group.service';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -942,6 +943,7 @@ export class AppLayout {
         public profileService: ProfileService,
         private authService: AuthService,
         private translateService: TranslateService,
+        private workGroupService: WorkGroupService,
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
@@ -1006,6 +1008,8 @@ export class AppLayout {
         this.router.events
             .pipe(filter(e => e instanceof NavigationEnd))
         	.subscribe((e: NavigationEnd) => {
+                this.workGroupService.setActiveGroup(undefined);
+                
                 if(e.urlAfterRedirects === '/home'){
                     this.loadStoredWindowPositions();
                 } else {
