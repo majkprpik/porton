@@ -47,7 +47,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
           <span class="work-group-title">{{getGroupColorName()}}</span>
           <p-tag 
             [value]="(workGroup?.is_locked ? 'DAILY-SHEET.WORK-GROUPS.PUBLISHED' : 'DAILY-SHEET.WORK-GROUPS.NOT-PUBLISHED') | translate"
-            [severity]="workGroup?.is_locked ? 'success' : 'secondary'"
+            [severity]="workGroup?.is_locked ? 'success' : 'danger'"
           ></p-tag>
         </div>
         <p-button 
