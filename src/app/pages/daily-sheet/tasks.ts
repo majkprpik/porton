@@ -140,7 +140,20 @@ export class TasksComponent implements OnInit {
           this.workGroupTasks = [...this.workGroupTasks, {
             work_group_id: this.activeWorkGroupId,
             task_id: taskToAdd.task_id,
-          }]
+          }];
+
+          const assignedTaskProgressType = this.progressTypes.find(progressType => progressType.task_progress_type_name === "Dodijeljeno");
+      
+          if (assignedTaskProgressType) {
+            this.tasks = this.tasks.map(t => 
+              t.task_id === taskToAdd.task_id ? { 
+                ...t, 
+                task_progress_type_id: assignedTaskProgressType.task_progress_type_id 
+              } : t
+            );
+          }
+          
+          this.dataService.setTasks(this.tasks);
         }
       }
     });
@@ -191,18 +204,18 @@ export class TasksComponent implements OnInit {
   // Helper method to update task progress type after task removal
   private updateTaskAfterRemoval(task: Task | undefined, taskToRemove: any) {
     if (task) {
-      const taskProgressType = this.progressTypes.find(progressType => progressType.task_progress_type_name === "Nije dodijeljeno");
+      const notAssignedTaskProgressType = this.progressTypes.find(progressType => progressType.task_progress_type_name === "Nije dodijeljeno");
       
-      if (taskProgressType) {
-        task.task_progress_type_id = taskProgressType.task_progress_type_id;
+      if (notAssignedTaskProgressType) {
+        task.task_progress_type_id = notAssignedTaskProgressType.task_progress_type_id;
         
         this.tasks = this.tasks.map(t => 
-          t.task_id === task.task_id ? { ...t, task_progress_type_id: taskProgressType.task_progress_type_id } : t
+          t.task_id === task.task_id ? { ...t, task_progress_type_id: notAssignedTaskProgressType.task_progress_type_id } : t
         );
 
         this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
         this.dataService.setWorkGroupTasks(this.workGroupTasks);
-      }
+        this.dataService.setTasks(this.tasks);
       }
     }
   }
