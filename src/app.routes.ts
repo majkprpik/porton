@@ -20,25 +20,52 @@ export const appRoutes: Routes = [
     {
         path: '',
         component: AppLayout,
-        canActivate: [AuthGuard, RoleGuard],
+        canActivate: [AuthGuard],
+        canActivateChild: [RoleGuard],
         children: [
             { path: '', component: Home }, // Default route
             { path: 'home', component: Home },
             { path: 'reservations', component: Reservations },
-            { path: 'reservations-2', component: Reservation2Component },
-            // { path: 'tasks', component: Tasks },
-            { path: 'profiles', component: ProfilesComponent },
-            { path: 'daily-sheet', component: DailySheetComponent },
-            { path: 'teams', component: Teams },
-            { path: 'teams/:id', component: WorkGroupDetail },
-            { path: 'task-progress-types', component: TaskProgressTypesComponent },
-            { path: 'house-types', component: HouseTypesComponent },
+            { 
+                path: 'reservations-2', 
+                component: Reservation2Component,
+                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave'] }
+            },
+            { 
+                path: 'profiles', 
+                component: ProfilesComponent,
+                data: { roles: ['Voditelj kampa', 'Uprava'] }
+            },
+            { 
+                path: 'daily-sheet', 
+                component: DailySheetComponent,
+                data: { roles: ['Savjetnik uprave', 'Voditelj kampa', 'Uprava', 'Voditelj domacinstva'] }
+            },
+            { 
+                path: 'teams', 
+                component: Teams ,
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva'] }
+            },
+            { 
+                path: 'teams/:id', 
+                component: WorkGroupDetail,
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva'] }
+            },
+            { 
+                path: 'task-progress-types', 
+                component: TaskProgressTypesComponent,
+                data: { roles: ['Voditelj kampa', 'Uprava'] }
+            },
+            { 
+                path: 'house-types', 
+                component: HouseTypesComponent,
+                data: { roles: ['Voditelj kampa', 'Uprava'] }
+            },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },
             { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') }
         ]
     },
-    // { path: 'landing', component: Landing, canActivate: [AuthGuard] },
     { path: 'notfound', component: Notfound },
     { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
     { path: '**', redirectTo: '/notfound' }
