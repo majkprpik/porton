@@ -38,7 +38,7 @@ import { ButtonModule } from 'primeng/button';
               pattern="[0-9]*"
               inputmode="numeric"
               pInputText 
-              [placeholder]="'HOME.SEARCH.SEARCH-HOUSES' | translate" 
+              [placeholder]="'DAILY-SHEET.TASKS.SEARCH-TASKS' | translate" 
               [(ngModel)]="searchTerm"
               (input)="applyFilters()"
               [min]="0"

@@ -65,7 +65,8 @@
         "TITLE": "Daily sheet",
         "TASKS": {
             "TITLE": "Tasks",
-            "LOADING-TASKS": "Loading tasks..."
+            "LOADING-TASKS": "Loading tasks...",
+            "SEARCH-TASKS": "Search by house number"
         },
         "WORK-GROUPS": {
             "TITLE": "Work groups",

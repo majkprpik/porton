@@ -65,7 +65,8 @@
         "TITLE": "Dnevni list",
         "TASKS": {
             "TITLE": "Zadaci",
-            "LOADING-TASKS": "Učitavanje zadataka..."
+            "LOADING-TASKS": "Učitavanje zadataka...",
+            "SEARCH-TASKS": "Pretraži po broju kućice"
         },
         "WORK-GROUPS": {
             "TITLE": "Radne grupe",
