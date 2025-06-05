@@ -97,14 +97,6 @@ export interface Task {
   is_unscheduled: boolean
 }
 
-export interface TeamTask {
-  id: number; 
-  house_number: number;
-  task_type_name: string;
-  progress_type_name: string;
-  index: number | null;
-}
-
 // Interface for house availabilities
 export interface HouseAvailability {
   house_availability_id: number;
