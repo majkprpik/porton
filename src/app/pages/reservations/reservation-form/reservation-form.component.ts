@@ -88,7 +88,6 @@ export class ReservationFormComponent implements OnInit, OnChanges {
     }
 
     ngOnInit() {
-        console.log("Form initialized with dates:", this.startDate, this.endDate);
         if(this.reservation){
             this.reservation.arrival_time = this.reservation.arrival_time ? this.timeStringToDate(this.reservation.arrival_time) : this.timeStringToDate("16:00:00");
             this.reservation.departure_time = this.reservation.departure_time ? this.timeStringToDate(this.reservation.departure_time) : this.timeStringToDate('10:00:00');
@@ -113,41 +112,29 @@ export class ReservationFormComponent implements OnInit, OnChanges {
     
     // Ensure dates are properly set and valid
     private ensureDatesAreValid() {
-        console.log("Ensuring dates are valid. Current values:", 
-            this.startDate, 
-            typeof this.startDate, 
-            this.endDate, 
-            typeof this.endDate);
-        
         // Handle the case where startDate is a string (from reservation object)
         if (typeof this.startDate === 'string') {
-            console.log("Converting startDate from string to Date");
             this.startDate = new Date(this.startDate);
         }
         
         // Handle the case where endDate is a string (from reservation object)
         if (typeof this.endDate === 'string') {
-            console.log("Converting endDate from string to Date");
             this.endDate = new Date(this.endDate);
         }
         
         // If startDate is still not a valid Date, create a new one
         if (!(this.startDate instanceof Date) || isNaN(this.startDate.getTime())) {
-            console.log("Fixing invalid start date");
             this.startDate = new Date(); // Default to today if invalid
         }
         
         // If endDate is still not a valid Date, default to startDate
         if (!(this.endDate instanceof Date) || isNaN(this.endDate.getTime())) {
-            console.log("Fixing invalid end date");
             this.endDate = new Date(this.startDate); // Default to start date if invalid
         }
         
         // Reset hours to avoid timezone issues
         this.startDate.setHours(0, 0, 0, 0);
         this.endDate.setHours(0, 0, 0, 0);
-        
-        console.log("Dates after validation:", this.startDate, this.endDate);
     }
 
     // Reset form when visibility changes (prevents data persistence between openings)
@@ -156,28 +143,20 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         if (changes['startDate'] || changes['isEditMode']) {
             this.updateMinEndDate();
         }
-
-        console.log("Form changes:", Object.keys(changes).join(', '));
         
         // Check if the reservation object changed (which contains date strings)
         if (changes['reservation']) {
-            console.log("Reservation changed:", 
-                changes['reservation'].currentValue, 
-                changes['reservation'].previousValue);
-            
             // If the reservation has start/end dates as strings, update our Date objects
             const currentReservation = changes['reservation'].currentValue;
             if (currentReservation) {
                 if (currentReservation.house_availability_start_date) {
                     this.startDate = new Date(currentReservation.house_availability_start_date);
-                    console.log("Updated startDate from reservation:", this.startDate);
                 }
                 
                 if (currentReservation.house_availability_end_date) {
                     // Add one day to end date for display purposes
                     this.endDate = new Date(currentReservation.house_availability_end_date);
                     this.endDate.setDate(this.endDate.getDate() + 1);
-                    console.log("Updated endDate from reservation (added 1 day):", this.endDate);
                 }
             }
         }
@@ -187,9 +166,6 @@ export class ReservationFormComponent implements OnInit, OnChanges {
                 // Form is being closed, reset notes
                 this.notes = '';
             } else if (changes['visible'].currentValue) {
-                // Form is being opened
-                console.log("Form visibility changed to visible, dates:", this.startDate, this.endDate);
-                
                 // Check for description
                 if (this.reservation && this.reservation.note) {
                     this.notes = this.reservation.note;
@@ -204,12 +180,6 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         
         // Check if dates have changed
         if (changes['startDate'] || changes['endDate']) {
-            console.log("Dates changed:", 
-                changes['startDate']?.currentValue, 
-                changes['startDate']?.previousValue,
-                changes['endDate']?.currentValue, 
-                changes['endDate']?.previousValue);
-                
             this.ensureDatesAreValid();
         }
     }
@@ -242,12 +212,8 @@ export class ReservationFormComponent implements OnInit, OnChanges {
     }
 
     onStartDateChange(): void {
-        console.log("Start date changed to:", this.startDate);
-        
         // Ensure the start date is valid
         if (!this.startDate || !(this.startDate instanceof Date) || isNaN(this.startDate.getTime())) {
-            console.log("Invalid start date, setting to today or original date");
-            
             // If in edit mode and we have an original date, use that
             if (this.isEditMode && this.reservation.house_availability_start_date) {
                 this.startDate = new Date(this.reservation.house_availability_start_date);
@@ -266,8 +232,6 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         if (!this.endDate || !(this.endDate instanceof Date) || 
             isNaN(this.endDate.getTime()) || 
             new Date(this.endDate).getTime() < new Date(this.startDate).getTime()) {
-            
-            console.log("End date missing or before start date, updating it");
             // Set end date to same day as start date initially
             this.endDate = new Date(this.startDate);
             this.endDate.setHours(0, 0, 0, 0);

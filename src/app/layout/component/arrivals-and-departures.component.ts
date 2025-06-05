@@ -1,4 +1,4 @@
-import { Component, LOCALE_ID } from '@angular/core';
+import { Component } from '@angular/core';
 import { combineLatest, Subscription } from 'rxjs';
 import { HouseService } from '../../pages/service/house.service';
 import { DataService, House, HouseAvailability } from '../../pages/service/data.service';

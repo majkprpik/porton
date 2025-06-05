@@ -734,8 +734,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 // Then send to backend using the DataService method
                 this.dataService.saveHouseAvailability(newReservation).subscribe({
                     next: (savedReservation: HouseAvailability | null) => {
-                        console.log("Reservation saved successfully:", savedReservation);
-
                         forkJoin({
                             temp: this.dataService.loadTempHouseAvailabilities(),
                             main: this.dataService.loadHouseAvailabilities(),
@@ -906,7 +904,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     // Method to scroll to today's date in the table
     scrollToToday(): void {
-        console.log("Scrolling to today's date");
         setTimeout(() => {
             // Find the column that represents today
             const today = new Date();
@@ -935,8 +932,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
                         // Scroll to position the today column in the middle
                         const scrollLeft = columnPosition - (containerWidth / 2) + (columnWidth / 2);
                         tableContainer.scrollLeft = scrollLeft > 0 ? scrollLeft : 0;
-                        
-                        console.log(`Scrolled to today (column ${todayIndex})`);
                     }
                 }
             }
@@ -1133,8 +1128,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     // Helper method to open the reservation form with given dates
     private openReservationForm(house: House, startDate: Date, endDate: Date): void {
-        console.log("Opening reservation form with dates:", startDate, endDate);
-        
         // First make sure we reset any previous state
         this.editingReservation.set({});
         
@@ -1146,14 +1139,11 @@ export class Reservation2Component implements OnInit, OnDestroy {
         formStartDate.setHours(0, 0, 0, 0);
         formEndDate.setHours(0, 0, 0, 0);
         
-        console.log("Form dates after processing:", formStartDate, formEndDate);
-        
         // Additional validation for start date being today
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
         if (formStartDate.getTime() === today.getTime()) {
-            console.log("Start date is today, ensuring valid date object");
             // Double check that we have a valid today's date
             const todayCopy = new Date();
             todayCopy.setHours(0, 0, 0, 0);
@@ -1173,8 +1163,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
         // Convert dates to string format for the reservation object
         const startDateString = this.formatDateToYYYYMMDD(formStartDate);
         const endDateString = this.formatDateToYYYYMMDD(formEndDate);
-        
-        console.log("Date strings for reservation:", startDateString, endDateString);
         
         // Check if there's a upcoming reservation that would limit the end date
         const nextReservation = this.findNextReservation(house.house_id, formStartDate);
@@ -1378,9 +1366,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     // Add a method to manually refresh the data
     manualRefresh(): void {
-        console.log("Manual refresh requested");
-        // Show loading indicator or toast message here if desired
-        
         // Reload house availabilities from the database
         this.dataService.loadHouseAvailabilities().subscribe({
             next: (freshData) => {
