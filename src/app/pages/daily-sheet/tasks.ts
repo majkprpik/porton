@@ -1,17 +1,28 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { TaskGroupComponent } from './task-group';
-import { DataService, Task, TaskType, TaskProgressType } from '../service/data.service';
+import { DataService, Task, TaskType, TaskProgressType, House } from '../service/data.service';
 import { combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { FormsModule } from '@angular/forms';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-tasks',
   standalone: true,
-  imports: [CommonModule, TaskGroupComponent, ProgressSpinnerModule, TranslateModule],
+  imports: [
+    CommonModule, 
+    TaskGroupComponent, 
+    ProgressSpinnerModule, 
+    TranslateModule,
+    FormsModule,
+    InputTextModule,
+    ButtonModule, 
+  ],
   template: `
     @if (loading) {
       <div class="loading-container">
@@ -20,10 +31,24 @@ import { TranslateModule } from '@ngx-translate/core';
       </div>
     } @else {
       <div class="tasks-container">
+        <div class="house-controls">
+          <div class="search-container">
+            <input 
+              type="text"
+              pattern="[0-9]*"
+              inputmode="numeric"
+              pInputText 
+              [placeholder]="'HOME.SEARCH.SEARCH-HOUSES' | translate" 
+              [(ngModel)]="searchTerm"
+              (input)="applyFilters()"
+              [min]="0"
+            >
+          </div>
+        </div>
         @for (taskType of taskTypes; track taskType.task_type_id) {
           <app-task-group 
             [taskType]="taskType"
-            [tasks]="getAvailableTasks()"
+            [tasks]="filteredTasks"
             [canAssignTasks]="hasActiveWorkGroup">
           </app-task-group>
         }
@@ -53,9 +78,25 @@ import { TranslateModule } from '@ngx-translate/core';
       border-radius: 6px;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 5px;
       padding: 1rem;
       scrollbar-gutter: stable;
+
+      .house-controls{
+        padding-bottom: 10px;
+        display: flex;
+        flex-direction: row; 
+        align-items: center;
+        justify-content: space-between;
+
+        .search-container{
+            width: 100%;
+
+          input{
+            width: 100%;
+          }
+        }
+      }
     }
   `]
 })
@@ -66,6 +107,9 @@ export class TasksComponent implements OnInit {
   progressTypes: TaskProgressType[] = [];
   workGroupTasks: { work_group_id: number; task_id: number }[] = [];
   activeWorkGroupId?: number;
+  searchTerm: string = '';
+  houses: House[] = [];
+  filteredTasks: Task[] = [];
 
   constructor(
     private dataService: DataService,
@@ -117,12 +161,16 @@ export class TasksComponent implements OnInit {
       this.dataService.tasks$,
       this.dataService.taskTypes$,
       this.dataService.taskProgressTypes$,
+      this.dataService.houses$,
     ]).subscribe(
-      ([tasks, taskTypes, progressTypes]) => {
+      ([tasks, taskTypes, progressTypes, houses]) => {
         this.tasks = tasks;
         this.taskTypes = taskTypes;
         this.progressTypes = progressTypes;
+        this.houses = houses;
         this.loading = false;
+
+        this.applyFilters();
       },
       error => {
         console.error('Error loading tasks:', error);
@@ -155,6 +203,22 @@ export class TasksComponent implements OnInit {
         this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
         this.dataService.setWorkGroupTasks(this.workGroupTasks);
       }
+      }
+    }
+  }
+
+  applyFilters(){
+    let result = this.getAvailableTasks();
+  
+    if (this.searchTerm || parseInt(this.searchTerm) == 0) {
+      result = result.filter(task => {
+        const house = this.houses.find(house => house.house_id === task.house_id);
+        return house?.house_number?.toString().toLowerCase().includes(this.searchTerm);
+      });
+
+      this.filteredTasks = result;
+    } else {
+      this.filteredTasks = this.getAvailableTasks();
     }
   }
 }
