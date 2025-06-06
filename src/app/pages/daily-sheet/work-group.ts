@@ -72,14 +72,10 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
           @if (assignedTasks.length === 0) {
             <div class="drop-area">{{ 'DAILY-SHEET.WORK-GROUPS.CLICK-TASKS' | translate }}</div>
           } @else {
-            <div class="tasks-list" pDroppable="tasks" (onDrop)="onDrop($event)">
+            <div class="tasks-list">
               @for (task of assignedTasks; track task.task_id; let i = $index) {
                 <div 
                   class="task-card-container"
-                  [class.dragging]="draggedTaskIndex === i"
-                  pDraggable="tasks"
-                  (onDragStart)="onDragStart($event, i)"
-                  (onDragEnd)="onDragEnd()"
                 >
                   <app-task-card 
                     [houseNumber]="houseService.getHouseNumber(task.house_id)"
@@ -302,18 +298,15 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
       min-height: 50px;
       padding: 0.25rem;
       transition: all 0.2s ease;
-
-      &.p-droppable-enter {
-        background-color: var(--surface-hover);
-      }
     }
 
     .task-card-container {
       display: flex;
       align-items: center;
-      cursor: move;
+      transition: transform 0.1s ease;
 
       &:hover {
+        cursor: pointer;
         transform: translateY(-2px);
       }
 
@@ -435,7 +428,6 @@ export class WorkGroup implements OnInit {
     }
   ];
 
-  draggedTaskIndex: number = -1;
   isSortDialogVisible = false;
   
   // Array of 12 distinct colors for work groups
@@ -821,58 +813,6 @@ export class WorkGroup implements OnInit {
         }
       });
     }
-  }
-
-  onDragStart(event: any, index: number) {
-    this.draggedTaskIndex = index;
-    event.currentTarget.classList.add('dragging');
-  }
-
-  onDragEnd() {
-    const draggingElement = document.querySelector('.dragging');
-    if (draggingElement) {
-      draggingElement.classList.remove('dragging');
-    }
-    this.draggedTaskIndex = -1;
-  }
-
-  onDrop(event: any) {
-    if (this.draggedTaskIndex !== -1 && this.workGroup?.work_group_id) {
-      const dropIndex = this.calculateDropIndex(event);
-      if (this.draggedTaskIndex !== dropIndex) {
-        const [movedTask] = this.assignedTasks.splice(this.draggedTaskIndex, 1);
-        this.assignedTasks.splice(dropIndex, 0, movedTask);
-        
-        // Update work group to unlocked state when tasks are reordered
-        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
-          .subscribe({
-            next: () => {
-              if (this.workGroup) {
-                this.workGroup.is_locked = false;
-              }
-            },
-            error: (error: any) => {
-              console.error('Error updating work group lock state:', error);
-            }
-          });
-      }
-    }
-  }
-
-  private calculateDropIndex(event: any): number {
-    const taskElements = Array.from(document.querySelectorAll('.task-card-container'));
-    const dropY = event.pageY;
-    
-    for (let i = 0; i < taskElements.length; i++) {
-      const rect = taskElements[i].getBoundingClientRect();
-      const centerY = rect.top + rect.height / 2;
-      
-      if (dropY < centerY) {
-        return i;
-      }
-    }
-    
-    return taskElements.length;
   }
 
   // Method to handle staff assignment

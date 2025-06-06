@@ -129,6 +129,15 @@ import { TranslateModule } from '@ngx-translate/core';
       flex-wrap: wrap;
       gap: 0.5rem;
       padding: 0.5rem;
+
+      app-task-card{
+        transition: transform 0.1s ease;
+        
+        &:hover{
+          transform: translateY(-2px);
+          cursor: pointer;
+        }
+      }
     }
   `
 })
