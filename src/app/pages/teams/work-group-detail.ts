@@ -10,6 +10,8 @@ import { HouseService } from '../service/house.service';
 import { TaskService } from '../service/task.service';
 import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
 import { TranslateModule } from '@ngx-translate/core';
+import { ProfileService } from '../service/profile.service';
+import { StaffCardComponent } from '../daily-sheet/staff-card';
 
 @Component({
     selector: 'app-work-group-detail',
@@ -21,6 +23,7 @@ import { TranslateModule } from '@ngx-translate/core';
         CardModule,
         TasksIndexSortPipe,
         TranslateModule,
+        StaffCardComponent,
     ],
     template: `
         @if (loading) {
@@ -45,10 +48,12 @@ import { TranslateModule } from '@ngx-translate/core';
                                 <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-STAFF' | translate }}</p>
                             } @else {
                                 @for (staff of assignedStaff; track staff.id) {
-                                    <div class="staff-card">
-                                        <i class="fa fa-user"></i>
-                                        <span>{{getStaffFullName(staff)}}</span>
-                                    </div>
+                                    <app-staff-card
+                                        [staff]="staff"
+                                        [canBeAssigned]="false"
+                                        [isInActiveGroup]="true"
+                                        [isClickedFromTeamDetails]="true"
+                                    ></app-staff-card>
                                 }
                             }
                         </div>
@@ -376,7 +381,8 @@ export class WorkGroupDetail implements OnInit {
         private route: ActivatedRoute,
         private dataService: DataService,
         public houseService: HouseService,
-        public taskService: TaskService
+        public taskService: TaskService,
+        private profileService: ProfileService,
     ) {}
 
     ngOnInit() {
@@ -683,5 +689,9 @@ export class WorkGroupDetail implements OnInit {
 
     openTaskDetails(task: Task){
         this.taskService.$taskModalData.next(task);
+    }
+
+    openProfileDetails(profile: Profile){
+        this.profileService.$profileModalData.next(profile);
     }
 } 

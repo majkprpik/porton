@@ -245,23 +245,6 @@ export class ProfilesComponent implements OnInit {
   newProfile: UserToRegister = { name: '', password: '', role_id: null };
   profileRoles: ProfileRole[] = [];
 
-  translationMap: { [key: string]: string } = {
-    "Uprava": "Management",
-    "Savjetnik uprave": "Management consultant",
-    "Voditelj recepcije": "Reception manager",
-    "Recepcija": "Reception",
-    "Voditelj kampa": "Camp manager",
-    "Voditelj domacinstva": "Household manager",
-    "Sobarica": "Housekeeper",
-    "Odrzavanje": "Maintenance",
-    "Prodaja": "Sales",
-    "Terasar": "Deck maintenance",
-    "Kucni majstor": "House technician",
-    "Nocna recepcija": "Night reception",
-    "Korisnicka sluzba": "Customer service",
-    "Ostalo": "Other"
-  }
-
   constructor(
     private dataService: DataService,
     private messageService: MessageService,
@@ -316,7 +299,7 @@ export class ProfilesComponent implements OnInit {
       next: async ([profileRoles, profiles]) => {
         this.profileRoles = profileRoles.map(role => ({
           ...role,
-          translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.translationMap[role.name] : role.name
+          translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.profileService.translationMap[role.name] : role.name
         }));
 
         const managementRoles = ['Uprava', 'Voditelj kampa', 'Savjetnik uprave'];

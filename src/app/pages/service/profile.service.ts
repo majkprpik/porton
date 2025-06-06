@@ -10,8 +10,26 @@ export class ProfileService {
   $staffToAdd = new BehaviorSubject<any>(null);
   $staffToRemove = new BehaviorSubject<any>(null);
   $profileForLocalStorage = new BehaviorSubject<any>(null);
+  $profileModalData = new BehaviorSubject<any>(null);
   profiles: Profile[] = [];
   profileRoles: ProfileRole[] = [];
+
+  translationMap: { [key: string]: string } = {
+    "Uprava": "Management",
+    "Savjetnik uprave": "Management consultant",
+    "Voditelj recepcije": "Reception manager",
+    "Recepcija": "Reception",
+    "Voditelj kampa": "Camp manager",
+    "Voditelj domacinstva": "Household manager",
+    "Sobarica": "Housekeeper",
+    "Odrzavanje": "Maintenance",
+    "Prodaja": "Sales",
+    "Terasar": "Deck maintenance",
+    "Kucni majstor": "House technician",
+    "Nocna recepcija": "Night reception",
+    "Korisnicka sluzba": "Customer service",
+    "Ostalo": "Other"
+  };
 
   constructor(
     private supabase: SupabaseService,

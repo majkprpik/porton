@@ -27,6 +27,15 @@ export class TaskService {
   deckCleaningTaskType: TaskType | undefined = undefined;
   sheetChangeTaskType: TaskType | undefined = undefined;
   towelChangeTaskType: TaskType | undefined = undefined;
+  
+  taskTypesTranslationMap: { [key: string]: string } = { 
+    "Čišćenje kućice": "House cleaning",
+    "Čišćenje terase": "Deck cleaning",
+    "Popravak": "Repair",
+    "Mijenjanje posteljine": "Sheet change",
+    "Mijenjanje ručnika": "Towel change",
+    "Ostalo": "Other"
+  };
 
   private isUrgentIconVisibleSubject = new BehaviorSubject<boolean>(false);
   isUrgentIconVisible$ = this.isUrgentIconVisibleSubject.asObservable();

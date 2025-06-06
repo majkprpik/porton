@@ -1,4 +1,4 @@
-import { HouseAvailability, HouseStatus, Note, Profile, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
+import { HouseAvailability, HouseStatus, Note, Profile, ProfileRole, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
 import { Component, ElementRef, LOCALE_ID, Renderer2, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -98,6 +98,42 @@ interface SpecialLocation {
                         </div>
                     </div>
                 }
+
+                <p-dialog
+                    [header]="'APP-LAYOUT.STAFF-DETAILS.TITLE' | translate"
+                    [(visible)]="isProfileDetailsWindowVisible"
+                    [modal]="true"
+                    [style]="{ width: '30rem' }"
+                    [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
+                >
+                    <div class="details" [ngStyle]="{'margin-left': '10px', 'margin-bottom': '10px'}">
+                        <div>
+                            <span><b>{{ 'APP-LAYOUT.STAFF-DETAILS.FULL-NAME' | translate }}:</b> {{ profileModalData?.first_name }}</span>
+                        </div>
+    
+                        <div>
+                            <span>
+                                <b>{{ 'APP-LAYOUT.STAFF-DETAILS.PASSWORD' | translate }}:</b> {{ profileModalData?.password }}
+                            </span>
+                        </div>
+
+                        <div>
+                            <span>
+                                <b>{{ 'APP-LAYOUT.STAFF-DETAILS.EMAIL' | translate }}:</b> {{ profileModalData?.email }}
+                            </span>
+                        </div>
+    
+                        <div>
+                            <span>
+                                <b>{{ 'APP-LAYOUT.STAFF-DETAILS.PHONE-NUMBER' | translate }}:</b> {{ profileModalData?.phone_number }}
+                            </span>
+                        </div>
+    
+                        <div>
+                            <span><b>{{ 'APP-LAYOUT.STAFF-DETAILS.ROLE' | translate }}:</b> {{ profileModalData?.translated_role }}</span>
+                        </div>
+                    </div>
+                </p-dialog>
 
                 <p-dialog
                     [header]="'APP-LAYOUT.TASK-DETAILS.TITLE' | translate" 
@@ -766,27 +802,6 @@ interface SpecialLocation {
                 }
             }
 
-            p-dialog {
-                .details {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 15px;
-                    margin-top: 10px;
-
-                    span {
-                        font-size: 16px;
-                    }
-
-                    .task-images {
-                        width: 100%;
-                        display: flex;
-                        flex-direction: row;
-                        align-items: center;
-                        overflow-x: auto;
-                    }
-                }
-            }
-
             p-dialog{
                 .dialog-header {
                     display: flex;
@@ -869,6 +884,7 @@ export class AppLayout {
     isNotesWindowVisible: boolean = false;
     isArrivalsAndDeparturesWindowVisible: boolean = false;
     isTaskDetailsWindowVisible: boolean = false;
+    isProfileDetailsWindowVisible: boolean = false;
 
     // Form fields
     selectedLocation: House | null = null;
@@ -887,8 +903,10 @@ export class AppLayout {
     taskTypes: TaskType[] = [];
     otherTaskTypes: TaskType[] = [];
     taskProgressTypes: TaskProgressType[] = [];
+    profileRoles: ProfileRole[] = [];
     task: any = {};
     tasks: Task[] = [];
+    profileModalData: any
     profiles: Profile[] = [];
 
     imageToUpload: any;
@@ -914,15 +932,6 @@ export class AppLayout {
     notes: Note[] = [];
 
     selectedTabIndex: string = "0";
-
-    taskTypesTranslationMap: { [key: string]: string } = { 
-        "Čišćenje kućice": "House cleaning",
-        "Čišćenje terase": "Deck cleaning",
-        "Popravak": "Repair",
-        "Mijenjanje posteljine": "Sheet change",
-        "Mijenjanje ručnika": "Towel change",
-        "Ostalo": "Other"
-    }
 
     menuItems: MenuItem[] = [
         {
@@ -1005,17 +1014,18 @@ export class AppLayout {
             this.dataService.profiles$,
             this.dataService.tempHouseAvailabilities$,
             this.dataService.notes$,
+            this.dataService.profileRoles$,
         ]).subscribe({
-            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities, profiles, tempHouseAvailabilities, notes]) => {
+            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles]) => {
                 this.comments = repairTaskComments;
                 this.houses = houses;
                 this.taskTypes = taskTypes.map(taskType => ({
                     ...taskType, 
-                    translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
+                    translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskService.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
                 })); 
-                this.otherTaskTypes  = taskTypes.map(taskType => ({
+                this.otherTaskTypes = taskTypes.map(taskType => ({
                     ...taskType, 
-                    translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
+                    translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskService.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
                 }));;
                 this.taskProgressTypes = taskProgressTypes;
                 this.tasks = tasks;
@@ -1027,6 +1037,7 @@ export class AppLayout {
                 this.profiles = profiles;
                 this.tempHouseAvailabilities = tempHouseAvailabilities;
                 this.notes = notes;
+                this.profileRoles = profileRoles;
 
                 if (houses) {
                     this.updateLocationOptions();
@@ -1071,6 +1082,24 @@ export class AppLayout {
                 }
             } else {
                 this.isTaskDetailsWindowVisible = false;
+            }
+        });
+
+        this.profileService.$profileModalData.subscribe((profileData) => {
+            if(profileData){
+                this.profileModalData = this.profiles.find(profile => profile.id == profileData.id)
+
+                this.isProfileDetailsWindowVisible = true;
+
+                const profileRoleName = this.getProfileRoleNameById(profileData.role_id);
+
+                if(profileRoleName){
+                    this.profileModalData = {
+                        ...this.profileModalData,
+                        email: this.authService.normalizeEmail(profileData.first_name),
+                        translated_role: this.languageService.getSelectedLanguageCode() == 'en' ? this.profileService.translationMap[profileRoleName] : profileRoleName,
+                    }
+                }
             }
         });
 
@@ -1272,6 +1301,10 @@ export class AppLayout {
                 }
             }
         });
+    }
+
+    getProfileRoleNameById(roleId: number){
+        return this.profileRoles.find(role => role.id == roleId)?.name;
     }
 
     isLoggedUserDeleted(){

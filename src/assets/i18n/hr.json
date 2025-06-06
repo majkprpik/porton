@@ -161,6 +161,14 @@
                 }
             }
         },
+        "STAFF-DETAILS": {
+            "TITLE": "Detalji osobe",
+            "FULL-NAME": "Ime i prezime",
+            "PASSWORD": "Lozinka",
+            "EMAIL": "Email",
+            "PHONE-NUMBER": "Broj telefona",
+            "ROLE": "Pozicija"
+        },
         "TASK-DETAILS": {
             "TITLE": "Detalji zadatka",
             "HOUSE": "Kućica",

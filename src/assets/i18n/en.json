@@ -161,6 +161,14 @@
                 }
             }
         },
+        "STAFF-DETAILS": {
+            "TITLE": "Staff details",
+            "FULL-NAME": "Full name",
+            "PASSWORD": "Password",
+            "EMAIL": "Email",
+            "PHONE-NUMBER": "Phone number",
+            "ROLE": "Role"
+        },
         "TASK-DETAILS": {
             "TITLE": "Task details",
             "HOUSE": "House",

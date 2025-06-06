@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Profile } from '../service/data.service';
+import { ProfileService } from '../service/profile.service';
 
 @Component({
   selector: 'app-staff-card',
@@ -31,11 +32,11 @@ import { Profile } from '../service/data.service';
       background: var(--surface-card);
       color: var(--text-color);
       font-size: 0.875rem;
-      cursor: pointer;
       transition: all 0.2s;
       width: fit-content;
 
       &:hover {
+        background-color: var(--p-gray-200);
         box-shadow: var(--card-shadow);
       }
 
@@ -59,6 +60,7 @@ import { Profile } from '../service/data.service';
         &:hover {
           background: var(--p-red-500) !important;
           color: var(--p-surface-0) !important;
+          cursor: pointer;
           
           .staff-icon i {
             color: var(--p-surface-0) !important;
@@ -82,17 +84,24 @@ export class StaffCardComponent {
   @Input() staff?: Profile;
   @Input() canBeAssigned: boolean = false;
   @Input() isInActiveGroup: boolean = false;
+  @Input() isClickedFromTeamDetails: boolean = false;
   
   @Output() staffClicked = new EventEmitter<void>();
   @Output() removeFromGroup = new EventEmitter<void>();
 
+  constructor(private profileService: ProfileService) {
+
+  }
+
   onClick(event: MouseEvent) {
     event.stopPropagation();
     
-    if (this.isInActiveGroup) {
+    if (this.isInActiveGroup && !this.isClickedFromTeamDetails) {
       this.removeFromGroup.emit();
     } else if (this.canBeAssigned) {
       this.staffClicked.emit();
+    } else {
+      this.profileService.$profileModalData.next(this.staff);
     }
   }
 
