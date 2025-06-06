@@ -110,12 +110,6 @@ interface SpecialLocation {
                         <div>
                             <span><b>{{ 'APP-LAYOUT.STAFF-DETAILS.FULL-NAME' | translate }}:</b> {{ profileModalData?.first_name }}</span>
                         </div>
-    
-                        <div>
-                            <span>
-                                <b>{{ 'APP-LAYOUT.STAFF-DETAILS.PASSWORD' | translate }}:</b> {{ profileModalData?.password }}
-                            </span>
-                        </div>
 
                         <div>
                             <span>
