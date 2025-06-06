@@ -26,6 +26,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { WorkGroupService } from '../../pages/service/work-group.service';
 import { TabsModule } from 'primeng/tabs';
 import { SelectModule } from 'primeng/select';
+import { LanguageService } from '../../pages/language/language.service';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -137,11 +138,15 @@ interface SpecialLocation {
                                     </div>
     
                                     <div>
-                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.TYPE' | translate }}:</b> {{ getTaskTypeName(task) }}</span>
+                                        <span>
+                                            <b>{{ 'APP-LAYOUT.TASK-DETAILS.TYPE' | translate }}:</b> {{ ('TASK-TYPES.' + getTaskTypeName(task)) | translate }}
+                                        </span>
                                     </div>
     
                                     <div>
-                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.STATUS' | translate }}:</b> {{ getTaskProgressTypeName(task) }}</span>
+                                        <span>
+                                            <b>{{ 'APP-LAYOUT.TASK-DETAILS.STATUS' | translate }}:</b> {{ ('TASK-PROGRESS-TYPES.' + getTaskProgressTypeName(task)) | translate }}
+                                        </span>
                                     </div>
     
                                     <div>
@@ -349,9 +354,10 @@ interface SpecialLocation {
                         id="taskType" 
                         [options]="taskTypes" 
                         [(ngModel)]="selectedTaskType" 
-                        optionLabel="task_type_name" 
+                        optionLabel="translatedName" 
                         [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-TASK-TYPE' | translate" 
                         [style]="{ width: '100%' }"
+                        appendTo="body"
                     ></p-select>
                 </div>
 
@@ -909,6 +915,15 @@ export class AppLayout {
 
     selectedTabIndex: string = "0";
 
+    taskTypesTranslationMap: { [key: string]: string } = { 
+        "Čišćenje kućice": "House cleaning",
+        "Čišćenje terase": "Deck cleaning",
+        "Popravak": "Repair",
+        "Mijenjanje posteljine": "Sheet change",
+        "Mijenjanje ručnika": "Towel change",
+        "Ostalo": "Other"
+    }
+
     menuItems: MenuItem[] = [
         {
             icon: 'pi pi-wrench',
@@ -954,6 +969,7 @@ export class AppLayout {
         private authService: AuthService,
         private translateService: TranslateService,
         private workGroupService: WorkGroupService,
+        private languageService: LanguageService,
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
@@ -993,8 +1009,14 @@ export class AppLayout {
             next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities, profiles, tempHouseAvailabilities, notes]) => {
                 this.comments = repairTaskComments;
                 this.houses = houses;
-                this.taskTypes = taskTypes;
-                this.otherTaskTypes = taskTypes;
+                this.taskTypes = taskTypes.map(taskType => ({
+                    ...taskType, 
+                    translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
+                })); 
+                this.otherTaskTypes  = taskTypes.map(taskType => ({
+                    ...taskType, 
+                    translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
+                }));;
                 this.taskProgressTypes = taskProgressTypes;
                 this.tasks = tasks;
                 this.workGroups = workGroups;

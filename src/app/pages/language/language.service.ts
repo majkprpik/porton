@@ -15,7 +15,7 @@ export class LanguageService {
   ];
 
   constructor(private translateService: TranslateService) { 
-    const savedLanguage = this.getSelectedLanguageFromLocalStorage()
+    const savedLanguage = this.getSelectedLanguageFromLocalStorage();
 
      if (savedLanguage) {
       this.setLanguage(JSON.parse(savedLanguage));
@@ -24,8 +24,16 @@ export class LanguageService {
     }
   }
 
-  getSelectedLanguageFromLocalStorage(): string | null {
+  private getSelectedLanguageFromLocalStorage(): string | null {
     return localStorage.getItem('portonSelectedLanguage');
+  }
+
+  getSelectedLanguageCode(){
+    const savedLanguage = this.getSelectedLanguageFromLocalStorage();
+
+    if(savedLanguage){
+      return JSON.parse(savedLanguage).code;
+    }
   }
 
   private setSelectedLanguageToLocalStorage(selectedLanguage: string){

@@ -14,6 +14,7 @@ import { ProfileService } from '../service/profile.service';
 import { combineLatest } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SelectModule } from 'primeng/select';
+import { LanguageService } from '../language/language.service';
 
 // Extended Profile interface to include the isDivider property
 interface ExtendedProfile extends Profile {
@@ -97,7 +98,7 @@ interface ExtendedProfile extends Profile {
             placeholder="Select a Role" 
             [showClear]="true"
             [style]="{'width':'100%'}"
-            optionLabel="name"
+            optionLabel="translatedName"
             optionValue="id"
             appendTo="body"
             id="role">
@@ -142,7 +143,7 @@ interface ExtendedProfile extends Profile {
           [placeholder]="'PROFILE-MANAGEMENT.ADD.SELECT-POSITION' | translate" 
           [showClear]="true"
           [style]="{'width':'100%'}"
-          optionLabel="name"
+          optionLabel="translatedName"
           optionValue="id"
           appendTo="body"
           id="role">
@@ -244,12 +245,30 @@ export class ProfilesComponent implements OnInit {
   newProfile: UserToRegister = { name: '', password: '', role_id: null };
   profileRoles: ProfileRole[] = [];
 
+  translationMap: { [key: string]: string } = {
+    "Uprava": "Management",
+    "Savjetnik uprave": "Management consultant",
+    "Voditelj recepcije": "Reception manager",
+    "Recepcija": "Reception",
+    "Voditelj kampa": "Camp manager",
+    "Voditelj domacinstva": "Household manager",
+    "Sobarica": "Housekeeper",
+    "Odrzavanje": "Maintenance",
+    "Prodaja": "Sales",
+    "Terasar": "Deck maintenance",
+    "Kucni majstor": "House technician",
+    "Nocna recepcija": "Night reception",
+    "Korisnicka sluzba": "Customer service",
+    "Ostalo": "Other"
+  }
+
   constructor(
     private dataService: DataService,
     private messageService: MessageService,
     public authService: AuthService,
     public profileService: ProfileService,
     private translateService: TranslateService,
+    private languageService: LanguageService,
   ) {
     // Create a map of user names to passwords from the auth service
     // this.initializePasswordMap();
@@ -294,8 +313,11 @@ export class ProfilesComponent implements OnInit {
       this.dataService.profileRoles$,
       this.dataService.profiles$,
     ]).subscribe({
-      next: ([profileRoles, profiles]) => {
-        this.profileRoles = profileRoles;
+      next: async ([profileRoles, profiles]) => {
+        this.profileRoles = profileRoles.map(role => ({
+          ...role,
+          translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.translationMap[role.name] : role.name
+        }));
 
         const managementRoles = ['Uprava', 'Voditelj kampa', 'Savjetnik uprave'];
         const receptionRoles = ['Voditelj recepcije', 'Recepcija', 'Korisnicka sluzba', 'Nocna recepcija', 'Prodaja'];
