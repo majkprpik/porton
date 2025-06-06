@@ -99,6 +99,7 @@
         "STAFF": {
             "TITLE": "Osoblje",
             "LOADING": "Učitavanje osoblja...",
+            "SEARCH-STAFF": "Pretraži osoblje",
             "AVAILABLE-STAFF": "Dostupno osoblje za Tim",
             "HOUSEKEEPING": "ODJEL DOMAĆINSTVA",
             "TECHNICAL-DEPARTMENT": "ODJEL TEHNIKA",

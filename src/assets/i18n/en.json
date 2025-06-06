@@ -99,6 +99,7 @@
         "STAFF": {
             "TITLE": "Staff",
             "LOADING": "Loading staff...",
+            "SEARCH-STAFF": "Search staff",
             "AVAILABLE-STAFF": "Available Staff for Team",
             "HOUSEKEEPING": "HOUSEKEEPING DEPARTMENT",
             "TECHNICAL-DEPARTMENT": "TECHNICAL DEPARTMENT",

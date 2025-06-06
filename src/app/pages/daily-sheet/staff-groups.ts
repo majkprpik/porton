@@ -5,6 +5,8 @@ import { DataService, Profile, ProfileRole } from '../service/data.service';
 import { CommonModule } from '@angular/common';
 import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { FormsModule } from '@angular/forms';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-staff-groups',
@@ -14,6 +16,8 @@ import { TranslateModule } from '@ngx-translate/core';
     StaffGroup, 
     ChipModule,
     TranslateModule,
+    FormsModule,
+    InputTextModule,
   ],
   template: `
     <div class="staff-groups-container">
@@ -28,6 +32,18 @@ import { TranslateModule } from '@ngx-translate/core';
             <h3>{{ 'DAILY-SHEET.STAFF.AVAILABLE-STAFF' | translate }}{{activeWorkGroupId}}</h3>
           </div>
         }
+
+        <div class="staff-controls">
+          <div class="search-container">
+            <input 
+              type="text"
+              pInputText 
+              [placeholder]="'DAILY-SHEET.STAFF.SEARCH-STAFF' | translate" 
+              [(ngModel)]="searchTerm"
+              [min]="0"
+            >
+          </div>
+        </div>
 
         <app-staff-group
           [groupName]="'DAILY-SHEET.STAFF.HOUSEKEEPING' | translate"
@@ -92,6 +108,22 @@ import { TranslateModule } from '@ngx-translate/core';
       background-color: var(--surface-card);
       border-radius: 8px;
       overflow-y: auto;
+
+      .staff-controls{
+        padding-bottom: 10px;
+        display: flex;
+        flex-direction: row; 
+        align-items: center;
+        justify-content: space-between;
+
+        .search-container{
+          width: 100%;
+
+          input{
+            width: 100%;
+          }
+        }
+      }
     }
 
     .staff-groups-header {
@@ -163,6 +195,8 @@ export class StaffGroups implements OnInit {
   otherRoles: string[] = ['Ostalo'];
   profileRoles: ProfileRole[] = [];
 
+  searchTerm: string = '';
+
   constructor(
     private dataService: DataService,
     private workGroupService: WorkGroupService,
@@ -192,23 +226,33 @@ export class StaffGroups implements OnInit {
   }
 
   getProfilesByRoles(roles: string[]): Profile[] {
+    const searchTermLower = this.searchTerm?.toLowerCase() || '';
+
+    const filtered = this.profiles.filter(profile =>
+      !searchTermLower || profile.first_name?.toLowerCase().includes(searchTermLower)
+    );
+
     if (roles.some(role => this.otherRoles.includes(role))) {
-      // For "Other" category, get profiles that don't match any of the defined categories
-      return this.profiles.filter(profile => {
-        if (!profile.role_id) return true;
+      return filtered.filter(profile => {
+        if (!profile.role_id) {
+          return true;
+        }
 
         const roleName = this.profileRoles.find(role => role.id == profile.role_id)?.name;
-        if (!roleName) return true; // Treat undefined as "other"
+
+        if (!roleName) {
+          return true;
+        } 
 
         return !this.managementRoles.includes(roleName) &&
-              !this.receptionRoles.includes(roleName) &&
-              !this.housekeepingRoles.includes(roleName) &&
-              !this.technicalRoles.includes(roleName);
-      })
-      .sort(this.sortByName);
+               !this.receptionRoles.includes(roleName) &&
+               !this.housekeepingRoles.includes(roleName) &&
+               !this.technicalRoles.includes(roleName);
+        }
+      ).sort(this.sortByName);
     }
 
-    return this.profiles.filter(profile =>
+    return filtered.filter(profile =>
       roles.some(roleName =>
         this.profileRoles.find(role => role.name === roleName)?.id === profile.role_id
       )
