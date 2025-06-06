@@ -90,7 +90,7 @@ import { ButtonModule } from 'primeng/button';
         justify-content: space-between;
 
         .search-container{
-            width: 100%;
+          width: 100%;
 
           input{
             width: 100%;

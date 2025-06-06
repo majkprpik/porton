@@ -181,7 +181,6 @@ export class StaffGroups implements OnInit {
 
     this.dataService.profiles$.subscribe({
       next: profiles => {
-        //console.log('Loaded profiles:', profiles);
         this.profiles = profiles;
         this.loading = false;
       },
