@@ -185,7 +185,7 @@ interface SpecialLocation {
                                         <div class="save-captured-image">
                                             <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.TASK-DETAILS.SAVE-IMAGE' | translate }}</label>
                                             <div class="captured-image-container">
-                                                <img [src]="capturedImage" alt="Captured Photo" />
+                                                <img #imgElement (click)="onOpenImage(imgElement)" [src]="capturedImage" alt="Captured Photo" />
                                                 <div class="save-captured-image-buttons">
                                                     <button pButton label="Odbaci" class="p-button-text" (click)="discardImage()"></button>
                                                     <button pButton label="Spremi" (click)="saveImage()"></button>
@@ -544,12 +544,19 @@ interface SpecialLocation {
 
                                 &:hover {
                                     cursor: pointer;
+                                    transform: scale(1.05);
                                 }
                             }
+
+                            transition: transform 0.3s ease;
 
                             img {
                                 border-radius: 5px;
                                 height: 200px;
+                            }
+
+                            &:hover{
+                                cursor: pointer;
                             }
                         }
                     }
@@ -602,6 +609,10 @@ interface SpecialLocation {
                         flex-direction: row;
                         align-items: center;
                         justify-content: space-evenly;
+                    }
+
+                    &:hover{
+                        cursor: pointer;
                     }
                 }
             }
