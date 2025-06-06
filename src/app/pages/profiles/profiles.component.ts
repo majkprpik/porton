@@ -241,7 +241,7 @@ export class ProfilesComponent implements OnInit {
   selectedProfile: ExtendedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
   userPasswordMap: { [name: string]: string } = {};
   newProfileRole: string = '';
-  newProfile: UserToRegister = { name: '', password: '', role_id: -1 };
+  newProfile: UserToRegister = { name: '', password: '', role_id: null };
   profileRoles: ProfileRole[] = [];
 
   constructor(
@@ -444,7 +444,7 @@ export class ProfilesComponent implements OnInit {
     this.selectedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
 
     this.showNewProfileDialog = false;
-    this.newProfile = { name: '', password: '', role_id: -1 };
+    this.newProfile = { name: '', password: '', role_id: null };
   }
 
   saveProfile() {
@@ -491,7 +491,7 @@ export class ProfilesComponent implements OnInit {
               life: 3000 
             });
             this.showNewProfileDialog = false;
-            this.newProfile = { name: '', password: '', role_id: -1 };
+            this.newProfile = { name: '', password: '', role_id: null };
           }
         })
         .catch(error => {

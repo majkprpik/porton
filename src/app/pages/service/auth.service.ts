@@ -266,5 +266,5 @@ export interface UserToRegister {
   password: string;
   email_confirm?: boolean;
   name: string;
-  role_id: number;
+  role_id: number | null;
 }
