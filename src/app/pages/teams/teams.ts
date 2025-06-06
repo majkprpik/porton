@@ -361,64 +361,6 @@ export class Teams implements OnInit {
                 this.loading = false;
             }
         });
-
-
-        this.dataService.$workGroupsUpdate.subscribe(res => {
-          if(res && res.eventType == 'INSERT') {
-            if(!this.workGroups.find(wg => wg.work_group_id == res.new.work_group_id)) {
-                this.workGroups = [...this.workGroups, res.new];
-                this.dataService.setWorkGroups(this.workGroups);
-            }
-          } else if(res && res.eventType == 'UPDATE') {
-            this.workGroups = this.workGroups.map(wg => {
-                return wg.work_group_id == res.new.work_group_id ? res.new : wg;
-            });
-            this.dataService.setWorkGroups(this.workGroups);
-          } else if(res && res.eventType == 'DELETE') {
-            this.workGroups = this.workGroups.filter(wg => wg.work_group_id != res.old.work_group_id);
-            this.dataService.setWorkGroups(this.workGroups);
-          }
-        });
-
-        this.dataService.$workGroupTasksUpdate.subscribe(res => {
-          if(res && res.eventType == 'INSERT') {
-            if(!this.workGroupTasks[res.new.work_group_id]){
-                this.workGroupTasks[res.new.work_group_id] = [];
-            }
-
-            if(!this.workGroupTasks[res.new.work_group_id].some(task => task.task_id == res.new.task_id)){
-                let task = this.allTasks.find(task => task.task_id == res.new.task_id);
-
-                if(task){
-                    this.workGroupTasks[res.new.work_group_id] = [...this.workGroupTasks[res.new.work_group_id], task];
-                    this.allWorkGroupTasks = [...this.allWorkGroupTasks, res.new];
-                }
-            }
-        
-            this.dataService.setWorkGroupTasks(this.allWorkGroupTasks);
-          } else if(res && res.eventType == 'DELETE') {
-            this.workGroupTasks[res.old.work_group_id] = this.workGroupTasks[res.old.work_group_id].filter(task => task.task_id != res.old.task_id);
-            this.allWorkGroupTasks = this.allWorkGroupTasks.filter(wgt => wgt.task_id != res.old.task_id);
-
-            this.dataService.setWorkGroupTasks(this.allWorkGroupTasks);
-          }
-        });
-
-        this.dataService.$tasksUpdate.subscribe(res => {
-            if(res && res.eventType == 'UPDATE'){
-                let allTasksIndex = this.allTasks.findIndex(task => task.task_id == res.new.task_id) ?? -1;
-                let workGroupTask = this.allWorkGroupTasks.find(wgt => wgt.task_id == res.new.task_id);
-
-                if(allTasksIndex != -1 && workGroupTask){
-                  this.allTasks = [...this.allTasks.slice(0, allTasksIndex), res.new, ...this.allTasks.slice(allTasksIndex + 1)];
-                //   this.dataService.setTasks(this.allTasks);
-
-                  this.workGroupTasks[workGroupTask.work_group_id] = this.workGroupTasks[workGroupTask.work_group_id].map(wgt => {
-                    return wgt.task_id == res.new.task_id ? res.new : wgt;
-                  });
-                }
-            }
-        });
     }
 
     getAssignedTasks(workGroupId: number): Task[] {
