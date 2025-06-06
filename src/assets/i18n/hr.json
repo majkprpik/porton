@@ -231,6 +231,7 @@
             "ADD-NEW-PROFILE": "Dodaj novi profil",
             "FULL-NAME": "Ime i prezime",
             "PASSWORD": "Lozinka",
+            "MIN-6-CHARS": "min. 6 znakova",
             "POSITION": "Pozicija",
             "SELECT-POSITION": "Odaberi poziciju"
         },

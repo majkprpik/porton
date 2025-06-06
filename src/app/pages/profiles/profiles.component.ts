@@ -126,7 +126,12 @@ interface ExtendedProfile extends Profile {
           <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.name" />
        </div>
        <div class="field">
-          <label for="firstName">{{ 'PROFILE-MANAGEMENT.ADD.PASSWORD' | translate }}</label>
+          <label for="firstName">
+            {{ 'PROFILE-MANAGEMENT.ADD.PASSWORD' | translate }} 
+            <span [ngStyle]="{'font-weight': 'normal'}">
+              ({{ 'PROFILE-MANAGEMENT.ADD.MIN-6-CHARS' | translate }})
+            </span>
+          </label>
           <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.password" />
        </div>
       <div class="p-field">
