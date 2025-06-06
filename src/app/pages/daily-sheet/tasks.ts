@@ -118,6 +118,31 @@ export class TasksComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    combineLatest([
+      this.dataService.tasks$,
+      this.dataService.taskTypes$,
+      this.dataService.taskProgressTypes$,
+      this.dataService.houses$,
+      this.dataService.workGroupTasks$,
+      this.workGroupService.activeGroupId$
+    ]).subscribe({
+      next: ([tasks, taskTypes, progressTypes, houses, workGroupTasks, activeGroupId]) => {
+        this.tasks = tasks;
+        this.taskTypes = taskTypes;
+        this.progressTypes = progressTypes;
+        this.houses = houses;
+        this.workGroupTasks = workGroupTasks;
+        this.activeWorkGroupId = activeGroupId;
+        this.loading = false;
+
+        this.applyFilters();
+      },
+      error: (error) => {
+        console.error('Error loading tasks:', error);
+        this.loading = false;
+      }
+    });
+
     this.taskService.$taskToRemove.subscribe(taskToRemove => {
       if(taskToRemove){
         let task = this.tasks.find(task => task.task_id == taskToRemove.task_id);
@@ -137,59 +162,26 @@ export class TasksComponent implements OnInit {
     this.taskService.$selectedTask.subscribe(taskToAdd => {
       if(taskToAdd){
         if(this.activeWorkGroupId){
-          this.workGroupTasks = [...this.workGroupTasks, {
-            work_group_id: this.activeWorkGroupId,
-            task_id: taskToAdd.task_id,
-          }];
-
           const assignedTaskProgressType = this.progressTypes.find(progressType => progressType.task_progress_type_name === "Dodijeljeno");
       
           if (assignedTaskProgressType) {
+            this.workGroupTasks = [...this.workGroupTasks, {
+              work_group_id: this.activeWorkGroupId,
+              task_id: taskToAdd.task_id,
+            }];
+
             this.tasks = this.tasks.map(t => 
               t.task_id === taskToAdd.task_id ? { 
                 ...t, 
                 task_progress_type_id: assignedTaskProgressType.task_progress_type_id 
               } : t
             );
+            
+            this.dataService.setTasks(this.tasks);
           }
-          
-          this.dataService.setTasks(this.tasks);
         }
       }
     });
-
-    this.workGroupService.activeGroupId$.subscribe(activeGroupId => {
-      if(activeGroupId){
-        this.activeWorkGroupId = activeGroupId;
-      }
-    });
-
-    this.dataService.workGroupTasks$.subscribe(workGroupTasks => {
-      if(workGroupTasks){
-        this.workGroupTasks = workGroupTasks;
-      }
-    });
-
-    combineLatest([
-      this.dataService.tasks$,
-      this.dataService.taskTypes$,
-      this.dataService.taskProgressTypes$,
-      this.dataService.houses$,
-    ]).subscribe(
-      ([tasks, taskTypes, progressTypes, houses]) => {
-        this.tasks = tasks;
-        this.taskTypes = taskTypes;
-        this.progressTypes = progressTypes;
-        this.houses = houses;
-        this.loading = false;
-
-        this.applyFilters();
-      },
-      error => {
-        console.error('Error loading tasks:', error);
-        this.loading = false;
-      }
-    );
   }
 
   get hasActiveWorkGroup(): boolean {
