@@ -8,6 +8,8 @@ import { ChipModule } from 'primeng/chip';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
+import { StaffCardComponent } from '../../pages/daily-sheet/staff-card';
+import { TaskCardComponent } from '../../pages/daily-sheet/task-card';
 
 @Component({
   selector: 'app-team-task-card',
@@ -16,6 +18,8 @@ import { TranslateModule } from '@ngx-translate/core';
     TabViewModule,
     ChipModule, 
     TranslateModule,
+    StaffCardComponent,
+    TaskCardComponent,
   ],
   template: `
     <div class="team-card" [class.locked]="workGroup?.is_locked" (click)="navigateToDetail(workGroup?.work_group_id)">
@@ -29,57 +33,40 @@ import { TranslateModule } from '@ngx-translate/core';
           <div class="section">
             <h4>{{ 'TEAMS.TEAM-TASK-CARD.TEAM-MEMBERS' | translate }}</h4>
             @if (workGroupStaff.length === 0) {
-                <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-STAFF' | translate }}</p>
+              <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-STAFF' | translate }}</p>
             } @else {
-                <div class="staff-list">
-                    @for (staff of workGroupStaff; track staff.id) {
-                        <p-chip 
-                            [label]="getStaffFullName(staff)"
-                            [removable]="!workGroup?.is_locked"
-                            (onRemove)="removeStaffFromGroup(staff.id!, workGroup?.work_group_id)"
-                        ></p-chip>
-                    }
-                </div>
+              <div class="staff-list">
+                  @for (staff of workGroupStaff; track staff.id) {
+                    <app-staff-card
+                      [staff]="staff"
+                      [canBeAssigned]="false"
+                      [isInActiveGroup]="false"
+                      [isClickedFromTeamDetails]="true"
+                    >
+                    </app-staff-card>
+                  }
+              </div>
             }
           </div>
 
           <div class="section">
             <h4>{{ 'TEAMS.TEAM-TASK-CARD.TASKS' | translate }}</h4>
             @if (workGroupTasks.length === 0) {
-                <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-TASKS' | translate }}</p>
+              <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-TASKS' | translate }}</p>
             } @else {
               <div class="tasks-list">
                 @for (task of workGroupTasks; track task.task_id) {
-                    <div 
-                      class="task-card" 
-                      [class.assigned]="taskService.isTaskAssigned(task)"
-                      [class.not-assigned]="taskService.isTaskNotAssigned(task)"
-                      [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
-                      [class.completed]="taskService.isTaskCompleted(task)"
-                      [class.removable]="!workGroup?.is_locked" 
-                      (click)="onTaskClick($event, task)"
-                    >
-                      <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
-                      @if(task?.is_unscheduled){
-                        @if(isUrgentIconVisibleMap[task.task_id]){
-                          <div class="urgent-task-icon">
-                            <i class="fa fa-exclamation-triangle"></i>
-                          </div>
-                        } @else{
-                          <div class="task-icon">
-                            <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
-                          </div>
-                        }
-                      } @else {
-                        <div class="task-icon">
-                          <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
-                        </div>
-                      }
-                      @if (!workGroup?.is_locked) {
-                        <i class="remove-icon fa fa-times"></i>
-                      }
-                    </div>
-                  }
+                  <app-task-card 
+                    [houseNumber]="houseService.getHouseNumber(task.house_id)"
+                    [houseName]="houseService.getHouseName(task.house_id)"
+                    [state]="taskService.getTaskState(task.task_progress_type_id)"
+                    [taskIcon]="taskService.getTaskIcon(task.task_type_id)"
+                    [task]="task"
+                    [canBeAssigned]="false"
+                    [isInActiveGroup]="false"
+                  >
+                  </app-task-card>
+                }
               </div>
             }
           </div>
