@@ -38,7 +38,15 @@ import { DatePickerModule } from 'primeng/datepicker';
                   width: '100px',
                 }"
                 (onSelect)="updateDaysIndexFromSelectedDate()"
-              ></p-datePicker>
+              >
+                <ng-template pTemplate="date" let-date>
+                  @if(hasNotesForCalendarDate(date) && !isCalendarDateSelected(date)){
+                    <strong [ngStyle]="{'color': 'var(--p-green-500)'}">{{ date.day }}</strong>
+                  } @else {
+                    {{ date.day }}
+                  }
+                </ng-template>
+              </p-datePicker>
             }
           </div>
           <p-button [disabled]="daysIndex >= 365" (onClick)="increaseIndex()" icon="pi pi-angle-right"></p-button>
@@ -246,17 +254,27 @@ export class NotesComponent {
   }
 
   get notesForSelectedDate(): Note[] {
-    if(!this.notes.length) return [];
-    const day = this.selectedDate;
-    const startOfDay = new Date(day);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(day);
-    endOfDay.setHours(23, 59, 59, 999);
+    if (!this.selectedDate || !this.notes.length) return [];
+
+    return this.getNotesForDay(
+      this.selectedDate.getFullYear(),
+      this.selectedDate.getMonth(),
+      this.selectedDate.getDate()
+    );
+  }
+
+  private getNotesForDay(year: number, month: number, day: number): Note[] {
+    const startOfDay = new Date(year, month, day, 0, 0, 0, 0);
+    const endOfDay = new Date(year, month, day, 23, 59, 59, 999);
 
     return this.notes.filter(note => {
-      const forDate = new Date(note.for_date!);
-      return forDate >= startOfDay && forDate <= endOfDay;
+      const noteDate = new Date(note.for_date!);
+      return noteDate >= startOfDay && noteDate <= endOfDay;
     });
+  }
+
+  hasNotesForCalendarDate(date: { year: number, month: number, day: number }): boolean {
+    return this.getNotesForDay(date.year, date.month, date.day).length > 0;
   }
 
   ngOnInit(){
@@ -364,6 +382,14 @@ export class NotesComponent {
     return date.getFullYear() === today.getFullYear() &&
            date.getMonth() === today.getMonth() &&
            date.getDate() === today.getDate();
+  }
+
+  isCalendarDateSelected(date: any): boolean {
+    return (
+      date.day === this.selectedDate.getDate() &&
+      date.month === this.selectedDate.getMonth() &&
+      date.year === this.selectedDate.getFullYear()
+    );
   }
 
   findProfileNameForNote(note: Note){
