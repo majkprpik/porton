@@ -116,7 +116,7 @@ import { StaffCardComponent } from '../daily-sheet/staff-card';
                                                         <p-button 
                                                             label="Pauza"
                                                             severity="warn" 
-                                                            (onClick)="handleTaskPause(task)"
+                                                            (onClick)="handleTaskPause($event, task)"
                                                             [style]="{'margin-left': '0.5rem'}"
                                                         ></p-button>
                                                     }
@@ -133,7 +133,7 @@ import { StaffCardComponent } from '../daily-sheet/staff-card';
                                                         <p-button 
                                                             label="Pauza"
                                                             severity="warn" 
-                                                            (onClick)="handleTaskPause(task)"
+                                                            (onClick)="handleTaskPause($event, task)"
                                                             [style]="{'margin-left': '0.5rem'}"
                                                         ></p-button>
                                                     }
@@ -665,7 +665,8 @@ export class WorkGroupDetail implements OnInit {
         });
     }
     
-    handleTaskPause(task: Task) {
+    handleTaskPause(event: any, task: Task) {
+        event.stopPropagation();
         // Find Pauza progress type
         const pauseProgressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === "Pauzirano");
         if (!pauseProgressType) {
