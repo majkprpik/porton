@@ -42,8 +42,6 @@ export class SupabaseService {
 
   // Example: Insert data into a table
   async insertData(table: string, newData: any, schema: string = 'public') {
-    console.log(`Inserting data into ${schema}.${table}:`, newData);
-    
     const { data, error } = await this.supabase
       .schema(schema)
       .from(table)
@@ -54,17 +52,12 @@ export class SupabaseService {
       console.error('Error inserting data:', error.message);
       return null;
     }
-
-    console.log(`Successfully inserted data into ${table}, response:`, data);
     
-    // Return the first item since we only insert one record
     return data.length > 0 ? data[0] : null;
   }
 
   // Update data in a table
   async updateData(table: string, updates: any, condition: string, schema: string = 'public') {
-    console.log(`Updating data in ${schema}.${table} with:`, updates, "condition:", condition);
-    
     let query;
     
     // Check if condition looks like a simple ID
@@ -97,8 +90,6 @@ export class SupabaseService {
           idColumn = 'id';
       }
       
-      console.log(`Using ID column: ${idColumn} with value: ${condition}`);
-      
       query = this.supabase
         .schema(schema)
         .from(table)
@@ -109,9 +100,7 @@ export class SupabaseService {
       const [column, value] = condition.split(' = ');
       // Remove any quotes from the value if present
       const cleanValue = value ? value.replace(/['"]/g, '') : value;
-      
-      console.log(`Using column: ${column} with value: ${cleanValue}`);
-      
+
       query = this.supabase
         .schema(schema)
         .from(table)
@@ -126,14 +115,11 @@ export class SupabaseService {
       return null;
     }
 
-    console.log(`Successfully updated data in ${table}, response:`, data);
     return data;
   }
 
   // Delete data from a table based on a filter condition
   async deleteData(table: string, filter: string | number, schema: string = 'public') {
-    console.log(`Deleting data from ${schema}.${table} with filter:`, filter);
-    
     let query = this.supabase
       .schema(schema)
       .from(table)
@@ -168,8 +154,7 @@ export class SupabaseService {
           // For tables ending with 's', use the singular form + '_id'
           idColumn = `${table.slice(0, -1)}_id`;
       }
-      
-      console.log(`Using ID column: ${idColumn} with value: ${filter}`);
+    
       query = query.eq(idColumn, filter);
     } else if (typeof filter === 'string' && filter.includes('=')) {
       // It's a condition string like "column = value"
@@ -182,7 +167,6 @@ export class SupabaseService {
       });
 
       conditions.forEach(({ column, value }) => {
-        console.log(`Using condition: ${column} = ${value}`);
         query = query.eq(column, value);
       });
     } else {
@@ -197,7 +181,6 @@ export class SupabaseService {
       return null;
     }
 
-    console.log(`Successfully deleted data from ${table}, response:`, data);
     return data;
   }
 

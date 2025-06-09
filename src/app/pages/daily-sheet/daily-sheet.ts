@@ -4,8 +4,7 @@ import { WorkGroups } from './work-groups';
 import { StaffComponent } from './staff';
 import { CommonModule } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
-import { TaskService } from '../service/task.service';
-import { DataService, House, Task, TaskProgressType, TaskType } from '../service/data.service';
+import { DataService, House, TaskProgressType, TaskType } from '../service/data.service';
 import { combineLatest } from 'rxjs';
 @Component({
   selector: 'app-daily-sheet',
@@ -48,27 +47,13 @@ import { combineLatest } from 'rxjs';
 
     .tasks, .staff {
       flex: 1;
-      min-width: 0; /* Prevent flex items from overflowing */
+      min-width: 0; 
     }
 
     .work-groups {
       flex: 2;
-      min-width: 0; /* Prevent flex items from overflowing */
+      min-width: 0; 
     }
-    
-    /* Responsive layout for smaller screens */
-    // @media screen and (max-width: 992px) {
-    //   .container {
-    //     flex-direction: column;
-    //     height: auto;
-    //   }
-      
-    //   .tasks, .staff, .work-groups {
-    //     width: 100%;
-    //     margin-left: 0;
-    //     margin-bottom: 1rem;
-    //   }
-    // }
   `
 })
 export class DailySheetComponent {

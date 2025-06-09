@@ -305,11 +305,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
       align-items: center;
       transition: transform 0.1s ease;
 
-      &:hover {
-        cursor: pointer;
-        transform: translateY(-2px);
-      }
-
       &.dragging {
         opacity: 0.5;
         transform: scale(0.98);

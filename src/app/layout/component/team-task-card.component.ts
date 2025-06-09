@@ -291,7 +291,6 @@ export class TeamTaskCardComponent {
   urgentIconSubscriptions: Subscription[] = [];
 
   constructor(
-    private dataService: DataService,
     public taskService: TaskService,
     public houseService: HouseService,
     private router: Router
@@ -327,22 +326,7 @@ export class TeamTaskCardComponent {
   onTaskClick(event: MouseEvent, task: Task) {
     event.stopPropagation(); // Prevents the parent click
     if (this.workGroup?.is_locked) {
-        this.taskService.$taskModalData.next(task);
-    } else {
-      this.removeTaskFromGroup(task.task_id, this.workGroup?.work_group_id);
-    }
-  }
-
-  removeTaskFromGroup(taskId: number, workGroupId: number | undefined) {
-    if(workGroupId){
-      this.dataService.removeTaskFromWorkGroup(workGroupId, taskId).subscribe({
-          next: () => {
-              console.log('Task removed from work group:', { taskId, workGroupId });
-          },
-          error: (error) => {
-              console.error('Error removing task from work group:', error);
-          }
-      });
+      this.taskService.$taskModalData.next(task);
     }
   }
   
@@ -354,19 +338,6 @@ export class TeamTaskCardComponent {
   navigateToDetail(workGroupId: number | undefined) {
     if(workGroupId){
       this.router.navigate(['/teams', workGroupId]);
-    }
-  }
-
-  removeStaffFromGroup(profileId: string, workGroupId: number | undefined) { 
-    if(workGroupId){
-      this.dataService.removeStaffFromWorkGroup(profileId, workGroupId).subscribe({
-          next: () => {
-              console.log('Staff removed from work group:', { profileId, workGroupId });
-          },
-          error: (error) => {
-              console.error('Error removing staff from work group:', error);
-          }
-      });
     }
   }
 }
