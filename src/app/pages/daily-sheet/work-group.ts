@@ -410,18 +410,11 @@ export class WorkGroup implements OnInit {
   
   @Output() groupSelected = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
-  @Output() staffRemoved = new EventEmitter<Profile>();
   
   @ViewChild('staffContextMenu') staffContextMenu!: ContextMenu;
 
   selectedStaff?: Profile;
-  staffMenuItems: MenuItem[] = [
-    {
-      label: 'Remove from Work Group',
-      icon: 'pi pi-times',
-      command: () => this.removeStaffFromGroup()
-    }
-  ];
+  staffMenuItems: MenuItem[] = [];
 
   isSortDialogVisible = false;
   
@@ -785,28 +778,14 @@ export class WorkGroup implements OnInit {
       this.workGroupProfiles = this.workGroupProfiles.filter((wgp: any) => !(wgp.profile_id == staff.id && wgp.work_group_id == this.workGroup?.work_group_id));
       this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
       this.workGroup.is_locked = false;
-    }
-  }
 
-  removeStaffFromGroup() {
-    if (this.selectedStaff?.id && this.workGroup?.work_group_id) {
-      const operations = [
-        this.dataService.removeStaffFromWorkGroup(this.selectedStaff.id, this.workGroup.work_group_id),
-        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
-      ];
+      const lockedTeam = this.workGroupService.getLockedTeams().find(lockedTeam => parseInt(lockedTeam.id) == this.workGroup?.work_group_id);
 
-      forkJoin(operations).subscribe({
-        next: () => {
-          if (this.workGroup) {
-            this.workGroup.is_locked = false;
-          }
-          this.staffRemoved.emit(this.selectedStaff);
-          this.loadAssignedStaff();
-        },
-        error: (error: any) => {
-          console.error('Error removing staff:', error);
-        }
-      });
+      if(lockedTeam){
+        lockedTeam.isLocked = false;
+        lockedTeam.members.filter(member => member.id != staff.id);
+        this.workGroupService.updateLockedTeam(lockedTeam);
+      }
     }
   }
 

@@ -92,7 +92,6 @@ import { TranslateModule } from '@ngx-translate/core';
                       [assignedStaff]="getAssignedStaff(group.work_group_id)"
                       (groupSelected)="setActiveGroup(group.work_group_id)"
                       (deleteClicked)="deleteWorkGroup(group.work_group_id)"
-                      (staffRemoved)="onStaffRemoved($event)"
                       [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
                     ></app-work-group>
                   </div>
@@ -151,7 +150,6 @@ import { TranslateModule } from '@ngx-translate/core';
                       [assignedStaff]="getAssignedStaff(group.work_group_id)"
                       (groupSelected)="setActiveGroup(group.work_group_id)"
                       (deleteClicked)="deleteWorkGroup(group.work_group_id)"
-                      (staffRemoved)="onStaffRemoved($event)"
                       [class.inactive]="activeGroupId !== undefined && group.work_group_id !== activeGroupId"
                     ></app-work-group>
                   </div>
@@ -635,15 +633,6 @@ export class WorkGroups implements OnInit {
         console.error('Error refreshing data:', error);
       }
     });
-  }
-
-  onStaffRemoved(staff: Profile) {
-    // Refresh the staff list for the active group
-    if (this.activeGroupId && staff.id) {
-      const staffList = this.getAssignedStaff(this.activeGroupId);
-      const updatedStaff = staffList.filter(s => s.id !== staff.id);
-      this.workGroupStaff[this.activeGroupId] = updatedStaff;
-    }
   }
 
   async publishWorkGroups() {
