@@ -14,7 +14,9 @@
         "SAVE": "Spremi",
         "CANCEL": "Odustani",
         "DELETE": "Obriši",
+        "START": "Započni",
         "CONFIRM": "Potvrdi",
+        "PAUSE": "Pauziraj",
         "CONTINUE": "Nastavi",
         "FINISH": "Završi",
         "YES": "Da",
@@ -223,6 +225,10 @@
             "TEAM-MEMBERS": "Članovi tima",
             "NO-ASSIGNED-TASKS": "Nema dodijeljenih zadataka",
             "NO-ASSIGNED-STAFF": "Nema dodijeljenih članova"
+        },
+        "TEAM-DETAILS": {
+            "TASK-FINISHED": "Zadatak završen",
+            "HOUSE-OCCUPIED": "Kućica zauzeta"
         }
     },
     "PROFILE-MANAGEMENT": {

@@ -95,7 +95,7 @@ import { StaffCardComponent } from '../daily-sheet/staff-card';
                                             </div>
                                             <div class="task-status">
                                                 <i class="status-icon" [class]="getTaskStatusIcon(task)"></i>
-                                                <span>{{getTaskStatusText(task)}}</span>
+                                                <span>{{ 'TASK-PROGRESS-TYPES.' + getTaskStatusText(task) | translate }}</span>
                                             </div>
                                         </div>
                                         <div class="task-actions">
@@ -107,39 +107,39 @@ import { StaffCardComponent } from '../daily-sheet/staff-card';
                                                     taskService.isTowelChangeTask(task))
                                                 {
                                                     <p-button 
-                                                        [label]="getActionButtonLabel(task)"
+                                                        [label]="'BUTTONS.' + getActionButtonLabel(task) | translate"
                                                         [severity]="getActionButtonSeverity(task)"
                                                         (onClick)="handleTaskAction($event, task)"
                                                     ></p-button>
                                                     
                                                     @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
                                                         <p-button 
-                                                            label="Pauza"
+                                                            [label]="'BUTTONS.PAUSE' | translate"
                                                             severity="warn" 
                                                             (onClick)="handleTaskPause($event, task)"
                                                             [style]="{'margin-left': '0.5rem'}"
                                                         ></p-button>
                                                     }
                                                 } @else if(houseService.isHouseOccupied(task.house_id)){
-                                                    <span>Kućica zauzeta</span>
+                                                    <span>{{ 'TEAMS.TEAM-DETAILS.HOUSE-OCCUPIED' | translate }}</span>
                                                 } @else {
                                                     <p-button 
-                                                        [label]="getActionButtonLabel(task)"
+                                                        [label]="'BUTTONS.' + getActionButtonLabel(task) | translate"
                                                         [severity]="getActionButtonSeverity(task)"
                                                         (onClick)="handleTaskAction($event, task)"
                                                     ></p-button>
                                                     
                                                     @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
                                                         <p-button 
-                                                            label="Pauza"
+                                                            [label]="'BUTTONS.PAUSE' | translate"
                                                             severity="warn" 
                                                             (onClick)="handleTaskPause($event, task)"
                                                             [style]="{'margin-left': '0.5rem'}"
                                                         ></p-button>
                                                     }
                                                 }
-                                            } @else {
-                                                <span>Zadatak završen</span>
+                                            } @else {    
+                                                <span>{{ 'TEAMS.TEAM-DETAILS.TASK-FINISHED' | translate }}</span>
                                             }
                                         </div>
                                     </div>
@@ -151,7 +151,7 @@ import { StaffCardComponent } from '../daily-sheet/staff-card';
             </div>
         } @else {
             <div class="error-container">
-                <p>Tim nije pronađen</p>
+                <p>{{ 'TEAM.TEAM-TASK-CARD.TEAM-NOT-FOUND' | translate }}</p>
             </div>
         }
     `,
@@ -613,12 +613,12 @@ export class WorkGroupDetail implements OnInit {
         const isPaused = this.taskService.isTaskPaused(task);
         
         if (this.taskService.isTaskInProgress(task)) {
-            return 'Završi';
+            return 'FINISH';
         } else if (isPaused) {
-            return 'Nastavi';
+            return 'CONTINUE';
         } 
         
-        return 'Započni';
+        return 'START';
     }
 
     getActionButtonSeverity(task: Task): 'success' | 'info' | 'warn' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' {

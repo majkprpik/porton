@@ -14,7 +14,9 @@
         "SAVE": "Save",
         "CANCEL": "Cancel",
         "DELETE": "Delete",
+        "START": "Start",
         "CONFIRM": "Confirm",
+        "PAUSE": "Pause",
         "CONTINUE": "Continue",
         "FINISH": "Finish",
         "YES": "Yes",
@@ -223,6 +225,10 @@
             "TEAM-MEMBERS": "Team members",
             "NO-ASSIGNED-TASKS": "No assigned tasks",
             "NO-ASSIGNED-STAFF": "No assigned staff"
+        },
+        "TEAM-DETAILS": {
+            "TASK-FINISHED": "Task finished",
+            "HOUSE-OCCUPIED": "House occupied"
         }
     },
     "PROFILE-MANAGEMENT": {
