@@ -86,16 +86,6 @@ import { ProfileService } from '../service/profile.service';
           flex-wrap: wrap;
           gap: 0.5rem;
           padding: 0.5rem;
-
-          
-          app-staff-card{
-            transition: transform 0.1s ease;
-            
-            &:hover{
-              transform: scale(1.03);
-              cursor: pointer;
-            }
-          }
         }
       }
     }

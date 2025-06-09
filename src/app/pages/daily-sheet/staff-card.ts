@@ -34,8 +34,11 @@ import { ProfileService } from '../service/profile.service';
       font-size: 0.875rem;
       transition: all 0.2s;
       width: fit-content;
-
+      transition: transform 0.1s ease;
+              
       &:hover {
+        transform: scale(1.03);
+        cursor: pointer;
         background-color: var(--p-gray-200);
         box-shadow: var(--card-shadow);
       }
@@ -53,18 +56,6 @@ import { ProfileService } from '../service/profile.service';
         }
         &:hover:after {
           opacity: 1;
-        }
-      }
-
-      &.in-active-group {
-        &:hover {
-          background: var(--p-red-500) !important;
-          color: var(--p-surface-0) !important;
-          cursor: pointer;
-          
-          .staff-icon i {
-            color: var(--p-surface-0) !important;
-          }
         }
       }
 
