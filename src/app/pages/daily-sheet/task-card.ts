@@ -59,6 +59,8 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       transition: all 0.2s;
 
       &:hover {
+        cursor: pointer;
+        transform: translateY(-4px);
         box-shadow: var(--card-shadow);
       }
 
