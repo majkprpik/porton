@@ -332,6 +332,14 @@ import { ProfileService } from '../service/profile.service';
                 margin: 0;
             }
         }
+
+        @media screen and (max-width: 460px){
+            .teams-grid{
+                display: flex; 
+                flex-direction: column; 
+                align-items: center;
+            }
+        }
     `
 })
 export class Teams implements OnInit {

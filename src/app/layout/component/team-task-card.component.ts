@@ -265,6 +265,18 @@ import { TaskCardComponent } from '../../pages/daily-sheet/task-card';
         }
       }
     }
+
+    @media screen and (max-width: 450px){
+      .team-card{
+        width: 300px;
+      }
+    }
+
+    @media screen and (max-width: 400px){
+      .team-card{
+        width: 250px;
+      }
+    }
   `
 })
 export class TeamTaskCardComponent {
