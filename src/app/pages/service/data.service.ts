@@ -332,7 +332,7 @@ export class DataService {
   }
 
   // Method to load all initial data
-  private loadInitialData(): void {
+  loadInitialData(): void {
     if (this.debug) {
       //console.log('[DataService] Loading initial data...');
     }

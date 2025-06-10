@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { DataService, WorkGroup, Profile, Task, House, LockedTeam, TaskProgressType, TaskType, WorkGroupTask } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, LockedTeam, TaskProgressType, TaskType, WorkGroupTask, WorkGroupProfile } from '../service/data.service';
 import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
@@ -11,6 +11,8 @@ import { TeamTaskCardComponent } from '../../layout/component/team-task-card.com
 import { PanelModule } from 'primeng/panel';
 import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { AuthService } from '../service/auth.service';
+import { ProfileService } from '../service/profile.service';
 
 @Component({
     selector: 'app-teams',
@@ -32,6 +34,56 @@ import { TranslateModule } from '@ngx-translate/core';
                 <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
                 <span>{{ 'TEAMS.LOADING-TEAMS' | translate }}</span>
             </div>
+        } @else if (!isAssignedToWorkGroup(authService.getStoredUserId()) && profileService.isHousekeeperOrHouseTechnician(authService.getStoredUserId())){
+            <div class="no-groups-assigned">
+                <span>Nemate dodijeljenih radnih grupa.</span>
+            </div>
+        } @else if (profileService.isHousekeeperOrHouseTechnician(authService.getStoredUserId())){
+
+            <p-panel
+                [toggleable]="true"
+                class="cleaning-group"
+                [(collapsed)]="isCleaningCollapsed"
+            >
+                <ng-template pTemplate="header" class="work-group-container-header">
+                    <div class="left-side">
+                    <h3 class="group-name">{{ 'TEAMS.CLEANING' | translate }}</h3>
+                    <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroupsForHousekeepingUser)}}</span>
+                    </div>
+                </ng-template>
+                <div class="teams-container">
+                    <div class="teams-list">
+                        @if (cleaningGroups.length === 0) {
+                            <div class="empty-state">
+                                <p>{{ 'TEAMS.NO-CLEANING-GROUPS' | translate }}</p>
+                            </div>
+                        } @else {
+                            <div class="teams-grid">
+                                @for (group of workGroupsForHousekeepingUser; track group.work_group_id; let i = $index){
+                                    @if(i == 0 || !areDaysEqual(workGroupsForHousekeepingUser[i].created_at, workGroupsForHousekeepingUser[i-1].created_at)){
+                                        <div class="date-separator">
+                                            <div class="left-half-line"></div>
+                                            @if(isToday(group.created_at)){
+                                                <span>{{ 'TEAMS.TODAY' | translate }}</span>
+                                            } @else {
+                                                <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
+                                            }
+                                            <div class="right-half-line"></div>
+                                        </div>
+                                    }
+                                    <app-team-task-card
+                                        [workGroup]="group"
+                                        [workGroupTasks]="getAssignedTasks(group.work_group_id)"
+                                        [workGroupStaff]="getAssignedStaff(group.work_group_id)"
+                                        [isRepairGroup]="group.is_repair"
+                                    ></app-team-task-card> 
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </p-panel>
+
         } @else {
             <p-panel
                 [toggleable]="true"
@@ -52,7 +104,7 @@ import { TranslateModule } from '@ngx-translate/core';
                             </div>
                         } @else {
                             <div class="teams-grid">
-                                @for (group of cleaningGroups; track trackByGroupId($index, group); let i = $index) {
+                                @for (group of cleaningGroups; track group.work_group_id; let i = $index) {
                                     @if(i == 0 || !areDaysEqual(cleaningGroups[i].created_at, cleaningGroups[i-1].created_at)){
                                         <div class="date-separator">
                                             <div class="left-half-line"></div>
@@ -97,7 +149,7 @@ import { TranslateModule } from '@ngx-translate/core';
                             </div>
                         } @else {
                             <div class="teams-grid">
-                                @for (group of repairGroups; track trackByGroupId($index, group); let i = $index) {
+                                @for (group of repairGroups; track group.work_group_id; let i = $index) {
                                     @if(i == 0 || !areDaysEqual(repairGroups[i].created_at, repairGroups[i-1].created_at)){
                                         <div class="date-separator">
                                             <div class="left-half-line"></div>
@@ -125,6 +177,14 @@ import { TranslateModule } from '@ngx-translate/core';
     `,
     styles: `
         :host ::ng-deep {
+            .no-groups-assigned{
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+
             .cleaning-group {
                 .left-side{
                     display: flex;
@@ -287,6 +347,8 @@ export class Teams implements OnInit {
     taskTypes: TaskType[] = [];
     allWorkGroupTasks: WorkGroupTask[] = [];
     taskImages: any[] = [];
+    workGroupProfiles: WorkGroupProfile[] = [];
+    workGroupsForHousekeepingUser: WorkGroup[] = [];
 
     isCleaningCollapsed = false;
     isRepairsCollapsed = false;
@@ -306,6 +368,8 @@ export class Teams implements OnInit {
     constructor(
         private dataService: DataService,
         public workGroupService: WorkGroupService,
+        public authService: AuthService,
+        public profileService: ProfileService,
     ) {
 
     }
@@ -330,16 +394,17 @@ export class Teams implements OnInit {
                 this.taskProgressTypes = taskProgressTypes;
                 this.taskTypes = taskTypes;
                 this.allWorkGroupTasks = workGroupTasks;
+                this.workGroupProfiles = workGroupProfiles;
                 
                 // Map work group staff
                 this.workGroupStaff = {};
-                workGroupProfiles.forEach(assignment => {
-                    if (!this.workGroupStaff[assignment.work_group_id]) {
-                        this.workGroupStaff[assignment.work_group_id] = [];
+                workGroupProfiles.forEach(workGroupProfile => {
+                    if (!this.workGroupStaff[workGroupProfile.work_group_id]) {
+                        this.workGroupStaff[workGroupProfile.work_group_id] = [];
                     }
-                    const profile = profiles.find(p => p.id === assignment.profile_id);
+                    const profile = profiles.find(p => p.id === workGroupProfile.profile_id);
                     if (profile) {
-                        this.workGroupStaff[assignment.work_group_id] = [...this.workGroupStaff[assignment.work_group_id], profile];
+                        this.workGroupStaff[workGroupProfile.work_group_id] = [...this.workGroupStaff[workGroupProfile.work_group_id], profile];
                     }
                 });
 
@@ -353,6 +418,16 @@ export class Teams implements OnInit {
                         this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], task];
                     }
                 });
+
+                if(this.profileService.isHousekeeperOrHouseTechnician(this.authService.getStoredUserId())){
+                    const housekeepingWorkGroupProfile = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.authService.getStoredUserId());
+
+                    this.workGroupsForHousekeepingUser = this.workGroups
+                        .filter(workGroup => housekeepingWorkGroupProfile
+                            .some(wgp => wgp.work_group_id == workGroup.work_group_id)
+                        )
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());;
+                }
 
                 this.loading = false;
             },
@@ -392,10 +467,6 @@ export class Teams implements OnInit {
         }
     }
 
-    trackByGroupId(index: number, group: { work_group_id: number }): number {
-        return group.work_group_id;
-    }
-
     areDaysEqual(date1: string, date2: string){
         return date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2];
     }
@@ -407,5 +478,9 @@ export class Teams implements OnInit {
         return date.getFullYear() === today.getFullYear() &&
                date.getMonth() === today.getMonth() &&
                date.getDate() === today.getDate();
+    }
+
+    isAssignedToWorkGroup(profileId: string | null){
+        return this.workGroupProfiles.find(workGroupProfile => workGroupProfile.profile_id == profileId);
     }
 } 

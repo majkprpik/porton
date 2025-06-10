@@ -40,12 +40,12 @@ export const appRoutes: Routes = [
             { 
                 path: 'teams', 
                 component: Teams ,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva'] }
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica'] }
             },
             { 
                 path: 'teams/:id', 
                 component: WorkGroupDetail,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva'] }
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica'] }
             },
             { 
                 path: 'task-progress-types', 

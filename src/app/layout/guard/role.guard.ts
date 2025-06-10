@@ -8,13 +8,11 @@ import { filter, map, take, tap } from 'rxjs/operators';
     providedIn: 'root'
 })
 export class RoleGuard implements CanActivateChild {
-    profileRoles: ProfileRole[] = [];
-
     constructor(
         private router: Router,
         private dataService: DataService,
     ) {
-        
+
     }
 
     canActivateChild(childRoute: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
@@ -27,18 +25,29 @@ export class RoleGuard implements CanActivateChild {
         const userProfile = JSON.parse(userProfileStr);
         const allowedRoles = childRoute.data['roles'] as string[];
 
-        if(!allowedRoles || allowedRoles.length == 0){
-            return of(true);
-        }
-
         return this.dataService.profileRoles$.pipe(
             filter((roles: any) => roles.length > 0),
             take(1),
             map((profileRoles: ProfileRole[]) => {
                 let userRole = profileRoles.find(profileRole => profileRole.id == userProfile.role_id);
+                const roleName = userRole?.name;
 
+                if(roleName){
+                    const restrictedRoles = ['Sobarica', 'Kucni majstor'];
+                    const isRestricted = restrictedRoles.includes(roleName);
+
+                    if (isRestricted && !state.url.startsWith('/teams')) {
+                        this.router.navigate(['/teams']);
+                        return false;
+                    }
+                }
+                
                 if(!userRole){
                     return false;
+                }
+
+                if(!allowedRoles || allowedRoles.length == 0){
+                    return true;
                 }
 
                 return allowedRoles.includes(userRole.name);

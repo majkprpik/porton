@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../service/auth.service';
+import { DataService } from '../service/data.service';
 @Component({
     selector: 'app-login',
     standalone: true,
@@ -85,10 +86,13 @@ export class Login implements OnInit {
 
     constructor(
         private authService: AuthService,
-        private router: Router
+        private router: Router,
+        private dataService: DataService,
     ) {}
 
     ngOnInit() {
+        this.dataService.loadProfileRoles().subscribe();
+
         if (this.authService.isLoggedIn()) {
             this.router.navigate(['/dashboard']);
         }

@@ -4,7 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
 import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType, HouseAvailability, WorkGroupProfile } from '../service/data.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { HouseService } from '../service/house.service';
 import { TaskService } from '../service/task.service';
@@ -12,6 +12,7 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProfileService } from '../service/profile.service';
 import { StaffCardComponent } from '../daily-sheet/staff-card';
+import { AuthService } from '../service/auth.service';
 
 @Component({
     selector: 'app-work-group-detail',
@@ -383,6 +384,8 @@ export class WorkGroupDetail implements OnInit {
         public houseService: HouseService,
         public taskService: TaskService,
         private profileService: ProfileService,
+        private authService: AuthService,
+        private router: Router,
     ) {}
 
     ngOnInit() {
@@ -441,6 +444,14 @@ export class WorkGroupDetail implements OnInit {
                 this.assignedTasks.forEach(task => {
                     this.houseService.isHouseOccupied(task.house_id);
                 });
+            }
+
+            if(this.profileService.isHousekeeperOrHouseTechnician(this.authService.getStoredUserId())){
+                const housekeepingWorkGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.authService.getStoredUserId());
+                
+                if(!housekeepingWorkGroupProfiles.some(wgp => wgp.work_group_id == this.workGroup?.work_group_id)){
+                    this.router.navigate(['/teams']);
+                }
             }
 
             this.setupUrgentIcons();

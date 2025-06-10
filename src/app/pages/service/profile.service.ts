@@ -54,6 +54,17 @@ export class ProfileService {
     return foundUser
   }
 
+  isHousekeeperOrHouseTechnician(profileId: string | null){
+    if(profileId){
+      const profile =  this.profiles.find(profile => profile.id == profileId);
+      const profileRole = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id);
+  
+      return profileRole?.name == 'Sobarica' || profileRole?.name == 'Kucni majstor';
+    }
+
+    return false;
+  }
+
   /**
    * Get all profiles
    * @returns Observable of Profile array

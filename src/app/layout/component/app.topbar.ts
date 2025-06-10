@@ -13,6 +13,7 @@ import { DataService, Language, Profile, ProfileRole } from '../../pages/service
 import { LanguageService } from '../../pages/language/language.service';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
+import { ProfileService } from '../../pages/service/profile.service';
 
 @Component({
     selector: 'app-topbar',
@@ -29,9 +30,11 @@ import { SelectModule } from 'primeng/select';
     ],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
-            <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
-                <i class="pi pi-bars"></i>
-            </button>
+            @if(!profileService.isHousekeeperOrHouseTechnician(authService.getStoredUserId())){
+                <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
+                    <i class="pi pi-bars"></i>
+                </button>
+            }
             <!-- <a class="layout-topbar-logo" routerLink="/">
                 <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -123,6 +126,7 @@ export class AppTopbar {
         public confirmationService: ConfirmationService,
         private dataService: DataService,
         public languageService: LanguageService,
+        public profileService: ProfileService,
     ) {
         this.languageService.$selectedLanguage.subscribe(selectedLanguage => {
             this.selectedLanguage = selectedLanguage;

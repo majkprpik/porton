@@ -139,12 +139,14 @@ interface SpecialLocation {
                 >
                     <ng-template pTemplate="header">
                         <div class="dialog-header">
-                        <span>{{ 'APP-LAYOUT.TASK-DETAILS.TITLE' | translate }}</span>
-                        <div class="header-icons">
-                            <div class="trash-icon" (click)="deleteTask($event, task)">
-                                <i class="pi pi-trash"></i>
-                            </div>
-                        </div>
+                            <span>{{ 'APP-LAYOUT.TASK-DETAILS.TITLE' | translate }}</span>
+                            @if(!profileService.isHousekeeperOrHouseTechnician(authService.getStoredUserId())) {
+                                <div class="header-icons">
+                                    <div class="trash-icon" (click)="deleteTask($event, task)">
+                                        <i class="pi pi-trash"></i>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </ng-template>
                     <p-tabs [(value)]="selectedTabIndex">
@@ -260,8 +262,8 @@ interface SpecialLocation {
         <p-speedDial
             [model]="menuItems"
             [radius]="120"
-            type="quarter-circle"
-            direction="up-left"
+            [type]="menuItems.length > 1 ? 'quarter-circle' : 'linear'"
+            [direction]="menuItems.length > 1 ? 'up-left' : 'up'"
             buttonClassName="p-button-primary"
             [buttonProps]="{ size: 'large', raised: true }"
             showIcon="pi pi-list"
@@ -927,38 +929,7 @@ export class AppLayout {
 
     selectedTabIndex: string = "0";
 
-    menuItems: MenuItem[] = [
-        {
-            icon: 'pi pi-wrench',
-            command: () => {
-                this.faultReportVisible = true;
-                this.isTaskDetailsWindowVisible = false;
-                this.resetForm('task-details');
-            }
-        },
-        {
-            icon: 'pi pi-file-edit',
-            command: () => {
-                this.isUnscheduledTaskVisible = true;
-            }
-        },
-        {
-            icon: 'pi pi-clipboard',
-            command: () => {
-                this.isNotesWindowVisible = true;
-                this.positions['notes'] = { x: 0, y: 0 };
-                localStorage.setItem('windowPositions', JSON.stringify(this.positions));
-            }
-        },
-        {
-            icon: 'pi pi-arrow-right-arrow-left',
-            command: () => {
-                this.isArrivalsAndDeparturesWindowVisible = true;
-                this.positions['arrivals'] = { x: 0, y: 0 };
-                localStorage.setItem('windowPositions', JSON.stringify(this.positions));
-            }
-        }
-    ];
+    menuItems: MenuItem[] = [];
 
     constructor(
         public layoutService: LayoutService,
@@ -969,7 +940,7 @@ export class AppLayout {
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
         public profileService: ProfileService,
-        private authService: AuthService,
+        public authService: AuthService,
         private translateService: TranslateService,
         private workGroupService: WorkGroupService,
         private languageService: LanguageService,
@@ -994,6 +965,9 @@ export class AppLayout {
     }
 
     ngOnInit() {
+        this.dataService.loadInitialData();
+        this.buildMenuItems();
+
         combineLatest([
             this.dataService.repairTaskComments$,
             this.dataService.houses$,
@@ -1295,6 +1269,41 @@ export class AppLayout {
                 }
             }
         });
+    }
+
+    buildMenuItems(){
+        this.menuItems.push({
+            icon: 'pi pi-wrench',
+            command: () => {
+                this.faultReportVisible = true;
+                this.isTaskDetailsWindowVisible = false;
+                this.resetForm('task-details');
+            }
+        });
+        if(!this.profileService.isHousekeeperOrHouseTechnician(this.authService.getStoredUserId())){
+            this.menuItems.push({
+            icon: 'pi pi-file-edit',
+            command: () => {
+                this.isUnscheduledTaskVisible = true;
+            }
+            },
+            {
+                icon: 'pi pi-clipboard',
+                command: () => {
+                    this.isNotesWindowVisible = true;
+                    this.positions['notes'] = { x: 0, y: 0 };
+                    localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+                }
+            },
+            {
+                icon: 'pi pi-arrow-right-arrow-left',
+                command: () => {
+                    this.isArrivalsAndDeparturesWindowVisible = true;
+                    this.positions['arrivals'] = { x: 0, y: 0 };
+                    localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+                }
+            });
+        } 
     }
 
     getProfileRoleNameById(roleId: number){
