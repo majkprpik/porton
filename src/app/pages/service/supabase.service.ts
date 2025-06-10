@@ -26,7 +26,7 @@ export class SupabaseService {
   }
 
   // Example: Fetch data from a table
-  async getData(table: string, schema: string = 'public') {
+  async getData(table: string, schema: string) {
     const { data, error } = await this.supabase
       .schema(schema)
       .from(table)
@@ -41,7 +41,7 @@ export class SupabaseService {
   }
 
   // Example: Insert data into a table
-  async insertData(table: string, newData: any, schema: string = 'public') {
+  async insertData(table: string, newData: any, schema: string) {
     const { data, error } = await this.supabase
       .schema(schema)
       .from(table)
@@ -57,7 +57,7 @@ export class SupabaseService {
   }
 
   // Update data in a table
-  async updateData(table: string, updates: any, condition: string, schema: string = 'public') {
+  async updateData(table: string, updates: any, condition: string, schema: string) {
     let query;
     
     // Check if condition looks like a simple ID
@@ -119,7 +119,7 @@ export class SupabaseService {
   }
 
   // Delete data from a table based on a filter condition
-  async deleteData(table: string, filter: string | number, schema: string = 'public') {
+  async deleteData(table: string, filter: string | number, schema: string) {
     let query = this.supabase
       .schema(schema)
       .from(table)
@@ -185,7 +185,7 @@ export class SupabaseService {
   }
 
   // Update all records in a table
-  async updateAll(table: string, updates: any, schema: string = 'public') {
+  async updateAll(table: string, updates: any, schema: string) {
     const { data, error } = await this.supabase
       .schema(schema)
       .from(table)
@@ -201,7 +201,7 @@ export class SupabaseService {
   }
 
   // Update multiple records in a table by IDs
-  async updateByIds(table: string, updates: any, ids: number[], idColumn: string, schema: string = 'public') {
+  async updateByIds(table: string, updates: any, ids: number[], idColumn: string, schema: string) {
     const { data, error } = await this.supabase
       .schema(schema)
       .from(table)
