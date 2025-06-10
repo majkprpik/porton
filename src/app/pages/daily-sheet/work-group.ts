@@ -787,28 +787,6 @@ export class WorkGroup implements OnInit {
     }
   }
 
-  // Method to handle staff assignment
-  onStaffAssigned(staff: Profile) {
-    if (staff.id && this.workGroup?.work_group_id) {
-      const operations = [
-        this.dataService.assignStaffToWorkGroup(staff.id, this.workGroup.work_group_id),
-        this.dataService.updateWorkGroupLocked(this.workGroup.work_group_id, false)
-      ];
-
-      forkJoin(operations).subscribe({
-        next: () => {
-          if (this.workGroup) {
-            this.workGroup.is_locked = false;
-          }
-          this.loadAssignedStaff();
-        },
-        error: (error: any) => {
-          console.error('Error assigning staff:', error);
-        }
-      });
-    }
-  }
-
   openSortDialog(){
     this.isSortDialogVisible = true;
   }
