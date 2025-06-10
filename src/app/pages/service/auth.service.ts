@@ -72,6 +72,8 @@ export class AuthService {
     try {
       await this.supabaseService.getClient().auth.signOut();
       localStorage.removeItem(this.STORAGE_KEY);
+      localStorage.removeItem('profileId');
+      localStorage.removeItem('userProfile');
       this.usernameSubject.next(null);
       this.userProfile.next(null);
       // Wait for navigation to complete
