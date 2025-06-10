@@ -7,11 +7,11 @@ import { TranslateService } from '@ngx-translate/core';
   providedIn: 'root'
 })
 export class LanguageService {
-  $selectedLanguage = new BehaviorSubject<Language>({ code: 'en', name: 'English' });
+  $selectedLanguage = new BehaviorSubject<Language>({ code: 'en', name: 'en' });
   
   languages = [
-    { code: 'en', name: 'English' },
-    { code: 'hr', name: 'Hrvatski' }
+    { code: 'en', name: 'en' },
+    { code: 'hr', name: 'hr' }
   ];
 
   constructor(private translateService: TranslateService) { 
