@@ -571,38 +571,36 @@ export class WorkGroup implements OnInit {
       this.loadAssignedStaff();
     }
 
-    if (this.workGroup){
-      const workGroup = this.workGroup;
-
-      this.profileService.$staffToAdd.subscribe(staffToAdd => {
+    this.profileService.$staffToAdd.subscribe(staffToAdd => {
         if(staffToAdd){
           const activeGroup = this.workGroupService.getActiveGroup();
 
-          if(activeGroup && workGroup.work_group_id == activeGroup){
-            workGroup.is_locked = false;
-            let lockedTeams = this.workGroupService.getLockedTeams();
-            let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup);
-
-            if(lockedTeam && !lockedTeam.members?.find(member => member.id == staffToAdd.id)){
-              if(!lockedTeam?.members){
-                lockedTeam.members = [];
+          if(this.workGroup){
+            if(activeGroup && this.workGroup.work_group_id == activeGroup){
+              this.workGroup.is_locked = false;
+              let lockedTeams = this.workGroupService.getLockedTeams();
+              let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup);
+  
+              if(lockedTeam && !lockedTeam.members?.find(member => member.id == staffToAdd.id)){
+                if(!lockedTeam?.members){
+                  lockedTeam.members = [];
+                }
+  
+                this.workGroupProfiles = [...this.workGroupProfiles, {
+                  work_group_id: parseInt(lockedTeam.id),
+                  profile_id: staffToAdd.id,
+                }];
+  
+                lockedTeam.isLocked = false;
+                lockedTeam.members.push(staffToAdd);
+                this.workGroupService.updateLockedTeam(lockedTeam);
+                this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+                this.profileService.$staffToAdd.next(null);
               }
-
-              this.workGroupProfiles = [...this.workGroupProfiles, {
-                work_group_id: parseInt(lockedTeam.id),
-                profile_id: staffToAdd.id,
-              }];
-
-              lockedTeam.isLocked = false;
-              lockedTeam.members.push(staffToAdd);
-              this.workGroupService.updateLockedTeam(lockedTeam);
-              this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
-              this.profileService.$staffToAdd.next(null);
             }
           }
         }
       });
-    }
 
     this.dataService.$workGroupProfilesUpdate.subscribe(res => {
       if(res && res.eventType == 'INSERT'){
