@@ -70,9 +70,7 @@ export class AuthService {
   async logout(): Promise<void> {
     try {
       await this.supabaseService.getClient().auth.signOut();
-      localStorage.removeItem(this.STORAGE_KEY);
-      localStorage.removeItem('profileId');
-      localStorage.removeItem('userProfile');
+      localStorage.clear();
       this.usernameSubject.next(null);
       this.userProfile.next(null);
       // Wait for navigation to complete
