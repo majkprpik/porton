@@ -377,6 +377,7 @@ export class WorkGroupDetail implements OnInit {
     isUrgentIconVisible: any;
     isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
     urgentIconSubscriptions: Subscription[] = [];
+    storedUserId: string | null = '';
 
     constructor(
         private route: ActivatedRoute,
@@ -389,79 +390,80 @@ export class WorkGroupDetail implements OnInit {
     ) {}
 
     ngOnInit() {
-      const workGroupId = Number(this.route.snapshot.paramMap.get('id'));
-      
-      if (!workGroupId) {
-        this.loading = false;
-        return;
-      }
-
-      combineLatest([
-          this.dataService.workGroups$,
-          this.dataService.workGroupTasks$,
-          this.dataService.tasks$,
-          this.dataService.workGroupProfiles$,
-          this.dataService.profiles$,
-          this.dataService.houses$,
-          this.dataService.taskTypes$,
-          this.dataService.taskProgressTypes$,
-          this.dataService.houseAvailabilities$
-      ]).subscribe({
-          next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, taskTypes, taskProgressTypes, houseAvailabilities]) => {
-            this.workGroup = workGroups.find(wg => wg.work_group_id === workGroupId) || null;
-            this.houses = houses;
-            this.workGroupTasks = workGroupTasks;
-            this.taskTypes = taskTypes;
-            this.progressTypes = taskProgressTypes;
-            this.houseAvailabilities = houseAvailabilities;
-            this.tasks = tasks;
-            this.profiles = profiles;
-            this.workGroupProfiles = workGroupProfiles;
-
-            // Get tasks for this work group
-            const groupTaskIds = workGroupTasks
-                .filter(wgt => wgt.work_group_id === workGroupId)
-                .map(wgt => wgt.task_id);
-
-            this.assignedTasks = tasks
-                .filter(task => groupTaskIds.includes(task.task_id))
-                .map(task => {
-                    const workGroupTask = workGroupTasks.find(wgt => wgt.task_id === task.task_id);
-                    return {
-                      ...task,
-                      index: workGroupTask?.index ?? null
-                    };
-                });
-
-            // Get staff for this work group
-            const groupProfileIds = workGroupProfiles
-                .filter(wgp => wgp.work_group_id === workGroupId)
-                .map(wgp => wgp.profile_id);
-
-            this.assignedStaff = profiles.filter(profile => groupProfileIds.includes(profile.id));
- 
-            if(houseAvailabilities && houseAvailabilities.length > 0 && this.assignedTasks && this.assignedTasks.length > 0){
-                this.assignedTasks.forEach(task => {
-                    this.houseService.isHouseOccupied(task.house_id);
-                });
-            }
-
-            if(this.profileService.isHousekeeperOrHouseTechnician(this.authService.getStoredUserId())){
-                const housekeepingWorkGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.authService.getStoredUserId());
-                
-                if(!housekeepingWorkGroupProfiles.some(wgp => wgp.work_group_id == this.workGroup?.work_group_id)){
-                    this.router.navigate(['/teams']);
-                }
-            }
-
-            this.setupUrgentIcons();
+        const workGroupId = Number(this.route.snapshot.paramMap.get('id'));
+        this.storedUserId = this.authService.getStoredUserId();
+    
+        if (!workGroupId) {
             this.loading = false;
-          },
-          error: (error) => {
-              console.error('Error loading work group details:', error);
-              this.loading = false;
-          }
-      });
+            return;
+        }
+
+        combineLatest([
+            this.dataService.workGroups$,
+            this.dataService.workGroupTasks$,
+            this.dataService.tasks$,
+            this.dataService.workGroupProfiles$,
+            this.dataService.profiles$,
+            this.dataService.houses$,
+            this.dataService.taskTypes$,
+            this.dataService.taskProgressTypes$,
+            this.dataService.houseAvailabilities$
+        ]).subscribe({
+            next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, taskTypes, taskProgressTypes, houseAvailabilities]) => {
+                this.workGroup = workGroups.find(wg => wg.work_group_id === workGroupId) || null;
+                this.houses = houses;
+                this.workGroupTasks = workGroupTasks;
+                this.taskTypes = taskTypes;
+                this.progressTypes = taskProgressTypes;
+                this.houseAvailabilities = houseAvailabilities;
+                this.tasks = tasks;
+                this.profiles = profiles;
+                this.workGroupProfiles = workGroupProfiles;
+
+                // Get tasks for this work group
+                const groupTaskIds = workGroupTasks
+                    .filter(wgt => wgt.work_group_id === workGroupId)
+                    .map(wgt => wgt.task_id);
+
+                this.assignedTasks = tasks
+                    .filter(task => groupTaskIds.includes(task.task_id))
+                    .map(task => {
+                        const workGroupTask = workGroupTasks.find(wgt => wgt.task_id === task.task_id);
+                        return {
+                          ...task,
+                          index: workGroupTask?.index ?? null
+                        };
+                    });
+
+                // Get staff for this work group
+                const groupProfileIds = workGroupProfiles
+                    .filter(wgp => wgp.work_group_id === workGroupId)
+                    .map(wgp => wgp.profile_id);
+
+                this.assignedStaff = profiles.filter(profile => groupProfileIds.includes(profile.id));
+                    
+                if(houseAvailabilities && houseAvailabilities.length > 0 && this.assignedTasks && this.assignedTasks.length > 0){
+                    this.assignedTasks.forEach(task => {
+                        this.houseService.isHouseOccupied(task.house_id);
+                    });
+                }
+
+                if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId)){
+                    const housekeepingWorkGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.authService.getStoredUserId());
+
+                    if(!housekeepingWorkGroupProfiles.some(wgp => wgp.work_group_id == this.workGroup?.work_group_id)){
+                        this.router.navigate(['/teams']);
+                    }
+                }
+
+                this.setupUrgentIcons();
+                this.loading = false;
+            },
+            error: (error) => {
+                console.error('Error loading work group details:', error);
+                this.loading = false;
+            }
+        });
     }
 
     private setupUrgentIcons(): void {

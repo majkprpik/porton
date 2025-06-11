@@ -13,6 +13,7 @@ import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../service/auth.service';
 import { ProfileService } from '../service/profile.service';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-teams',
@@ -34,12 +35,11 @@ import { ProfileService } from '../service/profile.service';
                 <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
                 <span>{{ 'TEAMS.LOADING-TEAMS' | translate }}</span>
             </div>
-        } @else if (!isAssignedToWorkGroup(authService.getStoredUserId()) && profileService.isHousekeeperOrHouseTechnician(authService.getStoredUserId())){
+        } @else if (!isAssignedToWorkGroup(storedUserId) && (profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId))){
             <div class="no-groups-assigned">
                 <span>Nemate dodijeljenih radnih grupa.</span>
             </div>
-        } @else if (profileService.isHousekeeperOrHouseTechnician(authService.getStoredUserId())){
-
+        } @else if (profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId)){
             <p-panel
                 [toggleable]="true"
                 class="cleaning-group"
@@ -47,13 +47,21 @@ import { ProfileService } from '../service/profile.service';
             >
                 <ng-template pTemplate="header" class="work-group-container-header">
                     <div class="left-side">
-                    <h3 class="group-name">{{ 'TEAMS.CLEANING' | translate }}</h3>
-                    <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroupsForHousekeepingUser)}}</span>
+                    <h3 class="group-name">
+                        @if(profileService.isHousekeeper(storedUserId)){
+                            {{ 'TEAMS.CLEANING' | translate }}
+                        } @else if(profileService.isHouseTechnician(storedUserId)){
+                            {{ 'TEAMS.REPAIRS' | translate }}
+                        }
+                    </h3>
+                    <span class="work-groups-count">
+                        {{ workGroupsForHousekeepingUser.length }}
+                    </span>
                     </div>
                 </ng-template>
                 <div class="teams-container">
                     <div class="teams-list">
-                        @if (cleaningGroups.length === 0) {
+                        @if (workGroupsForHousekeepingUser.length === 0) {
                             <div class="empty-state">
                                 <p>{{ 'TEAMS.NO-CLEANING-GROUPS' | translate }}</p>
                             </div>
@@ -357,6 +365,7 @@ export class Teams implements OnInit {
     taskImages: any[] = [];
     workGroupProfiles: WorkGroupProfile[] = [];
     workGroupsForHousekeepingUser: WorkGroup[] = [];
+    storedUserId: string | null = '';
 
     isCleaningCollapsed = false;
     isRepairsCollapsed = false;
@@ -378,12 +387,15 @@ export class Teams implements OnInit {
         public workGroupService: WorkGroupService,
         public authService: AuthService,
         public profileService: ProfileService,
+        private router: Router,
     ) {
 
     }
 
     ngOnInit() {
         // Use combineLatest to wait for all required data
+        this.storedUserId = this.authService.getStoredUserId();
+
         combineLatest([
             this.dataService.workGroups$,
             this.dataService.tasks$,
@@ -427,14 +439,23 @@ export class Teams implements OnInit {
                     }
                 });
 
-                if(this.profileService.isHousekeeperOrHouseTechnician(this.authService.getStoredUserId())){
+                if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId)){
                     const housekeepingWorkGroupProfile = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.authService.getStoredUserId());
 
                     this.workGroupsForHousekeepingUser = this.workGroups
                         .filter(workGroup => housekeepingWorkGroupProfile
                             .some(wgp => wgp.work_group_id == workGroup.work_group_id)
                         )
-                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());;
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+                    if(this.workGroupsForHousekeepingUser.length > 0){
+                        const isOnWorkGroupDetailPage = this.router.url.startsWith('/teams/') && this.router.url !== '/teams';
+
+                        if (!isOnWorkGroupDetailPage) {
+                            const firstWorkGroupId = this.workGroupsForHousekeepingUser[0].work_group_id;
+                            this.router.navigate(['/teams', firstWorkGroupId]);
+                        }
+                    }
                 }
 
                 this.loading = false;

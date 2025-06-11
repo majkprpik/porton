@@ -140,7 +140,7 @@ interface SpecialLocation {
                     <ng-template pTemplate="header">
                         <div class="dialog-header">
                             <span>{{ 'APP-LAYOUT.TASK-DETAILS.TITLE' | translate }}</span>
-                            @if(!profileService.isHousekeeperOrHouseTechnician(authService.getStoredUserId())) {
+                            @if(!profileService.isHousekeeper(storedUserId) && !profileService.isHouseTechnician(storedUserId)) {
                                 <div class="header-icons">
                                     <div class="trash-icon" (click)="deleteTask($event, task)">
                                         <i class="pi pi-trash"></i>
@@ -904,6 +904,7 @@ export class AppLayout {
     tasks: Task[] = [];
     profileModalData: any
     profiles: Profile[] = [];
+    storedUserId: string | null = '';
 
     imageToUpload: any;
     imagesToUpload: any[] = [];
@@ -966,6 +967,7 @@ export class AppLayout {
 
     ngOnInit() {
         this.dataService.loadInitialData();
+        this.storedUserId = this.authService.getStoredUserId();
         this.buildMenuItems();
 
         combineLatest([
@@ -1280,7 +1282,7 @@ export class AppLayout {
                 this.resetForm('task-details');
             }
         });
-        if(!this.profileService.isHousekeeperOrHouseTechnician(this.authService.getStoredUserId())){
+        if(!this.profileService.isHousekeeper(this.storedUserId) && !this.profileService.isHouseTechnician(this.storedUserId)){
             this.menuItems.push({
             icon: 'pi pi-file-edit',
             command: () => {

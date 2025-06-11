@@ -30,7 +30,7 @@ import { ProfileService } from '../../pages/service/profile.service';
     ],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
-            @if(!profileService.isHousekeeperOrHouseTechnician(authService.getStoredUserId())){
+            @if(!profileService.isHousekeeper(storedUserId)){
                 <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
                     <i class="pi pi-bars"></i>
                 </button>
@@ -117,6 +117,7 @@ export class AppTopbar {
     ];
     profiles: Profile[] = [];
     profileRoles: ProfileRole[] = [];
+    storedUserId: string | null = '';
 
     selectedLanguage: Language = { code: '', name: ''};
 
@@ -128,12 +129,15 @@ export class AppTopbar {
         public languageService: LanguageService,
         public profileService: ProfileService,
     ) {
-        this.languageService.$selectedLanguage.subscribe(selectedLanguage => {
-            this.selectedLanguage = selectedLanguage;
-        });
     }
 
     ngOnInit(){
+        this.storedUserId = this.authService.getStoredUserId();
+
+        this.languageService.$selectedLanguage.subscribe(selectedLanguage => {
+            this.selectedLanguage = selectedLanguage;
+        });
+
         this.dataService.profiles$.subscribe(profiles => {
             this.profiles = profiles;
         });

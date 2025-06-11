@@ -33,7 +33,7 @@ export class RoleGuard implements CanActivateChild {
                 const roleName = userRole?.name;
 
                 if(roleName){
-                    const restrictedRoles = ['Sobarica', 'Kucni majstor'];
+                    const restrictedRoles = ['Sobarica'];
                     const isRestricted = restrictedRoles.includes(roleName);
 
                     if (isRestricted && !state.url.startsWith('/teams')) {
