@@ -94,7 +94,7 @@ export class Login implements OnInit {
         this.dataService.loadProfileRoles().subscribe();
 
         if (this.authService.isLoggedIn()) {
-            this.router.navigate(['/dashboard']);
+            this.router.navigate(['/home']);
         }
     }
 
