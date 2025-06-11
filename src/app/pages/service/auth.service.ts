@@ -55,7 +55,6 @@ export class AuthService {
         this.userProfile.next(await this.profileService.fetchProfileById(data.user.id));
         // save to local storage
         localStorage.setItem('userProfile', JSON.stringify(this.userProfile.value));
-        console.log('userProfile', this.userProfile.value);
         // Wait for navigation to complete
         // TODO VEDRAN: if user without home than go to tasks(?)
         await this.router.navigate(['/home']);
