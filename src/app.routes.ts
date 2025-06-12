@@ -27,12 +27,12 @@ export const appRoutes: Routes = [
             { 
                 path: '', 
                 component: Home,
-                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija', 'Odrzavanje'] }
+                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija', 'Odrzavanje', 'Korisnicka sluzba'] }
             }, // Default route
             {   
                 path: 'home', 
                 component: Home,
-                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija', 'Odrzavanje'] }
+                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija', 'Odrzavanje', 'Korisnicka sluzba'] }
             },
             { 
                 path: 'reservations-2', 
@@ -74,12 +74,12 @@ export const appRoutes: Routes = [
             {
                 path: 'arrivals-and-departures',
                 component: ArrivalsAndDeparturesPageComponent,
-                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar', 'Odrzavanje'] }
+                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar', 'Odrzavanje', 'Korisnicka sluzba'] }
             },
             {
                 path: 'notes',
                 component: NotesPageComponent,
-                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar', 'Odrzavanje'] }
+                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar', 'Odrzavanje', 'Korisnicka sluzba'] }
             },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },

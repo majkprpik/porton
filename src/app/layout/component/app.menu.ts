@@ -126,6 +126,7 @@ export class AppMenu implements OnInit {
             profileRole.name == 'Kucni majstor' || 
             profileRole.name == 'Odrzavanje' || 
             profileRole.name == 'Voditelj kampa' ||
+            profileRole.name == 'Korisnicka sluzba' ||
             profileRole.name == 'Terasar'
         );
 
@@ -139,6 +140,7 @@ export class AppMenu implements OnInit {
             profileRole.name == 'Kucni majstor' || 
             profileRole.name == 'Odrzavanje' || 
             profileRole.name == 'Voditelj kampa' ||
+            profileRole.name == 'Korisnicka sluzba' ||
             profileRole.name == 'Terasar'
         );
 
