@@ -10,6 +10,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { DividerModule } from 'primeng/divider';
 import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-arrivals-and-departures-page',
@@ -21,9 +22,31 @@ import { InputTextModule } from 'primeng/inputtext';
     DividerModule,
     CommonModule,
     InputTextModule,
+    ButtonModule,
   ],
   template: `
   <div class="arrivals-and-departures">
+    <div class="header">
+      <p-button icon="pi pi-angle-left" (click)="goToPreviousDay()"></p-button>  
+      <span class="selected-date">
+          @if(isToday(selectedDate)){
+            <span [ngStyle]="{'height': '20px'}">{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.TODAY' | translate }}</span>
+          } @else {
+            <p-datepicker 
+              [(ngModel)]="selectedDate"
+              [showIcon]="false" 
+              dateFormat="dd/mm/yy"
+              [inputStyle]="{
+                height: '20px',
+                width: '100px',
+              }" 
+              (onSelect)="updateSelectedDate()"
+            />
+          }
+      </span>
+      <p-button icon="pi pi-angle-right" (click)="goToNextDay()"></p-button>
+    </div>
+
     <div class="departures-side">      
       <div class="name-with-icon">
         <i class="pi pi-sign-out mr-2"></i>
@@ -127,6 +150,23 @@ import { InputTextModule } from 'primeng/inputtext';
     align-items: center;
     width: 100%;
     gap: 50px;
+
+    .header{
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 50px;
+
+      .selected-date{
+        width: 150px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+    }
 
     .departures-side, .arrivals-side{
       width: 100%;
