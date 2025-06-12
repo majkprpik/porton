@@ -1,7 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, House, HouseAvailability, HouseAvailabilityType, HouseStatus, HouseStatusTask, TaskProgressType } from './data.service';
+import { DataService, House, HouseAvailability, HouseAvailabilityType, HouseStatus, HouseStatusTask, Task, TaskProgressType } from './data.service';
 import { TaskService } from './task.service';
+import { combineLatest } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -12,31 +13,32 @@ export class HouseService {
   houses: House[] = [];
   houseStatuses = signal<HouseStatus[]>([]);
   taskProgressTypes: TaskProgressType[] = [];
+  tasks: Task[] = []
 
   constructor(
     private supabase: SupabaseService,
     private dataService: DataService,
     private taskService: TaskService,
   ) {
-
-    this.dataService.taskProgressTypes$.subscribe(taskProgressTypes => {
-      this.taskProgressTypes = taskProgressTypes;
-    });
-
-    this.dataService.houseAvailabilityTypes$.subscribe(ha => {
-      this.houseAvailabilityTypes = ha;
-    });
-
-    this.dataService.houseAvailabilities$.subscribe(ha => {
-      this.houseAvailabilities = ha;
-    });
-
-    this.dataService.houses$.subscribe(houses => {
-      this.houses = houses;
-    })
-
-    this.dataService.houseStatuses$.subscribe((statuses) => {
-        this.houseStatuses.set(statuses);
+    combineLatest([
+      this.dataService.taskProgressTypes$,
+      this.dataService.houseAvailabilityTypes$,
+      this.dataService.houseAvailabilities$,
+      this.dataService.houses$,
+      this.dataService.houseStatuses$,
+      this.dataService.tasks$,
+    ]).subscribe({
+      next: ([taskProgressTypes, houseAvailabilityTypes, houseAvailabilities, houses, houseStatuses, tasks]) => {
+        this.taskProgressTypes = taskProgressTypes;
+        this.houseAvailabilityTypes = houseAvailabilityTypes;
+        this.houseAvailabilities = houseAvailabilities;
+        this.houses = houses;
+        this.houseStatuses.set(houseStatuses); 
+        this.tasks = tasks;
+      },
+      error: (error) => {
+        console.error(error);
+      }
     });
   }
 
@@ -119,6 +121,31 @@ export class HouseService {
     const notCompletedTasks = status?.housetasks.filter(housetask => housetask.task_progress_type_id != finishedTaskProgressType?.task_progress_type_id);
 
     return !!notCompletedTasks?.length;
+  }
+
+  hasScheduledTasks(houseId: number): boolean {
+    const finishedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
+    const status = this.houseStatuses().find((s) => s.house_id === houseId);
+    const notCompletedTasks = status?.housetasks
+      .filter(housetask => (housetask.task_progress_type_id != finishedTaskProgressType?.task_progress_type_id));
+
+    let mappedNotCompletedTasks = notCompletedTasks;
+
+    if(notCompletedTasks){
+      mappedNotCompletedTasks = notCompletedTasks.map(housetask => {
+        const matchingTask = this.tasks.find(task => task.task_id === housetask.task_id);
+        return {
+          ...housetask,
+          is_unscheduled: matchingTask?.is_unscheduled ?? false
+        };
+      });
+
+      const scheduledNotCompletedTasks = mappedNotCompletedTasks?.filter((tasks: any) => !tasks.is_unscheduled);
+      
+      return !!scheduledNotCompletedTasks.length;
+    }
+
+    return !!mappedNotCompletedTasks?.length;
   }
 
   getHouseTasks(houseId: number): HouseStatusTask[] {

@@ -80,8 +80,8 @@ interface SpecialLocation {
                         <div 
                             class="house-card" 
                             [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
-                            [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
-                            [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
+                            [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasScheduledTasks(house.house_id)" 
+                            [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasScheduledTasks(house.house_id)"
                             [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.isHouseReservedToday(house.house_id)"
                             [class.expanded]="expandedHouseId === house.house_id" 
                             (click)="toggleExpand($event, house.house_id)">
