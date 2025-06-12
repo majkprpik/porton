@@ -522,7 +522,7 @@ export class WorkGroups implements OnInit {
 
     if(workGroups){
       for (const workGroup of this.workGroups) {
-        if (this.is3DaysOld(workGroup)) {
+        if (!workGroup.is_repair && this.is3DaysOld(workGroup)) {
           await this.workGroupService.deleteWorkGroup(workGroup.work_group_id.toString());
         } else {
           this.lockedTeams.push({
