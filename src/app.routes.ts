@@ -26,12 +26,12 @@ export const appRoutes: Routes = [
             { 
                 path: '', 
                 component: Home,
-                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija'] }
+                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija', 'Odrzavanje'] }
             }, // Default route
             {   
                 path: 'home', 
                 component: Home,
-                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija'] }
+                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija', 'Odrzavanje'] }
             },
             { 
                 path: 'reservations-2', 
@@ -51,13 +51,13 @@ export const appRoutes: Routes = [
             { 
                 path: 'teams', 
                 component: Teams,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar'] },
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar', 'Odrzavanje'] },
                 canActivate: [TeamsGuard]
             },
             { 
                 path: 'teams/:id', 
                 component: WorkGroupDetail,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar'] },
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar', 'Odrzavanje'] },
                 canActivate: [TeamDetailGuard]
             },
             { 
@@ -73,7 +73,7 @@ export const appRoutes: Routes = [
             {
                 path: 'arrivals-and-departures',
                 component: ArrivalsAndDeparturesPageComponent,
-                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar'] }
+                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar', 'Odrzavanje'] }
             },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },

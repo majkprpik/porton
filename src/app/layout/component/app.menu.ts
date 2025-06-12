@@ -107,6 +107,7 @@ export class AppMenu implements OnInit {
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
             profileRole.name == 'Kucni majstor' || 
+            profileRole.name == 'Odrzavanje' || 
             profileRole.name == 'Savjetnik uprave' || 
             profileRole.name == 'Uprava' ||
             profileRole.name == 'Voditelj kampa' || 
@@ -123,6 +124,7 @@ export class AppMenu implements OnInit {
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
             profileRole.name == 'Kucni majstor' || 
+            profileRole.name == 'Odrzavanje' || 
             profileRole.name == 'Voditelj kampa' ||
             profileRole.name == 'Terasar'
         );
