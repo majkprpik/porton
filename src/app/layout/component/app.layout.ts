@@ -258,18 +258,22 @@ interface SpecialLocation {
         </div>
         <div class="layout-mask animate-fadein"></div>
         <!-- <app-debug-overlay></app-debug-overlay> -->
+        <div class="custom-overlay" *ngIf="isSpeedDialVisible" (click)="closeSpeedDial()"></div>
 
-        <p-speedDial
-            [model]="menuItems"
-            [radius]="120"
-            [type]="menuItems.length > 2 ? 'quarter-circle' : 'linear'"
-            [direction]="menuItems.length > 2 ? 'up-left' : 'up'"
-            buttonClassName="p-button-primary"
-            [buttonProps]="{ size: 'large', raised: true }"
-            showIcon="pi pi-list"
-            hideIcon="pi pi-times"
-            [transitionDelay]="80"
-        ></p-speedDial>
+        @if(!faultReportVisible && !isUnscheduledTaskVisible){
+            <p-speedDial
+                [(visible)]="isSpeedDialVisible"
+                [model]="menuItems"
+                [radius]="120"
+                [type]="menuItems.length > 2 ? 'quarter-circle' : 'linear'"
+                [direction]="menuItems.length > 2 ? 'up-left' : 'up'"
+                buttonClassName="p-button-primary"
+                [buttonProps]="{ size: 'large', raised: true }"
+                showIcon="pi pi-list"
+                hideIcon="pi pi-times"
+                [transitionDelay]="80"
+            ></p-speedDial>
+        }
 
         <!-- Fault Report Dialog -->
         <p-dialog [header]="'APP-LAYOUT.REPAIR-TASK-REPORT.TITLE' | translate" [(visible)]="faultReportVisible" [modal]="true" [style]="{ width: '30rem' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }" (onHide)="resetForm('fault-report')">
@@ -420,6 +424,13 @@ interface SpecialLocation {
     </div>`,
     styles: [
         `
+           .custom-overlay {
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 999;
+            }
+
             ::ng-deep .p-tablist-tab-list {
                 justify-content: space-evenly;
             }
@@ -881,6 +892,7 @@ export class AppLayout {
     isArrivalsAndDeparturesWindowVisible: boolean = false;
     isTaskDetailsWindowVisible: boolean = false;
     isProfileDetailsWindowVisible: boolean = false;
+    isSpeedDialVisible: boolean = false;
 
     // Form fields
     selectedLocation: House | null = null;
@@ -1924,5 +1936,9 @@ export class AppLayout {
 
     findProfileNameForComment(comment: RepairTaskComment){
         return this.profiles.find(profile => profile.id == comment.user_id)?.first_name;
+    }
+
+    closeSpeedDial(){
+        this.isSpeedDialVisible = false;
     }
 }

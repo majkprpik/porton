@@ -172,6 +172,7 @@ import { AuthService } from '../service/auth.service';
             padding: 1.5rem;
             background-color: var(--surface-card);
             border-radius: 8px;
+            padding-bottom: 80px;
         }
 
         .work-group-header {
