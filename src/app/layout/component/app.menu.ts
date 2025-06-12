@@ -132,6 +132,19 @@ export class AppMenu implements OnInit {
         return allowedRoles.some(allowedRole => allowedRole.name == role);
     }
 
+    private canViewNotes(role?: string): boolean {
+        if (!role) return false;
+
+        const allowedRoles = this.profileRoles.filter(profileRole => 
+            profileRole.name == 'Kucni majstor' || 
+            profileRole.name == 'Odrzavanje' || 
+            profileRole.name == 'Voditelj kampa' ||
+            profileRole.name == 'Terasar'
+        );
+
+        return allowedRoles.some(allowedRole => allowedRole.name == role);
+    }
+
     private canViewDnevniList(role?: string): boolean {
         if (!role) return false;
 
@@ -177,7 +190,11 @@ export class AppMenu implements OnInit {
         if(this.canViewArrivalsAndDepartures(userRole?.name)){
             menuItems.push({ label: this.translateService.instant('MENU.ARRIVALS-AND-DEPARTURES'), icon: 'pi pi-arrow-right-arrow-left', routerLink: ['/arrivals-and-departures'] });
         }
-        
+
+        if(this.canViewNotes(userRole?.name)){
+            menuItems.push({ label: this.translateService.instant('MENU.NOTES'), icon: 'pi pi-clipboard', routerLink: ['/notes'] });
+        }
+
         // Add Voditelj kampa only menu items
         if (this.isVoditeljKampa(userRole?.name)) {
             menuItems.push(

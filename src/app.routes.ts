@@ -15,6 +15,7 @@ import { HouseTypesComponent } from './app/pages/house-types/house-types.compone
 import { ArrivalsAndDeparturesPageComponent } from './app/layout/component/arrivals-and-departures-page.component';
 import { TeamsGuard } from './app/layout/guard/teams.guard';
 import { TeamDetailGuard } from './app/layout/guard/team-detail.guard';
+import { NotesPageComponent } from './app/layout/component/notes-page.component';
 
 export const appRoutes: Routes = [
     {
@@ -73,6 +74,11 @@ export const appRoutes: Routes = [
             {
                 path: 'arrivals-and-departures',
                 component: ArrivalsAndDeparturesPageComponent,
+                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar', 'Odrzavanje'] }
+            },
+            {
+                path: 'notes',
+                component: NotesPageComponent,
                 data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar', 'Odrzavanje'] }
             },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
