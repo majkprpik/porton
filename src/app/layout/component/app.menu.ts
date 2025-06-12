@@ -70,7 +70,7 @@ export class AppMenu implements OnInit {
             profileRole.name == 'Voditelj recepcije' ||
             profileRole.name == 'Prodaja' ||
             profileRole.name == 'Recepcija' ||
-            profileRole.name == 'Nocna Recepcija' ||
+            profileRole.name == 'Nocna recepcija' ||
             profileRole.name == 'Korisnicka sluzba' ||
             profileRole.name == 'Voditelj kampa' ||
             profileRole.name == 'Uprava' ||
@@ -88,6 +88,7 @@ export class AppMenu implements OnInit {
             profileRole.name == 'Voditelj recepcije' || 
             profileRole.name == 'Prodaja' || 
             profileRole.name == 'Recepcija' || 
+            profileRole.name == 'Nocna recepcija' || 
             profileRole.name == 'Uprava' ||
             profileRole.name == 'Voditelj domacinstva' || 
             profileRole.name == 'Voditelj kampa' || 
@@ -109,7 +110,21 @@ export class AppMenu implements OnInit {
             profileRole.name == 'Savjetnik uprave' || 
             profileRole.name == 'Uprava' ||
             profileRole.name == 'Voditelj kampa' || 
-            profileRole.name == 'Voditelj domacinstva'
+            profileRole.name == 'Voditelj domacinstva' ||
+            profileRole.name == 'Terasar' ||
+            profileRole.name == 'Sobarica'
+        );
+
+        return allowedRoles.some(allowedRole => allowedRole.name == role);
+    }
+
+    private canViewArrivalsAndDepartures(role?: string): boolean {
+        if (!role) return false;
+
+        const allowedRoles = this.profileRoles.filter(profileRole => 
+            profileRole.name == 'Kucni majstor' || 
+            profileRole.name == 'Voditelj kampa' ||
+            profileRole.name == 'Terasar'
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
@@ -155,6 +170,10 @@ export class AppMenu implements OnInit {
 
         if(this.canViewDnevniList(userRole?.name)){
             menuItems.push({ label: this.translateService.instant('MENU.DAILY-SHEET'), icon: 'pi pi-fw pi-file', routerLink: ['/daily-sheet'] });
+        }
+
+        if(this.canViewArrivalsAndDepartures(userRole?.name)){
+            menuItems.push({ label: this.translateService.instant('MENU.ARRIVALS-AND-DEPARTURES'), icon: 'pi pi-arrow-right-arrow-left', routerLink: ['/arrivals-and-departures'] });
         }
         
         // Add Voditelj kampa only menu items

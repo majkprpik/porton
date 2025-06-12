@@ -12,6 +12,9 @@ import { RoleGuard } from './app/layout/guard/role.guard';
 import { ProfilesComponent } from './app/pages/profiles/profiles.component';
 import { TaskProgressTypesComponent } from './app/pages/task-progress-types/task-progress-types.component';
 import { HouseTypesComponent } from './app/pages/house-types/house-types.component';
+import { ArrivalsAndDeparturesPageComponent } from './app/layout/component/arrivals-and-departures-page.component';
+import { TeamsGuard } from './app/layout/guard/teams.guard';
+import { TeamDetailGuard } from './app/layout/guard/team-detail.guard';
 
 export const appRoutes: Routes = [
     {
@@ -20,12 +23,20 @@ export const appRoutes: Routes = [
         canActivate: [AuthGuard],
         canActivateChild: [RoleGuard],
         children: [
-            { path: '', component: Home }, // Default route
-            { path: 'home', component: Home },
+            { 
+                path: '', 
+                component: Home,
+                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija'] }
+            }, // Default route
+            {   
+                path: 'home', 
+                component: Home,
+                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija'] }
+            },
             { 
                 path: 'reservations-2', 
                 component: Reservation2Component,
-                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave'] }
+                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Nocna recepcija'] }
             },
             { 
                 path: 'profiles', 
@@ -39,13 +50,15 @@ export const appRoutes: Routes = [
             },
             { 
                 path: 'teams', 
-                component: Teams ,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica'] }
+                component: Teams,
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar'] },
+                canActivate: [TeamsGuard]
             },
             { 
                 path: 'teams/:id', 
                 component: WorkGroupDetail,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica'] }
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar'] },
+                canActivate: [TeamDetailGuard]
             },
             { 
                 path: 'task-progress-types', 
@@ -56,6 +69,11 @@ export const appRoutes: Routes = [
                 path: 'house-types', 
                 component: HouseTypesComponent,
                 data: { roles: ['Voditelj kampa', 'Uprava'] }
+            },
+            {
+                path: 'arrivals-and-departures',
+                component: ArrivalsAndDeparturesPageComponent,
+                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar'] }
             },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },

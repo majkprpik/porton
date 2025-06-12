@@ -451,7 +451,11 @@ export class WorkGroupDetail implements OnInit {
                 if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId)){
                     const housekeepingWorkGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.authService.getStoredUserId());
 
-                    if(!housekeepingWorkGroupProfiles.some(wgp => wgp.work_group_id == this.workGroup?.work_group_id)){
+                    if(
+                        !housekeepingWorkGroupProfiles.some(wgp => wgp.work_group_id == this.workGroup?.work_group_id) && 
+                        this.router.url.includes('/teams') && 
+                        this.router.url != '/teams'
+                    ) {
                         this.router.navigate(['/teams']);
                     }
                 }

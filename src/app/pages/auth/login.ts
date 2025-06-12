@@ -92,6 +92,7 @@ export class Login implements OnInit {
 
     ngOnInit() {
         this.dataService.loadProfileRoles().subscribe();
+        this.dataService.loadWorkGroupProfiles().subscribe();
 
         if (this.authService.isLoggedIn()) {
             this.router.navigate(['/home']);

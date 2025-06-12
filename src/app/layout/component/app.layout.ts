@@ -262,8 +262,8 @@ interface SpecialLocation {
         <p-speedDial
             [model]="menuItems"
             [radius]="120"
-            [type]="menuItems.length > 1 ? 'quarter-circle' : 'linear'"
-            [direction]="menuItems.length > 1 ? 'up-left' : 'up'"
+            [type]="menuItems.length > 2 ? 'quarter-circle' : 'linear'"
+            [direction]="menuItems.length > 2 ? 'up-left' : 'up'"
             buttonClassName="p-button-primary"
             [buttonProps]="{ size: 'large', raised: true }"
             showIcon="pi pi-list"
@@ -968,7 +968,6 @@ export class AppLayout {
     ngOnInit() {
         this.dataService.loadInitialData();
         this.storedUserId = this.authService.getStoredUserId();
-        this.buildMenuItems();
 
         combineLatest([
             this.dataService.repairTaskComments$,
@@ -1008,6 +1007,10 @@ export class AppLayout {
                 this.tempHouseAvailabilities = tempHouseAvailabilities;
                 this.notes = notes;
                 this.profileRoles = profileRoles;
+
+                if(profiles.length > 0 && profileRoles.length > 0){
+                    this.buildMenuItems();
+                }
 
                 if (houses) {
                     this.updateLocationOptions();
@@ -1274,38 +1277,42 @@ export class AppLayout {
     }
 
     buildMenuItems(){
-        this.menuItems.push({
-            icon: 'pi pi-wrench',
-            command: () => {
-                this.faultReportVisible = true;
-                this.isTaskDetailsWindowVisible = false;
-                this.resetForm('task-details');
-            }
-        });
-        if(!this.profileService.isHousekeeper(this.storedUserId) && !this.profileService.isHouseTechnician(this.storedUserId)){
+        if(this.menuItems.length <= 0){
             this.menuItems.push({
-            icon: 'pi pi-file-edit',
-            command: () => {
-                this.isUnscheduledTaskVisible = true;
-            }
-            },
-            {
-                icon: 'pi pi-clipboard',
+                icon: 'pi pi-wrench',
                 command: () => {
-                    this.isNotesWindowVisible = true;
-                    this.positions['notes'] = { x: 0, y: 0 };
-                    localStorage.setItem('windowPositions', JSON.stringify(this.positions));
-                }
-            },
-            {
-                icon: 'pi pi-arrow-right-arrow-left',
-                command: () => {
-                    this.isArrivalsAndDeparturesWindowVisible = true;
-                    this.positions['arrivals'] = { x: 0, y: 0 };
-                    localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+                    this.faultReportVisible = true;
+                    this.isTaskDetailsWindowVisible = false;
+                    this.resetForm('task-details');
                 }
             });
-        } 
+            if(!this.profileService.isHousekeeper(this.storedUserId)){
+                this.menuItems.push({
+                    icon: 'pi pi-file-edit',
+                    command: () => {
+                        this.isUnscheduledTaskVisible = true;
+                    }
+                });
+                if(!this.profileService.isHouseTechnician(this.storedUserId)){
+                    this.menuItems.push({
+                        icon: 'pi pi-clipboard',
+                        command: () => {
+                            this.isNotesWindowVisible = true;
+                            this.positions['notes'] = { x: 0, y: 0 };
+                            localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+                        }
+                    },
+                    {
+                        icon: 'pi pi-arrow-right-arrow-left',
+                        command: () => {
+                            this.isArrivalsAndDeparturesWindowVisible = true;
+                            this.positions['arrivals'] = { x: 0, y: 0 };
+                            localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+                        }
+                    });
+                }
+            } 
+        }
     }
 
     getProfileRoleNameById(roleId: number){

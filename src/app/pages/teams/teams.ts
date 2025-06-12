@@ -13,7 +13,7 @@ import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../service/auth.service';
 import { ProfileService } from '../service/profile.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
     selector: 'app-teams',
@@ -370,6 +370,8 @@ export class Teams implements OnInit {
     isCleaningCollapsed = false;
     isRepairsCollapsed = false;
 
+    routeId: string | null = null;
+
     get cleaningGroups() {
         return this.workGroups
             .filter(g => !g.is_repair)
@@ -440,7 +442,7 @@ export class Teams implements OnInit {
                 });
 
                 if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId)){
-                    const housekeepingWorkGroupProfile = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.authService.getStoredUserId());
+                    const housekeepingWorkGroupProfile = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.storedUserId);
 
                     this.workGroupsForHousekeepingUser = this.workGroups
                         .filter(workGroup => housekeepingWorkGroupProfile
@@ -449,9 +451,9 @@ export class Teams implements OnInit {
                         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
                     if(this.workGroupsForHousekeepingUser.length > 0){
-                        const isOnWorkGroupDetailPage = this.router.url.startsWith('/teams/') && this.router.url !== '/teams';
+                        const hasId = /^\/teams\/[^\/]+/.test(this.router.url);
 
-                        if (!isOnWorkGroupDetailPage) {
+                        if (!hasId && this.router.url.includes('/teams')) {
                             const firstWorkGroupId = this.workGroupsForHousekeepingUser[0].work_group_id;
                             this.router.navigate(['/teams', firstWorkGroupId]);
                         }

@@ -54,7 +54,7 @@ export class RoleGuard implements CanActivateChild {
             }),
             tap((isAllowed: boolean) => {
                 if (!isAllowed) {
-                    this.router.navigate(['/home']); 
+                    this.router.navigate(['/teams']); 
                 }
             })
         );

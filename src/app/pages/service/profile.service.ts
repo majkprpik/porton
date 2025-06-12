@@ -55,22 +55,22 @@ export class ProfileService {
   }
 
   isHousekeeper(profileId: string | null){
-    if(profileId){
+    if(profileId && this.profiles.length > 0 && this.profileRoles.length > 0){
       const profile = this.profiles.find(profile => profile.id == profileId);
       const profileRole = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id);
   
-      return profileRole?.name == 'Sobarica';
+      return profileRole?.name == 'Sobarica' || profileRole?.name == 'Terasar';
     }
 
     return false;
   }
 
   isHouseTechnician(profileId: string | null){
-    if(profileId){
+    if(profileId && this.profiles.length > 0 && this.profileRoles.length > 0){
       const profile = this.profiles.find(profile => profile.id == profileId);
       const profileRole = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id);
   
-      return profileRole?.name == 'Kucni majstor';
+      return profileRole?.name == 'Kucni majstor' || profileRole?.name == 'Odrzavanje';
     }
 
     return false;

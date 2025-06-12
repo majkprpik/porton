@@ -94,6 +94,10 @@ export class AuthService {
     return localStorage.getItem('profileId');
   }
 
+  getStoredUserProfile(){
+    return localStorage.getItem('userProfile');
+  }
+
   getUsername() {
     return this.usernameSubject.asObservable();
   }
@@ -169,7 +173,7 @@ export class AuthService {
       { name: 'Slavica Petković', role: 'Sobarica', password: 'c5Fm5X' },
       { name: 'Jelena Kaluđer', role: 'Sobarica', password: 'd4Gn6Y' },
       { name: 'Sandi Maružin', role: 'Terasar', password: 'e3Ho7Z' },
-      { name: 'Đani Guštin', role: 'Kucni majstor', password: 'g1Jq9B' },
+      { name: 'Đani Guštin', role: 'Kucni majstor', password: 'g1Jq9B' }, //d96xkK
       { name: 'Dražen Pendeš', role: 'Kucni majstor', password: 'h5Kr0C' },
       { name: 'Ivo Pranjić', role: 'Odrzavanje', password: 'i4Ls1D' },
       { name: 'Daniel Begzić', role: 'Odrzavanje', password: 'j3Mt2E' },
