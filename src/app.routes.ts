@@ -79,7 +79,7 @@ export const appRoutes: Routes = [
             {
                 path: 'notes',
                 component: NotesPageComponent,
-                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar', 'Odrzavanje', 'Korisnicka sluzba'] }
+                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Odrzavanje', 'Korisnicka sluzba'] }
             },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },
