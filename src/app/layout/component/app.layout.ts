@@ -865,6 +865,12 @@ interface SpecialLocation {
                   }
                 }
             }
+
+            @media screen and (max-width: 600px){
+                .layout-main{
+                    padding-bottom: 100px;
+                }
+            }
         `
     ]
 })

@@ -150,7 +150,6 @@ import { ButtonModule } from 'primeng/button';
     align-items: center;
     width: 100%;
     gap: 50px;
-    padding-bottom: 100px;
 
     .header{
       width: 100%;
