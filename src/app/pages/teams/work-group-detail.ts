@@ -33,6 +33,19 @@ import { AuthService } from '../service/auth.service';
                 <span>{{ 'TEAMS.TEAM-TASK-CARD.LOADING-TEAM' | translate }}</span>
             </div>
         } @else if (workGroup) {
+            <div class="legend-container">
+                <div class="legend-wrapper">
+                    <div class="legend-items">
+                        <div class="legend-item"><i class="fa fa-house"></i> {{ 'TASK-TYPES.Čišćenje kućice' | translate }}</div>
+                        <div class="legend-item"><i class="fa fa-umbrella-beach"></i> {{ 'TASK-TYPES.Čišćenje terase' | translate }}</div>
+                        <div class="legend-item"><i class="fa fa-bed"></i> {{ 'TASK-TYPES.Mijenjanje posteljine' | translate }} </div>
+                        <div class="legend-item"><i class="fa fa-bookmark"></i> {{ 'TASK-TYPES.Mijenjanje ručnika' | translate }}</div>
+                        <div class="legend-item"><i class="fa fa-wrench"></i> {{ 'TASK-TYPES.Popravak' | translate }}</div>
+                        <div class="legend-item"><i class="fa fa-file"></i> {{ 'TASK-TYPES.Ostalo' | translate }}</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="work-group-container">
                 <div class="work-group-header">
                     <h2>{{ 'TEAMS.TEAM-TASK-CARD.TEAM' | translate }} {{workGroup.work_group_id}}</h2>
@@ -77,9 +90,9 @@ import { AuthService } from '../service/auth.service';
                                     >
                                         <div class="task-info">
                                             <div class="house-info">
-                                                <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
-                                                @if(task?.is_unscheduled){
-                                                    @if(isUrgentIconVisibleMap[task.task_id]){
+                                                <div class="house-number-and-icon">
+                                                    <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
+                                                    @if(task?.is_unscheduled && isUrgentIconVisibleMap[task.task_id]){
                                                         <div class="urgent-task-icon">
                                                             <i class="fa fa-exclamation-triangle"></i>
                                                         </div>
@@ -88,11 +101,10 @@ import { AuthService } from '../service/auth.service';
                                                             <i [class]="getTaskTypeIcon(task.task_type_id)"></i>
                                                         </div>
                                                     }
-                                                } @else{
-                                                    <div class="task-icon">
-                                                        <i [class]="getTaskTypeIcon(task.task_type_id)"></i>
-                                                    </div>
-                                                }
+                                                </div>
+                                                <div class="description">
+                                                    {{task.description}}
+                                                </div>
                                             </div>
                                             <div class="task-status">
                                                 <i class="status-icon" [class]="getTaskStatusIcon(task)"></i>
@@ -165,6 +177,50 @@ import { AuthService } from '../service/auth.service';
             height: 100%;
             gap: 1rem;
             color: var(--text-color-secondary);
+        }
+
+        .legend-container {
+            margin-bottom: 1.2rem;
+            padding: 0.8rem 1rem;
+            background-color: var(--surface-card);
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+            .legend-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+
+                .legend-items {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    gap: 1rem;
+
+                    .legend-item {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5em;
+                        font-size: 0.9em;
+                        white-space: nowrap;
+                        
+                        .legend-color {
+                            display: inline-block;
+                            width: 16px;
+                            height: 16px;
+                            border-radius: 4px;
+                            margin-right: 0.3em;
+                            border: 1px solid #bbb;
+                        }
+                    }
+                }
+
+                @media screen and (max-width: 800px){
+                    .legend-items{
+                        flex-direction: column;
+                    }
+                }
+            }
         }
 
         .work-group-container {
@@ -268,23 +324,38 @@ import { AuthService } from '../service/auth.service';
 
             .task-info {
                 display: flex;
-                justify-content: space-between;
-                align-items: center;
+                align-items: flex-start;
                 margin-bottom: 1rem;
             }
 
             .house-info {
                 display: flex;
-                align-items: center;
+                flex-direction: column;
+                align-items: flex-start;
                 gap: 0.75rem;
+                width: 30%;
+                flex-grow: 1;
 
-                .house-number {
-                    font-size: 1.2rem;
-                    font-weight: 600;
+                .house-number-and-icon{
+                    display: flex;
+                    flex-direction: row;
+                    gap: 5px;
+
+                    .house-number {
+                        font-size: 1.2rem;
+                        font-weight: 600;
+                    }
+    
+                    .task-icon {
+                        font-size: 1.1rem;
+                    }
                 }
 
-                .task-icon {
-                    font-size: 1.1rem;
+                .description{
+                    width: 95%;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
             }
 
