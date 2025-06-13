@@ -140,7 +140,11 @@ interface SpecialLocation {
                     <ng-template pTemplate="header">
                         <div class="dialog-header">
                             <span>{{ 'APP-LAYOUT.TASK-DETAILS.TITLE' | translate }}</span>
-                            @if(!profileService.isHousekeeper(storedUserId) && !profileService.isHouseTechnician(storedUserId)) {
+                            @if(
+                                !profileService.isHousekeeper(storedUserId) && 
+                                !profileService.isHouseTechnician(storedUserId) && 
+                                !profileService.isCustomerService(storedUserId)
+                            ) {
                                 <div class="header-icons">
                                     <div class="trash-icon" (click)="deleteTask($event, task)">
                                         <i class="pi pi-trash"></i>
