@@ -52,13 +52,13 @@ export const appRoutes: Routes = [
             { 
                 path: 'teams', 
                 component: Teams,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar', 'Odrzavanje'] },
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar', 'Odrzavanje', 'Korisnicka sluzba'] },
                 canActivate: [TeamsGuard]
             },
             { 
                 path: 'teams/:id', 
                 component: WorkGroupDetail,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar', 'Odrzavanje'] },
+                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar', 'Odrzavanje', 'Korisnicka sluzba'] },
                 canActivate: [TeamDetailGuard]
             },
             { 
