@@ -76,6 +76,17 @@ export class ProfileService {
     return false;
   }
 
+  isCustomerService(profileId: string | null){
+    if(profileId && this.profiles.length > 0 && this.profileRoles.length > 0){
+      const profile = this.profiles.find(profile => profile.id == profileId);
+      const profileRole = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id);
+  
+      return profileRole?.name == 'Korisnicka sluzba';
+    }
+
+    return false;
+  }
+
   /**
    * Get all profiles
    * @returns Observable of Profile array

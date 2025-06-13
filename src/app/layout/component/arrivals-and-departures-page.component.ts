@@ -11,6 +11,8 @@ import { DividerModule } from 'primeng/divider';
 import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { ProfileService } from '../../pages/service/profile.service';
+import { AuthService } from '../../pages/service/auth.service';
 
 @Component({
   selector: 'app-arrivals-and-departures-page',
@@ -63,10 +65,11 @@ import { ButtonModule } from 'primeng/button';
             <div class="p-field-row">
               <div class="status-container">
                 <p-checkbox 
-                  [disabled]="true"
+                  [disabled]="profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId)"
                   inputId="departure-checkbox-{{ departure.house_number }}" 
                   binary="true"
                   [(ngModel)]="departure.has_departed"
+                  (click)="submitDepartures($event, departure)"
                 ></p-checkbox>
               </div>
               <div class="house-container">
@@ -75,11 +78,24 @@ import { ButtonModule } from 'primeng/button';
                 </label>
               </div>
               <div class="time-container">
-                <input 
-                  pInputText
-                  [value]="departure.departureTimeObj | date:'HH:mm'" 
-                  readonly
-                >
+                @if(profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId)){
+                  <input 
+                    pInputText
+                    [value]="departure.departureTimeObj | date:'HH:mm'" 
+                    readonly
+                  >
+                } @else {
+                  <p-datepicker 
+                    [(ngModel)]="departure.departureTimeObj" 
+                    [timeOnly]="true" 
+                    hourFormat="24"
+                    [showSeconds]="false"
+                    (onBlur)="updateDepartureTime(departure)"
+                    appendTo="body"
+                    placeholder="10:00"
+                    styleClass="w-full"
+                  />
+                }  
               </div>
             </div>
             @if(!$last){
@@ -106,10 +122,11 @@ import { ButtonModule } from 'primeng/button';
             <div class="p-field-row">
               <div class="status-container">
                 <p-checkbox 
-                  [disabled]="true"
+                  [disabled]="profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId)"
                   inputId="arrival-checkbox-{{ arrival.house_number }}" 
                   binary="true"
                   [(ngModel)]="arrival.has_arrived"
+                  (click)="submitArrivals($event, arrival)"
                 ></p-checkbox>
               </div>
               <div class="house-container">
@@ -118,11 +135,24 @@ import { ButtonModule } from 'primeng/button';
                 </label>
               </div>
               <div class="time-container">
-                <input 
-                  pInputText 
-                  [value]="arrival.arrivalTimeObj | date:'HH:mm'" 
-                  readonly
-                >
+                @if(profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId)){
+                  <input 
+                    pInputText 
+                    [value]="arrival.arrivalTimeObj | date:'HH:mm'" 
+                    readonly
+                  >
+                } @else {
+                  <p-datepicker 
+                    [(ngModel)]="arrival.arrivalTimeObj" 
+                    [timeOnly]="true" 
+                    hourFormat="24"
+                    [showSeconds]="false"
+                    (onBlur)="updateArrivalTime(arrival)"
+                    appendTo="body"
+                    placeholder="16:00"
+                    styleClass="w-full"
+                  />
+                }
               </div>
             </div>
             @if(!$last){
@@ -227,17 +257,22 @@ export class ArrivalsAndDeparturesPageComponent {
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
   selectedDate: Date = new Date();
+  storedUserId: string | null = '';
 
   constructor(
     private houseService: HouseService,
     private dataService: DataService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    public profileService: ProfileService,
+    private authService: AuthService,
   ) {    
     
   }
   
   async ngOnInit(){
+    this.storedUserId = this.authService.getStoredUserId();
+
     combineLatest([
       this.dataService.houses$,
       this.dataService.houseAvailabilities$,
@@ -435,6 +470,12 @@ export class ArrivalsAndDeparturesPageComponent {
   }
 
   async submitDepartures(event: any, departure: any) {
+    if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId)){
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     if (!event.target.checked) {
       event.preventDefault();
   
@@ -476,6 +517,12 @@ export class ArrivalsAndDeparturesPageComponent {
   }
 
   async submitArrivals(event: any, arrival: any) {
+    if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId)){
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     if (!event.target.checked) {
       event.preventDefault();
   
