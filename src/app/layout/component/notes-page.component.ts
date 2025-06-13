@@ -149,7 +149,7 @@ import { TranslateModule } from '@ngx-translate/core';
         overflow-x: hidden;
         word-wrap: break-word;
         align-items: flex-start;
-        background-color: white;
+        background-color: var(--surface-card);
         scrollbar-gutter: stable;
 
         .date-sent{

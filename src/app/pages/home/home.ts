@@ -226,7 +226,7 @@ interface SpecialLocation {
             .legend-container {
                 margin-bottom: 1.2rem;
                 padding: 0.8rem 1rem;
-                background: rgba(255,255,255,0.9);
+                background-color: var(--surface-card);
                 border-radius: 6px;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }
