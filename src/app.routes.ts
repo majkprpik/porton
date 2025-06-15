@@ -74,7 +74,7 @@ export const appRoutes: Routes = [
             {
                 path: 'arrivals-and-departures',
                 component: ArrivalsAndDeparturesPageComponent,
-                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Terasar', 'Odrzavanje', 'Korisnicka sluzba'] }
+                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Odrzavanje', 'Korisnicka sluzba'] }
             },
             {
                 path: 'notes',
