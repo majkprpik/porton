@@ -1194,7 +1194,7 @@ export class AppLayout {
 
                     if(
                         this.taskService.isTaskCompleted(res.new) && 
-                        (this.taskService.isHouseCleaningTask(res.new) || this.taskService.isDeckCleaningTask(res.new)) &&
+                        this.taskService.isOtherTask(res.new) &&
                         this.loggedUser && this.loggedUser.first_name == 'Test User2'
                     ){
                         this.pushNotificationsService.sendTaskCompletedNotification(this.tasks[taskIndex]);

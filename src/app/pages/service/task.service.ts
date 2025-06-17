@@ -27,6 +27,7 @@ export class TaskService {
   deckCleaningTaskType: TaskType | undefined = undefined;
   sheetChangeTaskType: TaskType | undefined = undefined;
   towelChangeTaskType: TaskType | undefined = undefined;
+  otherTaskType: TaskType | undefined = undefined;
   
   taskTypesTranslationMap: { [key: string]: string } = { 
     "Čišćenje kućice": "House cleaning",
@@ -66,6 +67,7 @@ export class TaskService {
       this.houseRepairTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Popravak');
       this.sheetChangeTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Mijenjanje posteljine');
       this.towelChangeTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Mijenjanje ručnika');
+      this.otherTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Ostalo');
     });
   }
 
@@ -312,6 +314,13 @@ export class TaskService {
     return (
       this.towelChangeTaskType?.task_type_id == task.task_type_id || 
       this.towelChangeTaskType?.task_type_id == task.taskTypeId
+    );
+  }
+
+  isOtherTask(task: any){
+    return (
+      this.otherTaskType?.task_type_id == task.task_type_id || 
+      this.otherTaskType?.task_type_id == task.taskTypeId
     );
   }
 
