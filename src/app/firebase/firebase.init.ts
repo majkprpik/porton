@@ -1,4 +1,14 @@
 import { initializeApp } from 'firebase/app';
 import { environment } from '../../environments/environment';
 
-export const firebaseApp = initializeApp(environment.firebaseConfig);
+const firebaseConfig = {
+  apiKey: environment.firebaseApiKey,
+  authDomain: environment.firebaseAuthDomain,
+  projectId: environment.firebaseProjectId,
+  storageBucket: environment.firebaseStorageBucket,
+  messagingSenderId: environment.firebaseMessagingSenderId,
+  appId: environment.firebaseAppId,
+  measurementId: environment.firebaseMeasurementId,
+};
+
+export const firebaseApp = initializeApp(firebaseConfig);

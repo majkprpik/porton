@@ -1318,7 +1318,7 @@ export class AppLayout {
 
     subscribeToNotifications() {
         this.swPush.requestSubscription({
-            serverPublicKey: environment.VAPID_PUBLIC_KEY,
+            serverPublicKey: environment.vapidPublicKey,
         })
         .then(sub => {
             console.log('Subscribed', sub);
