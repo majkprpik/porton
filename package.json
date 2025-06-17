@@ -8,7 +8,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "format": "prettier --write \"**/*.{js,mjs,ts,mts,d.ts,html}\" --cache",
-    "test": "ng test"
+    "test": "ng test",
+    "import-reservations": "node import-reservations.js"
   },
   "private": true,
   "dependencies": {
@@ -22,6 +23,7 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
+    "@angular/service-worker": "^19.0.5",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@handsontable/angular": "^15.2.0",
     "@ngx-translate/core": "^16.0.4",
@@ -32,6 +34,7 @@
     "chart.js": "4.4.2",
     "colors": "^1.4.0",
     "dotenv": "^16.4.7",
+    "firebase": "^11.9.1",
     "handsontable": "^15.2.0",
     "primeclt": "^0.1.5",
     "primeicons": "^7.0.0",

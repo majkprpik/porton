@@ -29,7 +29,9 @@
                         "inlineStyleLanguage": "scss",
                         "assets": [
                             "src/assets",
-                            "src/favicon.ico"
+                            "src/favicon.ico",
+                            "src/manifest.webmanifest",
+                            "src/firebase-messaging-sw.js"
                         ],
                         "styles": [
                             "src/styles.scss",
@@ -52,7 +54,8 @@
                                 }
                             ],
                             "outputHashing": "all",
-                            "sourceMap": true
+                            "sourceMap": true,
+                            "serviceWorker": "ngsw-config.json"
                         },
                         "development": {
                             "optimization": false,

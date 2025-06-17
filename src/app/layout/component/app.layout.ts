@@ -27,6 +27,9 @@ import { WorkGroupService } from '../../pages/service/work-group.service';
 import { TabsModule } from 'primeng/tabs';
 import { SelectModule } from 'primeng/select';
 import { LanguageService } from '../../pages/language/language.service';
+import { SwPush } from '@angular/service-worker';
+import { PushNotificationsService } from '../../pages/service/push-notifications.service';
+import { environment } from '../../../environments/environment';
 
 // Define a special location interface for Zgrada and Parcela options
 interface SpecialLocation {
@@ -954,6 +957,8 @@ export class AppLayout {
 
     menuItems: MenuItem[] = [];
 
+    loggedUser: Profile | undefined = undefined;
+
     constructor(
         public layoutService: LayoutService,
         public renderer: Renderer2,
@@ -967,6 +972,8 @@ export class AppLayout {
         private translateService: TranslateService,
         private workGroupService: WorkGroupService,
         private languageService: LanguageService,
+        private swPush: SwPush,
+        private pushNotificationsService: PushNotificationsService,
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
@@ -990,6 +997,7 @@ export class AppLayout {
     ngOnInit() {
         this.dataService.loadInitialData();
         this.storedUserId = this.authService.getStoredUserId();
+        this.subscribeToNotifications(); 
 
         combineLatest([
             this.dataService.repairTaskComments$,
@@ -1029,6 +1037,8 @@ export class AppLayout {
                 this.tempHouseAvailabilities = tempHouseAvailabilities;
                 this.notes = notes;
                 this.profileRoles = profileRoles;
+                
+                this.loggedUser = this.profiles.find(profile => profile.id == this.storedUserId);
 
                 if(profiles.length > 0 && profileRoles.length > 0){
                     this.buildMenuItems();
@@ -1181,6 +1191,14 @@ export class AppLayout {
                     this.tasks = this.tasks.map((task) => (task.task_id === res.new.task_id ? res.new : task));
 
                     this.dataService.setTasks(this.tasks);
+
+                    if(
+                        this.taskService.isTaskCompleted(res.new) && 
+                        (this.taskService.isHouseCleaningTask(res.new) || this.taskService.isDeckCleaningTask(res.new)) &&
+                        this.loggedUser && this.loggedUser.first_name == 'Mia Lukić'
+                    ){
+                        this.pushNotificationsService.sendTaskCompletedNotification(this.tasks[taskIndex]);
+                    }
                 }
             } else if (res && res.eventType == 'DELETE') {
                 const updatedStatuses = this.houseStatuses().map(hs => {
@@ -1296,6 +1314,17 @@ export class AppLayout {
                 }
             }
         });
+    }
+
+    subscribeToNotifications() {
+        this.swPush.requestSubscription({
+            serverPublicKey: environment.VAPID_PUBLIC_KEY,
+        })
+        .then(sub => {
+            console.log('Subscribed', sub);
+            this.pushNotificationsService.setSubscription(sub.toJSON());
+        })
+        .catch(error => console.error(error));
     }
 
     buildMenuItems(){
