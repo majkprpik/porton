@@ -27,7 +27,16 @@ export class PushNotificationsService {
 
     onMessage(this.messaging, (payload) => {
       console.log('💬 FCM message received in foreground:', payload);
-      // Optional: show toast or notification
+      
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const notificationTitle = payload.notification?.title ?? 'Notification';
+        const notificationOptions = {
+          body: payload.notification?.body,
+          icon: payload.notification?.icon || '/assets/icons/icon-72x72.png',
+        };
+
+        new Notification(notificationTitle, notificationOptions);
+      }
     });
   }
 
