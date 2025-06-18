@@ -166,7 +166,12 @@ interface SpecialLocation {
                                         <span class="image-count">{{ taskImages.length }}</span>
                                     }
                                 </p-tab>
-                                <p-tab value="2">{{ 'APP-LAYOUT.TASK-DETAILS.TABS.COMMENTS' | translate }}</p-tab>
+                                <p-tab value="2">
+                                    {{ 'APP-LAYOUT.TASK-DETAILS.TABS.COMMENTS' | translate }}
+                                    @if(commentsForTask.length){
+                                        <span class="image-count">{{ commentsForTask.length }}</span>
+                                    }
+                                </p-tab>
                             </p-tablist>
                         }
                         <p-tabpanels>
