@@ -493,6 +493,7 @@ export class WorkGroup implements OnInit {
   workGroupProfiles: any;
   houses: House[] = [];
   taskTypes: TaskType[] = [];
+  workGroups: WorkGroupObject[] = [];
 
   constructor(
     private dataService: DataService,
@@ -511,15 +512,17 @@ export class WorkGroup implements OnInit {
       this.dataService.workGroupTasks$,
       this.dataService.houses$,
       this.dataService.taskTypes$,
-      this.dataService.workGroupProfiles$
+      this.dataService.workGroupProfiles$,
+      this.dataService.workGroups$,
     ]).subscribe({
-      next: ([taskProgressTypes, tasks, workGroupTasks, houses, taskTypes, workGroupProfiles]) => {
+      next: ([taskProgressTypes, tasks, workGroupTasks, houses, taskTypes, workGroupProfiles, workGroups]) => {
         this.taskProgressTypes = taskProgressTypes;
         this.tasks = tasks;
         this.workGroupTasks = workGroupTasks;
         this.houses = houses;
         this.taskTypes = taskTypes;
         this.workGroupProfiles = workGroupProfiles;
+        this.workGroups = workGroups;
 
       },
       error: (error) => {
@@ -548,6 +551,7 @@ export class WorkGroup implements OnInit {
               if(selectedTask.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
                 selectedTask.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
               }
+
               if(!lockedTeam.tasks){
                 lockedTeam.tasks = [];
               }
@@ -558,10 +562,14 @@ export class WorkGroup implements OnInit {
                 index: undefined,
               }];
 
+              const wgtIndex = this.workGroups.findIndex((wgt: any) => wgt.work_group_id == this.workGroup?.work_group_id);
+              this.workGroups[wgtIndex] = this.workGroup;
+
               lockedTeam.isLocked = false;
               lockedTeam.tasks.push(selectedTask);
               this.workGroupService.updateLockedTeam(lockedTeam);
               this.dataService.setWorkGroupTasks(this.workGroupTasks);
+              this.dataService.setWorkGroups(this.workGroups);
               this.taskService.$selectedTask.next(null);
             }
           }
