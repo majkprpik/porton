@@ -5,8 +5,20 @@ import 'handsontable/dist/handsontable.full.min.css';
 import { registerLocaleData } from '@angular/common';
 import localeEn from '@angular/common/locales/en';
 import localeHr from '@angular/common/locales/hr';
-import { environment } from './environments/environment';
 import './app/firebase/firebase.init';
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideMessaging, getMessaging } from '@angular/fire/messaging';
+import { environment } from './environments/environment';
+
+const firebaseConfig = {
+  apiKey: environment.firebaseApiKey,
+  authDomain: environment.firebaseAuthDomain,
+  projectId: environment.firebaseProjectId,
+  storageBucket: environment.firebaseStorageBucket,
+  messagingSenderId: environment.firebaseMessagingSenderId,
+  appId: environment.firebaseAppId,
+  measurementId: environment.firebaseMeasurementId,
+};
 
 registerLocaleData(localeEn);
 registerLocaleData(localeHr);
@@ -15,6 +27,8 @@ bootstrapApplication(AppComponent, {
   ...appConfig,
   providers: [
     ...(appConfig.providers ?? []),
+    provideFirebaseApp(() => initializeApp(firebaseConfig)),
+    provideMessaging(() => getMessaging()),
   ],
 }).catch((err) => console.error(err));
 

@@ -997,7 +997,7 @@ export class AppLayout {
     ngOnInit() {
         this.dataService.loadInitialData();
         this.storedUserId = this.authService.getStoredUserId();
-        this.subscribeToNotifications(); 
+        this.pushNotificationsService.requestFirebaseMessaging();
 
         combineLatest([
             this.dataService.repairTaskComments$,
@@ -1314,17 +1314,6 @@ export class AppLayout {
                 }
             }
         });
-    }
-
-    subscribeToNotifications() {
-        this.swPush.requestSubscription({
-            serverPublicKey: environment.vapidPublicKey,
-        })
-        .then(sub => {
-            console.log('Subscribed', sub);
-            this.pushNotificationsService.setSubscription(sub.toJSON());
-        })
-        .catch(error => console.error(error));
     }
 
     buildMenuItems(){
