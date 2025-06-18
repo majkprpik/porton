@@ -78,7 +78,10 @@ html {
 
 .new-profile-row{
   margin-bottom: 10px;
-  font-size: 15px;
+  font-size: 10px;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  max-width: 400px;
 }
 
 html, body { height: 100%; }
