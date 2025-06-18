@@ -174,7 +174,7 @@ export class AppTopbar {
                         <div class="new-profile-row"><b>Mobitel:</b> ${phone}</div>
                         <div class="new-profile-row"><b>Pozicija:</b> ${role}</div>
                         <div class="new-profile-row"><b>Access token:</b> ${localStorage.getItem('supabase_access_token')}</div>
-                        <div class="new-profile-row"><b>fcmToken:</b> ${this.pushNotificationService.getFirebaseMessagingSubscription()}</div>
+                        <div class="new-profile-row"><b>fcmToken:</b> ${this.pushNotificationService.getFirebaseMessagingSubscription()}</div> 
                     </div>`,
                 acceptButtonProps: {
                     label: 'Odjava',
