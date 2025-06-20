@@ -87,8 +87,7 @@ export class AppMenu implements OnInit {
         const allowedRoles = this.profileRoles.filter(profileRole => 
             profileRole.name == 'Voditelj recepcije' || 
             profileRole.name == 'Prodaja' || 
-            profileRole.name == 'Recepcija' || 
-            profileRole.name == 'Nocna recepcija' || 
+            profileRole.name == 'Recepcija' ||
             profileRole.name == 'Uprava' ||
             profileRole.name == 'Voditelj domacinstva' || 
             profileRole.name == 'Voditelj kampa' || 

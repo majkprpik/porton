@@ -37,7 +37,7 @@ export const appRoutes: Routes = [
             { 
                 path: 'reservations-2', 
                 component: Reservation2Component,
-                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Nocna recepcija'] }
+                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave'] }
             },
             { 
                 path: 'profiles', 
