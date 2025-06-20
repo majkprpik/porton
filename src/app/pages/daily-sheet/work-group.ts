@@ -40,7 +40,12 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   ],
   providers: [ConfirmationService],
   template: `
-    <div class="work-group-container" [class.active]="isActive" [style.background-color]="isActive ? getGroupColor() : null" [style.border-color]="isActive ? getGroupBorderColor() : null">
+    <div class="work-group-container" 
+      [class.active]="isActive" 
+      [class.active-with-tasks]="isActive && assignedTasks.length" 
+      [style.background-color]="isActive ? getGroupColor() : null" 
+      [style.border-color]="isActive ? getGroupBorderColor() : null"
+    >
       <div class="active-border" [style.background-image]="isActive ? 'linear-gradient(to right, ' + getGroupBorderColor() + ' 50%, transparent 50%), linear-gradient(to bottom, ' + getGroupBorderColor() + ' 50%, transparent 50%), linear-gradient(to left, ' + getGroupBorderColor() + ' 50%, transparent 50%), linear-gradient(to top, ' + getGroupBorderColor() + ' 50%, transparent 50%)' : null"></div>
       <div class="work-group-header">
         <div class="work-group-title-area">
@@ -196,6 +201,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
           animation: borderDance 5s infinite linear;
         }
       }
+
+      &.active-with-tasks {
+        .tasks-area {
+          box-sizing: border-box;
+          padding-bottom: 40px;
+        }
+      }
     }
 
     .work-group-header {
@@ -262,16 +274,17 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         width: 30px;
         bottom: 10px;
         right: 10px;
-        transition: transform 0.3s ease;
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
         border-radius: 5px;
+        transition: transform 0.3s ease;
 
         &:hover{
           cursor: pointer;
           background-color: lightgray;
+          transform: scale(1.05);
         }
       }
     }
