@@ -70,34 +70,6 @@ import { InputTextModule } from 'primeng/inputtext';
           [isExpanded]="false"
           [staffMembers]="getProfilesByRoles(managementRoles)"
         ></app-staff-group>
-
-        <!-- @if (getProfilesByRoles(otherRoles).length > 0) {
-          <app-staff-group
-            groupName="OSTALO"
-            groupIcon="pi pi-circle"
-            [staffMembers]="getProfilesByRoles(otherRoles)"
-          ></app-staff-group>
-        } -->
-
-        <!-- @if (debug) {
-          <div class="debug-info">
-            <h4>Debug Information</h4>
-            <p>Total Profiles: {{profiles.length}}</p>
-            <p>Management: {{getProfilesByRoles(managementRoles).length}}</p>
-            <p>Reception: {{getProfilesByRoles(receptionRoles).length}}</p>
-            <p>Housekeeping: {{getProfilesByRoles(housekeepingRoles).length}}</p>
-            <p>Technical: {{getProfilesByRoles(technicalRoles).length}}</p>
-            <p>Other: {{getProfilesByRoles(otherRoles).length}}</p>
-            <div class="roles-list">
-              <h5>Available Roles:</h5>
-              <ul>
-                @for (role of getUniqueRoles(); track role) {
-                  <li>{{role || 'null'}}</li>
-                }
-              </ul>
-            </div>
-          </div>
-        } -->
       }
     </div>
   `,
