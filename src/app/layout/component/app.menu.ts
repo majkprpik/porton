@@ -127,7 +127,7 @@ export class AppMenu implements OnInit {
             profileRole.name == 'Odrzavanje' || 
             profileRole.name == 'Voditelj kampa' ||
             profileRole.name == 'Korisnicka sluzba' ||
-            profileRole.name == 'Terasar'
+            profileRole.name == 'Uprava'
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
