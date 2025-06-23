@@ -164,7 +164,7 @@ import { AuthService } from '../service/auth.service';
             </div>
         } @else {
             <div class="error-container">
-                <p>{{ 'TEAM.TEAM-TASK-CARD.TEAM-NOT-FOUND' | translate }}</p>
+                <p>{{ 'TEAMS.TEAM-TASK-CARD.TEAM-NOT-FOUND' | translate }}</p>
             </div>
         }
     `,
