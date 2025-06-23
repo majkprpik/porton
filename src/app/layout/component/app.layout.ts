@@ -1237,8 +1237,10 @@ export class AppLayout {
 
         this.dataService.$workGroupProfilesUpdate.subscribe((res) => {
             if (res && res.eventType == 'INSERT') {
-                this.workGroupProfiles = [...this.workGroupProfiles, res.new];
-                this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+                if(!this.workGroupProfiles.find(wgp => wgp.profile_id == res.new.profile_id && wgp.work_group_id == res.new.work_group_id)){
+                    this.workGroupProfiles = [...this.workGroupProfiles, res.new];
+                    this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+                }
             } else if (res && res.eventType == 'DELETE') {
                 this.workGroupProfiles = this.workGroupProfiles.filter((wgp) => !(wgp.profile_id == res.old.profile_id && wgp.work_group_id == res.old.work_group_id));
                 this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
