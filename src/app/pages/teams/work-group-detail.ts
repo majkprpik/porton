@@ -462,14 +462,6 @@ export class WorkGroupDetail implements OnInit {
     ) {}
 
     ngOnInit() {
-        const workGroupId = Number(this.route.snapshot.paramMap.get('id'));
-        this.storedUserId = this.authService.getStoredUserId();
-    
-        if (!workGroupId) {
-            this.loading = false;
-            return;
-        }
-
         combineLatest([
             this.dataService.workGroups$,
             this.dataService.workGroupTasks$,
@@ -482,7 +474,10 @@ export class WorkGroupDetail implements OnInit {
             this.dataService.houseAvailabilities$
         ]).subscribe({
             next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, taskTypes, taskProgressTypes, houseAvailabilities]) => {
-                this.workGroup = workGroups.find(wg => wg.work_group_id === workGroupId) || null;
+                const workGroupId = Number(this.route.snapshot.paramMap.get('id'));
+                this.storedUserId = this.authService.getStoredUserId();
+                
+                this.workGroup = workGroups.find(wg => wg.work_group_id == workGroupId) ?? null;
                 this.houses = houses;
                 this.workGroupTasks = workGroupTasks;
                 this.taskTypes = taskTypes;
@@ -494,7 +489,7 @@ export class WorkGroupDetail implements OnInit {
 
                 // Get tasks for this work group
                 const groupTaskIds = workGroupTasks
-                    .filter(wgt => wgt.work_group_id === workGroupId)
+                    .filter(wgt => wgt.work_group_id == workGroupId)
                     .map(wgt => wgt.task_id);
 
                 this.assignedTasks = tasks
@@ -520,11 +515,15 @@ export class WorkGroupDetail implements OnInit {
                     });
                 }
 
-                if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId)){
-                    const housekeepingWorkGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.authService.getStoredUserId());
+                if(this.profileService.isHousekeeper(this.storedUserId)){
+                    const housekeepingWorkGroupProfile = this.workGroupProfiles.find(wgp => wgp.profile_id == this.authService.getStoredUserId());
+                    const todaysWorkGroup = workGroups.find(wg => 
+                        wg.work_group_id == housekeepingWorkGroupProfile?.work_group_id &&
+                        wg.created_at.startsWith(new Date().toISOString().split('T')[0])
+                    );
 
                     if(
-                        !housekeepingWorkGroupProfiles.some(wgp => wgp.work_group_id == this.workGroup?.work_group_id) && 
+                        !todaysWorkGroup && 
                         this.router.url.includes('/teams') && 
                         this.router.url != '/teams'
                     ) {

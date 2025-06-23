@@ -32,24 +32,18 @@ export class TeamDetailGuard implements CanActivate {
             filter(([profileRoles, workGroupProfiles, workGroups]) => profileRoles.length > 0),
             take(1),
             map(([profileRoles, workGroupProfiles, workGroups]) => {
-                const isTechnician = this.profileService.isHouseTechnician(storedUserId);
-                const isHousekeeper = this.profileService.isHousekeeper(storedUserId);
-
-                if (isHousekeeper || isTechnician) {
-                    const ownGroups = workGroupProfiles?.filter(wgp => wgp.profile_id == storedUserId);
-                    const groups = workGroups?.filter(wg => ownGroups?.some(wgp => wgp.work_group_id == wg.work_group_id));
-
-                    const lastGroup = groups?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())?.[0];
-
-                    const ownGroupId = lastGroup?.work_group_id?.toString();
-
-                    if (!ownGroupId) {
+                if(this.profileService.isHousekeeper(storedUserId)){
+                    const today = new Date();
+                    const userWorkGroupProfiles = workGroupProfiles?.filter(wgp => wgp.profile_id == storedUserId);
+                    const todaysWorkGroup = workGroups?.find(wg => userWorkGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id) && wg.created_at.startsWith(today.toISOString().split('T')[0]));
+    
+                    if(!todaysWorkGroup){
                         this.router.navigate(['/teams']);
                         return false;
                     }
-
-                    if (targetGroupId !== ownGroupId) {
-                        this.router.navigate(['/teams', ownGroupId]);
+    
+                    if (targetGroupId != todaysWorkGroup.work_group_id) {
+                        this.router.navigate(['/teams', todaysWorkGroup.work_group_id]);
                         return false;
                     }
                 }
