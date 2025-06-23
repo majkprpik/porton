@@ -2,7 +2,7 @@ import { Component, Input, ViewChild, OnInit, OnChanges, SimpleChanges } from '@
 import { CommonModule } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { ChipModule } from 'primeng/chip';
-import { Profile, DataService } from '../service/data.service';
+import { Profile, DataService, WorkGroup, WorkGroupProfile, ProfileRole } from '../service/data.service';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 import { StaffCardComponent } from './staff-card';
@@ -111,6 +111,12 @@ export class StaffGroup implements OnInit, OnChanges {
   selectedProfile?: Profile;
   hasActiveWorkGroup: boolean = false;
   availableStaff: Profile[] = [];
+  workGroups: WorkGroup[] = [];
+  workGroupProfiles: WorkGroupProfile[] = [];
+
+  profileRoles: ProfileRole[] = [];
+  repairProfileRoles: ProfileRole[] = [];
+  cleaningProfileRoles: ProfileRole[] = [];
 
   menuItems: MenuItem[] = [
     {
@@ -136,8 +142,7 @@ export class StaffGroup implements OnInit, OnChanges {
     private dataService: DataService,
     private profileService: ProfileService
   ) {
-    this.workGroupService.activeGroupId$.subscribe(
-      groupId => {
+    this.workGroupService.activeGroupId$.subscribe(groupId => {
         this.hasActiveWorkGroup = groupId !== undefined;
         if (groupId !== undefined) {
           this.updateAvailableStaff(groupId);
@@ -145,11 +150,25 @@ export class StaffGroup implements OnInit, OnChanges {
           this.availableStaff = this.staffMembers;
         }
       }
-    );
+    );    
   }
 
   ngOnInit() {
     this.availableStaff = this.staffMembers;
+
+    this.dataService.workGroups$.subscribe(workGroups => {
+      this.workGroups = workGroups;
+    });
+
+    this.dataService.workGroupProfiles$.subscribe(workGroupProfiles => {
+      this.workGroupProfiles = workGroupProfiles;
+    });
+
+    this.dataService.profileRoles$.subscribe(profileRoles => {
+      this.profileRoles = profileRoles;
+      this.repairProfileRoles = profileRoles.filter(pr => pr.name == 'Kucni majstor' || pr.name == 'Odrzavanje');
+      this.cleaningProfileRoles = profileRoles.filter(pr => pr.name == 'Voditelj domacinstva' || pr.name == 'Sobarica' || pr.name == 'Terasar');
+    })
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -166,8 +185,26 @@ export class StaffGroup implements OnInit, OnChanges {
   updateAvailableStaff(workGroupId: number) {
     this.dataService.getAssignedStaffForWorkGroup(workGroupId).subscribe(assignedStaff => {
         const assignedIds = assignedStaff.map(staff => staff.id);
-        this.availableStaff = this.staffMembers.filter(
-          staff => staff.id && !assignedIds.includes(staff.id)
+        const selectedWorkGroup = this.workGroups.find(workGroup => workGroup.work_group_id == workGroupId);
+        const selectedWorkGroupsDay = selectedWorkGroup?.created_at.split('T')[0] ?? new Date().toISOString();
+        const workGroupsForSelectedDay = this.workGroups.filter(wg => wg.created_at.startsWith(selectedWorkGroupsDay));
+
+        const workGroupProfilesForSelectedDayIds = this.workGroupProfiles
+          .filter(wgp => workGroupsForSelectedDay.some(wg => wg.work_group_id == wgp.work_group_id))
+          .map(wgp => {
+            return wgp.profile_id;
+          });
+
+        if(selectedWorkGroup?.is_repair){
+          this.staffMembers = this.staffMembers.filter(profile => this.cleaningProfileRoles.every(pr => pr.id != profile.role_id));
+        } else if(!selectedWorkGroup?.is_repair){
+          this.staffMembers = this.staffMembers.filter(profile => this.repairProfileRoles.every(pr => pr.id != profile.role_id));
+        }
+
+        this.availableStaff = this.staffMembers.filter(staff => 
+          staff.id && 
+          !assignedIds.includes(staff.id) && 
+          !workGroupProfilesForSelectedDayIds.includes(staff.id)
         );
       }
     );
