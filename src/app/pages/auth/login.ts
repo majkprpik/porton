@@ -11,7 +11,8 @@ import { Router } from '@angular/router';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../service/auth.service';
-import { DataService } from '../service/data.service';
+import { DataService, ProfileRole } from '../service/data.service';
+import { take } from 'rxjs';
 @Component({
     selector: 'app-login',
     standalone: true,
@@ -93,10 +94,6 @@ export class Login implements OnInit {
     ngOnInit() {
         this.dataService.loadProfileRoles().subscribe();
         this.dataService.loadWorkGroupProfiles().subscribe();
-
-        if (this.authService.isLoggedIn()) {
-            this.router.navigate(['/home']);
-        }
     }
 
     async onLogin() {
@@ -108,13 +105,56 @@ export class Login implements OnInit {
                 const success = await this.authService.login(this.email.trim() + '@porton.com', this.password.trim());
                 if (!success) {
                     this.errorMessage = 'Invalid email or password';
+                    return;
                 }
+
+                this.dataService.profileRoles$.pipe(take(1)).subscribe((roles) => {
+                    if(roles){
+                        this.redirectUserByRole(roles);
+                    }
+                });
+
             } catch (error) {
                 this.errorMessage = 'An error occurred during login';
                 console.error('Login error:', error);
             } finally {
                 this.loading = false;
             }
+        }
+    }
+
+    redirectUserByRole(profileRoles: ProfileRole[]) {
+        const userProfileStr = localStorage.getItem('userProfile');
+        if (!userProfileStr) {
+            this.router.navigate(['/notfound']);
+            return;
+        }
+
+        const userProfile = JSON.parse(userProfileStr);
+
+        const userRole = profileRoles.find(r => r.id === userProfile.role_id);
+        const roleName = userRole?.name;
+
+        switch (roleName) {
+            case 'Sobarica':
+            case 'Terasar':
+            case 'Odrzavanje':
+            case 'Kucni majstor':
+                this.router.navigate(['/teams']);
+                break;
+            case 'Voditelj recepcije':
+            case 'Prodaja':
+            case 'Recepcija':
+            case 'Uprava':
+            case 'Voditelj domacinstva':
+            case 'Voditelj kampa':
+            case 'Savjetnik uprave':
+            case 'Nocna recepcija':
+            case 'Korisnicka sluzba':
+                this.router.navigate(['/home']);
+                break;
+            default:
+                this.router.navigate(['/notfound']);
         }
     }
 }

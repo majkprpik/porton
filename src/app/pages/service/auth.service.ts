@@ -53,17 +53,13 @@ export class AuthService {
         localStorage.setItem('profileId', data.user.id)
         this.usernameSubject.next(email);
         this.userProfile.next(await this.profileService.fetchProfileById(data.user.id));
-        // save to local storage
         localStorage.setItem('userProfile', JSON.stringify(this.userProfile.value));
-        // Wait for navigation to complete
-        // TODO VEDRAN: if user without home than go to tasks(?)
 
         const accessToken = data.session?.access_token;
         if (accessToken) {
           localStorage.setItem('supabase_access_token', accessToken);
         }
 
-        await this.router.navigate(['/home']);
         return true;
       }
       return false;
