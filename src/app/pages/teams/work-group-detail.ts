@@ -1,4 +1,4 @@
-import { Component, OnInit, SimpleChanges } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -606,7 +606,10 @@ export class WorkGroupDetail implements OnInit {
                     });
                 }
 
-                if(this.profileService.isHousekeeper(this.storedUserId)){
+                if(
+                    this.profileService.isHousekeeper(this.storedUserId) || 
+                    this.profileService.isCustomerService(this.storedUserId)
+                ){
                     const housekeepingWorkGroupProfile = this.workGroupProfiles.find(wgp => wgp.profile_id == this.authService.getStoredUserId());
                     const todaysWorkGroup = workGroups.find(wg => 
                         wg.work_group_id == housekeepingWorkGroupProfile?.work_group_id &&

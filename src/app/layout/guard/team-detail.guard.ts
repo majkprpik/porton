@@ -32,7 +32,10 @@ export class TeamDetailGuard implements CanActivate {
             filter(([profileRoles, workGroupProfiles, workGroups]) => profileRoles.length > 0),
             take(1),
             map(([profileRoles, workGroupProfiles, workGroups]) => {
-                if(this.profileService.isHousekeeper(storedUserId)){
+                if(
+                    this.profileService.isHousekeeper(storedUserId) || 
+                    this.profileService.isCustomerService(storedUserId)
+                ){
                     const today = new Date();
                     const userWorkGroupProfiles = workGroupProfiles?.filter(wgp => wgp.profile_id == storedUserId);
                     const todaysWorkGroup = workGroups?.find(wg => userWorkGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id) && wg.created_at.startsWith(today.toISOString().split('T')[0]));

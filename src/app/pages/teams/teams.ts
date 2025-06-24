@@ -35,11 +35,18 @@ import { ActivatedRoute, Router } from '@angular/router';
                 <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
                 <span>{{ 'TEAMS.LOADING-TEAMS' | translate }}</span>
             </div>
-        } @else if (!isAssignedToTodaysWorkGroup(storedUserId) && profileService.isHousekeeper(storedUserId)){
+        } @else if (
+            !isAssignedToTodaysWorkGroup(storedUserId) && 
+            (profileService.isHousekeeper(storedUserId) ||
+            profileService.isCustomerService(storedUserId))
+        ){
             <div class="no-groups-assigned">
                 <span>Nemate dodijeljenih radnih grupa.</span>
             </div>
-        } @else if(!profileService.isHousekeeper(storedUserId)) {
+        } @else if(
+            !profileService.isHousekeeper(storedUserId) && 
+            !profileService.isCustomerService(storedUserId)
+        ) {
             <p-panel
                 [toggleable]="true"
                 class="cleaning-group"
@@ -386,7 +393,10 @@ export class Teams implements OnInit {
                     }
                 });
 
-                if(this.profileService.isHousekeeper(this.storedUserId)){
+                if(
+                    this.profileService.isHousekeeper(this.storedUserId) || 
+                    this.profileService.isCustomerService(this.storedUserId)
+                ){
                     const today = new Date();
                     const workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.storedUserId);
                     const todaysWorkGroup = this.workGroups.find(wg => workGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id) && wg.created_at.startsWith(today.toISOString().split('T')[0]));
