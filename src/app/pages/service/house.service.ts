@@ -197,6 +197,23 @@ export class HouseService {
     );
   }
 
+  getNextHouseAvailabilityForHouse(houseId: number) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const futureAvailabilities = this.houseAvailabilities?.filter(item => {
+      return item.house_id === houseId &&
+            new Date(item.house_availability_start_date) > today;
+    }) || [];
+
+    // Return the earliest upcoming availability, or null if none
+    return futureAvailabilities
+      .sort((a, b) =>
+        new Date(a.house_availability_start_date).getTime() -
+        new Date(b.house_availability_start_date).getTime()
+      )[0] || null;
+  }
+
   isHouseReservedToday(houseId: number){
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -229,6 +246,42 @@ export class HouseService {
     date.setSeconds(0);
     
     return date;
+  }
+
+  getCurrentOccupantCount(houseId: number, key: keyof HouseAvailability){
+    const todayAvailabilities = this.getTodaysHouseAvailabilityForHouse(houseId);
+
+    if (!todayAvailabilities || todayAvailabilities.length === 0) {
+      const nextAvailability = this.getNextHouseAvailabilityForHouse(houseId);
+      return nextAvailability ? nextAvailability[key] ?? 0 : 0;
+    }
+
+    if (todayAvailabilities.length === 1) {
+      return todayAvailabilities[0][key] ?? 0;
+    }
+
+    if (todayAvailabilities.length === 2) {
+      const relevant = todayAvailabilities[0].has_departed ? todayAvailabilities[1] : todayAvailabilities[0];
+      return relevant[key] ?? 0;
+    }
+
+    return 0;
+  }
+
+  getCurrentNumberOfAdults(houseId: number){
+    return this.getCurrentOccupantCount(houseId, 'adults');
+  }
+
+  getCurrentNumberOfBabies(houseId: number){
+    return this.getCurrentOccupantCount(houseId, 'babies');
+  }
+
+  getCurrentNumberOfCribs(houseId: number){
+    return this.getCurrentOccupantCount(houseId, 'cribs');
+  }
+
+  getCurrentNumberOfPets(houseId: number){
+    return this.getCurrentOccupantCount(houseId, 'dogs_d');
   }
 
   async setHouseAvailabilityDeparted(houseAvailabilityId: number, state: boolean){

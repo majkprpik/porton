@@ -73,7 +73,7 @@ import { AuthService } from '../service/auth.service';
                         </div>
                     </div>
 
-                    <div class="section tasks-section">
+                    <div class="section">
                         <h3>{{ 'TEAMS.TEAM-TASK-CARD.TASKS' | translate }}</h3>
                         <div class="tasks-list">
                             @if (assignedTasks.length === 0) {
@@ -105,6 +105,26 @@ import { AuthService } from '../service/auth.service';
                                                 <div class="description">
                                                     {{task.description}}
                                                 </div>
+                                                
+                                                <div class="next-reservation-date">
+                                                    @if(
+                                                        !houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length &&
+                                                        houseService.getNextHouseAvailabilityForHouse(task.house_id)
+                                                    ){ 
+                                                        <span>Dolazak: {{ houseService.getNextHouseAvailabilityForHouse(task.house_id).house_availability_start_date | date: 'dd/MM/yyyy' }}</span>
+                                                    }
+                                                    @if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length == 2){
+                                                        @if(!houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_departed){
+                                                            Odlazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
+                                                        } @else if(
+                                                            houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_departed &&
+                                                            !houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].has_arrived
+                                                        ){
+                                                            Dolazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].arrival_time }}
+                                                        }
+                                                    }
+                                                </div>
+                                                
                                             </div>
                                             <div class="task-status">
                                                 <i class="status-icon" [class]="getTaskStatusIcon(task)"></i>
@@ -112,6 +132,32 @@ import { AuthService } from '../service/auth.service';
                                             </div>
                                         </div>
                                         <div class="task-actions">
+                                            <div class="reservation-numbers">
+                                                @if(houseService.getCurrentNumberOfAdults(task.house_id)){
+                                                    <div class="adults-count">
+                                                        <span>{{ houseService.getCurrentNumberOfAdults(task.house_id) }}</span>
+                                                        <i class="fa-solid fa-person"></i>
+                                                    </div>
+                                                }
+                                                @if(houseService.getCurrentNumberOfPets(task.house_id)){
+                                                    <div class="pets-count">
+                                                        <span>{{ houseService.getCurrentNumberOfPets(task.house_id) }}</span>
+                                                        <i class="fa-solid fa-paw"></i>
+                                                    </div>
+                                                }
+                                                @if(houseService.getCurrentNumberOfBabies(task.house_id)){
+                                                    <div class="babies-count">
+                                                        <span>{{ houseService.getCurrentNumberOfBabies(task.house_id) }}</span>
+                                                        <i class="fa-solid fa-baby"></i>
+                                                    </div>
+                                                }
+                                                @if(houseService.getCurrentNumberOfCribs(task.house_id)){
+                                                    <div class="cribs-count">
+                                                        <span>{{ houseService.getCurrentNumberOfCribs(task.house_id) }}</span>
+                                                        <i class="fa-solid fa-baby-carriage"></i>
+                                                    </div>
+                                                }
+                                            </div>
                                             @if (!taskService.isTaskCompleted(task)) {
                                                 @if(
                                                     task.is_unscheduled || 
@@ -260,6 +306,7 @@ import { AuthService } from '../service/auth.service';
 
         .section {
             margin-bottom: 2rem;
+            width: 100%;
 
             h3 {
                 color: var(--text-color);
@@ -291,8 +338,16 @@ import { AuthService } from '../service/auth.service';
 
         .tasks-list {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            flex-wrap: wrap;
             gap: 0.5rem;
+            width: 100%
+        }
+
+        @media screen and (max-width: 800px){
+            .task-card{
+                width: 100% !important;
+            }
         }
 
         .task-card {
@@ -301,6 +356,8 @@ import { AuthService } from '../service/auth.service';
             border-radius: 6px;
             padding: 1rem;
             transition: transform 0.3s ease;
+            height: 155px;
+            width: 400px;
 
             &.completed{
                 background: var(--p-red-400);
@@ -332,7 +389,7 @@ import { AuthService } from '../service/auth.service';
                 display: flex;
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.75rem;
+                gap: 10px;
                 width: 30%;
                 flex-grow: 1;
 
@@ -351,8 +408,13 @@ import { AuthService } from '../service/auth.service';
                     }
                 }
 
+                .next-reservation-date{
+                    height: 20px;
+                }
+
                 .description{
                     width: 95%;
+                    height: 20px;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -371,7 +433,20 @@ import { AuthService } from '../service/auth.service';
 
             .task-actions {
                 display: flex;
-                justify-content: flex-end;
+                justify-content: space-between;
+
+                .reservation-numbers{
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 5px;
+
+                    .adults-count, .pets-count, .babies-count, .cribs-count{
+                        display: flex;
+                        flex-direction: row;
+                        gap: 5px;
+                    }
+                }
             }
 
             &:hover{
