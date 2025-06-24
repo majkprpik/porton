@@ -237,7 +237,17 @@ export class HouseService {
     return this.houseAvailabilities.find(ha => ha.house_availability_end_date.split('T')[0] == specificDateStr && ha.house_id == houseId);
   }
 
-   getTimeObjFromTimeString(timeString: string): Date {
+  hasArrivalForToday(houseId: number) {
+    const today = new Date();
+    const specificDateStr = today.toISOString().split('T')[0];
+
+    return this.houseAvailabilities.find(ha =>
+      ha.house_availability_start_date.split('T')[0] == specificDateStr &&
+      ha.house_id == houseId
+    );
+  }
+
+  getTimeObjFromTimeString(timeString: string): Date {
     const date = new Date();
     const [hours, minutes] = timeString.split(':').map(n => parseInt(n, 10));
 

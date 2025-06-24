@@ -120,7 +120,7 @@ import { AuthService } from '../service/auth.service';
                                                         ){
                                                             Odlazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
                                                         } @else if(
-                                                            !houseService.hasDepartureForToday(task.house_id) &&
+                                                            houseService.hasArrivalForToday(task.house_id) &&
                                                             !houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_arrived
                                                         ) {
                                                             Dolazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].arrival_time }}
