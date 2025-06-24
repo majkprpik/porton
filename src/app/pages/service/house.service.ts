@@ -261,16 +261,20 @@ export class HouseService {
   getCurrentOccupantCount(houseId: number, key: keyof HouseAvailability){
     const todayAvailabilities = this.getTodaysHouseAvailabilityForHouse(houseId);
 
-    if (!todayAvailabilities || todayAvailabilities.length === 0) {
+    if (
+      !todayAvailabilities || 
+      todayAvailabilities.length == 0 || 
+      (todayAvailabilities.length == 1 && this.hasDepartureForToday(houseId) && todayAvailabilities[0].has_departed)
+    ) {
       const nextAvailability = this.getNextHouseAvailabilityForHouse(houseId);
       return nextAvailability ? nextAvailability[key] ?? 0 : 0;
     }
 
-    if (todayAvailabilities.length === 1) {
+    if (todayAvailabilities.length == 1) {
       return todayAvailabilities[0][key] ?? 0;
     }
 
-    if (todayAvailabilities.length === 2) {
+    if (todayAvailabilities.length == 2) {
       const relevant = todayAvailabilities[0].has_departed ? todayAvailabilities[1] : todayAvailabilities[0];
       return relevant[key] ?? 0;
     }
