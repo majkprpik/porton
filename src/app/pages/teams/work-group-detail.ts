@@ -165,20 +165,22 @@ import { AuthService } from '../service/auth.service';
                                                     taskService.isSheetChangeTask(task) || 
                                                     taskService.isTowelChangeTask(task))
                                                 {
-                                                    <p-button 
-                                                        [label]="'BUTTONS.' + getActionButtonLabel(task) | translate"
-                                                        [severity]="getActionButtonSeverity(task)"
-                                                        (onClick)="handleTaskAction($event, task)"
-                                                    ></p-button>
-                                                    
-                                                    @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
+                                                    <div class="buttons">
                                                         <p-button 
-                                                            [label]="'BUTTONS.PAUSE' | translate"
-                                                            severity="warn" 
-                                                            (onClick)="handleTaskPause($event, task)"
-                                                            [style]="{'margin-left': '0.5rem'}"
+                                                            [label]="'BUTTONS.' + getActionButtonLabel(task) | translate"
+                                                            [severity]="getActionButtonSeverity(task)"
+                                                            (onClick)="handleTaskAction($event, task)"
                                                         ></p-button>
-                                                    }
+                                                        
+                                                        @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
+                                                            <p-button 
+                                                                [label]="'BUTTONS.PAUSE' | translate"
+                                                                severity="warn" 
+                                                                (onClick)="handleTaskPause($event, task)"
+                                                                [style]="{'margin-left': '0.5rem'}"
+                                                            ></p-button>
+                                                        }
+                                                    </div>
                                                 } @else if(houseService.isHouseOccupied(task.house_id)){
                                                     <span>{{ 'TEAMS.TEAM-DETAILS.HOUSE-OCCUPIED' | translate }}</span>
                                                 } @else {
