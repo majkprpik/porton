@@ -108,12 +108,24 @@ import { AuthService } from '../service/auth.service';
                                                 
                                                 <div class="next-reservation-date">
                                                     @if(
-                                                        !houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length &&
+                                                        !houseService.isHouseOccupied(task.house_id) &&
+                                                        !houseService.isHouseReservedToday(task.house_id) &&
                                                         houseService.getNextHouseAvailabilityForHouse(task.house_id)
                                                     ){ 
                                                         <span>Dolazak: {{ houseService.getNextHouseAvailabilityForHouse(task.house_id).house_availability_start_date | date: 'dd/MM/yyyy' }}</span>
-                                                    }
-                                                    @if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length == 2){
+                                                    } @else if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length == 1){
+                                                        @if(
+                                                            houseService.hasDepartureForToday(task.house_id) && 
+                                                            !houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_departed
+                                                        ){
+                                                            Odlazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
+                                                        } @else if(
+                                                            !houseService.hasDepartureForToday(task.house_id) &&
+                                                            !houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_arrived
+                                                        ) {
+                                                            Dolazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].arrival_time }}
+                                                        }
+                                                    } @else if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length == 2){
                                                         @if(!houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_departed){
                                                             Odlazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
                                                         } @else if(
