@@ -460,6 +460,10 @@ export class ArrivalsAndDeparturesComponent {
   // Update arrival time in database
   async updateArrivalTime(arrival: any) {
     const timeString = this.getTimeStringFromObj(arrival.arrivalTimeObj);
+
+    if(arrival.arrival_time.startsWith(timeString)){
+      return;
+    }
     
     try {
       await this.houseService.updateHouseAvailabilityTime(
@@ -486,6 +490,10 @@ export class ArrivalsAndDeparturesComponent {
   // Update departure time in database
   async updateDepartureTime(departure: any) {
     const timeString = this.getTimeStringFromObj(departure.departureTimeObj);
+
+    if(departure.departure_time.startsWith(timeString)){
+      return;
+    }
     
     try {
       await this.houseService.updateHouseAvailabilityTime(
