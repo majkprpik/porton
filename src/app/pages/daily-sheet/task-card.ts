@@ -56,7 +56,7 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       font-size: 0.875rem;
       width: fit-content;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
 
       &:hover {
         cursor: pointer;
