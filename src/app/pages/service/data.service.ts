@@ -78,7 +78,7 @@ export interface WorkGroupProfile {
 export interface WorkGroupTask {
   work_group_id: number;
   task_id: number;
-  index?: number | null;
+  index: number;
 }
 
 // Interface for tasks
@@ -93,7 +93,7 @@ export interface Task {
   description: string | null;
   created_by: string;
   created_at: string;
-  index?: number | null; 
+  index: number; 
   is_unscheduled: boolean
 }
 

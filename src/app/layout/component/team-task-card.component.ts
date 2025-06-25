@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { StaffCardComponent } from '../../pages/daily-sheet/staff-card';
 import { TaskCardComponent } from '../../pages/daily-sheet/task-card';
+import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
 
 @Component({
   selector: 'app-team-task-card',
@@ -20,6 +21,7 @@ import { TaskCardComponent } from '../../pages/daily-sheet/task-card';
     TranslateModule,
     StaffCardComponent,
     TaskCardComponent,
+    TasksIndexSortPipe,
   ],
   template: `
     <div class="team-card" [class.locked]="workGroup?.is_locked" (click)="navigateToDetail(workGroup?.work_group_id)">
@@ -55,7 +57,7 @@ import { TaskCardComponent } from '../../pages/daily-sheet/task-card';
               <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-TASKS' | translate }}</p>
             } @else {
               <div class="tasks-list">
-                @for (task of workGroupTasks; track task.task_id) {
+                @for (task of workGroupTasks | tasksIndexSort; track task.task_id) {
                   <app-task-card 
                     [houseNumber]="houseService.getHouseNumber(task.house_id)"
                     [houseName]="houseService.getHouseName(task.house_id)"

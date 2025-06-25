@@ -19,6 +19,7 @@ import { CdkDrag, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { HouseService } from '../service/house.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
 
 @Component({
   selector: 'app-work-group',
@@ -37,6 +38,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     CdkDrag,
     ConfirmDialogModule,
     TranslateModule,
+    TasksIndexSortPipe,
   ],
   providers: [ConfirmationService],
   template: `
@@ -78,7 +80,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
             <div class="drop-area">{{ 'DAILY-SHEET.WORK-GROUPS.CLICK-TASKS' | translate }}</div>
           } @else {
             <div class="tasks-list">
-              @for (task of assignedTasks; track task.task_id; let i = $index) {
+              @for (task of assignedTasks | tasksIndexSort; track task.task_id; let i = $index) {
                 <div 
                   class="task-card-container"
                 >
@@ -128,10 +130,10 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
       [draggable]="false"
     >
       <div cdkDropList class="sorted-tasks-list" (cdkDropListDropped)="drop($event)">
-        @for (task of assignedTasks; track trackByTaskId($index, task)) {
+        @for (task of assignedTasks | tasksIndexSort; track task.task_id; let i = $index) {
           <div class="task-box-container">
             <div class="task-index">
-              ({{$index + 1}})
+              ({{i + 1}})
             </div>
   
             <div 
@@ -420,7 +422,7 @@ export class WorkGroup implements OnInit {
   @Input() isActive: boolean = false;
   @Input() assignedTasks: Task[] = [];
   @Input() assignedStaff: Profile[] = [];
-  
+
   @Output() groupSelected = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
   
@@ -572,7 +574,7 @@ export class WorkGroup implements OnInit {
               this.workGroupTasks = [...this.workGroupTasks, {
                 work_group_id: activeGroup,
                 task_id: selectedTask.task_id,
-                index: undefined,
+                index: this.workGroupTasks.filter((wgt: any) => wgt.work_group_id == activeGroup).length,
               }];
 
               const wgtIndex = this.workGroups.findIndex((wgt: any) => wgt.work_group_id == this.workGroup?.work_group_id);
@@ -709,11 +711,11 @@ export class WorkGroup implements OnInit {
       let lockedWorkGroupProfiles: any[] = [];
       
       lockedTeams.forEach(lockedTeam => {
-        lockedTeam.tasks?.forEach((task, index) => {
+        lockedTeam.tasks?.forEach((task) => {
           lockedWorkGroupTasks.push({
             work_group_id: parseInt(lockedTeam.id),
             task_id: task.task_id,
-            index: index,
+            index: this.workGroupTasks.find((wgt: any) => wgt.task_id == task.task_id)?.index ?? 0,
           });
         });
 
@@ -815,16 +817,31 @@ export class WorkGroup implements OnInit {
   drop(event: any) {
     let lockedTeam = this.workGroupService.getLockedTeams().find(lt => parseInt(lt.id) == this.workGroup?.work_group_id);
 
-    if(this.workGroup && lockedTeam){
-      this.workGroup.is_locked = false;
-      lockedTeam.isLocked = false;
-      this.workGroupService.updateLockedTeam(lockedTeam);
+    if(!this.workGroup || !lockedTeam){
+      return;
     }
 
-    moveItemInArray(this.assignedTasks, event.previousIndex, event.currentIndex);
-  }
+    this.workGroup.is_locked = false;
+    lockedTeam.isLocked = false;
 
-  trackByTaskId(index: number, task: Task): number {
-    return task.task_id;
+    moveItemInArray(this.assignedTasks, event.previousIndex, event.currentIndex);
+
+    this.assignedTasks.forEach((task, index) => {
+      task.index = index;
+
+      this.workGroupTasks = this.workGroupTasks.map((wgt: any) => {
+        if(wgt.task_id == task.task_id){
+          return {
+            ...wgt,
+            index: index,
+          }
+        } else {
+          return wgt;
+        }
+      });
+    });
+
+    this.dataService.setWorkGroupTasks(this.workGroupTasks);
+    this.workGroupService.updateLockedTeam(lockedTeam);
   }
 } 

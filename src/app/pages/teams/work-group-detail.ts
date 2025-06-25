@@ -606,7 +606,7 @@ export class WorkGroupDetail implements OnInit {
                         const workGroupTask = workGroupTasks.find(wgt => wgt.task_id === task.task_id);
                         return {
                           ...task,
-                          index: workGroupTask?.index ?? null
+                          index: workGroupTask?.index ?? 0
                         };
                     });
 

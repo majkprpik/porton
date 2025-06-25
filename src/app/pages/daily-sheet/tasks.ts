@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { TaskGroupComponent } from './task-group';
-import { DataService, Task, TaskType, TaskProgressType, House } from '../service/data.service';
+import { DataService, Task, TaskType, TaskProgressType, House, WorkGroupTask } from '../service/data.service';
 import { combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TaskService } from '../service/task.service';
@@ -105,7 +105,7 @@ export class TasksComponent implements OnInit {
   tasks: Task[] = [];
   taskTypes: TaskType[] = [];
   progressTypes: TaskProgressType[] = [];
-  workGroupTasks: { work_group_id: number; task_id: number }[] = [];
+  workGroupTasks: WorkGroupTask[] = [];
   activeWorkGroupId?: number;
   searchTerm: string = '';
   houses: House[] = [];
@@ -168,6 +168,7 @@ export class TasksComponent implements OnInit {
             this.workGroupTasks = [...this.workGroupTasks, {
               work_group_id: this.activeWorkGroupId,
               task_id: taskToAdd.task_id,
+              index: this.workGroupTasks.filter(wgt => wgt.work_group_id == this.activeWorkGroupId).length,
             }];
 
             this.tasks = this.tasks.map(t => 

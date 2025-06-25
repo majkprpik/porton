@@ -544,9 +544,17 @@ export class WorkGroups implements OnInit {
   getAssignedTasks(workGroupId: number): Task[] {
     let lockedTeams = this.workGroupService.getLockedTeams();
     let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == workGroupId);
+    const workGroupTasks = this.wgt.filter(wgt => wgt.work_group_id == lockedTeam?.id);
 
     if(lockedTeam?.tasks){
-      return lockedTeam?.tasks || [];
+      return lockedTeam.tasks.map(task => {
+        const workGroupTask = workGroupTasks.find(wgt => wgt.task_id == task.task_id);
+
+        return {
+          ...task,
+          index: workGroupTask.index,
+        }
+      });
     }
 
     return [];
@@ -646,6 +654,7 @@ export class WorkGroups implements OnInit {
 
     const workGroupPromises = unlockedWorkGroups.map(async (lockedWorkGroup) => {
       const workGroupId = parseInt(lockedWorkGroup.id);
+      const deletedWorkGroupTasks = this.wgt;
   
       await this.workGroupService.lockWorkGroup(workGroupId);
   
@@ -657,8 +666,8 @@ export class WorkGroups implements OnInit {
       lockedWorkGroup.tasks ??= [];
       lockedWorkGroup.members ??= [];
   
-      const createTaskPromises = lockedWorkGroup.tasks.map((task, index) => 
-        this.workGroupService.createWorkGroupTask(workGroupId, task.task_id, index)
+      const createTaskPromises = lockedWorkGroup.tasks.map((task) => 
+        this.workGroupService.createWorkGroupTask(workGroupId, task.task_id, deletedWorkGroupTasks.find(wgt => wgt.task_id == task.task_id).index)
       );
 
       const updateTaskProgressPromises = lockedWorkGroup.tasks

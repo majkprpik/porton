@@ -419,7 +419,20 @@ export class Teams implements OnInit {
     }
 
     getAssignedTasks(workGroupId: number): Task[] {
-        return this.workGroupTasks[workGroupId] || [];
+        const workGroupTasks = this.allWorkGroupTasks.filter(tasks => tasks.work_group_id == workGroupId);
+
+        if(!this.workGroupTasks[workGroupId]){
+            return [];
+        }
+
+        return this.workGroupTasks[workGroupId].map(wgt => {
+            const workGroupTask = workGroupTasks.find(task => task.task_id == wgt.task_id);
+
+            return {
+                ...wgt,
+                index: workGroupTask?.index ?? 0
+            }
+        });
     }
 
     getAssignedStaff(workGroupId: number): Profile[] {
