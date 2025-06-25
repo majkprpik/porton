@@ -27,11 +27,11 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       <div class="house-number">{{houseName}}</div>
       @if(task?.is_unscheduled){
         @if(isUrgentIconVisible){
-          <div class="urgent-task-icon">
+          <div class="urgent-task-icon blinking">
             <i class="fa fa-exclamation-triangle"></i>
           </div>
-        } @else{
-          <div class="task-icon">
+        } @else {
+          <div class="task-icon blinking">
             <i class="{{taskIcon}}"></i>
           </div>
         }
@@ -140,6 +140,10 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
       }
     } 
 
+    .blinking {
+      animation: blink 1s infinite;
+    }
+
     .urgent-task-icon{
       display: flex;
       align-items: center;
@@ -150,6 +154,12 @@ export type TaskState = 'not-assigned' | 'assigned' |'in-progress' | 'completed'
         color: red;
         font-size: 0.875rem;
       }
+    }
+
+    @keyframes blink {
+      0% { opacity: 0; }
+      50% { opacity: 1; }
+      100% { opacity: 0; }
     }
   `
 })
