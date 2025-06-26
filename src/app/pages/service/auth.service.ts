@@ -218,8 +218,8 @@ export class AuthService {
   
       return data;
     } catch (error) {
-      console.error('Error creating users:', error);
-      return null;
+      console.error('Error creating profile:', error);
+      throw error;
     }
   }
 

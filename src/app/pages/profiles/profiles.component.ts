@@ -503,8 +503,8 @@ export class ProfilesComponent implements OnInit {
           this.messageService.add({ 
             severity: 'error', 
             summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.ERROR'),  
-            detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.CREATE-ERROR'), 
-            life: 3000 
+            detail: error instanceof Error ? error.message : String(error), 
+            life: 5000 
           });
           console.error('Error creating profile:', error);
         }
