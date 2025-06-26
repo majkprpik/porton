@@ -70,7 +70,6 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
             [text]="true"
             [rounded]="true"
             (onClick)="onDeleteClick($event)"
-            pTooltip="Delete Group"
           ></p-button>
         </div>
       </div>
