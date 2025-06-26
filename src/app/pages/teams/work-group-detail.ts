@@ -377,7 +377,7 @@ import { AuthService } from '../service/auth.service';
             border: 1px solid var(--surface-border);
             border-radius: 6px;
             padding: 1rem;
-            transition: transform 0.3s ease;
+            transition: transform 0.15s ease;
             height: 155px;
             width: 400px;
 
@@ -473,7 +473,7 @@ import { AuthService } from '../service/auth.service';
 
             &:hover{
                 cursor: pointer;
-                transform: scale(1.01);
+                transform: translateY(-4px);
             }
         }
 

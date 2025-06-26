@@ -179,10 +179,6 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
       position: relative;
       transition: all 0.2s;
 
-      &:hover {
-        background-color: var(--surface-hover);
-      }
-
       &.active {
         .work-group-title {
           color: var(--text-color);
