@@ -523,7 +523,14 @@ export class WorkGroups implements OnInit {
     if(workGroups){
       for (const workGroup of this.workGroups) {
         if (!workGroup.is_repair && this.is3DaysOld(workGroup)) {
-          await this.workGroupService.deleteWorkGroup(workGroup.work_group_id.toString());
+          const workGroupTasks = this.wgt.filter(wgt => wgt.work_group_id == workGroup.work_group_id);
+          const tasks = this.allTasks.filter(task => workGroupTasks.some(wgt => wgt.task_id == task.task_id));
+  
+          const hasTasksInprogress = tasks.some(task => this.taskService.isTaskInProgress(task) || this.taskService.isTaskPaused(task));
+
+          if(!hasTasksInprogress){
+            this.deleteWorkGroup(workGroup.work_group_id);
+          }
         } else {
           this.lockedTeams.push({
             id: workGroup.work_group_id.toString(),
