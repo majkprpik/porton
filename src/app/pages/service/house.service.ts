@@ -13,7 +13,7 @@ export class HouseService {
   houses: House[] = [];
   houseStatuses = signal<HouseStatus[]>([]);
   taskProgressTypes: TaskProgressType[] = [];
-  tasks: Task[] = []
+  tasks: Task[] = [];
 
   constructor(
     private supabase: SupabaseService,
@@ -151,7 +151,14 @@ export class HouseService {
   getHouseTasks(houseId: number): HouseStatusTask[] {
     const status = this.houseStatuses().find((s) => s.house_id === houseId);
 
-    return status?.housetasks || [];
+    return status?.housetasks.map(housetask => {
+      const task = this.tasks.find(task => task.task_id == housetask.task_id);
+
+      return {
+        ...housetask,
+        is_unscheduled: task?.is_unscheduled,
+      }
+    }) || [];
   }
 
   getHouseNumber(houseId: number) {

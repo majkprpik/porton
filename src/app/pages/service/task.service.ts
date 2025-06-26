@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, HouseStatus, TaskProgressType, TaskType } from './data.service';
+import { DataService, HouseStatus, Task, TaskProgressType, TaskType } from './data.service';
 import { BehaviorSubject } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 import { AuthService } from './auth.service';
@@ -41,6 +41,7 @@ export class TaskService {
   private isUrgentIconVisibleSubject = new BehaviorSubject<boolean>(false);
   isUrgentIconVisible$ = this.isUrgentIconVisibleSubject.asObservable();
   private intervalId: any;
+  tasks: Task[] = [];
 
   constructor(
     private supabaseService: SupabaseService,
@@ -68,6 +69,10 @@ export class TaskService {
       this.sheetChangeTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Mijenjanje posteljine');
       this.towelChangeTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Mijenjanje ručnika');
       this.otherTaskType = this.taskTypes.find(tt => tt.task_type_name == 'Ostalo');
+    });
+
+    this.dataService.tasks$.subscribe(tasks => {
+      this.tasks = tasks;
     });
   }
 
@@ -120,6 +125,10 @@ export class TaskService {
       console.error('Error fetching task for house:', error);
       return null;
     }
+  }
+
+  isUnscheduled(taskId: number){
+    return this.tasks.find(task => task.task_id == taskId)?.is_unscheduled;
   }
 
   async uploadCommentForTask(taskId: number, comment: string){

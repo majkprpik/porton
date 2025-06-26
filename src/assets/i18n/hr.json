@@ -377,7 +377,8 @@
         "SEARCH": {
             "SEARCH-HOUSES": "Pretraži kućice",
             "BY-NUMBER": "Po broju",
-            "BY-TYPE": "Po tipu"
+            "BY-TYPE": "Po tipu",
+            "BY-STATUS": "Po statusu"
         },
         "HOUSE-STATUS": {
             "FREE": "Slobodna",

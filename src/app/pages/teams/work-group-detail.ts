@@ -554,7 +554,6 @@ export class WorkGroupDetail implements OnInit {
     houseAvailabilities: HouseAvailability[] = [];
     workGroupProfiles: WorkGroupProfile[] = [];
     taskIcon: any;
-    isUrgentIconVisible: any;
     isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
     urgentIconSubscriptions: Subscription[] = [];
     storedUserId: string | null = '';

@@ -70,12 +70,20 @@ interface SpecialLocation {
                                 (onClick)="sortBy('type')"
                                 styleClass="p-button-sm">
                             </p-button>
+                            <p-button 
+                                [outlined]="sortType !== 'status'"
+                                [raised]="sortType === 'status'"
+                                icon="pi pi-filter"
+                                [label]="'HOME.SEARCH.BY-STATUS' | translate"
+                                (onClick)="sortBy('status')"
+                                styleClass="p-button-sm">
+                            </p-button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="house-grid">
-                @if (sortType !== 'type') {
+                @if (sortType == 'number' || !sortType) {
                     @for (house of filteredHouses(); track house.house_id) {
                         <div 
                             class="house-card" 
@@ -91,19 +99,16 @@ interface SpecialLocation {
                                     @if (houseService.hasAnyTasks(house.house_id)) {
                                         @for (task of houseService.getHouseTasks(house.house_id); track task.task_id) {
                                             @if (!taskService.isTaskCompleted(task)){
-                                                @if (taskService.isRepairTask(task)) {
-                                                    <i class="fa fa-wrench" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                } @else if (taskService.isHouseCleaningTask(task)) {
-                                                    <i class="fa fa-house" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                } @else if (taskService.isTowelChangeTask(task)) {
-                                                    <i class="fa fa-bookmark" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                } @else if (taskService.isDeckCleaningTask(task)) {
-                                                    <i class="fa fa-umbrella-beach" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                } @else if (taskService.isSheetChangeTask(task)) {
-                                                    <i class="fa fa-bed" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                } @else {
-                                                    <i class="fa fa-file" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                }
+                                                <i 
+                                                    class="fa"
+                                                    [ngClass]="[
+                                                        getTaskIcon(task),
+                                                        taskService.isTaskInProgress(task) 
+                                                            ? (isUrgentIconVisibleMap[task.task_id] ? 'rotating' : 'rotating-wrench') 
+                                                            : ''
+                                                    ]"
+                                                    (click)="openTaskDetails($event, task)">
+                                                </i>
                                             }
                                         }
                                     }
@@ -148,7 +153,7 @@ interface SpecialLocation {
                             </div>
                         </div>
                     }
-                } @else {
+                } @else if (sortType == 'type') {
                     @for (group of groupedHouses(); track group.type.house_type_id) {
                         <div class="type-divider">{{ group.type.house_type_name }}</div>
                         @for (house of group.houses; track house.house_id) {
@@ -166,19 +171,87 @@ interface SpecialLocation {
                                         @if (houseService.hasAnyTasks(house.house_id)) {
                                             @for (task of houseService.getHouseTasks(house.house_id); track task.task_id) {
                                                 @if (!taskService.isTaskCompleted(task)){
-                                                    @if (taskService.isRepairTask(task)) {
-                                                        <i class="fa fa-wrench" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                    } @else if (taskService.isHouseCleaningTask(task)) {
-                                                        <i class="fa fa-house" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                    } @else if (taskService.isTowelChangeTask(task)) {
-                                                        <i class="fa fa-bookmark" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                    } @else if (taskService.isDeckCleaningTask(task)) {
-                                                        <i class="fa fa-umbrella-beach" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                    } @else if (taskService.isSheetChangeTask(task)) {
-                                                        <i class="fa fa-bed" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                    } @else {
-                                                        <i class="fa fa-file" [ngClass]="{ 'rotate-icon': taskService.isTaskInProgress(task) }" (click)="openTaskDetails($event, task)"></i>
-                                                    }
+                                                    <i 
+                                                        class="fa"
+                                                        [ngClass]="[
+                                                            getTaskIcon(task),
+                                                            taskService.isTaskInProgress(task) 
+                                                                ? (isUrgentIconVisibleMap[task.task_id] ? 'rotating' : 'rotating-wrench') 
+                                                                : ''
+                                                        ]"
+                                                        (click)="openTaskDetails($event, task)">
+                                                    </i>
+                                                }
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                                <div
+                                    class="expanded-content"
+                                    [class.expanded-occupied]="!isCurrentSlotGap(house.house_id) && isCurrentSlotOccupied(house.house_id)"
+                                    [class.expanded-free]="isCurrentSlotGap(house.house_id) || !isCurrentSlotOccupied(house.house_id)"
+                                    (click)="handleExpandedContentClick($event)"
+                                >
+                                    <div class="date-range">
+                                        <div class="date-nav">
+                                            <i class="fa fa-chevron-left" (click)="navigateReservation(house.house_id, 'prev')"></i>
+                                            <span>{{ getCurrentReservationDates(house.house_id) }}</span>
+                                            <i class="fa fa-chevron-right" (click)="navigateReservation(house.house_id, 'next')"></i>
+                                        </div>
+                                        <div class="numbers">
+                                            <div class="number-item">
+                                                <i class="fa fa-user"></i>
+                                                <span>{{ getAdultsCount(house.house_id) }}</span>
+                                            </div>
+                                            <span class="separator">|</span>
+                                            <div class="number-item">
+                                                <i class="fa fa-heart"></i>
+                                                <span>{{ getBabiesCount(house.house_id) }}</span>
+                                            </div>
+                                            <span class="separator">|</span>
+                                            <div class="number-item">
+                                                <i class="fa fa-star"></i>
+                                                <span>{{ getDogsCount(house.house_id) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                } @else if(sortType == 'status'){
+                    @for (group of groupedHousesByStatus(); track group.status) {
+                        <div class="type-divider">
+                            {{ ('HOME.HOUSE-STATUS.' + group.status) | translate }}
+                            <span class="houses-count">
+                                {{group.houses.length}}
+                            </span>
+                        </div> 
+                        @for (house of group.houses; track house.house_id) {
+                            <div 
+                                class="house-card" 
+                                [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
+                                [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
+                                [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
+                                [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.isHouseReservedToday(house.house_id)"
+                                [class.expanded]="expandedHouseId === house.house_id" 
+                                (click)="toggleExpand($event, house.house_id)">
+                                <div class="house-content">
+                                    <div class="house-number">{{ house.house_name }}</div>
+                                    <div class="house-icons">
+                                        @if (houseService.hasAnyTasks(house.house_id)) {
+                                            @for (task of houseService.getHouseTasks(house.house_id); track task.task_id) {
+                                                @if (!taskService.isTaskCompleted(task)){
+                                                    <i 
+                                                        class="fa"
+                                                        [ngClass]="[
+                                                            getTaskIcon(task),
+                                                            taskService.isTaskInProgress(task) 
+                                                                ? (isUrgentIconVisibleMap[task.task_id] ? 'rotating' : 'rotating-wrench') 
+                                                                : ''
+                                                        ]"
+                                                        (click)="openTaskDetails($event, task)">
+                                                    </i>
                                                 }
                                             }
                                         }
@@ -294,6 +367,28 @@ interface SpecialLocation {
             
             .sort-button, .sort-button:hover, .sort-button.active {
                 display: none;
+            }
+
+            .urgent-task-icon{
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 15px;
+
+                i {
+                    color: red;
+                    font-size: 0.875rem;
+                }
+            }
+
+            .blinking {
+                animation: blink 1s infinite;
+            }
+
+            @keyframes blink {
+                0% { opacity: 0; }
+                50% { opacity: 1; }
+                100% { opacity: 0; }
             }
             
             @media screen and (min-width: 992px) {
@@ -525,7 +620,8 @@ interface SpecialLocation {
                         background: var(--p-green-600);
                         .house-number,
                         .house-icons i {
-                            color: var(--p-green-100);
+                            color: white;
+                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
                         }
                     }
                 }
@@ -541,7 +637,8 @@ interface SpecialLocation {
                         background: var(--p-red-600);
                         .house-number,
                         .house-icons i {
-                            color: var(--p-red-100);
+                            color: white;
+                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
                         }
                     }
                 }
@@ -557,7 +654,8 @@ interface SpecialLocation {
                         background: var(--p-red-400);
                         .house-number,
                         .house-icons i {
-                            color: var(--p-red-100);
+                            color: white;
+                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
                         }
                     }
                 }
@@ -573,7 +671,8 @@ interface SpecialLocation {
                         background: var(--p-green-400);
                         .house-number,
                         .house-icons i {
-                            color: var(--p-green-100);
+                            color: white;
+                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
                         }
                     }
                 }
@@ -589,7 +688,8 @@ interface SpecialLocation {
                         background: var(--p-yellow-400);
                         .house-number,
                         .house-icons i {
-                            color: var(--p-yellow-100);
+                            color: white;
+                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
                         }
                     }
                 }
@@ -606,12 +706,18 @@ interface SpecialLocation {
                 }
 
                 .house-icons {
-                    display: flex;
-                    gap: 0.25rem;
                     padding-right: 0;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 10px;
 
                     i {
                         font-size: 1.25rem;
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: center;
                     }
                 }
             }
@@ -632,9 +738,19 @@ interface SpecialLocation {
                     }
 
                     .house-icons {
-                        gap: 0.5rem;
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        gap: 5px;
+
                         i {
                             font-size: 1.5rem;
+                            width: 25px;
+                            
+                            display: flex;
+                            flex-direction: row;
+                            align-items: center;
+                            justify-content: center;
                         }
                     }
                 }
@@ -706,8 +822,21 @@ interface SpecialLocation {
                 }
             }
 
-            .rotate-icon {
+            .rotating {
                 animation: rotate 2s linear infinite;
+            }
+
+            .rotating-wrench {
+                animation: rotate-180 2s linear infinite
+            }
+
+            @keyframes rotate-180 {
+                from {
+                    transform: rotate(130deg);
+                }
+                to {
+                    transform: rotate(490deg);
+                }
             }
 
             @keyframes rotate {
@@ -738,6 +867,19 @@ interface SpecialLocation {
                 background-color: var(--surface-ground, #f8f9fa);
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
+
+                .houses-count{
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 22px;
+                    height: 22px;
+                    background: var(--primary-color);
+                    color: var(--primary-color-text);
+                    border-radius: 50px;
+                    font-size: 12px;
+                    font-weight: 700;
+                }
             }
             
             @media (prefers-color-scheme: dark) {
@@ -767,10 +909,11 @@ export class Home implements OnInit, OnDestroy {
     
     // New properties for filtering and sorting
     searchTerm: string = '';
-    sortType: 'number' | 'type' | null = 'number';
+    sortType: 'number' | 'type' | 'status' | null = 'number';
     
     // Group houses by type for divider display
     groupedHouses = signal<{ type: HouseType; houses: House[] }[]>([]);
+    groupedHousesByStatus = signal<{ status: string; houses: House[] }[]>([]);
 
     // Special locations
     specialLocations: SpecialLocation[] = [
@@ -800,6 +943,8 @@ export class Home implements OnInit, OnDestroy {
     taskDescription: string = '';
     taskTypes = signal<TaskType[]>([]);
     tasks: Task[] = [];
+
+    isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
 
     menuItems: MenuItem[] = [
         {
@@ -849,10 +994,28 @@ export class Home implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.dataService.houseAvailabilities$.subscribe((availabilities) => {
             this.houseAvailabilities.set(availabilities);
+            this.applyFilters();
         }));
 
         this.subscriptions.push(this.dataService.houseStatuses$.subscribe((statuses) => {
             this.houseStatuses.set(statuses);
+
+            statuses.forEach(status => {
+                status.housetasks.map(housetask => {
+                    const task = this.tasks.find(task => task.task_id == housetask.task_id);
+
+                    if(task?.is_unscheduled){
+                        this.taskService.isUrgentIconVisible$.subscribe(visible => {
+                            this.isUrgentIconVisibleMap[task.task_id] = visible;
+                        });
+                    }
+
+                    return {
+                        ...housetask,
+                        is_unscheduled: task?.is_unscheduled,
+                    }
+                })
+            })
         }));
 
         this.subscriptions.push(this.dataService.taskTypes$.subscribe((types) => {
@@ -1279,12 +1442,12 @@ export class Home implements OnInit, OnDestroy {
         }
         
         // Apply sorting
-        if (this.sortType === 'number') {
+        if (this.sortType == 'number') {
             result.sort((a, b) => a.house_number - b.house_number);
             this.filteredHouses.set(result);
             // Reset grouped houses when not sorting by type
             this.groupedHouses.set([]);
-        } else if (this.sortType === 'type') {
+        } else if (this.sortType == 'type') {
             // First sort by type, then by number within same type
             result.sort((a, b) => {
                 if (a.house_type_id !== b.house_type_id) {
@@ -1304,6 +1467,27 @@ export class Home implements OnInit, OnDestroy {
             
             this.groupedHouses.set(grouped);
             this.filteredHouses.set(result);
+        } else if (this.sortType == 'status'){
+            const statusOrder = ['OCCUPIED', 'ARRIVAL-DAY', 'NOT-CLEANED', 'FREE'];
+            
+            result.sort((a, b) => {
+                const statusA = this.getHouseStatus(a);
+                const statusB = this.getHouseStatus(b);
+                const orderDiff = statusOrder.indexOf(statusA) - statusOrder.indexOf(statusB);
+                if (orderDiff !== 0) return orderDiff;
+                return a.house_number - b.house_number;
+            });
+
+            // Group by status
+            const grouped = statusOrder.map(status => {
+                return {
+                    status,
+                    houses: result.filter(h => this.getHouseStatus(h) === status)
+                };
+            }).filter(group => group.houses.length > 0);
+
+            this.groupedHousesByStatus.set(grouped);
+            this.filteredHouses.set(result);
         } else {
             this.filteredHouses.set(result);
             // Reset grouped houses when not sorting by type
@@ -1311,7 +1495,7 @@ export class Home implements OnInit, OnDestroy {
         }
     }
     
-    sortBy(type: 'number' | 'type') {
+    sortBy(type: 'number' | 'type' | 'status') {
         // Toggle sort if clicking the same button
         this.sortType = this.sortType === type ? null : type;
         
@@ -1321,5 +1505,25 @@ export class Home implements OnInit, OnDestroy {
         }
         
         this.applyFilters();
+    }
+
+    getTaskIcon(task: HouseStatusTask): string {
+        if (this.isUrgentIconVisibleMap[task.task_id]) {
+            return 'fa-exclamation-triangle';
+        }
+
+        if (this.taskService.isRepairTask(task)) return 'fa-wrench';
+        if (this.taskService.isHouseCleaningTask(task)) return 'fa-house';
+        if (this.taskService.isTowelChangeTask(task)) return 'fa-bookmark';
+        if (this.taskService.isDeckCleaningTask(task)) return 'fa-umbrella-beach';
+        if (this.taskService.isSheetChangeTask(task)) return 'fa-bed';
+        return 'fa-file';
+    }
+
+    getHouseStatus(house: House): 'OCCUPIED' | 'ARRIVAL-DAY' | 'NOT-CLEANED' | 'FREE' {
+        if (this.houseService.isHouseOccupied(house.house_id)) return 'OCCUPIED';
+        if (!this.houseService.isHouseOccupied(house.house_id) && this.houseService.hasAnyTasks(house.house_id)) return 'NOT-CLEANED';
+        if (!this.houseService.isHouseOccupied(house.house_id) && this.houseService.isHouseReservedToday(house.house_id)) return 'ARRIVAL-DAY';
+        return 'FREE';
     }
 }

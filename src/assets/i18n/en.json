@@ -377,7 +377,8 @@
         "SEARCH": {
             "SEARCH-HOUSES": "Search houses",
             "BY-NUMBER": "By number",
-            "BY-TYPE": "By type"
+            "BY-TYPE": "By type",
+            "BY-STATUS": "By status"
         },
         "HOUSE-STATUS": {
             "FREE": "Free",
