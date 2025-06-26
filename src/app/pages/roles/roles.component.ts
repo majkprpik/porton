@@ -8,7 +8,6 @@ import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
-import { TooltipModule } from 'primeng/tooltip';
 import { Subject } from 'rxjs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
@@ -28,7 +27,6 @@ interface Role {
     InputTextModule, 
     FormsModule,
     ToastModule,
-    TooltipModule,
     ConfirmDialogModule,
   ],
   providers: [MessageService, ConfirmationService],

@@ -9,7 +9,6 @@ import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
-import { TooltipModule } from 'primeng/tooltip';
 import { Subject, takeUntil } from 'rxjs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -25,7 +24,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     InputTextModule, 
     FormsModule,
     ToastModule,
-    TooltipModule,
     ConfirmDialogModule,
     TranslateModule,
   ],

@@ -7,8 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { StaffCardComponent } from './staff-card';
 import { MenuItem } from 'primeng/api';
 import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
-import { combineLatest, forkJoin } from 'rxjs';
-import { TooltipModule } from 'primeng/tooltip';
+import { combineLatest } from 'rxjs';
 import { DragDropModule } from 'primeng/dragdrop';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
@@ -31,7 +30,6 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
     TagModule, 
     StaffCardComponent, 
     ContextMenuModule,
-    TooltipModule,
     DragDropModule,
     DialogModule,
     CdkDropList, 
