@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { ProfileService } from '../../pages/service/profile.service';
 import { PushNotificationsService } from '../../pages/service/push-notifications.service';
+import { combineLatest } from 'rxjs';
 
 @Component({
     selector: 'app-topbar',
@@ -132,18 +133,20 @@ export class AppTopbar {
     }
 
     ngOnInit(){
-        this.storedUserId = this.authService.getStoredUserId();
-
-        this.languageService.$selectedLanguage.subscribe(selectedLanguage => {
-            this.selectedLanguage = selectedLanguage;
-        });
-
-        this.dataService.profiles$.subscribe(profiles => {
-            this.profiles = profiles;
-        });
-
-        this.dataService.profileRoles$.subscribe(profileRoles => {
-            this.profileRoles = profileRoles;
+        combineLatest([
+            this.languageService.$selectedLanguage,
+            this.dataService.profiles$,
+            this.dataService.profileRoles$
+        ]).subscribe({
+            next: ([selectedLanguage, profiles, profileRoles]) => {
+                this.storedUserId = this.authService.getStoredUserId();
+                this.selectedLanguage = selectedLanguage;
+                this.profiles = profiles;
+                this.profileRoles = profileRoles;
+            },
+            error: (error) => {
+                console.error('Error in combineLatest:', error);
+            }
         });
     }
 

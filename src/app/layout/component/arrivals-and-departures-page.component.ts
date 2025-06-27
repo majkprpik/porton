@@ -272,13 +272,13 @@ export class ArrivalsAndDeparturesPageComponent {
   }
   
   async ngOnInit(){
-    this.storedUserId = this.authService.getStoredUserId();
-
     combineLatest([
       this.dataService.houses$,
-      this.dataService.houseAvailabilities$,
+      this.dataService.houseAvailabilities$
     ]).subscribe({
       next: ([houses, houseAvailabilities]) => {
+        this.storedUserId = this.authService.getStoredUserId();
+        
         this.houses = houses;
         this.houseAvailabilities = houseAvailabilities;
 
