@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { ProfileService } from './profile.service';
 import { DataService, ProfileRole } from './data.service';
+import { LayoutService } from '../../layout/service/layout.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ import { DataService, ProfileRole } from './data.service';
 export class AuthService {  
   private readonly STORAGE_KEY = 'username';
   private usernameSubject = new BehaviorSubject<string | null>(this.getStoredUsername());
-  public userProfile = new BehaviorSubject<any>({});
+  public userProfile = new BehaviorSubject<any>(null);
   profileRoles: ProfileRole[] = [];
 
   constructor(
@@ -19,6 +20,7 @@ export class AuthService {
     private supabaseService: SupabaseService,
     private profileService: ProfileService,
     private dataService: DataService,
+    private layoutService: LayoutService,
   ) {
     this.dataService.profileRoles$.subscribe(profileRoles => {
       this.profileRoles = profileRoles;
@@ -49,15 +51,16 @@ export class AuthService {
       if (error) throw error;
 
       if (data.user) {
-        localStorage.setItem(this.STORAGE_KEY, email);
-        localStorage.setItem('profileId', data.user.id)
+        this.setUserName(this.STORAGE_KEY, email);
+        this.setProfileId(data.user.id);
         this.usernameSubject.next(email);
         this.userProfile.next(await this.profileService.fetchProfileById(data.user.id));
-        localStorage.setItem('userProfile', JSON.stringify(this.userProfile.value));
+        this.setUserProfile(JSON.stringify(this.userProfile.value));
+        this.layoutService.setSpeedDialItems([]);
 
         const accessToken = data.session?.access_token;
         if (accessToken) {
-          localStorage.setItem('supabase_access_token', accessToken);
+          this.setSupabaseAccessToken(accessToken);
         }
 
         return true;
@@ -75,7 +78,7 @@ export class AuthService {
       localStorage.clear();
       this.usernameSubject.next(null);
       this.userProfile.next(null);
-      // Wait for navigation to complete
+      this.layoutService.setSpeedDialItems([]);
       await this.router.navigate(['/auth/login']);
     } catch (error) {
       console.error('Logout error:', error);
@@ -92,16 +95,32 @@ export class AuthService {
     return localStorage.getItem(this.STORAGE_KEY);
   }
 
+  setUserName(userName: string, email: string){
+    localStorage.setItem(userName, email);
+  }
+
   getStoredUserId(){
     return localStorage.getItem('profileId');
+  }
+
+  setProfileId(profileId: string){
+    localStorage.setItem('profileId', profileId);
   }
 
   getStoredUserProfile(){
     return localStorage.getItem('userProfile');
   }
 
+  setUserProfile(userProfile: string){
+    localStorage.setItem('userProfile', userProfile);
+  }
+
   getUsername() {
     return this.usernameSubject.asObservable();
+  }
+
+  setSupabaseAccessToken(accessToken: string){
+    localStorage.setItem('supabase_access_token', accessToken);
   }
 
   /**

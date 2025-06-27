@@ -275,10 +275,10 @@ interface SpecialLocation {
         @if(!faultReportVisible && !isUnscheduledTaskVisible){
             <p-speedDial
                 [(visible)]="isSpeedDialVisible"
-                [model]="menuItems"
+                [model]="layoutService.getSpeedDialItems()"
                 [radius]="120"
-                [type]="menuItems.length > 2 ? 'quarter-circle' : 'linear'"
-                [direction]="menuItems.length > 2 ? 'up-left' : 'up'"
+                [type]="layoutService.getSpeedDialItems().length > 2 ? 'quarter-circle' : 'linear'"
+                [direction]="layoutService.getSpeedDialItems().length > 2 ? 'up-left' : 'up'"
                 buttonClassName="p-button-primary"
                 [buttonProps]="{ size: 'large', raised: true }"
                 showIcon="pi pi-list"
@@ -959,8 +959,6 @@ export class AppLayout {
 
     selectedTabIndex: string = "0";
 
-    menuItems: MenuItem[] = [];
-
     loggedUser: Profile | undefined = undefined;
 
     constructor(
@@ -999,8 +997,9 @@ export class AppLayout {
 
     ngOnInit() {
         this.dataService.loadInitialData();
-        this.storedUserId = this.authService.getStoredUserId();
         this.pushNotificationsService.requestFirebaseMessaging();
+        this.dataService.listenToDatabaseChanges();
+
 
         combineLatest([
             this.dataService.repairTaskComments$,
@@ -1018,6 +1017,8 @@ export class AppLayout {
             this.dataService.profileRoles$,
         ]).subscribe({
             next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles]) => {
+                this.storedUserId = this.authService.getStoredUserId();
+
                 this.comments = repairTaskComments;
                 this.houses = houses;
                 this.taskTypes = taskTypes.map(taskType => ({
@@ -1042,7 +1043,7 @@ export class AppLayout {
                 this.loggedUser = this.profiles.find(profile => profile.id == this.storedUserId);
 
                 if(profiles.length > 0 && profileRoles.length > 0){
-                    this.buildMenuItems();
+                    this.buildSpeedDialItems();
                 }
 
                 if (houses) {
@@ -1256,12 +1257,12 @@ export class AppLayout {
                     this.dataService.setProfiles(updatedProfiles);
                 }
             } else if (res && res.eventType == 'DELETE'){
-                if(res.old.id == this.authService.getStoredUserId()){
-                    this.authService.logout();
-                }
-
                 this.profiles = this.profiles.filter(profile => profile.id != res.old.id);
                 this.dataService.setProfiles(this.profiles);
+
+                if(res.old.id == this.storedUserId){
+                    this.authService.logout();
+                }
             }
         });
 
@@ -1275,9 +1276,9 @@ export class AppLayout {
         });
     }
 
-    buildMenuItems(){
-        if(this.menuItems.length <= 0){
-            this.menuItems.push({
+    buildSpeedDialItems(){
+        if(this.layoutService.getSpeedDialItems().length <= 0){
+            this.layoutService.addSpeedDialItem({
                 icon: 'pi pi-wrench',
                 command: () => {
                     this.faultReportVisible = true;
@@ -1286,22 +1287,22 @@ export class AppLayout {
                 }
             });
             if(!this.profileService.isHousekeeper(this.storedUserId)){
-                this.menuItems.push({
+                this.layoutService.addSpeedDialItem({
                     icon: 'pi pi-file-edit',
                     command: () => {
                         this.isUnscheduledTaskVisible = true;
                     }
                 });
                 if(!this.profileService.isHouseTechnician(this.storedUserId)){
-                    this.menuItems.push({
+                    this.layoutService.addSpeedDialItem({
                         icon: 'pi pi-clipboard',
                         command: () => {
                             this.isNotesWindowVisible = true;
                             this.positions['notes'] = { x: 0, y: 0 };
                             localStorage.setItem('windowPositions', JSON.stringify(this.positions));
                         }
-                    },
-                    {
+                    });
+                    this.layoutService.addSpeedDialItem({
                         icon: 'pi pi-arrow-right-arrow-left',
                         command: () => {
                             this.isArrivalsAndDeparturesWindowVisible = true;
@@ -1319,7 +1320,7 @@ export class AppLayout {
     }
 
     isLoggedUserDeleted(){
-        return !this.profiles.find(profile => profile.id == this.authService.getStoredUserId());
+        return !this.profiles.find(profile => profile.id == this.storedUserId);
     }
 
     loadStoredWindowPositions(){

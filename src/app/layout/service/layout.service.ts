@@ -1,4 +1,5 @@
 import { Injectable, effect, signal, computed } from '@angular/core';
+import { MenuItem } from 'primeng/api';
 import { Subject } from 'rxjs';
 
 export interface layoutConfig {
@@ -43,40 +44,24 @@ export class LayoutService {
     };
 
     layoutConfig = signal<layoutConfig>(this._config);
-
     layoutState = signal<LayoutState>(this._state);
-
     private configUpdate = new Subject<layoutConfig>();
-
     private overlayOpen = new Subject<any>();
-
     private menuSource = new Subject<MenuChangeEvent>();
-
     private resetSource = new Subject();
-
     menuSource$ = this.menuSource.asObservable();
-
     resetSource$ = this.resetSource.asObservable();
-
     configUpdate$ = this.configUpdate.asObservable();
-
     overlayOpen$ = this.overlayOpen.asObservable();
-
     theme = computed(() => (this.layoutConfig()?.darkTheme ? 'light' : 'dark'));
-
     isSidebarActive = computed(() => this.layoutState().overlayMenuActive || this.layoutState().staticMenuMobileActive);
-
     isDarkTheme = computed(() => this.layoutConfig().darkTheme);
-
     getPrimary = computed(() => this.layoutConfig().primary);
-
     getSurface = computed(() => this.layoutConfig().surface);
-
     isOverlay = computed(() => this.layoutConfig().menuMode === 'overlay');
-
     transitionComplete = signal<boolean>(false);
-
     private initialized = false;
+    private speedDialItems: MenuItem[] = [];
 
     constructor() {
         effect(() => {
@@ -96,6 +81,18 @@ export class LayoutService {
 
             this.handleDarkModeTransition(config);
         });
+    }
+
+    getSpeedDialItems(){
+        return this.speedDialItems;
+    }
+
+    setSpeedDialItems(speedDialItems: MenuItem[]){
+        this.speedDialItems = speedDialItems;
+    }
+
+    addSpeedDialItem(speedDialItems: MenuItem){
+        this.speedDialItems.push(speedDialItems);
     }
 
     private handleDarkModeTransition(config: layoutConfig): void {
