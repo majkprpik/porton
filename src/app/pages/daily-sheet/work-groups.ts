@@ -705,10 +705,6 @@ export class WorkGroups implements OnInit {
     });
   
     await Promise.all(workGroupPromises);
-
-    if(unlockedWorkGroups.length){
-      window.location.reload();
-    }
   }
 
   areDaysEqual(date1: string, date2: string){
