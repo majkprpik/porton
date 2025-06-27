@@ -998,8 +998,7 @@ export class AppLayout {
     ngOnInit() {
         this.dataService.loadInitialData();
         this.pushNotificationsService.requestFirebaseMessaging();
-        this.dataService.listenToDatabaseChanges();
-
+        this.dataService.listenToDatabaseChanges(); 
 
         combineLatest([
             this.dataService.repairTaskComments$,

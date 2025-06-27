@@ -9,8 +9,8 @@ import {
   catchError,
   tap,
   combineLatest,
-  of,
 } from 'rxjs';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 // Interfaces for enum types
 export interface HouseAvailabilityType {
@@ -240,12 +240,13 @@ export class DataService {
   $areNotesLoaded = new BehaviorSubject<boolean>(false);
   $areRepairTaskCommentsLoaded = new BehaviorSubject<boolean>(false);
 
+  private realtimeChannel: RealtimeChannel | null = null;
+
   constructor(private supabaseService: SupabaseService) {
     // Load all enum types when service is initialized
     this.loadAllEnumTypes();
     // Load all data
     this.loadInitialData();
-    this.listenToDatabaseChanges();
   }
 
   setTasks(tasks: Task[]){
@@ -1106,7 +1107,9 @@ export class DataService {
   }
 
   listenToDatabaseChanges(){
-    this.supabaseService.getClient().channel('realtime:porton')
+    if (this.realtimeChannel) return;
+
+    this.realtimeChannel = this.supabaseService.getClient().channel('realtime:porton')
     .on(
       'postgres_changes',
       { 
