@@ -94,11 +94,11 @@ import { AuthService } from '../service/auth.service';
                                                     <span class="house-number">{{houseService.getHouseName(task.house_id)}}</span>
                                                     @if(task?.is_unscheduled){
                                                         @if(isUrgentIconVisibleMap[task.task_id]){
-                                                            <div class="urgent-task-icon blinking">
+                                                            <div class="urgent-task-icon">
                                                                 <i class="fa fa-exclamation-triangle"></i>
                                                             </div>
                                                         } @else {
-                                                            <div class="task-icon blinking">
+                                                            <div class="task-icon">
                                                                 <i [class]="getTaskTypeIcon(task.task_type_id)"></i>
                                                             </div>
                                                         }
@@ -524,17 +524,6 @@ import { AuthService } from '../service/auth.service';
               color: red;
               font-size: 1rem;
             }
-        }
-
-        .blinking {
-            animation: blink 1s infinite;
-        }
-
-        
-        @keyframes blink {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
         }
     `
 })
