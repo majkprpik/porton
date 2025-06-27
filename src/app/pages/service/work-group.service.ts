@@ -129,78 +129,6 @@ export class WorkGroupService {
     }
   }
 
-  async updateWorkGroupTaskIndex(taskId: number, index: number){
-    try{
-      const { error: updateTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_tasks')
-        .update({
-          index: index
-        })
-        .eq('task_id', taskId);
-
-      if(updateTaskError) throw updateTaskError
-
-      return true;
-    } catch(error) {
-      console.log(error);
-      return false;
-    }
-  }
-
-  async deleteWorkGroup(teamId: string){
-    try{
-      const { error: updateTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_groups')
-        .delete()
-        .eq('work_group_id', teamId);
-
-      if(updateTaskError) throw updateTaskError
-
-      return true;
-    } catch(error) {
-      console.log(error);
-      return false;
-    }
-  }
-
-  async deleteWorkGroupProfile(profileId: string, workGroupId: number){
-    try{
-      const { error: deleteWorkGroupProfileError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_profiles')
-        .delete()
-        .eq('profile_id', profileId)
-        .eq('work_group_id', workGroupId);
-
-      if(deleteWorkGroupProfileError) throw deleteWorkGroupProfileError
-
-      return true;
-    } catch(error) {
-      console.log(error);
-      return false;
-    }
-  }
-
-  async deleteWorkGroupTask(taskId: number, workGroupId: number){
-    try{
-      const { error: deleteWorkGroupTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_tasks')
-        .delete()
-        .eq('task_id', taskId)
-        .eq('work_group_id', workGroupId);
-
-      if(deleteWorkGroupTaskError) throw deleteWorkGroupTaskError
-
-      return true;
-    } catch(error) {
-      console.log(error);
-      return false;
-    }
-  }
-
   async deleteAllWorkGroupTasksByWorkGroupId(workGroupId: number){
     try{
       const { error: deleteWorkGroupTaskError } = await this.supabaseService.getClient()
@@ -235,27 +163,6 @@ export class WorkGroupService {
     }
   }
 
-  async submitTechnicianForRepairTask(workGroupId: number, profileId: string){
-    try{
-      const { data: newTechnicianForRepairTask, error: newTechnicianForRepairTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_profiles')
-        .insert({ 
-          work_group_id: workGroupId,
-          profile_id: profileId,
-         })
-        .select()
-        .single();
-
-      if(newTechnicianForRepairTaskError) throw newTechnicianForRepairTaskError;
-
-      return newTechnicianForRepairTask;
-    } catch (error){
-      console.log(error);
-      return {};
-    }
-  }
-
   async createWorkGroupProfile(workGroupId: number, profileId: string){
     try{
       const { data: newWorkGroupProfile, error: newWorkGroupProfileError } = await this.supabaseService.getClient()
@@ -274,79 +181,6 @@ export class WorkGroupService {
     } catch (error){
       console.log(error);
       return {};
-    }
-  }
-
-  async createWorkGroupForHouse(workGroupId: number, houseId: number){
-    try{
-      const { data: newWorkGroupForHouseTask, error: newWorkGroupForHouseTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_houses')
-        .insert({ 
-          work_group_id: workGroupId,
-          house_id: houseId,
-         })
-        .select()
-        .single();
-
-      if(newWorkGroupForHouseTaskError) throw newWorkGroupForHouseTaskError;
-
-      return newWorkGroupForHouseTask;
-    } catch (error){
-      console.log(error);
-      return {};
-    }
-  }
-
-  async getWorkGroupTasksByTaskId(taskId: number){
-    try{
-      const { data: existingWorkGroupTask, error: existingWorkGroupTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_tasks')
-        .select('*')
-        .eq('task_id', taskId)
-        .single();
-
-      if(existingWorkGroupTaskError) throw existingWorkGroupTaskError;
-
-      return existingWorkGroupTask;
-    } catch (error) {
-      console.log(error);
-      return {};
-    }
-  }
-
-  async deleteWorkGroupProfileByProfileId(profileId: string){
-    try{
-      const { error: deleteWorkGroupProfileError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_profiles')
-        .delete()
-        .eq('profile_id', profileId);
-
-      if(deleteWorkGroupProfileError) throw deleteWorkGroupProfileError
-
-      return true;
-    } catch(error) {
-      console.log(error);
-      return false;
-    }
-  }
-
-  async deleteWorkGroupTaskByTaskId(taskId: string){
-    try{
-      const { error: deleteWorkGroupTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_tasks')
-        .delete()
-        .eq('task_id', taskId);
-
-      if(deleteWorkGroupTaskError) throw deleteWorkGroupTaskError
-
-      return true;
-    } catch(error) {
-      console.log(error);
-      return false;
     }
   }
 

@@ -302,12 +302,6 @@ export class DataService {
     }
   }
 
-  // Method to enable/disable debug mode
-  setDebug(enabled: boolean): void {
-    this.debug = enabled;
-    //console.log(`Debug mode ${enabled ? 'enabled' : 'disabled'}`);
-  }
-
   private logData(source: string, data: any): void {
     if (this.debug) {
       //console.log(`[DataService] ${source}:`, data);
@@ -355,19 +349,6 @@ export class DataService {
     this.getTaskTypes().subscribe();
     this.getTaskProgressTypes().subscribe();
     this.getHouseTypes().subscribe();
-  }
-
-  // Method to set schema name
-  setSchema(schemaName: string): void {
-    this.schema = schemaName;
-    if (this.debug) {
-      //console.log(`[DataService] Schema changed to: ${schemaName}`);
-    }
-  }
-
-  // Method to get schema name
-  getSchema(): string {
-    return this.schema;
   }
 
   getHouseAvailabilityTypes(): Observable<HouseAvailabilityType[]> {
@@ -707,59 +688,6 @@ export class DataService {
     );
   }
 
-  async getWorkGroupProfilesByWorkGroupId(workGroupId: number): Promise<any>{
-    try{
-      const { data: existingWorkGroup, error: existingWorkGroupError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_profiles')
-        .select('*')
-        .eq('work_group_id', workGroupId);
-
-      if(existingWorkGroupError) throw existingWorkGroupError;
-
-      return existingWorkGroup;
-    } catch (error) {
-      console.log(error);
-      return [];
-    }
-  }
-
-  async getWorkGroupTasksByTaskId(taskId: number){
-    try{
-      const { data: existingWorkGroupTask, error: existingWorkGroupTaskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('work_group_tasks')
-        .select('*')
-        .eq('task_id', taskId)
-        .single();
-
-      if(existingWorkGroupTaskError) throw existingWorkGroupTaskError;
-
-      return existingWorkGroupTask;
-    } catch (error) {
-      console.log(error);
-      return {};
-    }
-  }
-
-  // Method to create a new profile
-  createProfile(profile: Omit<Profile, 'id' | 'created_at'>): Observable<Profile | null> {
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.insertData('profiles', profile, this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentProfiles = this.profilesSubject.value;
-          this.setProfiles([...currentProfiles, data[0]]);
-          this.logData('Created Profile', data[0]);
-        }
-      }),
-      map((data) => (data ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
   // Method to update a profile
   updateProfile(id: string, updates: Partial<Omit<Profile, 'id' | 'created_at'>>): Observable<Profile | null> {
     this.loadingSubject.next(true);
@@ -1001,44 +929,6 @@ export class DataService {
     }
   }
 
-  // Method to create a new house
-  createHouse(house: Omit<House, 'house_id'>): Observable<House | null> {
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.insertData('houses', house, this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentHouses = this.housesSubject.value;
-          this.housesSubject.next([...currentHouses, data[0]]);
-          this.logData('Created House', data[0]);
-        }
-      }),
-      map((data) => (data ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  // Method to update a house
-  updateHouse(houseId: number, updates: Partial<Omit<House, 'house_id'>>): Observable<House | null> {
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.updateData('houses', updates, houseId.toString(), this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentHouses = this.housesSubject.value;
-          const updatedHouses = currentHouses.map(house => 
-            house.house_id === houseId ? { ...house, ...data[0] } : house
-          );
-          this.housesSubject.next(updatedHouses);
-        }
-      }),
-      map((data) => (data ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
   // Method to refresh all data
   refreshData(): void {
     if (this.debug) {
@@ -1122,95 +1012,6 @@ export class DataService {
       map((data) => (data ? data[0] : null)),
       catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  // Method to publish work groups (set all to locked)
-  publishWorkGroups(workGroupIds: number[]): Observable<WorkGroup[] | null> {
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.updateByIds(
-      'work_groups', 
-      { is_locked: true }, 
-      workGroupIds,
-      'work_group_id',
-      this.schema
-    )).pipe(
-      tap((data) => {
-        if (data) {
-          // Update only the specified work groups in the BehaviorSubject
-          const currentGroups = this.workGroupsSubject.value;
-          const updatedGroups = currentGroups.map(group => 
-            workGroupIds.includes(group.work_group_id) 
-              ? { ...group, is_locked: true }
-              : group
-          );
-          this.workGroupsSubject.next(updatedGroups);
-          this.logData('Published Work Groups', data);
-        }
-      }),
-      map((data) => data || null),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  assignStaffToWorkGroup(profileId: string, workGroupId: number): Observable<WorkGroupProfile | null> {
-    const assignment: WorkGroupProfile = {
-      work_group_id: workGroupId,
-      profile_id: profileId
-    };
-
-    return from(this.supabaseService.insertData('work_group_profiles', assignment, this.schema)).pipe(
-      tap(result => {
-        if (result) {
-          const currentAssignments = this.workGroupProfilesSubject.value;
-          this.workGroupProfilesSubject.next([...currentAssignments, assignment]);
-        }
-      }),
-      map(data => data ? data[0] : null),
-      catchError(error => {
-        console.error('Error assigning staff to work group:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // Method to remove staff from work group
-  removeStaffFromWorkGroup(profileId: string, workGroupId: number): Observable<any> {
-    const filter = `profile_id = '${profileId}' AND work_group_id = ${workGroupId}`;
-
-    return from(this.supabaseService.deleteData('work_group_profiles', filter, this.schema)).pipe(
-      tap(() => {
-        const currentAssignments = this.workGroupProfilesSubject.value;
-        const updatedAssignments = currentAssignments.filter(
-          assignment => !(assignment.profile_id === profileId && assignment.work_group_id === workGroupId)
-        );
-        this.workGroupProfilesSubject.next(updatedAssignments);
-      }),
-      catchError(error => {
-        console.error('Error removing staff from work group:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // Method to remove task from work group
-  removeTaskFromWorkGroup(workGroupId: number, taskId: number): Observable<any> {
-    const filter = `work_group_id = ${workGroupId} AND task_id = ${taskId}`;
-
-    return from(this.supabaseService.deleteData('work_group_tasks', filter, this.schema)).pipe(
-      tap(() => {
-        const currentTasks = this.workGroupTasksSubject.value;
-        const updatedTasks = currentTasks.filter(
-          task => !(task.work_group_id === workGroupId && task.task_id === taskId)
-        );
-        this.workGroupTasksSubject.next(updatedTasks);
-      }),
-      catchError(error => {
-        console.error('Error removing task from work group:', error);
-        return throwError(() => error);
-      })
     );
   }
 
@@ -1609,24 +1410,6 @@ export class DataService {
   
     } catch (error) {
       console.error('Error getting public URL:', error);
-      return null;
-    }
-  }
-
-  async getDeletedUser(){
-    try {
-      const { data: deletedUser, error } = await this.supabaseService.getAdminClient()
-        .schema('porton')
-        .from('profiles')
-        .select('*')
-        .eq('id', '11111111-1111-1111-1111-111111111111')
-        .eq('first_name', 'Deleted User')
-
-      if(error) throw error
-
-      return deletedUser;
-    } catch (error) {
-      console.error('Error fetching Deleted User', error);
       return null;
     }
   }
