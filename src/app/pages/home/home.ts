@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseStatus, HouseStatusTask, Task, TaskType, HouseType } from '../service/data.service';
-import { Subscription } from 'rxjs';
+import { combineLatest, Subscription } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -88,16 +88,16 @@ interface SpecialLocation {
                         <div 
                             class="house-card" 
                             [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
-                            [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasScheduledTasks(house.house_id)" 
-                            [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasScheduledTasks(house.house_id)"
+                            [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasScheduledNotCompletedTasks(house.house_id)" 
+                            [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasScheduledNotCompletedTasks(house.house_id)"
                             [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.isHouseReservedToday(house.house_id)"
                             [class.expanded]="expandedHouseId === house.house_id" 
                             (click)="toggleExpand($event, house.house_id)">
                             <div class="house-content">
                                 <div class="house-number">{{ house.house_name }}</div>
                                 <div class="house-icons">
-                                    @if (houseService.hasAnyTasks(house.house_id)) {
-                                        @for (task of houseService.getHouseTasks(house.house_id); track task.task_id) {
+                                    @if (houseService.hasNotCompletedTasks(house.house_id)) {
+                                        @for (task of houseService.getTasksForHouse(house.house_id); track task.task_id) {
                                             @if (!taskService.isTaskCompleted(task)){
                                                 <i 
                                                     class="fa"
@@ -160,16 +160,16 @@ interface SpecialLocation {
                             <div 
                                 class="house-card" 
                                 [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
-                                [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
-                                [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
+                                [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasScheduledNotCompletedTasks(house.house_id)" 
+                                [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasScheduledNotCompletedTasks(house.house_id)"
                                 [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.isHouseReservedToday(house.house_id)"
                                 [class.expanded]="expandedHouseId === house.house_id" 
                                 (click)="toggleExpand($event, house.house_id)">
                                 <div class="house-content">
                                     <div class="house-number">{{ house.house_name }}</div>
                                     <div class="house-icons">
-                                        @if (houseService.hasAnyTasks(house.house_id)) {
-                                            @for (task of houseService.getHouseTasks(house.house_id); track task.task_id) {
+                                        @if (houseService.hasNotCompletedTasks(house.house_id)) {
+                                            @for (task of houseService.getTasksForHouse(house.house_id); track task.task_id) {
                                                 @if (!taskService.isTaskCompleted(task)){
                                                     <i 
                                                         class="fa"
@@ -231,16 +231,16 @@ interface SpecialLocation {
                             <div 
                                 class="house-card" 
                                 [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
-                                [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasAnyTasks(house.house_id)" 
-                                [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasAnyTasks(house.house_id)"
+                                [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasScheduledNotCompletedTasks(house.house_id)" 
+                                [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasScheduledNotCompletedTasks(house.house_id)"
                                 [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.isHouseReservedToday(house.house_id)"
                                 [class.expanded]="expandedHouseId === house.house_id" 
                                 (click)="toggleExpand($event, house.house_id)">
                                 <div class="house-content">
                                     <div class="house-number">{{ house.house_name }}</div>
                                     <div class="house-icons">
-                                        @if (houseService.hasAnyTasks(house.house_id)) {
-                                            @for (task of houseService.getHouseTasks(house.house_id); track task.task_id) {
+                                        @if (houseService.hasNotCompletedTasks(house.house_id)) {
+                                            @for (task of houseService.getTasksForHouse(house.house_id); track task.task_id) {
                                                 @if (!taskService.isTaskCompleted(task)){
                                                     <i 
                                                         class="fa"
@@ -901,7 +901,6 @@ export class Home implements OnInit, OnDestroy {
     houses = signal<House[]>([]);
     filteredHouses = signal<House[]>([]);
     houseAvailabilities = signal<HouseAvailability[]>([]);
-    houseStatuses = signal<HouseStatus[]>([]);
     houseTypes = signal<HouseType[]>([]);
     private subscriptions: Subscription[] = [];
     expandedHouseId: number | null = null;
@@ -986,36 +985,26 @@ export class Home implements OnInit, OnDestroy {
         );
         
         this.subscriptions.push(this.dataService.loadHouseAvailabilities().subscribe());
-        this.subscriptions.push(this.dataService.loadHouseStatuses().subscribe());
 
-        this.subscriptions.push(this.dataService.tasks$.subscribe(tasks => {
-            this.tasks = tasks;
-        }));
+        this.subscriptions.push(
+            combineLatest([
+                this.dataService.tasks$,
+                this.taskService.isUrgentIconVisible$
+            ]).subscribe(([tasks, visible]) => {
+                this.tasks = tasks;
+                this.isUrgentIconVisibleMap = {};
+                
+                this.tasks.forEach(task => {
+                    if (task.is_unscheduled) {
+                        this.isUrgentIconVisibleMap[task.task_id] = visible;
+                    }
+                });
+            })
+        );
 
         this.subscriptions.push(this.dataService.houseAvailabilities$.subscribe((availabilities) => {
             this.houseAvailabilities.set(availabilities);
             this.applyFilters();
-        }));
-
-        this.subscriptions.push(this.dataService.houseStatuses$.subscribe((statuses) => {
-            this.houseStatuses.set(statuses);
-
-            statuses.forEach(status => {
-                status.housetasks.map(housetask => {
-                    const task = this.tasks.find(task => task.task_id == housetask.task_id);
-
-                    if(task?.is_unscheduled){
-                        this.taskService.isUrgentIconVisible$.subscribe(visible => {
-                            this.isUrgentIconVisibleMap[task.task_id] = visible;
-                        });
-                    }
-
-                    return {
-                        ...housetask,
-                        is_unscheduled: task?.is_unscheduled,
-                    }
-                })
-            })
         }));
 
         this.subscriptions.push(this.dataService.taskTypes$.subscribe((types) => {
@@ -1507,7 +1496,7 @@ export class Home implements OnInit, OnDestroy {
         this.applyFilters();
     }
 
-    getTaskIcon(task: HouseStatusTask): string {
+    getTaskIcon(task: Task): string {
         if (this.isUrgentIconVisibleMap[task.task_id]) {
             return 'fa-exclamation-triangle';
         }
@@ -1522,8 +1511,9 @@ export class Home implements OnInit, OnDestroy {
 
     getHouseStatus(house: House): 'OCCUPIED' | 'ARRIVAL-DAY' | 'NOT-CLEANED' | 'FREE' {
         if (this.houseService.isHouseOccupied(house.house_id)) return 'OCCUPIED';
-        if (!this.houseService.isHouseOccupied(house.house_id) && this.houseService.hasAnyTasks(house.house_id)) return 'NOT-CLEANED';
+        if (!this.houseService.isHouseOccupied(house.house_id) && this.houseService.hasScheduledNotCompletedTasks(house.house_id)) return 'NOT-CLEANED';
         if (!this.houseService.isHouseOccupied(house.house_id) && this.houseService.isHouseReservedToday(house.house_id)) return 'ARRIVAL-DAY';
+        if(!this.houseService.isHouseOccupied(house.house_id) && !this.houseService.hasScheduledNotCompletedTasks(house.house_id)) return 'FREE';
         return 'FREE';
     }
 }

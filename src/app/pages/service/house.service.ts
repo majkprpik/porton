@@ -11,29 +11,25 @@ export class HouseService {
   houseAvailabilityTypes: HouseAvailabilityType[] = [];
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
-  houseStatuses = signal<HouseStatus[]>([]);
   taskProgressTypes: TaskProgressType[] = [];
   tasks: Task[] = [];
 
   constructor(
     private supabase: SupabaseService,
     private dataService: DataService,
-    private taskService: TaskService,
   ) {
     combineLatest([
       this.dataService.taskProgressTypes$,
       this.dataService.houseAvailabilityTypes$,
       this.dataService.houseAvailabilities$,
       this.dataService.houses$,
-      this.dataService.houseStatuses$,
       this.dataService.tasks$,
     ]).subscribe({
-      next: ([taskProgressTypes, houseAvailabilityTypes, houseAvailabilities, houses, houseStatuses, tasks]) => {
+      next: ([taskProgressTypes, houseAvailabilityTypes, houseAvailabilities, houses, tasks]) => {
         this.taskProgressTypes = taskProgressTypes;
         this.houseAvailabilityTypes = houseAvailabilityTypes;
         this.houseAvailabilities = houseAvailabilities;
         this.houses = houses;
-        this.houseStatuses.set(houseStatuses); 
         this.tasks = tasks;
       },
       error: (error) => {
@@ -99,66 +95,31 @@ export class HouseService {
     return false;
   }
 
-  hasCompletedTasks(houseId: number): boolean {
-    const status = this.houseStatuses().find((s) => s.house_id === houseId);
-    if (!status?.housetasks?.length) return false;
-    let hasCompletedTasks = status.housetasks.some((task) => this.taskService.isTaskCompleted(task));
-    
-    return hasCompletedTasks;
-  }
-
-  hasInProgressTasks(houseId: number): boolean {
-    const status = this.houseStatuses().find((s) => s.house_id === houseId);
-    if (!status?.housetasks?.length) return false;
-    let hasTasksInProgress = status.housetasks.some((task) => this.taskService.isTaskInProgress(task)); 
-
-    return hasTasksInProgress;
-  }
-
-  hasAnyTasks(houseId: number): boolean {
+  hasNotCompletedTasks(houseId: number): boolean{
     const finishedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
-    const status = this.houseStatuses().find((s) => s.house_id === houseId);
-    const notCompletedTasks = status?.housetasks.filter(housetask => housetask.task_progress_type_id != finishedTaskProgressType?.task_progress_type_id);
+    const notCompletedTasksForHouse = this.tasks
+      .filter(task => 
+        task.house_id == houseId && 
+        task.task_progress_type_id != finishedTaskProgressType?.task_progress_type_id
+      );
 
-    return !!notCompletedTasks?.length;
+    return !!notCompletedTasksForHouse.length;
   }
 
-  hasScheduledTasks(houseId: number): boolean {
+  hasScheduledNotCompletedTasks(houseId: number): boolean {
     const finishedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
-    const status = this.houseStatuses().find((s) => s.house_id === houseId);
-    const notCompletedTasks = status?.housetasks
-      .filter(housetask => (housetask.task_progress_type_id != finishedTaskProgressType?.task_progress_type_id));
+    const notCompletedTasksForHouse = this.tasks
+      .filter(task => 
+        task.house_id == houseId &&
+        task.task_progress_type_id != finishedTaskProgressType?.task_progress_type_id &&
+        !task.is_unscheduled
+      );
 
-    let mappedNotCompletedTasks = notCompletedTasks;
-
-    if(notCompletedTasks){
-      mappedNotCompletedTasks = notCompletedTasks.map(housetask => {
-        const matchingTask = this.tasks.find(task => task.task_id === housetask.task_id);
-        return {
-          ...housetask,
-          is_unscheduled: matchingTask?.is_unscheduled ?? false
-        };
-      });
-
-      const scheduledNotCompletedTasks = mappedNotCompletedTasks?.filter((tasks: any) => !tasks.is_unscheduled);
-      
-      return !!scheduledNotCompletedTasks.length;
-    }
-
-    return !!mappedNotCompletedTasks?.length;
+    return !!notCompletedTasksForHouse.length;
   }
 
-  getHouseTasks(houseId: number): HouseStatusTask[] {
-    const status = this.houseStatuses().find((s) => s.house_id === houseId);
-
-    return status?.housetasks.map(housetask => {
-      const task = this.tasks.find(task => task.task_id == housetask.task_id);
-
-      return {
-        ...housetask,
-        is_unscheduled: task?.is_unscheduled,
-      }
-    }) || [];
+  getTasksForHouse(houseId: number): Task[] {
+    return this.tasks.filter(task => task.house_id == houseId);
   }
 
   getHouseNumber(houseId: number) {

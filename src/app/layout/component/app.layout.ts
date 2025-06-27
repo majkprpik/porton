@@ -952,7 +952,6 @@ export class AppLayout {
     workGroupTasks: WorkGroupTask[] = [];
     workGroupProfiles: WorkGroupProfile[] = [];
 
-    houseStatuses = signal<HouseStatus[]>([]);
     houseAvailabilities = signal<HouseAvailability[]>([]);
     tempHouseAvailabilities: HouseAvailability[] = [];
 
@@ -977,7 +976,6 @@ export class AppLayout {
         private translateService: TranslateService,
         private workGroupService: WorkGroupService,
         private languageService: LanguageService,
-        private swPush: SwPush,
         private pushNotificationsService: PushNotificationsService,
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
@@ -1013,14 +1011,13 @@ export class AppLayout {
             this.dataService.workGroups$,
             this.dataService.workGroupTasks$,
             this.dataService.workGroupProfiles$,
-            this.dataService.houseStatuses$,
             this.dataService.houseAvailabilities$,
             this.dataService.profiles$,
             this.dataService.tempHouseAvailabilities$,
             this.dataService.notes$,
             this.dataService.profileRoles$,
         ]).subscribe({
-            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseStatuses, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles]) => {
+            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles]) => {
                 this.comments = repairTaskComments;
                 this.houses = houses;
                 this.taskTypes = taskTypes.map(taskType => ({
@@ -1036,7 +1033,6 @@ export class AppLayout {
                 this.workGroups = workGroups;
                 this.workGroupTasks = workGroupTasks;
                 this.workGroupProfiles = workGroupProfiles;
-                this.houseStatuses.set(houseStatuses);
                 this.houseAvailabilities.set(houseAvailabilities);
                 this.profiles = profiles;
                 this.tempHouseAvailabilities = tempHouseAvailabilities;
@@ -1154,21 +1150,6 @@ export class AppLayout {
         this.dataService.$tasksUpdate.subscribe((res) => {
             if (res && res.eventType == 'INSERT') {
                 if (!this.tasks.find((task) => task.task_id == res.new.task_id)) {
-                    const updatedStatuses = this.houseStatuses().map((hs) => {
-                        if (hs.house_id === res.new.house_id) {
-                            const existingTask = hs.housetasks.some((task: any) => task.task_id === res.new.task_id);
-
-                            if (!existingTask) {
-                                return {
-                                    ...hs,
-                                    housetasks: [...hs.housetasks, res.new]
-                                };
-                            }
-                        }
-                        return hs;
-                    });
-
-                    this.dataService.setHouseStatuses(updatedStatuses);
                     this.tasks = [...this.tasks, res.new];
                     this.dataService.setTasks(this.tasks);
                 }
@@ -1176,23 +1157,6 @@ export class AppLayout {
                 let taskIndex = this.tasks.findIndex((task) => task.task_id == res.new.task_id);
 
                 if (taskIndex != -1) {
-                    const updatedStatuses = this.houseStatuses().map((hs) => {
-                        let housetaskIndex = hs.housetasks.findIndex((ht) => ht.task_id == res.new.task_id);
-
-                        if (housetaskIndex != -1) {
-                            const updatedTasks = [...hs.housetasks];
-                            updatedTasks[housetaskIndex] = res.new;
-
-                            return {
-                                ...hs,
-                                housetasks: updatedTasks
-                            };
-                        }
-
-                        return hs;
-                    });
-
-                    this.dataService.setHouseStatuses(updatedStatuses);
                     this.tasks = this.tasks.map((task) => (task.task_id === res.new.task_id ? res.new : task));
 
                     this.dataService.setTasks(this.tasks);
@@ -1206,18 +1170,6 @@ export class AppLayout {
                     }
                 }
             } else if (res && res.eventType == 'DELETE') {
-                const updatedStatuses = this.houseStatuses().map(hs => {
-                    if (hs.housetasks.find(ht => ht.task_id == res.old.task_id)) {
-                        return {
-                            ...hs,
-                            housetasks: hs.housetasks.filter(ht => ht.task_id != res.old.task_id),
-                        };
-                    }
-
-                    return hs;
-                });
-                this.dataService.setHouseStatuses(updatedStatuses);
-
                 this.tasks = this.tasks.filter((task) => task.task_id != res.old.task_id);
                 this.dataService.setTasks(this.tasks);
             }

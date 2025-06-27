@@ -201,7 +201,6 @@ export class DataService {
   private profilesSubject = new BehaviorSubject<Profile[]>([]);
   private housesSubject = new BehaviorSubject<House[]>([]);
   private tempHousesSubject = new BehaviorSubject<House[]>([]);
-  private houseStatusesSubject = new BehaviorSubject<HouseStatus[]>([]);
   private authUsersSubject = new BehaviorSubject<Profile[]>([]);
   private notesSubject = new BehaviorSubject<Note[]>([]);
   private repairTaskCommentsSubject = new BehaviorSubject<RepairTaskComment[]>([]);
@@ -223,7 +222,6 @@ export class DataService {
   profiles$ = this.profilesSubject.asObservable();
   houses$ = this.housesSubject.asObservable();
   tempHouses$ = this.tempHousesSubject.asObservable();
-  houseStatuses$ = this.houseStatusesSubject.asObservable();
   authUsers$ = this.authUsersSubject.asObservable();
   notes$ = this.notesSubject.asObservable();
   repairTaskComments$ = this.repairTaskCommentsSubject.asObservable();
@@ -286,12 +284,6 @@ export class DataService {
     }
   }
 
-  setHouseStatuses(houseStatuses: HouseStatus[]){
-    if(houseStatuses){
-      this.houseStatusesSubject.next(houseStatuses);
-    }
-  }
-
   setProfiles(profiles: Profile[]){
     if(profiles){
       this.profilesSubject.next(profiles.filter(profile => profile.id != '11111111-1111-1111-1111-111111111111'));
@@ -336,8 +328,6 @@ export class DataService {
     if (this.debug) {
       //console.log('[DataService] Loading initial data...');
     }
-    // Load house statuses first
-    this.loadHouseStatuses().subscribe();
     // Then load other data
     this.loadHouseAvailabilities().subscribe();
     this.loadTempHouseAvailabilities().subscribe();
@@ -1054,7 +1044,6 @@ export class DataService {
     if (this.debug) {
       //console.log('[DataService] Refreshing all data...');
     }
-    this.houseStatusesSubject.next([]);
     this.houseAvailabilityTypesSubject.next([]);
     this.taskTypesSubject.next([]);
     this.taskProgressTypesSubject.next([]);
@@ -1312,69 +1301,6 @@ export class DataService {
         console.error('Error deleting work group:', error);
         return throwError(() => error);
       })
-    );
-  }
-
-  // Method to update work group locked status
-  updateWorkGroupLocked(workGroupId: number, isLocked: boolean): Observable<WorkGroup[] | null> {
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.updateByIds(
-      'work_groups', 
-      { is_locked: isLocked }, 
-      [workGroupId],
-      'work_group_id',
-      this.schema
-    )).pipe(
-      tap((data) => {
-        if (data) {
-          // Update only the specified work group in the BehaviorSubject
-          const currentGroups = this.workGroupsSubject.value;
-          const updatedGroups = currentGroups.map(group => 
-            group.work_group_id === workGroupId
-              ? { ...group, is_locked: isLocked }
-              : group
-          );
-          this.workGroupsSubject.next(updatedGroups);
-          this.logData('Updated Work Group Lock Status', data);
-        }
-      }),
-      map((data) => data || null),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  // Method to load house statuses
-  loadHouseStatuses(): Observable<HouseStatus[]> {
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.getData('house_statuses_view', this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          // Parse the housetasks JSON string into actual objects
-          const processedData = data.map(status => ({
-            ...status,
-            housetasks: typeof status.housetasks === 'string' ? JSON.parse(status.housetasks) : (status.housetasks || [])
-          }));
-          this.houseStatusesSubject.next(processedData);
-          this.logData('House Statuses', processedData);
-        }
-      }),
-      map((data) => {
-        if (data) {
-          return data.map(status => ({
-            ...status,
-            housetasks: typeof status.housetasks === 'string' ? JSON.parse(status.housetasks) : (status.housetasks || [])
-          }));
-        }
-        return [];
-      }),
-      catchError((error) => {
-        this.handleError(error);
-        return of([]);
-      }),
-      tap(() => this.loadingSubject.next(false))
     );
   }
 
