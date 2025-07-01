@@ -8,7 +8,8 @@
         "TASK-STATUSES": "Statusi zadataka",
         "HOUSE-TYPES": "Tipovi kućica",
         "ARRIVALS-AND-DEPARTURES": "Dolasci i odlasci",
-        "NOTES": "Bilješke"
+        "NOTES": "Bilješke",
+        "STATISTICS": "Statistika"
     },
     "BUTTONS": {
         "REPORT": "Prijavi",
@@ -23,7 +24,9 @@
         "FINISH": "Završi",
         "YES": "Da",
         "NO": "Ne",
-        "OK": "OK"
+        "OK": "OK",
+        "YEAR": "Godina",
+        "MONTH": "Mjesec"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Dodijeljeno",
@@ -386,6 +389,20 @@
             "ARRIVAL-DAY": "Dolazna",
             "CLEANED": "Očišćena",
             "NOT-CLEANED": "Neočišćena"
+        }
+    },
+    "STATISTICS": {
+        "SELECT": {
+            "TITLE": {
+                "MONTH": "Mjesec",
+                "LOCATION": "Lokacija",
+                "METRIC": "Metrika"
+            },
+            "DATA": {
+                "SELECT-MONTH": "Odaberi mjesec",
+                "SELECT-LOCATION": "Odaberi lokaciju",
+                "SELECT-METRIC": "Odaberi metriku"
+            }
         }
     }
 }

@@ -16,6 +16,7 @@ import { ArrivalsAndDeparturesPageComponent } from './app/layout/component/arriv
 import { TeamsGuard } from './app/layout/guard/teams.guard';
 import { TeamDetailGuard } from './app/layout/guard/team-detail.guard';
 import { NotesPageComponent } from './app/layout/component/notes-page.component';
+import { StatisticsComponent } from './app/layout/component/statistics.component';
 
 export const appRoutes: Routes = [
     {
@@ -80,6 +81,11 @@ export const appRoutes: Routes = [
                 path: 'notes',
                 component: NotesPageComponent,
                 data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Odrzavanje', 'Korisnicka sluzba'] }
+            },
+            {
+                path: 'statistics',
+                component: StatisticsComponent,
+                data: { roles: ['Voditelj kampa', 'Uprava'] }
             },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },

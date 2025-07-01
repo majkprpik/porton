@@ -8,7 +8,8 @@
         "TASK-STATUSES": "Task Statuses",
         "HOUSE-TYPES": "House Types",
         "ARRIVALS-AND-DEPARTURES": "Arrivals and departures",
-        "NOTES": "Notes"
+        "NOTES": "Notes",
+        "STATISTICS": "Statistics"
     },
     "BUTTONS": {
         "REPORT": "Report",
@@ -23,7 +24,9 @@
         "FINISH": "Finish",
         "YES": "Yes",
         "NO": "No",
-        "OK": "OK"
+        "OK": "OK",
+        "YEAR": "Year",
+        "MONTH": "Month"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Assigned",
@@ -386,6 +389,20 @@
             "ARRIVAL-DAY": "Arrival day",
             "CLEANED": "Cleaned",
             "NOT-CLEANED": "Not cleaned"
+        }
+    },
+    "STATISTICS": {
+        "SELECT": {
+            "TITLE": {
+                "MONTH": "Month",
+                "LOCATION": "Location",
+                "METRIC": "Metrics"
+            },
+            "DATA": {
+                "SELECT-MONTH": "Select a month",
+                "SELECT-LOCATION": "Select a location",
+                "SELECT-METRIC": "Select a metric"
+            }
         }
     }
 }
