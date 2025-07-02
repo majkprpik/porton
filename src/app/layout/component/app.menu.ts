@@ -202,7 +202,8 @@ export class AppMenu implements OnInit {
                 { label: this.translateService.instant('MENU.PROFILES'), icon: 'pi pi-fw pi-user', routerLink: ['/profiles'] },
                 { label: this.translateService.instant('MENU.TASK-STATUSES'), icon: 'pi pi-fw pi-check-square', routerLink: ['/task-progress-types'] },
                 { label: this.translateService.instant('MENU.HOUSE-TYPES'), icon: 'pi pi-fw pi-home', routerLink: ['/house-types'] },
-                { label: this.translateService.instant('MENU.STATISTICS'), icon: 'pi pi-chart-bar', routerLink: ['/statistics'] }
+                { label: this.translateService.instant('MENU.STATISTICS'), icon: 'pi pi-chart-bar', routerLink: ['/statistics'] },
+                { label: this.translateService.instant('MENU.ARCHIVE'), icon: 'pi pi-book', routerLink: ['/archive'] },
             );
         }
         

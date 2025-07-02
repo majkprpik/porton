@@ -9,7 +9,8 @@
         "HOUSE-TYPES": "Tipovi kućica",
         "ARRIVALS-AND-DEPARTURES": "Dolasci i odlasci",
         "NOTES": "Bilješke",
-        "STATISTICS": "Statistika"
+        "STATISTICS": "Statistika",
+        "ARCHIVE": "Arhiva zadataka"
     },
     "BUTTONS": {
         "REPORT": "Prijavi",
@@ -402,6 +403,19 @@
                 "SELECT-MONTH": "Odaberi mjesec",
                 "SELECT-LOCATION": "Odaberi lokaciju",
                 "SELECT-METRIC": "Odaberi metriku"
+            }
+        }
+    },
+    "TASK-ARCHIVE": {
+        "TITLE": "Arhiva zadataka",
+        "FIELDS": {
+            "TASK-TYPES": {
+                "TITLE": "Tip zadatka",
+                "SELECT-TYPE": "Odaberi tip zadatka"
+            },
+            "HOUSE-NUMBERS": {
+                "TITLE": "Broj kućice",
+                "SEARCH-HOUSE-NUMBER": "Pretraži po broju kućice" 
             }
         }
     }

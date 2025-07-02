@@ -9,7 +9,8 @@
         "HOUSE-TYPES": "House Types",
         "ARRIVALS-AND-DEPARTURES": "Arrivals and departures",
         "NOTES": "Notes",
-        "STATISTICS": "Statistics"
+        "STATISTICS": "Statistics",
+        "ARCHIVE": "Task archive"
     },
     "BUTTONS": {
         "REPORT": "Report",
@@ -402,6 +403,19 @@
                 "SELECT-MONTH": "Select a month",
                 "SELECT-LOCATION": "Select a location",
                 "SELECT-METRIC": "Select a metric"
+            }
+        }
+    },
+    "TASK-ARCHIVE": {
+        "TITLE": "Task archive",
+        "FIELDS": {
+            "TASK-TYPES": {
+                "TITLE": "Task types",
+                "SELECT-TYPE": "Select task type"
+            },
+            "HOUSE-NUMBERS": {
+                "TITLE": "House number",
+                "SEARCH-HOUSE-NUMBER": "Search by house number" 
             }
         }
     }

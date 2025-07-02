@@ -94,7 +94,8 @@ export interface Task {
   created_by: string;
   created_at: string;
   index: number; 
-  is_unscheduled: boolean
+  is_unscheduled: boolean;
+  completed_by: string | null;
 }
 
 // Interface for house availabilities

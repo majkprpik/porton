@@ -92,27 +92,18 @@ export class TaskService {
     }
   }
 
-  async createTaskForHouse(houseId: string, description: string, taskTypeName: string, isAssigned: boolean, isUnscheduled: boolean = false){
+  async createTaskForHouse(houseId: string, description: string, taskTypeName: string, isUnscheduled: boolean = false){
     try {
-      let taskTypeId = await this.dataService.getTaskTypeIdByTaskName(taskTypeName);
-      let taskProgressTypeId;
-
-      if(isAssigned){
-        taskProgressTypeId = await this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('Dodijeljeno');
-      } else {
-        taskProgressTypeId = await this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('Nije dodijeljeno');
-      }
-
       const { data, error } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .insert({
-          task_type_id: taskTypeId,
-          task_progress_type_id: taskProgressTypeId,
+          task_type_id: this.taskTypes.find(tt => tt.task_type_name == taskTypeName)?.task_type_id,
+          task_progress_type_id: this.notAssignedTaskProgressType?.task_progress_type_id,
           house_id: parseInt(houseId),
           description: description,
-          // created_by: this.authService.getStoredUserId(),
-          created_at: this.getFormattedDateTimeNowForSupabase(),
+          created_by: this.authService.getStoredUserId(),
+          created_at: this.supabaseService.formatDateTimeForSupabase(new Date()),
           is_unscheduled: isUnscheduled
         })
         .select()
