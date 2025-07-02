@@ -1515,7 +1515,9 @@ export class AppLayout {
             ).then(async result => {
                 if (result) {
                     try {
-                        await this.taskService.storeImagesForTask(this.imagesToUpload, result.task_id);
+                        if(this.imagesToUpload.length){
+                            await this.taskService.storeImagesForTask(this.imagesToUpload, result.task_id);
+                        }
 
                         this.messageService.add({
                             severity: 'success',
