@@ -17,7 +17,8 @@ import { MultiSelect } from 'primeng/multiselect';
     FormsModule,
     TranslateModule,
     ButtonModule,
-    MultiSelect
+    MultiSelect,
+    FormsModule
   ],
   template: `
     <div class="statistics-container">
