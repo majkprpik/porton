@@ -951,72 +951,6 @@ export class DataService {
     this.loadInitialData();
   }
 
-  // Method to create a new task
-  createTask(task: Omit<Task, 'task_id' | 'created_at'>): Observable<Task | null> {
-    this.loadingSubject.next(true);
-    
-    // Create a clean task object with properly set fields
-    const taskToCreate = { ...task } as any; // Use any to bypass TypeScript checks for now
-    
-    // Handle location types
-    if (taskToCreate.location_type === 'house' && taskToCreate.house_id) {
-      // House type - need both house_id and house_number
-      // Make sure house_number is set based on house_id if it isn't already
-      if (!taskToCreate.house_number) {
-        // Find the house number from the houses array
-        const house = this.housesSubject.value.find(h => h.house_id === taskToCreate.house_id);
-        if (house) {
-          taskToCreate.house_number = house.house_number;
-        }
-      }
-      // For house type, remove location_name as it's not needed
-      delete taskToCreate.location_name;
-    } else if (['building', 'parcel'].includes(taskToCreate.location_type || '')) {
-      // For building or parcel, house_id and house_number should be null
-      taskToCreate.house_id = null;
-      taskToCreate.house_number = null;
-    }
-
-    return from(this.supabaseService.insertData('tasks', taskToCreate, this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentTasks = this.tasksSubject.value;
-          this.tasksSubject.next([...currentTasks, data[0]]);
-          this.logData('Created Task', data[0]);
-        }
-      }),
-      map((data) => (data ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  // Method to update task progress type
-  updateTaskProgressType(taskId: number, progressTypeId: number): Observable<Task | null> {
-    this.loadingSubject.next(true);
-
-    const updates = { task_progress_type_id: progressTypeId };
-
-    return from(this.supabaseService.updateData('tasks', updates, taskId.toString(), this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          // Update the tasks in the BehaviorSubject
-          const currentTasks = this.tasksSubject.value;
-          const updatedTasks = currentTasks.map(task => 
-            task.task_id === taskId 
-              ? { ...task, task_progress_type_id: progressTypeId }
-              : task
-          );
-          this.tasksSubject.next(updatedTasks);
-          this.logData('Updated Task Progress Type', data[0]);
-        }
-      }),
-      map((data) => (data ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
   async getTaskProgressTypeIdByTaskProgressTypeName(taskProgressTypeName: string){
     try{
       const { data: existingProgressTypeId, error: progressTypeIdError } = await this.supabaseService.getClient()
@@ -1031,28 +965,6 @@ export class DataService {
       return existingProgressTypeId?.task_progress_type_id;
     } catch (error) {
       console.error('Error fetching task type ids', error);
-      return null;
-    }
-  }
-
-  async updateTaskProgressType1(taskId: number, taskProgressTypeId: number){
-    try{
-      this.loadingSubject.next(true);
-      const { data: task, error: taskError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('tasks')
-        .update({ task_progress_type_id: taskProgressTypeId })
-        .eq('task_id', taskId)
-        .select();
-
-      if(taskError) throw taskError
-
-      
-      this.loadingSubject.next(false);
-      return task;
-    } catch (error) {
-      console.error('Error fetching task type ids', error);
-      this.loadingSubject.next(false);
       return null;
     }
   }

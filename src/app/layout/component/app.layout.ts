@@ -200,6 +200,24 @@ interface SpecialLocation {
                                     <div>
                                         <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.CREATED-AT' | translate }}: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
                                     </div>
+
+                                    @if(task.start_time){
+                                        <div>
+                                            <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.START-TIME' | translate }}: </b> {{ task.start_time | date: 'dd MMM yyyy - HH:mm' : 'UTC' }} </span>
+                                        </div>
+                                    }
+
+                                    @if(task.end_time){
+                                        <div>
+                                            <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.END-TIME' | translate }}: </b> {{ task.end_time | date: 'dd MMM yyyy - HH:mm' : 'UTC' }} </span>
+                                        </div>
+                                    }
+
+                                    @if(task.completed_by){
+                                        <div>
+                                            <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.COMPLETED-BY' | translate }}: </b> {{ profileService.findProfile(task.completed_by)?.first_name }}</span>
+                                        </div>   
+                                    }
                                 </div>
                             </p-tabpanel>
                             @if (getTaskTypeName(task) == 'Popravak'){

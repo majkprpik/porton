@@ -620,7 +620,7 @@ export class WorkGroups implements OnInit {
       let updateObservables = tasksToReturn
         .filter(task => task.task_progress_type_id === assignedTaskType.task_progress_type_id)
         .map(task => 
-          from(this.dataService.updateTaskProgressType1(task.task_id, nijeDodijeljenoType.task_progress_type_id))
+          from(this.taskService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id))
         );
       
       forkJoin(updateObservables.length > 0 ? updateObservables : [of(null)]).pipe(
@@ -683,11 +683,11 @@ export class WorkGroups implements OnInit {
           task.task_progress_type_id != inProgressTaskProgressType.task_progress_type_id &&
           task.task_progress_type_id != pausedTaskProgressType.task_progress_type_id)
         .map(task => 
-          this.dataService.updateTaskProgressType1(task.task_id, assignedTaskProgressType.task_progress_type_id)
+          this.taskService.updateTaskProgressType(task.task_id, assignedTaskProgressType.task_progress_type_id)
         );
       
       const updateRemovedTasksPromises = this.tasksToRemove.map(ttrm =>
-        this.dataService.updateTaskProgressType1(ttrm.task_id, notAssignedTaskProgressType.task_progress_type_id)
+        this.taskService.updateTaskProgressType(ttrm.task_id, notAssignedTaskProgressType.task_progress_type_id)
       );
 
       this.tasksToRemove = [];

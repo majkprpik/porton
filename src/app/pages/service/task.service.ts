@@ -240,6 +240,33 @@ export class TaskService {
     }
   }
 
+  async updateTaskProgressType(taskId: number, taskProgressTypeId: number){
+    const task = this.tasks.find(task => task.task_id == taskId);
+    const isCompleted = this.taskProgressTypes.find(tpt => tpt.task_progress_type_id == taskProgressTypeId)?.task_progress_type_name == 'Završeno';
+    const isInProgress = this.taskProgressTypes.find(tpt => tpt.task_progress_type_id == taskProgressTypeId)?.task_progress_type_name == 'U tijeku';
+
+    try{
+      const { data: task1, error: taskError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('tasks')
+        .update({ 
+          task_progress_type_id: taskProgressTypeId,
+          completed_by: isCompleted ? this.authService.getStoredUserId() : null,
+          end_time: isCompleted ? this.supabaseService.formatDateTimeForSupabase(new Date()) : null,
+          start_time: isInProgress ? (task?.start_time ?? this.supabaseService.formatDateTimeForSupabase(new Date())) : task?.start_time,
+        })
+        .eq('task_id', taskId)
+        .select();
+
+      if(taskError) throw taskError
+      
+      return task1;
+    } catch (error) {
+      console.error('Error updating task progress type: ', error);
+      return null;
+    }
+  }
+
   private async compressImage(image: File, targetMegaBytes: number){
     const options = {
       maxSizeMB: targetMegaBytes, 

@@ -751,18 +751,7 @@ export class WorkGroupDetail implements OnInit {
             return;
         }
         
-        this.dataService.updateTaskProgressType(task.task_id, progressType.task_progress_type_id).subscribe({
-            next: () => {
-                // Update the task in the UI to reflect the new status
-                const updatedTask = this.assignedTasks.find(t => t.task_id === task.task_id);
-                if (updatedTask) {
-                    updatedTask.task_progress_type_id = progressType.task_progress_type_id;
-                }
-            },
-            error: (error: unknown) => {
-                console.error('Error updating task progress:', error);
-            }
-        });
+        this.taskService.updateTaskProgressType(task.task_id, progressType.task_progress_type_id);
     }
     
     handleTaskPause(event: any, task: Task) {
@@ -774,18 +763,7 @@ export class WorkGroupDetail implements OnInit {
             return;
         }
         
-        this.dataService.updateTaskProgressType(task.task_id, pauseProgressType.task_progress_type_id).subscribe({
-            next: () => {
-                // Update the task in the UI to reflect the new status
-                const updatedTask = this.assignedTasks.find(t => t.task_id === task.task_id);
-                if (updatedTask) {
-                    updatedTask.task_progress_type_id = pauseProgressType.task_progress_type_id;
-                }
-            },
-            error: (error: unknown) => {
-                console.error('Error pausing task:', error);
-            }
-        });
+        this.taskService.updateTaskProgressType(task.task_id, pauseProgressType.task_progress_type_id);
     }
 
     openTaskDetails(task: Task){
