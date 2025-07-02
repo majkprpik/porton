@@ -2,7 +2,6 @@ import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskCardComponent } from './task-card';
 import { Task, TaskType, TaskProgressType, DataService, House } from '../service/data.service';
-import { TaskState } from './task-card';
 import { PanelModule } from 'primeng/panel';
 import { BadgeModule } from 'primeng/badge';
 import { combineLatest } from 'rxjs';
@@ -36,12 +35,8 @@ import { TranslateModule } from '@ngx-translate/core';
         </div>
       </ng-template>
       <div class="task-grid">
-        @for (task of filteredTasks; track trackByTask($index, task)) {
+        @for (task of filteredTasks; track task.task_id) {
           <app-task-card 
-            [houseNumber]="houseService.getHouseNumber(task.house_id)"
-            [houseName]="houseService.getHouseName(task.house_id)"
-            [state]="taskService.getTaskState(task.task_progress_type_id)"
-            [taskIcon]="taskService.getTaskIcon(task.task_type_id)"
             [task]="task"
             [canBeAssigned]="canAssignTasks && isTaskAvailable(task)">
           </app-task-card>
@@ -182,9 +177,5 @@ export class TaskGroupComponent implements OnInit {
 
   isTaskAvailable(task: Task): boolean {
     return !this.workGroupTasks.some(wgt => wgt.task_id === task.task_id);
-  }
-
-  trackByTask(index: number, task: Task) {
-    return task.task_id + '_' + index;  // combine id with index to guarantee uniqueness
   }
 } 

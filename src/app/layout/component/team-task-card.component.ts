@@ -59,10 +59,6 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
               <div class="tasks-list">
                 @for (task of workGroupTasks | tasksIndexSort; track task.task_id) {
                   <app-task-card 
-                    [houseNumber]="houseService.getHouseNumber(task.house_id)"
-                    [houseName]="houseService.getHouseName(task.house_id)"
-                    [state]="taskService.getTaskState(task.task_progress_type_id)"
-                    [taskIcon]="taskService.getTaskIcon(task.task_type_id)"
                     [task]="task"
                     [canBeAssigned]="false"
                     [isInActiveGroup]="false"

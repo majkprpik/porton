@@ -1393,35 +1393,23 @@ export class AppLayout {
         }
     }
 
-    // Handle location change in Unscheduled task dialog
     onLocationChangeForTask(event: any) {
         const selection = event.value;
         let house = this.houses.find(house => house.house_id == selection.house_id);
+        this.selectedHouseForTask = selection;
         
         if(house?.house_name == 'Zgrada' || house?.house_name == 'Parcele'){
             this.taskTypes = this.taskTypes.filter(tt => tt.task_type_name == 'Ostalo');
         } else {
             this.taskTypes = [...this.otherTaskTypes];
         }
-
-        if (selection && 'type' in selection) {
-            // This is a special location
-            this.locationTypeForTask = selection.type;
-            this.selectedHouseForTask = null;
-        } else {
-            // This is a house
-            this.locationTypeForTask = 'house';
-            this.selectedHouseForTask = selection;
-        }
     }
 
-    // Update location options method
     updateLocationOptions() {
         this.locationOptions = [
             // ...this.specialLocations,
             ...this.houses
         ];
-
 
         // sort first names with letters, then numbers
        this.locationOptions.sort((a, b) => {
@@ -1504,13 +1492,11 @@ export class AppLayout {
     submitFaultReport() {
         if (!this.isFormValid()) return;
 
-        if (this.locationType === 'house' && this.selectedHouse) {
-            // For house locations, use the existing method
+        if (this.locationType == 'house' && this.selectedHouse) {
             this.taskService.createTaskForHouse(
                 this.selectedHouse.house_id.toString(),
                 this.faultDescription,
                 'Popravak',
-                false,
                 true
             ).then(async result => {
                 if (result) {
@@ -1525,12 +1511,7 @@ export class AppLayout {
                             detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.SUCCESS'),
                         });
 
-                        // Reset form and close dialog
-                        this.selectedLocation = null;
-                        this.selectedHouse = null;
-                        this.locationType = 'house';
-                        this.faultDescription = '';
-                        this.faultReportVisible = false;
+                        this.resetFaultReportForm();
                     } catch (imagesSaveError) {
                         console.error('Error saving images: ', imagesSaveError);
                     }
@@ -1542,93 +1523,20 @@ export class AppLayout {
                     });
                 }
             });
-        } else if (this.selectedLocation && 'type' in this.selectedLocation) {
-            // For special locations (building or parcel)
-            const locationName = this.selectedLocation.house_name;
-            const locationType = this.selectedLocation.type;
-
-            // Add the location to the description rather than using a separate field
-            const enhancedDescription = `[${locationName}] ${this.faultDescription}`;
-
-            // Create a task with location_type field
-            const taskData: any = {
-                description: enhancedDescription,
-                location_type: locationType,
-                is_unscheduled: false
-            };
-
-            // Get the task type ID for "Popravak" (repair)
-            this.dataService.getTaskTypeIdByTaskName('Popravak').then((taskTypeId) => {
-                if (!taskTypeId) {
-                    console.error('Couldn\'t find "Popravak" task type');
-                    return;
-                }
-
-                // Get the "Nije dodijeljeno" (not assigned) task progress type
-                this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('Nije dodijeljeno').then((progressTypeId) => {
-                    if (!progressTypeId) {
-                        console.error('Couldn\'t find "Nije dodijeljeno" task progress type');
-                        return;
-                    }
-
-                    // Complete the task data
-                    taskData.task_type_id = taskTypeId;
-                    taskData.task_progress_type_id = progressTypeId;
-                    taskData.created_by = 'user'; // Replace with actual user ID if available
-                    taskData.created_at = new Date().toISOString();
-
-                    // Create the task
-                    this.dataService.createTask(taskData).subscribe(
-                        async (result) => {
-                            if (result) {
-                                try {
-                                    await this.taskService.storeImagesForTask(this.imagesToUpload, result.task_id);
-                                    this.messageService.add({
-                                        severity: 'success',
-                                        summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.SUCCESS'),
-                                        detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.SUCCESS'),
-                                    });
-
-                                    // Reset form and close dialog
-                                    this.selectedLocation = null;
-                                    this.selectedHouse = null;
-                                    this.locationType = 'house';
-                                    this.faultDescription = '';
-                                    this.faultReportVisible = false;
-
-                                    // Refresh tasks list
-                                    this.dataService.loadTasksFromDb();
-                                } catch (imagesSaveError) {
-                                    console.error('Error saving images: ', imagesSaveError);
-                                }
-                            } else {
-                                this.messageService.add({
-                                    severity: 'error',
-                                    summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.ERORR'),
-                                    detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.ERORR'),
-                                });
-                            }
-                        },
-                        (error) => {
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.ERORR'),
-                                detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.ERORR'),
-                            });
-                            console.error('Error creating task:', error);
-                        }
-                    );
-                });
-            });
         }
     }
 
     submitUnscheduledTask() {
         if (!this.isTaskFormValid()) return;
 
-        if (this.locationTypeForTask === 'house' && this.selectedHouseForTask) {
+        if (this.locationTypeForTask == 'house' && this.selectedHouseForTask) {
             // For house locations, use the existing method
-            this.taskService.createTaskForHouse(this.selectedHouseForTask.house_id.toString(), this.taskDescription, this.selectedTaskType!.task_type_name, false, true).then((result) => {
+            this.taskService.createTaskForHouse(
+                this.selectedHouseForTask.house_id.toString(), 
+                this.taskDescription, 
+                this.selectedTaskType!.task_type_name, 
+                true
+            ).then((result) => {
                 if (result) {
                     this.messageService.add({
                         severity: 'success',
@@ -1636,16 +1544,7 @@ export class AppLayout {
                         detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.SUCCESS'),
                     });
 
-                    // Reset form and close dialog
-                    this.selectedLocationForTask = null;
-                    this.selectedHouseForTask = null;
-                    this.locationTypeForTask = 'house';
-                    this.selectedTaskType = null;
-                    this.taskDescription = '';
-                    this.isUnscheduledTaskVisible = false;
-
-                    // Refresh tasks list
-                    this.dataService.loadTasksFromDb();
+                    this.resetUnscheduledTaskForm();
                 } else {
                     this.messageService.add({
                         severity: 'error',
@@ -1654,82 +1553,24 @@ export class AppLayout {
                     });
                 }
             });
-        } else if (this.selectedLocationForTask && 'type' in this.selectedLocationForTask) {
-            // For special locations (building or parcel)
-            const locationName = this.selectedLocationForTask.house_name;
-            const locationType = this.selectedLocationForTask.type;
+        } 
+    }
 
-            if (!this.selectedTaskType) {
-                this.messageService.add({
-                    severity: 'error',
-                    summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.ERROR'),
-                    detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.TASK-TYPE-NOT-SELECTED'),
-                });
-                return;
-            }
+    resetUnscheduledTaskForm(){
+        this.selectedLocationForTask = null;
+        this.selectedHouseForTask = null;
+        this.locationTypeForTask = 'house';
+        this.selectedTaskType = null;
+        this.taskDescription = '';
+        this.isUnscheduledTaskVisible = false;
+    }
 
-            // Add the location to the description rather than using a separate field
-            const enhancedDescription = `[${locationName}] ${this.taskDescription}`;
-
-            // Create a task with location_type field
-            const taskData: any = {
-                description: enhancedDescription,
-                location_type: locationType,
-                task_type_id: this.selectedTaskType.task_type_id,
-                is_unscheduled: true
-            };
-
-            // Get the "Nije dodijeljeno" (not assigned) task progress type
-            this.dataService.getTaskProgressTypeIdByTaskProgressTypeName('Nije dodijeljeno').then((progressTypeId) => {
-                if (!progressTypeId) {
-                    console.error('Couldn\'t find "Nije dodijeljeno" task type');
-                    return;
-                }
-
-                // Complete the task data
-                taskData.task_progress_type_id = progressTypeId;
-                taskData.created_by = 'user'; // Replace with actual user ID if available
-                taskData.created_at = new Date().toISOString();
-
-                // Create the task
-                this.dataService.createTask(taskData).subscribe(
-                    (result) => {
-                        if (result) {
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.SUCCESS'),
-                                detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.SUCCESS'),
-                            });
-
-                            // Reset form and close dialog
-                            this.selectedLocationForTask = null;
-                            this.selectedHouseForTask = null;
-                            this.locationTypeForTask = 'house';
-                            this.selectedTaskType = null;
-                            this.taskDescription = '';
-                            this.isUnscheduledTaskVisible = false;
-
-                            // Refresh tasks list
-                            this.dataService.loadTasksFromDb();
-                        } else {
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.ERROR'),
-                                detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.ERROR'),
-                            });
-                        }
-                    },
-                    (error) => {
-                        this.messageService.add({
-                            severity: 'error',
-                            summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.ERROR'),
-                            detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.ERROR'),
-                        });
-                        console.error('Error creating task:', error);
-                    }
-                );
-            });
-        }
+    resetFaultReportForm(){
+        this.selectedLocation = null;
+        this.selectedHouse = null;
+        this.locationType = 'house';
+        this.faultDescription = '';
+        this.faultReportVisible = false;
     }
 
     async saveImage() {

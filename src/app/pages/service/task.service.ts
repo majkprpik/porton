@@ -118,10 +118,6 @@ export class TaskService {
     }
   }
 
-  isUnscheduled(taskId: number){
-    return this.tasks.find(task => task.task_id == taskId)?.is_unscheduled;
-  }
-
   async uploadCommentForTask(taskId: number, comment: string){
     try{
       const { error: commentUploadError } = await this.supabaseService.getClient()
@@ -137,14 +133,6 @@ export class TaskService {
       console.error('Error uploading comment:', error);
       return [];
     }
-  }
-
-  private getFormattedDateTimeNowForSupabase(){
-    const now = new Date();
-    const isoString = now.toISOString(); // Example: 2025-03-14T11:26:33.350Z
-  
-    // Convert to required format: "YYYY-MM-DD HH:MM:SS.ssssss+00"
-    return isoString.replace('T', ' ').replace('Z', '+00');
   }
 
   async storeImagesForTask(images: any[], taskId: number) {
@@ -351,7 +339,7 @@ export class TaskService {
     );
   }
 
-  getTaskIcon(taskTypeId: number): string {
+  getTaskIcon(taskTypeId: number | undefined): string {
     switch(taskTypeId){
       case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
         return 'fa fa-house';
@@ -368,7 +356,7 @@ export class TaskService {
     }
   }
 
-  getTaskState(taskProgressTypeId: number): 'assigned' | 'not-assigned' | 'in-progress' | 'completed' | 'paused' {
+  getTaskProgressType(taskProgressTypeId: number): 'assigned' | 'not-assigned' | 'in-progress' | 'completed' | 'paused' {
     if (this.assignedTaskProgressType?.task_progress_type_id === taskProgressTypeId) {
       return 'assigned';
     } else if (this.notAssignedTaskProgressType?.task_progress_type_id === taskProgressTypeId) {

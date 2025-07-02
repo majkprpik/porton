@@ -82,11 +82,7 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
                   class="task-card-container"
                 >
                   <app-task-card 
-                    [houseNumber]="houseService.getHouseNumber(task.house_id)"
-                    [houseName]="houseService.getHouseName(task.house_id)"
                     [task]="task"
-                    [state]="isTaskCompleted(task) ? 'completed' : 'assigned'"
-                    [taskIcon]="taskService.getTaskIcon(task.task_type_id)"
                     [isInActiveGroup]="isActive"
                     (removeFromGroup)="onRemoveTask(task)">
                   </app-task-card>
