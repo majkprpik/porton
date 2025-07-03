@@ -363,7 +363,7 @@ export class WorkGroups implements OnInit {
   workGroupStaff: { [key: number]: Profile[] } = {};
   allTasks: Task[] = [];
   lockedTeams: LockedTeam[] = [];
-  taskProgressTypes: any;
+  taskProgressTypes: TaskProgressType[] = [];
   wgt: any[] = [];
   isRepairsCollapsed: boolean = true;
   isCleaningCollapsed: boolean = false;
@@ -494,19 +494,21 @@ export class WorkGroups implements OnInit {
       if (!this.workGroupTasks[workGroupTask.work_group_id]) {
         this.workGroupTasks[workGroupTask.work_group_id] = [];
       }
+
       const task = tasks.find(t => t.task_id === workGroupTask.task_id);
+
       if (task) {
         const taskCopy = { ...task };
         const notAssignedType = this.taskProgressTypes.find((type: any) => type.task_progress_type_name === "Nije dodijeljeno");
         const assignedType = this.taskProgressTypes.find((type: any) => type.task_progress_type_name === "Dodijeljeno");
-        if (task.task_progress_type_id === notAssignedType?.task_progress_type_id) {
-          taskCopy.task_progress_type_id = assignedType?.task_progress_type_id;
+
+        if (task.task_progress_type_id == notAssignedType?.task_progress_type_id) {
+          taskCopy.task_progress_type_id = assignedType!.task_progress_type_id;
         }
         this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], taskCopy];
       }
     });
 
-    // Map work group staff
     this.workGroupStaff = {};
     workGroupProfiles.forEach(assignment => {
       if (!this.workGroupStaff[assignment.work_group_id]) {
@@ -592,13 +594,12 @@ export class WorkGroups implements OnInit {
   }
 
   deleteWorkGroup(workGroupId: number) {
-    if (this.activeGroupId === workGroupId) {
+    if (this.activeGroupId == workGroupId) {
       this.workGroupService.setActiveGroup(undefined);
     }
 
     const assignedTaskType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Dodijeljeno');
-
-    // Get the tasks that will be removed from this work group
+    const notAssignedTaskType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Nije dodijeljeno')
     const tasksToReturn = this.getAssignedTasks(workGroupId);
     
     if(tasksToReturn && tasksToReturn.length > 0){
@@ -606,48 +607,20 @@ export class WorkGroups implements OnInit {
       this.workGroupTasks[workGroupId] = this.workGroupTasks[workGroupId].filter(task => !tasksToReturn.some(ttr => ttr.task_id == task.task_id));
       this.dataService.setWorkGroupTasks(this.wgt);
     }
-    
-    // Get the progress type ID for "Nije dodijeljeno"
-    this.dataService.taskProgressTypes$.pipe(
-      map(types => types.find(type => type.task_progress_type_name === 'Nije dodijeljeno')),
-      take(1)
-    ).subscribe(async nijeDodijeljenoType => {
-      if (!nijeDodijeljenoType) {
-        console.error('Could not find progress type "Nije dodijeljeno"');
-        return;
-      }
 
-      let updateObservables = tasksToReturn
-        .filter(task => task.task_progress_type_id === assignedTaskType.task_progress_type_id)
+    let updateObservables = tasksToReturn
+        .filter(task => task.task_progress_type_id === assignedTaskType!.task_progress_type_id)
         .map(task => 
-          from(this.taskService.updateTaskProgressType(task.task_id, nijeDodijeljenoType.task_progress_type_id))
+          from(this.taskService.updateTaskProgressType(task.task_id, notAssignedTaskType!.task_progress_type_id))
         );
-      
-      forkJoin(updateObservables.length > 0 ? updateObservables : [of(null)]).pipe(
-        switchMap(() => this.dataService.deleteWorkGroup(workGroupId)),
-        catchError((err) => {
-          console.error("Error:", err);
-          throw new Error("Error deleting work group!");
-        })
-      ).subscribe();
-    });
-  }
-  
-  // Helper method to refresh all data
-  refreshData() {
-    // Reload tasks and work group tasks
-    forkJoin([
-      this.dataService.loadTasksFromDb(),
-      this.dataService.loadTasks(),
-      this.dataService.loadWorkGroupTasks()
-    ]).subscribe({
-      next: () => {
-        console.log('Data refreshed after work group deletion');
-      },
-      error: (error) => {
-        console.error('Error refreshing data:', error);
-      }
-    });
+
+    forkJoin(updateObservables.length > 0 ? updateObservables : [of(null)]).pipe(
+      switchMap(() => this.dataService.deleteWorkGroup(workGroupId)),
+      catchError((err) => {
+        console.error("Error:", err);
+        throw new Error("Error deleting work group!");
+      })
+    ).subscribe();
   }
 
   async publishWorkGroups() {
@@ -679,15 +652,15 @@ export class WorkGroups implements OnInit {
 
       const updateTaskProgressPromises = lockedWorkGroup.tasks
         .filter(task => 
-          task.task_progress_type_id != completedTaskProgressType.task_progress_type_id && 
-          task.task_progress_type_id != inProgressTaskProgressType.task_progress_type_id &&
-          task.task_progress_type_id != pausedTaskProgressType.task_progress_type_id)
+          task.task_progress_type_id != completedTaskProgressType!.task_progress_type_id && 
+          task.task_progress_type_id != inProgressTaskProgressType!.task_progress_type_id &&
+          task.task_progress_type_id != pausedTaskProgressType!.task_progress_type_id)
         .map(task => 
-          this.taskService.updateTaskProgressType(task.task_id, assignedTaskProgressType.task_progress_type_id)
+          this.taskService.updateTaskProgressType(task.task_id, assignedTaskProgressType!.task_progress_type_id)
         );
       
       const updateRemovedTasksPromises = this.tasksToRemove.map(ttrm =>
-        this.taskService.updateTaskProgressType(ttrm.task_id, notAssignedTaskProgressType.task_progress_type_id)
+        this.taskService.updateTaskProgressType(ttrm.task_id, notAssignedTaskProgressType!.task_progress_type_id)
       );
 
       this.tasksToRemove = [];

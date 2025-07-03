@@ -234,7 +234,7 @@ export class TaskService {
     const isInProgress = this.taskProgressTypes.find(tpt => tpt.task_progress_type_id == taskProgressTypeId)?.task_progress_type_name == 'U tijeku';
 
     try{
-      const { data: task1, error: taskError } = await this.supabaseService.getClient()
+      const { data: updatedTask, error: taskError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .update({ 
@@ -248,7 +248,7 @@ export class TaskService {
 
       if(taskError) throw taskError
       
-      return task1;
+      return updatedTask;
     } catch (error) {
       console.error('Error updating task progress type: ', error);
       return null;

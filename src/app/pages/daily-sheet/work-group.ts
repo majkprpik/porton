@@ -720,7 +720,6 @@ export class WorkGroup implements OnInit {
       this.dataService.setWorkGroupProfiles(lockedWorkGroupProfiles);
       this.workGroupService.setActiveGroup(undefined);
     } else {
-      // If the group is not active, activate it
       this.groupSelected.emit();
     }
   }
