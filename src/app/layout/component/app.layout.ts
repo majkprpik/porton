@@ -27,15 +27,8 @@ import { WorkGroupService } from '../../pages/service/work-group.service';
 import { TabsModule } from 'primeng/tabs';
 import { SelectModule } from 'primeng/select';
 import { LanguageService } from '../../pages/language/language.service';
-import { SwPush } from '@angular/service-worker';
 import { PushNotificationsService } from '../../pages/service/push-notifications.service';
-import { environment } from '../../../environments/environment';
-
-// Define a special location interface for Zgrada and Parcela options
-interface SpecialLocation {
-    name: string;
-    type: string;
-}
+import { MultiSelect } from 'primeng/multiselect';
 
 @Component({
     selector: 'app-layout',
@@ -59,9 +52,11 @@ interface SpecialLocation {
         TranslateModule,
         TabsModule,
         SelectModule,
+        MultiSelect,
     ],
     providers: [MessageService, ConfirmationService],
-    template: ` <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
+    template: ` 
+    <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">
@@ -305,17 +300,22 @@ interface SpecialLocation {
             ></p-speedDial>
         }
 
-        <!-- Fault Report Dialog -->
-        <p-dialog [header]="'APP-LAYOUT.REPAIR-TASK-REPORT.TITLE' | translate" [(visible)]="faultReportVisible" [modal]="true" [style]="{ width: '30rem' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }" (onHide)="resetForm('fault-report')">
+        <p-dialog 
+            [header]="'APP-LAYOUT.REPAIR-TASK-REPORT.TITLE' | translate" 
+            [(visible)]="faultReportVisible" 
+            [modal]="true" 
+            [style]="{ width: '30rem' }" 
+            [breakpoints]="{ '960px': '75vw', '641px': '90vw' }" 
+            (onHide)="resetForm('fault-report')"
+        >
             <div class="fault-report-form">
                 <div class="field">
                     <label for="location" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.LOCATION' | translate }}*</label>
                     <p-select id="location" 
-                        [options]="locationOptions" 
-                        [(ngModel)]="selectedLocation" 
+                        [options]="houses" 
+                        [(ngModel)]="selectedHouseForFaultReport" 
                         [placeholder]="'APP-LAYOUT.REPAIR-TASK-REPORT.SELECT-LOCATION' | translate" 
                         [style]="{ width: '100%' }" 
-                        (onChange)="onLocationChange($event)"
                     >
                         <ng-template let-item pTemplate="item">
                             <span>{{ item.name || item.house_name }}</span>
@@ -386,32 +386,36 @@ interface SpecialLocation {
                 @if (!capturedImage) {
                     <div class="flex justify-content-end gap-2">
                         <button pButton [label]="'BUTTONS.CANCEL' | translate" class="p-button-text" (click)="faultReportVisible = false"></button>
-                        <button pButton [label]="'BUTTONS.REPORT' | translate" (click)="submitFaultReport()" [disabled]="!isFormValid()"></button>
+                        <button pButton [label]="'BUTTONS.REPORT' | translate" (click)="submitFaultReport()" [disabled]="!isFaultReportFormValid()"></button>
                     </div>
                 }
             </ng-template>
         </p-dialog>
 
-        <!-- Unscheduled Task Dialog -->
-        <p-dialog [header]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.TITLE' | translate" [(visible)]="isUnscheduledTaskVisible" [modal]="true" [style]="{ width: '30rem' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }">
+        <p-dialog 
+            [header]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.TITLE' | translate" 
+            [(visible)]="isUnscheduledTaskVisible" 
+            [modal]="true" 
+            [style]="{ width: '30rem' }" 
+            [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
+            (onHide)="resetForm('unscheduled-task-report')"
+        >
             <div class="task-form">
                 <div class="field">
                     <label for="location" class="font-bold block mb-2">{{ 'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.LOCATION' | translate }}*</label>
-                    <p-select 
-                        id="location" 
-                        [options]="locationOptions" 
-                        [(ngModel)]="selectedLocationForTask" 
-                        [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-LOCATION' | translate" 
-                        [style]="{ width: '100%' }" 
-                        (onChange)="onLocationChangeForTask($event)"
-                    >
-                        <ng-template let-item pTemplate="item">
-                            <span>{{ item.name || item.house_name }}</span>
-                        </ng-template>
-                        <ng-template let-item pTemplate="selectedItem">
-                            <span>{{ item.name || item.house_name }}</span>
-                        </ng-template>
-                    </p-select>
+                    <p-multiselect 
+                            [options]="houses" 
+                            [(ngModel)]="selectedHouseNamesForTaskReport"
+                            optionLabel="house_name" 
+                            optionValue="house_name" 
+                            [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-LOCATION' | translate" 
+                            [style]="{ width: '100%' }" 
+                            (onChange)="onLocationSelect()"
+                        >
+                            <ng-template let-item pTemplate="item">
+                                <span>{{ item.house_name }}</span>
+                            </ng-template>
+                    </p-multiselect>
                 </div>
 
                 <div class="field mt-4">
@@ -444,7 +448,7 @@ interface SpecialLocation {
             <ng-template pTemplate="footer">
                 <div class="flex justify-content-end gap-2">
                     <button pButton [label]="'BUTTONS.CANCEL' | translate" class="p-button-text" (click)="isUnscheduledTaskVisible = false"></button>
-                    <button pButton [label]="'BUTTONS.REPORT' | translate" (click)="submitUnscheduledTask()" [disabled]="!isTaskFormValid()"></button>
+                    <button pButton [label]="'BUTTONS.REPORT' | translate" (click)="submitUnscheduledTask()" [disabled]="!isUnscheduledTaskFormValid()"></button>
                 </div>
             </ng-template>
         </p-dialog>
@@ -912,15 +916,6 @@ export class AppLayout {
     @ViewChild(AppSidebar) appSidebar!: AppSidebar;
     @ViewChild(AppTopbar) appTopBar!: AppTopbar;
 
-    // Special locations
-    specialLocations: SpecialLocation[] = [
-        { name: 'Zgrada', type: 'building' },
-        { name: 'Parcela', type: 'parcel' }
-    ];
-
-    // Combined location options
-    locationOptions: (House)[] = [];
-
     // Dialog visibility flags
     faultReportVisible: boolean = false;
     isUnscheduledTaskVisible: boolean = false;
@@ -930,18 +925,13 @@ export class AppLayout {
     isProfileDetailsWindowVisible: boolean = false;
     isSpeedDialVisible: boolean = false;
 
-    // Form fields
-    selectedLocation: House | null = null;
     selectedHouse: House | null = null;
     faultDescription: string = '';
-    locationType: string = 'house';
 
-    // Form fields for Unscheduled task
-    selectedLocationForTask: House | null = null;
-    selectedHouseForTask: House | null = null;
-    locationTypeForTask: string = 'house';
     selectedTaskType: TaskType | null = null;
     taskDescription: string = '';
+    selectedHouseNamesForTaskReport: string[] = [];
+    selectedHouseForFaultReport: House | null = null;
 
     houses: House[] = [];
     taskTypes: TaskType[] = [];
@@ -1037,7 +1027,6 @@ export class AppLayout {
                 this.storedUserId = this.authService.getStoredUserId();
 
                 this.comments = repairTaskComments;
-                this.houses = houses;
                 this.taskTypes = taskTypes.map(taskType => ({
                     ...taskType, 
                     translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskService.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
@@ -1059,12 +1048,23 @@ export class AppLayout {
                 
                 this.loggedUser = this.profiles.find(profile => profile.id == this.storedUserId);
 
+                this.houses = houses.sort((a, b) => {
+                    const nameA = a.house_name.toLowerCase();
+                    const nameB = b.house_name.toLowerCase();
+
+                    if (isNaN(Number(nameA)) && isNaN(Number(nameB))) {
+                        return nameA.localeCompare(nameB);
+                    } else if (isNaN(Number(nameA))) {
+                        return -1;
+                    } else if (isNaN(Number(nameB))) {
+                        return 1;
+                    } else {
+                        return Number(nameA) - Number(nameB);
+                    }
+                });
+
                 if(profiles.length > 0 && profileRoles.length > 0){
                     this.buildSpeedDialItems();
-                }
-
-                if (houses) {
-                    this.updateLocationOptions();
                 }
             },
             error: (error) => {
@@ -1379,53 +1379,14 @@ export class AppLayout {
         }
     }
 
-    // Handle location change in fault report dialog
-    onLocationChange(event: any) {
-        const selection = event.value;
-        if (selection && 'type' in selection) {
-            // This is a special location
-            this.locationType = selection.type;
-            this.selectedHouse = null;
-        } else {
-            // This is a house
-            this.locationType = 'house';
-            this.selectedHouse = selection;
-        }
-    }
+    onLocationSelect(){
+        const houses = this.houses.filter(house => this.selectedHouseNamesForTaskReport.includes(house.house_name));
 
-    onLocationChangeForTask(event: any) {
-        const selection = event.value;
-        let house = this.houses.find(house => house.house_id == selection.house_id);
-        this.selectedHouseForTask = selection;
-        
-        if(house?.house_name == 'Zgrada' || house?.house_name == 'Parcele'){
-            this.taskTypes = this.taskTypes.filter(tt => tt.task_type_name == 'Ostalo');
+        if(houses.find(house => house.house_name == 'Zgrada' || house.house_name == 'Parcele')){
+            this.taskTypes = this.taskTypes.filter(tt => tt.task_type_name == 'Ostalo' || tt.task_type_name == 'Popravak');
         } else {
             this.taskTypes = [...this.otherTaskTypes];
         }
-    }
-
-    updateLocationOptions() {
-        this.locationOptions = [
-            // ...this.specialLocations,
-            ...this.houses
-        ];
-
-        // sort first names with letters, then numbers
-       this.locationOptions.sort((a, b) => {
-            const nameA = a.house_name.toLowerCase();
-            const nameB = b.house_name.toLowerCase();
-
-            if (isNaN(Number(nameA)) && isNaN(Number(nameB))) {
-                return nameA.localeCompare(nameB);
-            } else if (isNaN(Number(nameA))) {
-                return -1;
-            } else if (isNaN(Number(nameB))) {
-                return 1;
-            } else {
-                return Number(nameA) - Number(nameB);
-            }
-        });
     }
 
     isOutsideClicked(event: MouseEvent) {
@@ -1481,96 +1442,100 @@ export class AppLayout {
         }
     }
 
-    isFormValid(): boolean {
-        return !!this.selectedLocation;
+    isFaultReportFormValid(): boolean {
+        return !!this.selectedHouseForFaultReport;
     }
 
-    isTaskFormValid(): boolean {
-        return !!this.selectedLocationForTask && !!this.selectedTaskType;
+    isUnscheduledTaskFormValid(): boolean {
+        return !!this.selectedHouseNamesForTaskReport.length && !!this.selectedTaskType;
     }
 
     submitFaultReport() {
-        if (!this.isFormValid()) return;
+        if (!this.isFaultReportFormValid()) return;
 
-        if (this.locationType == 'house' && this.selectedHouse) {
-            this.taskService.createTaskForHouse(
-                this.selectedHouse.house_id.toString(),
-                this.faultDescription,
-                'Popravak',
-                true
-            ).then(async result => {
-                if (result) {
-                    try {
-                        if(this.imagesToUpload.length){
-                            await this.taskService.storeImagesForTask(this.imagesToUpload, result.task_id);
-                        }
-
-                        this.messageService.add({
-                            severity: 'success',
-                            summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.SUCCESS'),
-                            detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.SUCCESS'),
-                        });
-
-                        this.resetFaultReportForm();
-                    } catch (imagesSaveError) {
-                        console.error('Error saving images: ', imagesSaveError);
+        this.taskService.createTaskForHouse(
+            this.selectedHouseForFaultReport!.house_id.toString(),
+            this.faultDescription,
+            'Popravak',
+            true
+        ).then(async result => {
+            if (result) {
+                try {
+                    if(this.imagesToUpload.length){
+                        await this.taskService.storeImagesForTask(this.imagesToUpload, result.task_id);
                     }
-                } else {
+
                     this.messageService.add({
-                        severity: 'error',
-                        summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.ERROR'),
-                        detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.ERORR'),
+                        severity: 'success',
+                        summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.SUCCESS'),
+                        detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.SUCCESS'),
                     });
+
+                    this.resetFaultReportForm();
+                } catch (imagesSaveError) {
+                    console.error('Error saving images: ', imagesSaveError);
                 }
-            });
-        }
+            } else {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.ERROR'),
+                    detail: this.translateService.instant('APP-LAYOUT.REPAIR-TASK-REPORT.MESSAGES.REPAIR-REPORT.ERORR'),
+                });
+            }
+        });
     }
 
     submitUnscheduledTask() {
-        if (!this.isTaskFormValid()) return;
+        if (!this.isUnscheduledTaskFormValid()) return;
 
-        if (this.locationTypeForTask == 'house' && this.selectedHouseForTask) {
-            // For house locations, use the existing method
-            this.taskService.createTaskForHouse(
-                this.selectedHouseForTask.house_id.toString(), 
-                this.taskDescription, 
-                this.selectedTaskType!.task_type_name, 
+        const createPromises = this.selectedHouseNamesForTaskReport.map(houseName => {
+            const house = this.houses.find(h => h.house_name == houseName);
+            if (!house) return Promise.resolve(null);
+
+            return this.taskService.createTaskForHouse(
+                house.house_id.toString(),
+                this.taskDescription,
+                this.selectedTaskType!.task_type_name,
                 true
-            ).then((result) => {
-                if (result) {
-                    this.messageService.add({
-                        severity: 'success',
-                        summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.SUCCESS'),
-                        detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.SUCCESS'),
-                    });
+            );
+        });
 
-                    this.resetUnscheduledTaskForm();
-                } else {
-                    this.messageService.add({
-                        severity: 'error',
-                        summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.ERROR'),
-                        detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.ERROR'),
-                    });
-                }
-            });
-        } 
+        Promise.all(createPromises).then(results => {
+            const allSucceeded = results.every(result => result != null);
+
+            if (allSucceeded) {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.SUCCESS'),
+                    detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.SUCCESS'),
+                });
+                this.resetUnscheduledTaskForm();
+            } else {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.ERROR'),
+                    detail: this.translateService.instant('APP-LAYOUT.UNSCHEDULED-TASK-REPORT.MESSAGES.TASK-REPORT.ERROR'),
+                });
+            }
+        });
     }
 
     resetUnscheduledTaskForm(){
-        this.selectedLocationForTask = null;
-        this.selectedHouseForTask = null;
-        this.locationTypeForTask = 'house';
         this.selectedTaskType = null;
         this.taskDescription = '';
         this.isUnscheduledTaskVisible = false;
+        this.selectedHouseNamesForTaskReport = [];
+        this.taskTypes = [...this.otherTaskTypes];
     }
 
     resetFaultReportForm(){
-        this.selectedLocation = null;
+        this.selectedHouseForFaultReport = null;
         this.selectedHouse = null;
-        this.locationType = 'house';
         this.faultDescription = '';
         this.faultReportVisible = false;
+        this.capturedImage = '';
+        this.taskImages = [];
+        this.imagesToUpload = [];
     }
 
     async saveImage() {
@@ -1641,17 +1606,15 @@ export class AppLayout {
     }
 
     resetForm(window: string) {
-        this.selectedLocation = null;
-        this.faultDescription = '';
-        this.capturedImage = '';
-        this.taskImages = [];
-        this.imagesToUpload = [];
-        this.task = {};
-        this.selectedTabIndex = "0";
-
-        if (window == 'task-details') {
+        if(window == 'unscheduled-task-report'){
+            this.resetUnscheduledTaskForm();
+        } else if (window == 'fault-report'){
+            this.resetFaultReportForm();
+        } else if(window == 'task-details'){
+            this.selectedTabIndex = "0";
             this.taskService.$taskModalData.next(null);
         }
+        this.task = {};
     }
 
     removeImage(imageToRemove: any, event: any, window: string) {
