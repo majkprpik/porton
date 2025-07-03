@@ -223,7 +223,7 @@ export class TaskService {
 
       return true;
     } catch (error){
-      console.error('Error uploading comment:', error);
+      console.error('Error deleting task:', error);
       return false;
     }
   }
