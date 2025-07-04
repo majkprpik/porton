@@ -1,6 +1,6 @@
 import { Injectable, effect, signal, computed } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 export interface layoutConfig {
     preset?: string;
@@ -62,6 +62,7 @@ export class LayoutService {
     transitionComplete = signal<boolean>(false);
     private initialized = false;
     private speedDialItems: MenuItem[] = [];
+    public $isOccupancyChartVisible = new BehaviorSubject<boolean>(false);
 
     constructor() {
         effect(() => {

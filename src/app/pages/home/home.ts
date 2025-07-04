@@ -13,6 +13,8 @@ import { TaskService } from '../service/task.service';
 import { HouseService } from '../service/house.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { TranslateModule } from '@ngx-translate/core';
+import { LayoutService } from '../../layout/service/layout.service';
+import { ChartComponent } from '../../layout/component/chart.component';
 
 // Define the special location option interface
 interface SpecialLocation {
@@ -32,6 +34,7 @@ interface SpecialLocation {
         FormsModule,
         InputTextModule,
         TranslateModule,
+        ChartComponent,
     ],
     template: `
         <div class="home-container" (click)="handleContainerClick($event)">
@@ -292,10 +295,30 @@ interface SpecialLocation {
                     }
                 }
             </div>
+
+            @if(isOccupancyChartVisible){
+                <div class="occupancy-container">
+                    <app-chart
+                        [title]="'Occupancy'"
+                        [dataType]="'occupancy'"
+                        [metrics]="occupancyMetrics"
+                    ></app-chart>
+                </div>
+            }
         </div>
     `,
     styles: [
         `
+            .occupancy-container{
+                height: 900px;
+                width: 1900px;
+                background-color: white;
+                border-radius: 10px;
+                box-sizing: border-box;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
             .legend-container {
                 margin-bottom: 1.2rem;
                 padding: 0.8rem 1rem;
@@ -456,6 +479,7 @@ interface SpecialLocation {
                 gap: 0.25rem;
                 padding: 0;
                 position: relative;
+                padding-bottom: 20px;
             }
 
             .house-card {
@@ -917,6 +941,10 @@ export class Home implements OnInit, OnDestroy {
     faultReportVisible: boolean = false;
     isUnscheduledTaskVisible: boolean = false;
     phoneDialogVisible: boolean = false;
+    isOccupancyChartVisible: boolean = false; 
+    occupancyMetrics = [
+        { name: 'Occupancy', value: 'occupancy' },
+    ]
 
     // Form fields
     selectedLocation: House | SpecialLocation | null = null;
@@ -960,6 +988,7 @@ export class Home implements OnInit, OnDestroy {
         private dataService: DataService,
         public taskService: TaskService,
         public houseService: HouseService,
+        private layoutService: LayoutService,
     ) {}
 
     ngOnInit(): void {
@@ -973,6 +1002,10 @@ export class Home implements OnInit, OnDestroy {
                 this.applyFilters();
             })
         );
+
+        this.layoutService.$isOccupancyChartVisible.subscribe(res => {
+            this.isOccupancyChartVisible = res;
+        })
         
         this.subscriptions.push(this.dataService.loadHouseAvailabilities().subscribe());
 

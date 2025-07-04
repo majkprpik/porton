@@ -27,7 +27,10 @@
         "NO": "Ne",
         "OK": "OK",
         "YEAR": "Godina",
-        "MONTH": "Mjesec"
+        "SEASON": "Sezona",
+        "MONTH": "Mjesec",
+        "ADD-TO-HOME": "Dodaj na pregled",
+        "REMOVE-FROM-HOME": "Ukloni s pregleda"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Dodijeljeno",

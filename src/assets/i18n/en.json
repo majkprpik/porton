@@ -27,7 +27,10 @@
         "NO": "No",
         "OK": "OK",
         "YEAR": "Year",
-        "MONTH": "Month"
+        "SEASON": "Season",
+        "MONTH": "Month",
+        "ADD-TO-HOME": "Add to home",
+        "REMOVE-FROM-HOME": "Remove from home"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Assigned",
