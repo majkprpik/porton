@@ -262,7 +262,7 @@ export class ChartComponent {
       this.tasks = tasks;
 
       this.houses.forEach(house => {
-        if(!this.houseNumbers.includes(house.house_number.toString())){
+        if(!this.houseNumbers.includes(house.house_number.toString()) && house.house_name != 'Zgrada' && house.house_name != 'Parcele'){
           this.houseNumbers.push(house.house_number.toString());
         }
       });
