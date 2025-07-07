@@ -385,44 +385,67 @@ export class ChartComponent {
     return index;
   }
 
-  calculateOccupancyMetric(metric: string, year: number, monthlyData: any){
-    const houseCount = this.houses.filter(house => house.house_name != 'Zgrada' && house.house_name != 'Parcele').length; 
-    let houseAvailabilitesForHouse;
+  getOccupancyDataForMonth(year: number, month: number){
+    let houseAvailabilitiesForSelectedHouse;
+    let monthIndex = this.getMonthIndex(month);
+    
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    let data = Array(daysInMonth).fill(0); 
+    const houseCount = this.houses.filter(house => house.house_name != 'Zgrada' && house.house_name != 'Parcele').length;
 
     if(this.selectedHouseNumber == 'All'){
-      houseAvailabilitesForHouse = this.houseAvailabilities;
+      houseAvailabilitiesForSelectedHouse = this.houseAvailabilities;
     } else {
-      houseAvailabilitesForHouse = this.houseAvailabilities.filter(ha => ha.house_id == this.selectedHouseId);
+      houseAvailabilitiesForSelectedHouse = this.houseAvailabilities.filter(ha => ha.house_id == this.selectedHouseId);
     }
 
-    for (let month = 0; month < monthlyData.length; month++){
-      let haArray = [];
-      let monthIndex = this.getMonthIndex(month);
-      
-      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-      const data = Array(daysInMonth).fill(0);
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDay = new Date(year, monthIndex, day);
 
-      for (let day = 1; day <= daysInMonth; day++) {
-        const currentDay = new Date(year, monthIndex, day);
-
-        haArray = houseAvailabilitesForHouse.filter((availability: any) => {
+      if(this.selectedHouseNumber == 'All'){
+        const houseAvailabilitiesForToday = houseAvailabilitiesForSelectedHouse.filter((availability: any) => {
           const start = new Date(availability.house_availability_start_date);
           const end = new Date(availability.house_availability_end_date);
           return currentDay >= start && currentDay <= end;
         });
 
-        if(this.selectedHouseNumber == 'All'){
-          data[day - 1] = (haArray.length / houseCount) * 100;
-        } else {
-          data[day - 1] = houseAvailabilitesForHouse.some((availability: any) => {
-            const start = new Date(availability.house_availability_start_date);
-            const end = new Date(availability.house_availability_end_date);
-            return currentDay >= start && currentDay <= end;
-          });
+        data[day - 1] = (houseAvailabilitiesForToday.length / houseCount) * 100;
+      } else {
+        data[day - 1] = houseAvailabilitiesForSelectedHouse.some((availability: any) => {
+          const start = new Date(availability.house_availability_start_date);
+          const end = new Date(availability.house_availability_end_date);
+          return currentDay >= start && currentDay <= end;
+        });
 
-          data[day - 1] = data[day - 1] ? 100 : 0;
-        }
+        data[day - 1] = data[day - 1] ? 100 : 0;
       }
+    }
+
+    return data;
+  }
+
+  getTaskDataForMonth(metric: string, year: number, month: number){
+    const tasks = this.filterTasksForMetric(metric, year, month);
+    const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let data = Array(daysInMonth).fill(0); 
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayString = `${wantedDate}-${day.toString().padStart(2, '0')}`;
+      const countForDay = tasks.filter(task => task.created_at.startsWith(dayString)).length;
+
+      data[day - 1] = countForDay;
+    }
+
+    return data;
+  }
+
+  calculateOccupancyMetric(metric: string, year: number, monthlyData: any){
+    for (let month = 0; month < monthlyData.length - 1; month++){
+      let monthIndex = this.getMonthIndex(month);
+      
+      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+      const data = this.getOccupancyDataForMonth(year, month);
 
       if(this.selectedHouseNumber == 'All'){
         let monthlyPercentages = 0;
@@ -448,37 +471,44 @@ export class ChartComponent {
     return monthlyData;
   }
 
+  filterTasksForMetric(metric: string, year: number, month: number){
+    let tasks;
+  
+    const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
+  
+    if(this.selectedHouseNumber == 'All'){
+      tasks = this.tasks.filter(task => 
+        task.created_at.startsWith(wantedDate)
+      );
+    } else {
+      tasks = this.tasks.filter(task => 
+        task.house_id == this.selectedHouseId &&
+        task.created_at.startsWith(wantedDate)
+      );
+    }
+  
+    if(!metric.includes('Total')){
+      if(metric.includes('Repair')){
+        tasks = tasks.filter(task => this.taskService.isRepairTask(task));
+      } else if(metric.includes('House')){
+        tasks = tasks.filter(task => this.taskService.isHouseCleaningTask(task));
+      } else if(metric.includes('Deck')){
+        tasks = tasks.filter(task => this.taskService.isDeckCleaningTask(task));
+      } else if(metric.includes('Unscheduled')){
+        tasks = tasks.filter(task => task.is_unscheduled);
+      } else if(metric.includes('Towel')){
+        tasks = tasks.filter(task => this.taskService.isTowelChangeTask(task));
+      } else if(metric.includes('Sheet')){
+        tasks = tasks.filter(task => this.taskService.isSheetChangeTask(task));
+      }
+    }
+
+    return tasks;
+  }
+
   calculateTaskMetric(metric: string, year: number, monthlyData: any){
     for (let month = 0; month < this.months.length - 1; month++) {
-      const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
-      let tasks
-  
-      if(this.selectedHouseNumber == 'All'){
-        tasks = this.tasks.filter(task => 
-          task.created_at.startsWith(wantedDate)
-        );
-      } else {
-        tasks = this.tasks.filter(task => 
-          task.house_id == this.selectedHouseId &&
-          task.created_at.startsWith(wantedDate)
-        );
-      }
-  
-      if(!metric.includes('Total')){
-        if(metric.includes('Repair')){
-          tasks = tasks.filter(task => this.taskService.isRepairTask(task));
-        } else if(metric.includes('House')){
-          tasks = tasks.filter(task => this.taskService.isHouseCleaningTask(task));
-        } else if(metric.includes('Deck')){
-          tasks = tasks.filter(task => this.taskService.isDeckCleaningTask(task));
-        } else if(metric.includes('Unscheduled')){
-          tasks = tasks.filter(task => task.is_unscheduled);
-        } else if(metric.includes('Towel')){
-          tasks = tasks.filter(task => this.taskService.isTowelChangeTask(task));
-        } else if(metric.includes('Sheet')){
-          tasks = tasks.filter(task => this.taskService.isSheetChangeTask(task));
-        }
-      }
+      const tasks = this.filterTasksForMetric(metric, year, month);
   
       monthlyData[month] += tasks.length;
     }
@@ -510,131 +540,59 @@ export class ChartComponent {
     return monthlyData;
   }
 
+  getAvailabilityDataForMonth(metric: string, year: number, month: number){
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let data = Array(daysInMonth).fill(0);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDay = new Date(year, month, day);
+
+      if(this.selectedHouseNumber == 'All'){
+        this.houseAvailabilities.forEach((availability: any) => {
+          const start = new Date(availability.house_availability_start_date);
+          const end = new Date(availability.house_availability_end_date);
+    
+          if (currentDay >= start && currentDay <= end) {
+            data[day - 1] += availability[metric] || 0;
+          }
+        });
+      } else {
+        this.houseAvailabilities.forEach((availability: any) => {
+          if (availability.house_id == this.selectedHouseId) {
+            const start = new Date(availability.house_availability_start_date);
+            const end = new Date(availability.house_availability_end_date);
+    
+            if (currentDay >= start && currentDay <= end) {
+              data[day - 1] += availability[metric] || 0;
+            }
+          }
+        });
+      }
+    }
+    
+    return data;
+  }
+
   generateDataset() {
     this.resetTotalMonthlyData();
-
-    const currentDate = this.selectedMonth;
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
-
+    
     this.selectedMetrics.forEach(metric => {
       this.initEmptyMetrics(metric);
 
-      const data = Array(daysInMonth).fill(0);
+      const currentDate = this.selectedMonth;
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
+
+      let data = Array(daysInMonth).fill(0);
       const isTaskMetric = metric.includes('tasks');
       const isOccupancyMetric = metric.includes('occupancy');
 
       if(isOccupancyMetric){
-        let houseAvailabilitesForHouse;
-        const houseCount = this.houses.filter(house => house.house_name != 'Zgrada' && house.house_name != 'Parcele').length;
+        data = this.getOccupancyDataForMonth(year, month);  
 
         if(this.selectedHouseNumber == 'All'){
-          houseAvailabilitesForHouse = this.houseAvailabilities;
-        } else {
-          houseAvailabilitesForHouse = this.houseAvailabilities.filter(ha => ha.house_id == this.selectedHouseId);
-        }
-        
-        const monthStart = new Date(year, month, 1);
-        const monthEnd = new Date(year, month, daysInMonth);
-
-        houseAvailabilitesForHouse = houseAvailabilitesForHouse.filter(availability => {
-          const start = new Date(availability.house_availability_start_date);
-          const end = new Date(availability.house_availability_end_date);
-          return end >= monthStart && start <= monthEnd;
-        });
-
-        for (let day = 1; day <= daysInMonth; day++) {
-          const currentDay = new Date(year, month, day);
-
-          if(this.selectedHouseNumber == 'All'){
-            const haArray = houseAvailabilitesForHouse.filter((availability: any) => {
-              const start = new Date(availability.house_availability_start_date);
-              const end = new Date(availability.house_availability_end_date);
-              return currentDay >= start && currentDay <= end;
-            });
-
-            data[day - 1] = (haArray.length / houseCount) * 100;
-          } else {
-            data[day - 1] = houseAvailabilitesForHouse.some((availability: any) => {
-              const start = new Date(availability.house_availability_start_date);
-              const end = new Date(availability.house_availability_end_date);
-              return currentDay >= start && currentDay <= end;
-            });
-            data[day - 1] = data[day - 1] ? 100 : 0;
-          }
-        }
-      } else if(isTaskMetric){
-        let tasks;
-
-        if(this.selectedHouseNumber == 'All'){
-          tasks = this.tasks.filter(task => 
-            task.created_at.startsWith(wantedDate)
-          );
-        } else {
-          tasks = this.tasks.filter(task => 
-            task.house_id == this.selectedHouseId &&
-            task.created_at.startsWith(wantedDate)
-          );
-        }
-
-        if(!metric.includes('Total')){
-          if(metric.includes('Repair')){
-            tasks = tasks.filter(task => this.taskService.isRepairTask(task));
-          } else if(metric.includes('House')){
-            tasks = tasks.filter(task => this.taskService.isHouseCleaningTask(task));
-          } else if(metric.includes('Deck')){
-            tasks = tasks.filter(task => this.taskService.isDeckCleaningTask(task));
-          } else if(metric.includes('Unscheduled')){
-            tasks = tasks.filter(task => task.is_unscheduled);
-          } else if(metric.includes('Towel')){
-            tasks = tasks.filter(task => this.taskService.isTowelChangeTask(task));
-          } else if(metric.includes('Sheet')){
-            tasks = tasks.filter(task => this.taskService.isSheetChangeTask(task));
-          }
-        }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-          const dayString = `${wantedDate}-${day.toString().padStart(2, '0')}`;
-          const countForDay = tasks.filter(task => task.created_at.startsWith(dayString)).length;
-
-          data[day - 1] = countForDay;
-        }
-
-        data.forEach(data => {
-          this.totalMonthlyData[metric] += data;
-        });
-      } else {
-        for (let day = 1; day <= daysInMonth; day++) {
-          const currentDay = new Date(year, month, day);
-
-          if(this.selectedHouseNumber == 'All'){
-            this.houseAvailabilities.forEach((availability: any) => {
-              const start = new Date(availability.house_availability_start_date);
-              const end = new Date(availability.house_availability_end_date);
-      
-              if (currentDay >= start && currentDay <= end) {
-                data[day - 1] += availability[metric] || 0;
-              }
-            });
-          } else {
-            this.houseAvailabilities.forEach((availability: any) => {
-              if (availability.house_id == this.selectedHouseId) {
-                const start = new Date(availability.house_availability_start_date);
-                const end = new Date(availability.house_availability_end_date);
-      
-                if (currentDay >= start && currentDay <= end) {
-                  data[day - 1] += availability[metric] || 0;
-                }
-              }
-            });
-          }
-        }
-      }
-
-      if(this.selectedHouseNumber == 'All'){
-        if(isOccupancyMetric){
           let dailyPercentages = 0;
 
           data.forEach(data => {
@@ -642,22 +600,7 @@ export class ChartComponent {
           });
 
           this.totalMonthlyData[metric] = Number(((dailyPercentages / daysInMonth)).toFixed(2));
-        } else if(isTaskMetric){
-          data.forEach(data => {
-            this.totalMonthlyData[metric] += data;
-          });
         } else {
-          const houseAvailabilitiesForSelectedMonth = this.houseAvailabilities
-            .filter(ha => 
-              (ha.house_availability_start_date.startsWith(wantedDate) || ha.house_availability_end_date.startsWith(wantedDate))
-            );
-  
-          houseAvailabilitiesForSelectedMonth.forEach((ha: any) => {
-            this.totalMonthlyData[metric] += ha[metric];
-          });
-        }
-      } else {
-        if(isOccupancyMetric){
           let daysOccupied = 0;
 
           data.forEach(data => {
@@ -665,21 +608,30 @@ export class ChartComponent {
           });
 
           this.totalMonthlyData[metric] = Number(((daysOccupied / daysInMonth) * 100).toFixed(2));
-        } else if(isTaskMetric){
-          data.forEach(data => {
-            this.totalMonthlyData[metric] += data;
-          });
-        } else {
-          const houseAvailabilitiesForSelectedMonth = this.houseAvailabilities
-            .filter(ha => 
-              ha.house_id == this.selectedHouseId && 
-              (ha.house_availability_start_date.startsWith(wantedDate) || ha.house_availability_end_date.startsWith(wantedDate))
-            );
-
-          houseAvailabilitiesForSelectedMonth.forEach((ha: any) => {
-            this.totalMonthlyData[metric] += ha[metric];
-          });
         }
+      } else if(isTaskMetric){
+        data = this.getTaskDataForMonth(metric, year, month);
+
+        data.forEach(data => {
+          this.totalMonthlyData[metric] += data;
+        });
+      } else {
+        data = this.getAvailabilityDataForMonth(metric, year, month);
+
+        let houseAvailabilitiesForSelectedMonth = this.houseAvailabilities
+          .filter(ha => 
+            (ha.house_availability_start_date.startsWith(wantedDate) || ha.house_availability_end_date.startsWith(wantedDate))
+          );
+
+        if(this.selectedHouseNumber != 'All'){
+          houseAvailabilitiesForSelectedMonth = houseAvailabilitiesForSelectedMonth
+            .filter(ha => ha.house_id == this.selectedHouseId
+          );
+        }
+        
+        houseAvailabilitiesForSelectedMonth.forEach((ha: any) => {
+          this.totalMonthlyData[metric] += ha[metric];
+        });
       }
 
       this.dataToDisplay[metric] = data;
@@ -706,27 +658,28 @@ export class ChartComponent {
 
       if(isOccupancyMetric){
         metricData = this.calculateOccupancyMetric(metric, year, monthlyData);
-      } else if(isTaskMetric){
-        metricData = this.calculateTaskMetric(metric, year, monthlyData);
-      } else {
-        metricData = this.calculateAvailabilityMetric(metric, year, monthlyData);
-      }
-
-      if(!isOccupancyMetric){
-        metricData.forEach((data: any) => {
-          this.totalMonthlyData[metric] += data;
-        });
-      } else {
+        
         let totalData = 0;
+        //preskoci zadnji mjesec jer nije u sezoni, u mjesecima je jer se samo displaya na grafu
+        const monthsCount = this.timePeriod == 'season' ? monthlyData.length - 1 : monthlyData.length;
 
         for (let i = 0; i < monthlyData.length - 1; i++){
           totalData += metricData[i]
         }
-        
-        //preskoci zadnji mjesec jer nije u sezoni, u mjesecima je jer se samo displaya na grafu
-        const monthsCount = this.timePeriod == 'season' ? monthlyData.length - 1 : monthlyData.length;
 
         this.totalMonthlyData[metric] = Number((totalData / monthsCount).toFixed(2));
+      } else if(isTaskMetric){
+        metricData = this.calculateTaskMetric(metric, year, monthlyData);
+
+        metricData.forEach((data: any) => {
+          this.totalMonthlyData[metric] += data;
+        });
+      } else {
+        metricData = this.calculateAvailabilityMetric(metric, year, monthlyData);
+        
+        metricData.forEach((data: any) => {
+          this.totalMonthlyData[metric] += data;
+        });
       }
 
       this.dataToDisplay[metric] = metricData;
