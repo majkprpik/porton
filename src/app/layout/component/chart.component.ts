@@ -386,7 +386,7 @@ export class ChartComponent {
   }
 
   calculateOccupancyMetric(metric: string, year: number, monthlyData: any){
-    const houseCount = this.houses.filter(house => house.house_name != 'Zgrada' && house.house_name != 'Parcele').length;
+    const houseCount = this.houses.filter(house => house.house_name != 'Zgrada' && house.house_name != 'Parcele').length; 
     let houseAvailabilitesForHouse;
 
     if(this.selectedHouseNumber == 'All'){
