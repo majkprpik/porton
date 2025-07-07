@@ -5,11 +5,13 @@ import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
 import { MultiSelect } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, TitleCasePipe } from '@angular/common';
 import { DataService, House, HouseAvailability, Task } from '../../pages/service/data.service';
 import { TaskService } from '../../pages/service/task.service';
 import { combineLatest } from 'rxjs';
 import { LayoutService } from '../service/layout.service';
+
+type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'polarArea' | 'radar';
 
 @Component({
   selector: 'app-chart',
@@ -20,11 +22,31 @@ import { LayoutService } from '../service/layout.service';
     TranslateModule,
     ButtonModule,
     MultiSelect,
+    TitleCasePipe
   ],
   template: `
     <div class="container">
       <div class="header">
         <h1>{{title}}</h1>
+        @if(dataType != 'occupancy'){
+          <div class="field">
+            <label for="location" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.CHART-TYPE' | translate }}*</label>
+            <p-select 
+              id="month" 
+              [options]="chartTypes" 
+              [(ngModel)]="chartType" 
+              [style]="{ width: '150px' }" 
+              (onChange)="onChartSelect()"
+            >
+              <ng-template let-item pTemplate="item">
+                <span>{{ item | titlecase }}</span>
+              </ng-template>
+              <ng-template let-item pTemplate="selectedItem">
+                <span>{{ item | titlecase }}</span>
+              </ng-template>
+            </p-select>
+          </div>
+        }
         @if(dataType == 'occupancy'){ 
           @if(isOccupancyChartAddedToHome){
             <p-button
@@ -127,7 +149,7 @@ import { LayoutService } from '../service/layout.service';
       </div>
 
       <div class="card">
-        <p-chart type="line" [data]="data" [options]="options" class="h-[30rem]" />
+        <p-chart [type]="chartType" [data]="data" [options]="options" class="h-[30rem]" />
       </div>
 
       @if(selectedMetrics.length && selectedHouseNumber){
@@ -228,6 +250,9 @@ export class ChartComponent {
 
   isOccupancyChartAddedToHome: boolean = false
 
+  chartType: ChartType = 'line';
+  chartTypes: ChartType[] = ['bar', 'line', 'bubble']
+
   constructor(
     private cd: ChangeDetectorRef,
     private dataService: DataService,
@@ -322,6 +347,10 @@ export class ChartComponent {
 
       return isSameHouse && overlapsMonth;
     });
+  }
+
+  onChartSelect(){
+    this.onMetricsSelect();
   }
 
   onMonthSelect(){
@@ -733,55 +762,110 @@ export class ChartComponent {
 
         const colorVar = colors[index % colors.length];
 
-        return {
-          label: this.metrics.find((m: any) => m.value == metric)?.name,
-          data: this.dataToDisplay[metric],
-          fill: true,
-          tension: 0,
-          borderColor: documentStyle.getPropertyValue(colorVar),
-          backgroundColor: documentStyle.getPropertyValue(colorVar) + '33'
-        };
+        if(this.chartType == 'line'){
+          return {
+            label: this.metrics.find((m: any) => m.value == metric)?.name,
+            data: this.dataToDisplay[metric],
+            fill: true,
+            tension: 0,
+            borderColor: documentStyle.getPropertyValue(colorVar),
+            backgroundColor: documentStyle.getPropertyValue(colorVar) + '33',
+          };
+        } 
+        else {
+          return {
+            label: this.metrics.find((m: any) => m.value == metric)?.name,
+            data: this.dataToDisplay[metric],
+            fill: true,
+            tension: 0,
+            borderColor: 'white',
+            backgroundColor: documentStyle.getPropertyValue(colorVar),
+            borderWidth: 1,
+          };
+        }
       });
 
-      this.data = {
-        labels: this.xLabels,
-        datasets: datasets
-      };
+      if(this.chartType == 'line'){
+        this.data = {
+          labels: this.xLabels,
+          datasets: datasets
+        };
 
-      this.options = {
-        maintainAspectRatio: false,
-        aspectRatio: 0.6,
-        plugins: {
-          legend: {
-            labels: {
-              color: textColor
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: {
-              color: textColorSecondary
-            },
-            grid: {
-              color: surfaceBorder
+        this.options = {
+          maintainAspectRatio: false,
+          aspectRatio: 0.6,
+          plugins: {
+            legend: {
+              labels: {
+                color: textColor
+              }
             }
           },
-          y: {
-            min: 0,
-            max: hasOccupancy ? Math.max(100, maxDataValue) : undefined,
-            ticks: {
-              color: textColorSecondary,
-              callback: function (value: number | string) {
-                return Number(value) % 1 === 0 ? value : '';
+          scales: {
+            x: {
+              ticks: {
+                color: textColorSecondary
+              },
+              grid: {
+                color: surfaceBorder
               }
             },
-            grid: {
-              color: surfaceBorder
+            y: {
+              min: 0,
+              max: hasOccupancy ? Math.max(100, maxDataValue) : undefined,
+              ticks: {
+                color: textColorSecondary,
+                callback: function (value: number | string) {
+                  return Number(value) % 1 === 0 ? value : '';
+                }
+              },
+              grid: {
+                color: surfaceBorder
+              }
             }
           }
-        }
-      };
+        };
+      } else {
+        this.data = {
+          labels: this.xLabels,
+          datasets: datasets
+        };
+
+        this.options = {
+          maintainAspectRatio: false,
+          aspectRatio: 0.6,
+          plugins: {
+            legend: {
+              labels: {
+                color: textColor
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: textColorSecondary
+              },
+              grid: {
+                color: surfaceBorder
+              }
+            },
+            y: {
+              min: 0,
+              max: hasOccupancy ? Math.max(100, maxDataValue) : undefined,
+              ticks: {
+                color: textColorSecondary,
+                callback: function (value: number | string) {
+                  return Number(value) % 1 === 0 ? value : '';
+                }
+              },
+              grid: {
+                color: surfaceBorder
+              }
+            }
+          }
+        };
+      }
 
       this.cd.markForCheck();
     }

@@ -403,7 +403,8 @@
             "TITLE": {
                 "MONTH": "Month",
                 "LOCATION": "Location",
-                "METRIC": "Metrics"
+                "METRIC": "Metrics",
+                "CHART-TYPE": "Chart type"
             },
             "DATA": {
                 "SELECT-MONTH": "Select a month",
