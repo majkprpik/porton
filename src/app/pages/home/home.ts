@@ -296,8 +296,8 @@ interface SpecialLocation {
                 }
             </div>
 
-            @if(isOccupancyChartVisible){
-                <div class="occupancy-container">
+            @for(chart of pinnedCharts; track chart){
+                <div class="pinned-container">
                     <app-chart
                         [title]="'Occupancy'"
                         [dataType]="'occupancy'"
@@ -309,7 +309,7 @@ interface SpecialLocation {
     `,
     styles: [
         `
-            .occupancy-container{
+            .pinned-container{
                 height: 900px;
                 background-color: white;
                 border-radius: 10px;
@@ -962,6 +962,8 @@ export class Home implements OnInit, OnDestroy {
 
     isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
 
+    pinnedCharts: string[] = [];
+
     menuItems: MenuItem[] = [
         {
             icon: 'pi pi-exclamation-circle',
@@ -1002,10 +1004,12 @@ export class Home implements OnInit, OnDestroy {
             })
         );
 
-        this.layoutService.$isOccupancyChartVisible.subscribe(res => {
-            this.isOccupancyChartVisible = res;
-        })
-        
+        this.layoutService.$chartToRemove.subscribe(chartToRemove => {
+            this.pinnedCharts = this.pinnedCharts.filter(pinnedChart => pinnedChart != chartToRemove);
+        });
+
+        this.loadPinnedCharts();
+
         this.subscriptions.push(this.dataService.loadHouseAvailabilities().subscribe());
 
         this.subscriptions.push(
@@ -1051,6 +1055,10 @@ export class Home implements OnInit, OnDestroy {
         
         // Make sure the number sort is applied initially
         this.applyFilters();
+    }
+
+    loadPinnedCharts(){
+        this.pinnedCharts = this.layoutService.loadPinnedCharts();
     }
 
     @HostListener('document:click', ['$event'])

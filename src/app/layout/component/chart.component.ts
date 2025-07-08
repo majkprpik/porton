@@ -49,17 +49,17 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
           </div>
         }
         @if(dataType == 'occupancy'){ 
-          @if(isOccupancyChartAddedToHome){
+          @if(isChartPinnedToHome('occupancy')){
             <p-button
               [label]="'BUTTONS.REMOVE-FROM-HOME' | translate" 
               [severity]="'danger'"
-              (click)="toggleOccupancyChartOnHomeScreen(false)"
+              (click)="removeChartFromHome('occupancy')"
             />
           } @else {
             <p-button
               [label]="'BUTTONS.ADD-TO-HOME' | translate" 
               [severity]="'primary'"
-              (click)="toggleOccupancyChartOnHomeScreen(true)"
+              (click)="pinChartToHome('occupancy')"
             />
           }
         }
@@ -307,10 +307,6 @@ export class ChartComponent {
     if(this.dataType == 'occupancy'){
       this.selectedMetrics = [];
       this.selectedMetrics.push('occupancy');
-
-      this.layoutService.$isOccupancyChartVisible.subscribe(res => {
-        this.isOccupancyChartAddedToHome = res;
-      });
     }
 
     if(this.dataType == 'general'){
@@ -770,8 +766,16 @@ export class ChartComponent {
     }
   }
 
-  toggleOccupancyChartOnHomeScreen(state: boolean){
-    this.layoutService.$isOccupancyChartVisible.next(state);
+  pinChartToHome(chart: string){
+    this.layoutService.storePinnedChartToLocalStorage(chart);
+  }
+
+  removeChartFromHome(chart: string){
+    this.layoutService.removePinnedChartFromLocalStorage(chart);
+  }
+
+  isChartPinnedToHome(chart: string){
+    return this.layoutService.isChartPinnedToHome(chart);
   }
 
   initPieChart(){

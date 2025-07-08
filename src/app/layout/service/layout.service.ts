@@ -62,7 +62,7 @@ export class LayoutService {
     transitionComplete = signal<boolean>(false);
     private initialized = false;
     private speedDialItems: MenuItem[] = [];
-    public $isOccupancyChartVisible = new BehaviorSubject<boolean>(false);
+    $chartToRemove: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
     constructor() {
         effect(() => {
@@ -82,6 +82,51 @@ export class LayoutService {
 
             this.handleDarkModeTransition(config);
         });
+    }
+
+    loadPinnedCharts(){
+        const pinnedCharts = this.getPinnedChartsFromLocalStorage();
+
+        return pinnedCharts ? JSON.parse(pinnedCharts) : [];
+    }
+
+    storePinnedChartToLocalStorage(chartToPin: string){
+        const pinnedCharts = this.getPinnedChartsFromLocalStorage();
+        
+        if(pinnedCharts){
+            const pinnedChartsArray = JSON.parse(pinnedCharts);
+
+            pinnedChartsArray.push(chartToPin);
+            localStorage.setItem('pinnedCharts', JSON.stringify(pinnedChartsArray));
+        } else {
+            const chartsToPin: string[] = [];
+
+            chartsToPin.push(chartToPin);
+            localStorage.setItem('pinnedCharts', JSON.stringify(chartsToPin));
+        }
+    }
+
+    removePinnedChartFromLocalStorage(chartToRemove: string){
+        const pinnedCharts = this.getPinnedChartsFromLocalStorage();
+
+        if(pinnedCharts){
+            const pinnedChartsJSON = JSON.parse(pinnedCharts);
+            const filteredPinnedCharts = pinnedChartsJSON.filter((pinnedCharts: string) => pinnedCharts != chartToRemove);
+
+            localStorage.setItem('pinnedCharts', JSON.stringify(filteredPinnedCharts));
+
+            this.$chartToRemove.next(chartToRemove);
+        }
+    }
+
+    isChartPinnedToHome(chart: string){
+        const pinnedCharts = this.loadPinnedCharts();
+
+        return pinnedCharts.includes(chart);
+    }
+
+    getPinnedChartsFromLocalStorage(){
+        return localStorage.getItem('pinnedCharts');
     }
 
     getSpeedDialItems(){
