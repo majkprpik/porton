@@ -10,8 +10,8 @@ import { ChartComponent } from './chart.component';
     FormsModule,
   ],
   template: `
-    <div class="container">
-      <div class="statistics-container">
+    <div class="statistics-container">
+      <div class="general-statistics-container">
         <app-chart
           [title]="'General statistics'"
           [dataType]="'general'"
@@ -29,14 +29,15 @@ import { ChartComponent } from './chart.component';
     </div>
   `,
   styles: `
-    .container{
+    .statistics-container{
       height: 1900px;
+      width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 20px;
 
-      .statistics-container, .occupancy-container{
+      .general-statistics-container, .occupancy-container{
         height: 900px;
         width: 100%;
         background-color: white;
