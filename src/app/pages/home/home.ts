@@ -311,7 +311,6 @@ interface SpecialLocation {
         `
             .occupancy-container{
                 height: 900px;
-                width: 1900px;
                 background-color: white;
                 border-radius: 10px;
                 box-sizing: border-box;
