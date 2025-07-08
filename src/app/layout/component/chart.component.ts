@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
 import { MultiSelect } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
-import { isPlatformBrowser, TitleCasePipe } from '@angular/common';
+import { CommonModule, isPlatformBrowser, TitleCasePipe } from '@angular/common';
 import { DataService, House, HouseAvailability, Task } from '../../pages/service/data.service';
 import { TaskService } from '../../pages/service/task.service';
 import { combineLatest } from 'rxjs';
@@ -22,10 +22,11 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
     TranslateModule,
     ButtonModule,
     MultiSelect,
-    TitleCasePipe
+    TitleCasePipe,
+    CommonModule,
   ],
   template: `
-    <div class="container">
+    <div class="chart-container">
       <div class="header">
         <h1>{{title}}</h1>
         @if(dataType != 'occupancy'){
@@ -148,9 +149,25 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
         }
       </div>
 
-      <div class="card">
-        <p-chart [type]="chartType" [data]="data" [options]="options" class="h-[30rem]" />
-      </div>
+      @if(chartType == 'pie' || chartType == 'doughnut'){
+        <div class="pie-card">
+          <p-chart 
+            id="chart"
+            [type]="chartType" 
+            [data]="data" 
+            [options]="options"
+          />
+        </div>
+      } @else {
+        <div class="card">
+          <p-chart 
+            id="chart"
+            [type]="chartType" 
+            [data]="data" 
+            [options]="options"
+          />
+        </div>
+      }
 
       @if(selectedMetrics.length && selectedHouseNumber){
         <div class="total-monthly-data">
@@ -167,13 +184,32 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
     </div>
   `,
   styles: `
-    .container{
+    ::ng-deep .pie-card p-chart canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .pie-card{
+      width: 500px;
+      padding: 50px 0 50px 0;
+    }
+
+    .chart-container{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+
       .header{
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+        width: 100%;
+        padding: 0 15px 0 15px;
       }
+
       .buttons{
         width: 100%;
         display: flex;
@@ -200,6 +236,11 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
           padding: 15px;
           width: 100%;
         }
+      }
+
+      .card{
+        width: 100%;
+        height: 100%;
       }
   
       .total-monthly-data{
@@ -251,7 +292,7 @@ export class ChartComponent {
   isOccupancyChartAddedToHome: boolean = false
 
   chartType: ChartType = 'line';
-  chartTypes: ChartType[] = ['bar', 'line', 'bubble']
+  chartTypes: ChartType[] = ['bar', 'line', 'bubble', 'pie', 'doughnut'];
 
   constructor(
     private cd: ChangeDetectorRef,
@@ -666,7 +707,7 @@ export class ChartComponent {
       this.dataToDisplay[metric] = data;
     });
 
-    this.initChart();
+    (this.chartType == 'pie' || this.chartType == 'doughnut') ? this.initPieChart() : this.initChart();
   }
 
   
@@ -714,7 +755,7 @@ export class ChartComponent {
       this.dataToDisplay[metric] = metricData;
     });
 
-    this.initChart();
+    (this.chartType == 'pie' || this.chartType == 'doughnut') ? this.initPieChart() : this.initChart();
   }
 
   displayPeroid(period: string){
@@ -731,6 +772,61 @@ export class ChartComponent {
 
   toggleOccupancyChartOnHomeScreen(state: boolean){
     this.layoutService.$isOccupancyChartVisible.next(state);
+  }
+
+  initPieChart(){
+    if(isPlatformBrowser(this.platformId)){
+      const documentStyle = getComputedStyle(document.documentElement);
+      const textColor = documentStyle.getPropertyValue('--p-text-color');
+
+      let pieData: number[] = [];
+      let pieColors: string[] = [];
+      let pieLabels: string[] = [];
+
+      const colors = [
+        '--p-cyan-500',
+        '--p-orange-500',
+        '--p-green-500',
+        '--p-pink-500',
+        '--p-purple-500',
+        '--p-yellow-500',
+        '--p-red-500',
+        '--p-blue-500',
+        '--p-teal-500',
+        '--p-indigo-500',
+        '--p-lime-500'
+      ];
+
+      Object.keys(this.dataToDisplay).forEach((metric, index) => {
+        pieColors.push(documentStyle.getPropertyValue(colors[index % colors.length]));
+        pieLabels.push(this.metrics.find((m: any) => m.value == metric)?.name || metric);
+        pieData.push(this.totalMonthlyData[metric]);
+      });
+
+      this.data = {
+        labels: pieLabels,
+        datasets: [{
+          data: pieData,
+          backgroundColor: pieColors,
+          borderColor: 'white',
+          borderWidth: 1
+        }]
+      };
+
+      this.options = {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: textColor
+            }
+          }
+        }
+      };
+    }
   }
 
   initChart() {
@@ -771,8 +867,7 @@ export class ChartComponent {
             borderColor: documentStyle.getPropertyValue(colorVar),
             backgroundColor: documentStyle.getPropertyValue(colorVar) + '33',
           };
-        } 
-        else {
+        } else {
           return {
             label: this.metrics.find((m: any) => m.value == metric)?.name,
             data: this.dataToDisplay[metric],
