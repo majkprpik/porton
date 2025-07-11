@@ -1,111 +1,107 @@
-<div class="container-fluid">
+<div class="reservations-container">
     <div class="row">
         <!-- House Type Filter -->
         <div class="col-12 mb-3">
             <div class="house-type-tabs">
                 @for (type of houseTypes(); track type.house_type_id) {
-                    <div class="house-type-tab" 
-                         [ngClass]="{'active': selectedHouseTypeId() === type.house_type_id}"
-                         (click)="setSelectedHouseType(type.house_type_id)">
-                        {{ type.house_type_name }}
-                    </div>
+                    <p-button 
+                        [label]="type.house_type_name | titlecase" 
+                        [severity]="selectedHouseTypeId() == type.house_type_id ? 'primary' : 'secondary'"
+                        (click)="setSelectedHouseType(type.house_type_id)">
+                    </p-button>  
                 }
             </div>
         </div>
     </div>
 
     <!-- Reservation Grid -->
-    <div class="row">
-        <div class="col-12">
-            <div class="table-container">
-                <table class="reservation-table">
-                    <thead>
-                        <tr>
-                            <th class="house-header corner-header">{{ 'RESERVATIONS.HOUSE' | translate }}</th>
-                            @for (day of days(); track day.getTime()) {
-                                <th class="day-header" 
-                                    [ngClass]="{
-                                        'today-column': isToday(day),
-                                        'saturday-column': isSaturday(day),
-                                        'sunday-column': isSunday(day)
-                                    }"
-                                    [title]="day.toLocaleDateString()">
-                                    <div>{{ formatDate(day) }}</div>
-                                </th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (house of filteredHouses(); track house.house_id; let i = $index) {
-                            <tr>
-                                <th class="row-header" [ngClass]="{'active-row': selectedCellRowIndex() === i}">{{ house.house_name || house.house_number }}</th>
-                                @for (day of days(); track day.getTime(); let j = $index) {
-                                    <td (dblclick)="onCellDoubleClick($event, i, j)"
-                                        (mousedown)="onCellMouseDown($event, i, j)"
-                                        (mousemove)="onCellMouseMove($event, i, j)"
-                                        (click)="gridMatrix()[i][j].isReserved ? onReservationCellClick($event, i, j) : onCellClick($event, i, j)"
-                                        [ngClass]="{
-                                            'reserved-cell': gridMatrix()[i][j].isReserved,
-                                            'selected-cell': isCellSelected(i, j),
-                                            'selection-start': i === selectedCellRowIndex() && j === getStartColIndex(),
-                                            'selection-end': i === selectedCellRowIndex() && j === getEndColIndex(),
-                                            'past-date': isCellInPast(j),
-                                            'today-column': isToday(days()[j]),
-                                            'saturday-column': isSaturday(days()[j]),
-                                            'sunday-column': isSunday(days()[j]),
-                                            'reservation-start': gridMatrix()[i][j].isReservationStart,
-                                            'reservation-middle': gridMatrix()[i][j].isReservationMiddle,
-                                            'reservation-end': gridMatrix()[i][j].isReservationEnd,
-                                            'border-left-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationStart,
-                                            'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationEnd,
-                                            'border-top-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
-                                            'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
-                                        }"
-                                        [style.background-color]="gridMatrix()[i][j].color">
-                                        <!-- Simple reservation cell without drag functionality -->
-                                        @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j].isReservationStart) {
-                                            <div class="reservation-item">
-                                                <span class="handle-icon">&#9776;</span>
-                                                {{ gridMatrix()[i][j].displayText }}
-                                            </div>
-                                        } @else {
-                                            @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j - 1].isReservationStart) {
-                                                <div class="reservation-numbers">
-                                                    @if (getNumberOfAdults(gridMatrix()[i][j])){
-                                                        <div class="adults-count">
-                                                            {{ getNumberOfAdults(gridMatrix()[i][j]) }} 
-                                                            <i class="fa-solid fa-person"></i>
-                                                        </div>
-                                                    }
-                                                    @if (getNumberOfPets(gridMatrix()[i][j])) {
-                                                        <div class="pets-count">
-                                                            {{ getNumberOfPets(gridMatrix()[i][j]) }} 
-                                                            <i class="fa-solid fa-paw"></i>
-                                                        </div>
-                                                    } 
-                                                    @if (getNumberOfBabies(gridMatrix()[i][j])) {
-                                                        <div class="babies-count">
-                                                            {{ getNumberOfBabies(gridMatrix()[i][j]) }}
-                                                            <i class="fa-solid fa-baby"></i>
-                                                        </div>
-                                                    }
-                                                    @if (getNumberOfCribs(gridMatrix()[i][j])) {
-                                                        <div class="cribs-count">
-                                                            {{ getNumberOfCribs(gridMatrix()[i][j]) }}
-                                                            <i class="fa-solid fa-baby-carriage"></i>
-                                                        </div>
-                                                    }
+    <div class="table-container">
+        <table class="reservation-table">
+            <thead>
+                <tr>
+                    <th class="house-header corner-header">{{ 'RESERVATIONS.HOUSE' | translate }}</th>
+                    @for (day of days(); track day.getTime()) {
+                        <th class="day-header" 
+                            [ngClass]="{
+                                'today-column': isToday(day),
+                                'saturday-column': isSaturday(day),
+                                'sunday-column': isSunday(day)
+                            }"
+                            [title]="day.toLocaleDateString()">
+                            <div>{{ formatDate(day) }}</div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (house of filteredHouses(); track house.house_id; let i = $index) {
+                    <tr>
+                        <th class="row-header" [ngClass]="{'active-row': selectedCellRowIndex() === i}">{{ house.house_name || house.house_number }}</th>
+                        @for (day of days(); track day.getTime(); let j = $index) {
+                            <td (dblclick)="onCellDoubleClick($event, i, j)"
+                                (mousedown)="onCellMouseDown($event, i, j)"
+                                (mousemove)="onCellMouseMove($event, i, j)"
+                                (click)="gridMatrix()[i][j].isReserved ? onReservationCellClick($event, i, j) : onCellClick($event, i, j)"
+                                [ngClass]="{
+                                    'reserved-cell': gridMatrix()[i][j].isReserved,
+                                    'selected-cell': isCellSelected(i, j),
+                                    'selection-start': i === selectedCellRowIndex() && j === getStartColIndex(),
+                                    'selection-end': i === selectedCellRowIndex() && j === getEndColIndex(),
+                                    'past-date': isCellInPast(j),
+                                    'today-column': isToday(days()[j]),
+                                    'saturday-column': isSaturday(days()[j]),
+                                    'sunday-column': isSunday(days()[j]),
+                                    'reservation-start': gridMatrix()[i][j].isReservationStart,
+                                    'reservation-middle': gridMatrix()[i][j].isReservationMiddle,
+                                    'reservation-end': gridMatrix()[i][j].isReservationEnd,
+                                    'border-left-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationStart,
+                                    'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationEnd,
+                                    'border-top-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
+                                    'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
+                                }"
+                                [style.background-color]="gridMatrix()[i][j].color">
+                                <!-- Simple reservation cell without drag functionality -->
+                                @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j].isReservationStart) {
+                                    <div class="reservation-item">
+                                        <span class="handle-icon">&#9776;</span>
+                                        {{ gridMatrix()[i][j].displayText }}
+                                    </div>
+                                } @else {
+                                    @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j - 1].isReservationStart) {
+                                        <div class="reservation-numbers">
+                                            @if (getNumberOfAdults(gridMatrix()[i][j])){
+                                                <div class="adults-count">
+                                                    {{ getNumberOfAdults(gridMatrix()[i][j]) }} 
+                                                    <i class="fa-solid fa-person"></i>
                                                 </div>
                                             }
-                                        }
-                                    </td>
+                                            @if (getNumberOfPets(gridMatrix()[i][j])) {
+                                                <div class="pets-count">
+                                                    {{ getNumberOfPets(gridMatrix()[i][j]) }} 
+                                                    <i class="fa-solid fa-paw"></i>
+                                                </div>
+                                            } 
+                                            @if (getNumberOfBabies(gridMatrix()[i][j])) {
+                                                <div class="babies-count">
+                                                    {{ getNumberOfBabies(gridMatrix()[i][j]) }}
+                                                    <i class="fa-solid fa-baby"></i>
+                                                </div>
+                                            }
+                                            @if (getNumberOfCribs(gridMatrix()[i][j])) {
+                                                <div class="cribs-count">
+                                                    {{ getNumberOfCribs(gridMatrix()[i][j]) }}
+                                                    <i class="fa-solid fa-baby-carriage"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
                                 }
-                            </tr>
+                            </td>
                         }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 
     <!-- Reservation Form -->

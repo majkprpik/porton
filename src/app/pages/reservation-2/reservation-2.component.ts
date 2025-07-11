@@ -1,10 +1,11 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
 import { Subject, takeUntil, forkJoin, combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ReservationFormComponent } from '../reservations/reservation-form/reservation-form.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
 
 interface CellData {
     isReserved: boolean;
@@ -30,6 +31,8 @@ interface CellData {
         ProgressSpinnerModule,
         ReservationFormComponent,
         TranslateModule,
+        ButtonModule,
+        TitleCasePipe,
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 }) 
