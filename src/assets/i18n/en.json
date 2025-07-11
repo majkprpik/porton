@@ -10,7 +10,8 @@
         "ARRIVALS-AND-DEPARTURES": "Arrivals and departures",
         "NOTES": "Notes",
         "STATISTICS": "Statistics",
-        "ARCHIVE": "Task archive"
+        "ARCHIVE": "Task archive",
+        "WORK-SCHEDULE": "Work schedule"
     },
     "BUTTONS": {
         "REPORT": "Report",
@@ -424,6 +425,33 @@
                 "TITLE": "House number",
                 "SEARCH-HOUSE-NUMBER": "Search by house number" 
             }
+        }
+    },
+    "WORK-SCHEDULE": {
+        "TITLE": "Work schedule",
+        "LEGEND": {
+            "TITLE": "Legend",
+            "MORNING-SHIFT": "Morning shift",
+            "AFTERNOON-SHIFT": "Afternoon shift",
+            "EVENING-SHIFT": "Evening shift"
+        },
+        "EMPLOYEES": "Employees",
+        "MODAL": {
+            "CREATE-SCHEDULE": "Create schedule",
+            "EDIT-SCHEDULE": "Edit schedule",
+            "EMPLOYEE": "Employee",
+            "SHIFT": "Shift",
+            "SELECT-A-SHIFT": "Select a shift",
+            "START-DATE": "Start date",
+            "END-DATE": "End date",
+            "SELECT-START-DATE": "Select start date",
+            "SELECT-END-DATE": "Select end date",
+            "NOTES": "Notes",
+            "NOTES-ENTER-INFO": "Enter any additional information about this schedule",
+            "START-TIME": "Start time",
+            "END-TIME": "End time",
+            "SELECT-START-TIME": "Select start time",
+            "SELECT-END-TIME": "Select end time"
         }
     }
 }

@@ -10,7 +10,8 @@
         "ARRIVALS-AND-DEPARTURES": "Dolasci i odlasci",
         "NOTES": "Bilješke",
         "STATISTICS": "Statistika",
-        "ARCHIVE": "Arhiva zadataka"
+        "ARCHIVE": "Arhiva zadataka",
+        "WORK-SCHEDULE": "Raspored"
     },
     "BUTTONS": {
         "REPORT": "Prijavi",
@@ -424,6 +425,33 @@
                 "TITLE": "Broj kućice",
                 "SEARCH-HOUSE-NUMBER": "Pretraži po broju kućice" 
             }
+        }
+    },
+    "WORK-SCHEDULE": {
+        "TITLE": "Raspored",
+        "LEGEND": {
+            "TITLE": "Legenda",
+            "MORNING-SHIFT": "Prva smjena",
+            "AFTERNOON-SHIFT": "Druga smjena",
+            "EVENING-SHIFT": "Treca smjena"
+        },
+        "EMPLOYEES": "Zaposlenici",
+        "MODAL": {
+            "CREATE-SCHEDULE": "Kreiraj raspored",
+            "EDIT-SCHEDULE": "Uredi raspored",
+            "EMPLOYEE": "Zaposlenik",
+            "SHIFT": "Smjena",
+            "SELECT-A-SHIFT": "Odaberi smjenu",
+            "START-DATE": "Početak",
+            "END-DATE": "Kraj",
+            "SELECT-START-DATE": "Odaberi početak",
+            "SELECT-END-DATE": "Odaberi kraj",
+            "NOTES": "Bilješke",
+            "NOTES-ENTER-INFO": "Unesi dodatne informacije o rasporedu",
+            "START-TIME": "Početak smjene",
+            "END-TIME": "Kraj smjene",
+            "SELECT-START-TIME": "Odabrei početak smjene",
+            "SELECT-END-TIME": "Odaberi kraj smjene"
         }
     }
 }

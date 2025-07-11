@@ -1,5 +1,5 @@
-import { HouseAvailability, HouseStatus, Note, Profile, ProfileRole, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
-import { Component, ElementRef, LOCALE_ID, Renderer2, signal, ViewChild } from '@angular/core';
+import { HouseAvailability, Note, Profile, ProfileRole, ProfileWorkSchedule, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
+import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { combineLatest, filter, Subscription } from 'rxjs';
@@ -963,6 +963,8 @@ export class AppLayout {
     houseAvailabilities = signal<HouseAvailability[]>([]);
     tempHouseAvailabilities: HouseAvailability[] = [];
 
+    fullWorkSchedule: ProfileWorkSchedule[] = [];
+
     notes: Note[] = [];
 
     selectedTabIndex: string = "0";
@@ -1022,8 +1024,9 @@ export class AppLayout {
             this.dataService.tempHouseAvailabilities$,
             this.dataService.notes$,
             this.dataService.profileRoles$,
+            this.dataService.profileWorkSchedule$,
         ]).subscribe({
-            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles]) => {
+            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles, fullWorkSchedule]) => {
                 this.storedUserId = this.authService.getStoredUserId();
 
                 this.comments = repairTaskComments;
@@ -1045,6 +1048,7 @@ export class AppLayout {
                 this.tempHouseAvailabilities = tempHouseAvailabilities;
                 this.notes = notes;
                 this.profileRoles = profileRoles;
+                this.fullWorkSchedule = fullWorkSchedule;
                 
                 this.loggedUser = this.profiles.find(profile => profile.id == this.storedUserId);
 
@@ -1256,6 +1260,26 @@ export class AppLayout {
             } else if(res && res.eventType == 'DELETE'){
                 this.tempHouseAvailabilities = this.tempHouseAvailabilities.filter(tha => tha.house_availability_id != res.old.house_availability_id);
                 this.dataService.setTempHouseAvailabilities(this.tempHouseAvailabilities);
+            }
+        });
+
+        this.dataService.$profileWorkScheduleUpdate.subscribe(res => {
+            if(res && res.eventType == 'INSERT'){
+                if(!this.fullWorkSchedule.find(sch => sch.id == res.new.id)){
+                    this.fullWorkSchedule = [...this.fullWorkSchedule, res.new];
+                    this.dataService.setFullWorkSchedule(this.fullWorkSchedule);
+                }
+            } else if(res && res.eventType == 'UPDATE'){
+                const profileWorkScheduleIndex = this.fullWorkSchedule.findIndex(schedule => schedule.id == res.new.id);
+
+                if(profileWorkScheduleIndex != -1){
+                    const updatedFullWorkSchedule = [...this.fullWorkSchedule];
+                    updatedFullWorkSchedule[profileWorkScheduleIndex] = res.new;
+                    this.dataService.setFullWorkSchedule(updatedFullWorkSchedule);
+                }
+            } else if(res && res.eventType == 'DELETE'){
+                this.fullWorkSchedule = this.fullWorkSchedule.filter(schedule => schedule.id != res.old.id);
+                this.dataService.setFullWorkSchedule(this.fullWorkSchedule);
             }
         });
 

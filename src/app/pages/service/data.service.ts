@@ -125,29 +125,19 @@ export interface HouseAvailability {
   departure_time?: any;
 }
 
-// Interface for house status task
-export interface HouseStatusTask {
-  task_id: number;
-  taskt_type_id: number;
-  task_type_name: string;
-  task_progress_type_id: number;
-  task_progress_type_name: string;
-  start_time: string | null;
-  end_time: string | null;
-  description: string | null;
-  created_by: string;
-  created_at: string;
+export interface ProfileWorkSchedule{
+  id?: number;
+  profile_id: string; 
+  start_date: string;
+  end_date: string;
+  shift_type_id: number;
 }
 
-// Interface for house status from view
-export interface HouseStatus {
-  house_id: number;
-  housename: string;
-  housetypeid: number;
-  housetypename: string;
-  availabilityid: number | null;
-  availabilityname: string | null;
-  housetasks: HouseStatusTask[];
+export interface ShiftType{
+  id: number;
+  name: string;
+  start_time: string | Date;
+  end_time: string | Date;
 }
 
 export interface Note {
@@ -206,6 +196,8 @@ export class DataService {
   private notesSubject = new BehaviorSubject<Note[]>([]);
   private repairTaskCommentsSubject = new BehaviorSubject<RepairTaskComment[]>([]);
   private profileRolesSubject = new BehaviorSubject<ProfileRole[]>([]);
+  private shiftTypesSubject = new BehaviorSubject<ShiftType[]>([]);
+  private profileWorkScheduleSubject = new BehaviorSubject<ProfileWorkSchedule[]>([]);
 
   // Public Observables
   loading$ = this.loadingSubject.asObservable();
@@ -227,6 +219,8 @@ export class DataService {
   notes$ = this.notesSubject.asObservable();
   repairTaskComments$ = this.repairTaskCommentsSubject.asObservable();
   profileRoles$ = this.profileRolesSubject.asObservable();
+  shiftTypes$ = this.shiftTypesSubject.asObservable();
+  profileWorkSchedule$ = this.profileWorkScheduleSubject.asObservable();
   
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tempHouseAvailabilitiesUpdate = new BehaviorSubject<any>('');
@@ -237,6 +231,7 @@ export class DataService {
   $notesUpdate = new BehaviorSubject<any>('');
   $repairTaskCommentsUpdate = new BehaviorSubject<any>('');
   $profilesUpdate = new BehaviorSubject<any>('');
+  $profileWorkScheduleUpdate = new BehaviorSubject<any>('');
 
   $areNotesLoaded = new BehaviorSubject<boolean>(false);
   $areRepairTaskCommentsLoaded = new BehaviorSubject<boolean>(false);
@@ -304,6 +299,12 @@ export class DataService {
     }
   }
 
+  setFullWorkSchedule(fullWorkSchedule: ProfileWorkSchedule[]){
+    if(fullWorkSchedule){
+      this.profileWorkScheduleSubject.next(fullWorkSchedule);
+    }
+  }
+
   private logData(source: string, data: any): void {
     if (this.debug) {
       //console.log(`[DataService] ${source}:`, data);
@@ -337,6 +338,8 @@ export class DataService {
     this.loadTempHouses().subscribe();
     this.loadNotes().subscribe();
     this.loadRepairTaskComments().subscribe();
+    this.loadShiftTypes().subscribe();
+    this.loadProfileWorkSchedule().subscribe();
     // this.loadAuthUsers().subscribe();
   }
 
@@ -655,6 +658,38 @@ export class DataService {
     );
   }
 
+  loadShiftTypes(){
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('shift_types', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.shiftTypesSubject.next(data);
+          this.logData('Shift types', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  loadProfileWorkSchedule(){
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('profile_work_schedule', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.profileWorkScheduleSubject.next(data);
+          this.logData('Profile work schedule', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
   loadRepairTaskComments(): Observable<RepairTaskComment[]> { 
     this.loadingSubject.next(true);
 
@@ -788,6 +823,53 @@ export class DataService {
     }
   }
 
+  saveProfileWorkSchedule(newProfileSchedule: Partial<ProfileWorkSchedule>){
+    this.loadingSubject.next(true);
+    const { id, ...scheduleWithoutId } = newProfileSchedule;
+
+    return from(this.supabaseService.insertData('profile_work_schedule', scheduleWithoutId, this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          const currentFullWorkSchedule = this.profileWorkScheduleSubject.value;
+          this.setFullWorkSchedule([...currentFullWorkSchedule, data]);
+          this.logData('Created Profile Work Schedule', data);
+        }
+      }),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  updateProfileWorkSchedule(updatedSchedule: Partial<ProfileWorkSchedule>){
+    this.loadingSubject.next(true);
+
+    if(!updatedSchedule.id){
+      console.error('Cannot update profile schedule without an ID');
+      return throwError(() => new Error('Missing profile work schedule id'));
+    }
+
+    return from(this.supabaseService.updateData('profile_work_schedule', updatedSchedule, updatedSchedule.id.toString(), this.schema)).pipe(
+      tap((data) => {
+        if (data && data.length > 0) {
+          const fullProfileSchedule = this.profileWorkScheduleSubject.value;
+          const updatedFullProfileSchedule = fullProfileSchedule.map(schedule => {
+            if(schedule.id == data[0].id){
+              return data[0];
+            } else {
+              return schedule;
+            }
+          });
+
+          this.setFullWorkSchedule(updatedFullProfileSchedule);
+          this.logData('Updated Profile Work Schedule', data[0]);
+        }
+      }),
+      map((data) => (data && data.length > 0 ? data[0] : null)),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
   // Method to update an existing house availability (reservation)
   updateHouseAvailability(reservation: HouseAvailability): Observable<HouseAvailability | null> {
     this.loadingSubject.next(true);
@@ -911,6 +993,23 @@ export class DataService {
         tap(() => this.loadingSubject.next(false))
       );
     }
+  }
+
+  deleteProfileWorkSchedule(scheduleId: number){
+    const filterCondition = `id = ${scheduleId}`;
+
+    return from(this.supabaseService.deleteData('profile_work_schedule', filterCondition, this.schema)).pipe(
+      tap((data) => {
+        if(data && data.length > 0){
+          const currentFullWorkSchedule = this.profileWorkScheduleSubject.value;
+          const updatedFullWorkSchedule = currentFullWorkSchedule.filter(schedule => schedule.id != data[0].id);
+          this.setFullWorkSchedule(updatedFullWorkSchedule);
+          this.logData('Deleted Profile Work Schedule ', scheduleId);
+        }
+      }),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
   }
 
   async getHouseAvailabilityTypeByName(name: string){
@@ -1112,6 +1211,16 @@ export class DataService {
       },
       async (payload: any) => {
         this.$profilesUpdate.next(payload);
+      }
+    ).on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'porton',
+        table: 'profile_work_schedule'
+      },
+      async (payload: any) => {
+        this.$profileWorkScheduleUpdate.next(payload);
       }
     )
     .subscribe();

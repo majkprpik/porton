@@ -204,6 +204,7 @@ export class AppMenu implements OnInit {
                 { label: this.translateService.instant('MENU.HOUSE-TYPES'), icon: 'pi pi-fw pi-home', routerLink: ['/house-types'] },
                 { label: this.translateService.instant('MENU.STATISTICS'), icon: 'pi pi-chart-bar', routerLink: ['/statistics'] },
                 { label: this.translateService.instant('MENU.ARCHIVE'), icon: 'pi pi-book', routerLink: ['/archive'] },
+                { label: this.translateService.instant('MENU.WORK-SCHEDULE'), icon: 'pi pi-calendar-clock', routerLink: ['/work-schedule'] },
             );
         }
         
