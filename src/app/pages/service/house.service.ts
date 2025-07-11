@@ -1,7 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, House, HouseAvailability, HouseAvailabilityType, HouseStatus, HouseStatusTask, Task, TaskProgressType } from './data.service';
-import { TaskService } from './task.service';
+import { DataService, House, HouseAvailability, HouseAvailabilityType, Task, TaskProgressType } from './data.service';
 import { combineLatest } from 'rxjs';
 
 @Injectable({

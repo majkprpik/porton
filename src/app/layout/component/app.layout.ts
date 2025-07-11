@@ -1034,7 +1034,7 @@ export class AppLayout {
                 this.otherTaskTypes = taskTypes.map(taskType => ({
                     ...taskType, 
                     translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskService.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
-                }));;
+                }));
                 this.taskProgressTypes = taskProgressTypes;
                 this.tasks = tasks;
                 this.workGroups = workGroups;

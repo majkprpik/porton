@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, HouseStatus, Task, TaskProgressType, TaskType } from './data.service';
+import { DataService, Task, TaskProgressType, TaskType } from './data.service';
 import { BehaviorSubject } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 import { AuthService } from './auth.service';
@@ -9,7 +9,6 @@ import { AuthService } from './auth.service';
   providedIn: 'root'
 })
 export class TaskService {
-  mobileHomes: HouseStatus[] = [];
   $selectedTask = new BehaviorSubject<any>(null);
   $taskToRemove = new BehaviorSubject<any>(null);
   $taskModalData = new BehaviorSubject<any>(null);

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService, House, HouseAvailability, HouseStatus, HouseStatusTask, Task, TaskType, HouseType } from '../service/data.service';
+import { DataService, House, HouseAvailability, Task, TaskType, HouseType } from '../service/data.service';
 import { combineLatest, Subscription } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
