@@ -626,10 +626,6 @@ export class WorkScheduleComponent {
         const key = this.getReservationKey(profile.id, day);
         const reservation = this.reservationMap.get(key);
 
-        if(reservation){
-          console.log('aaa');
-        }
-
         row.push(this.createCellData(day, reservation));
       }
 
