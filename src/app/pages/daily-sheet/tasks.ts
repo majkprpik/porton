@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { TaskGroupComponent } from './task-group';
-import { DataService, Task, TaskType, TaskProgressType, House, WorkGroupTask } from '../service/data.service';
+import { DataService, Task, House, WorkGroupTask } from '../service/data.service';
 import { combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TaskService } from '../service/task.service';
+import { TaskProgressTypeName, TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
@@ -45,7 +45,7 @@ import { ButtonModule } from 'primeng/button';
             >
           </div>
         </div>
-        @for (taskType of taskTypes; track taskType.task_type_id) {
+        @for (taskType of taskService.getAllTaskTypes(); track taskType.task_type_id) {
           <app-task-group 
             [taskType]="taskType"
             [tasks]="filteredTasks"
@@ -103,8 +103,6 @@ import { ButtonModule } from 'primeng/button';
 export class TasksComponent implements OnInit {
   loading = true;
   tasks: Task[] = [];
-  taskTypes: TaskType[] = [];
-  progressTypes: TaskProgressType[] = [];
   workGroupTasks: WorkGroupTask[] = [];
   activeWorkGroupId?: number;
   searchTerm: string = '';
@@ -114,22 +112,18 @@ export class TasksComponent implements OnInit {
   constructor(
     private dataService: DataService,
     private workGroupService: WorkGroupService,
-    private taskService: TaskService,
+    public taskService: TaskService,
   ) {}
 
   ngOnInit() {
     combineLatest([
       this.dataService.tasks$,
-      this.dataService.taskTypes$,
-      this.dataService.taskProgressTypes$,
       this.dataService.houses$,
       this.dataService.workGroupTasks$,
       this.workGroupService.activeGroupId$
     ]).subscribe({
-      next: ([tasks, taskTypes, progressTypes, houses, workGroupTasks, activeGroupId]) => {
+      next: ([tasks, houses, workGroupTasks, activeGroupId]) => {
         this.tasks = tasks;
-        this.taskTypes = taskTypes;
-        this.progressTypes = progressTypes;
         this.houses = houses;
         this.workGroupTasks = workGroupTasks;
         this.activeWorkGroupId = activeGroupId;
@@ -144,44 +138,52 @@ export class TasksComponent implements OnInit {
     });
 
     this.taskService.$taskToRemove.subscribe(taskToRemove => {
-      if(taskToRemove){
-        let task = this.tasks.find(task => task.task_id == taskToRemove.task_id);
-        
-        // First make sure we have the progress types loaded
-        if (this.progressTypes.length === 0) {
-          this.dataService.taskProgressTypes$.subscribe(types => {
-            this.progressTypes = types;
-            this.updateTaskAfterRemoval(task, taskToRemove);
-          });
+      if(!taskToRemove) return;
+
+      const notAssignedTaskProgressType = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.NotAssigned);
+      if(!notAssignedTaskProgressType) return;
+      
+      this.tasks = this.tasks.map(task => {
+        if(task.task_id == taskToRemove.task_id){
+          return {
+            ...task,
+            task_progress_type_id: notAssignedTaskProgressType.task_progress_type_id
+          }
         } else {
-          this.updateTaskAfterRemoval(task, taskToRemove);
+          return task;
         }
-      }
+      });
+
+      this.dataService.setTasks(this.tasks);
+
+      this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
+      this.dataService.setWorkGroupTasks(this.workGroupTasks);
+
+      this.taskService.$taskToRemove.next(null);
     });
 
     this.taskService.$selectedTask.subscribe(taskToAdd => {
-      if(taskToAdd){
-        if(this.activeWorkGroupId){
-          const assignedTaskProgressType = this.progressTypes.find(progressType => progressType.task_progress_type_name === "Dodijeljeno");
-      
-          if (assignedTaskProgressType) {
-            this.workGroupTasks = [...this.workGroupTasks, {
-              work_group_id: this.activeWorkGroupId,
-              task_id: taskToAdd.task_id,
-              index: this.workGroupTasks.filter(wgt => wgt.work_group_id == this.activeWorkGroupId).length,
-            }];
+      if (!taskToAdd || !this.activeWorkGroupId) return;
 
-            this.tasks = this.tasks.map(t => 
-              t.task_id === taskToAdd.task_id ? { 
-                ...t, 
-                task_progress_type_id: assignedTaskProgressType.task_progress_type_id 
-              } : t
-            );
-            
-            this.dataService.setTasks(this.tasks);
-          }
-        }
-      }
+      const assignedTaskProgressType = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Assigned);
+
+      if(!assignedTaskProgressType) return;
+  
+      this.workGroupTasks = [...this.workGroupTasks, {
+        work_group_id: this.activeWorkGroupId,
+        task_id: taskToAdd.task_id,
+        index: this.workGroupTasks.filter(wgt => wgt.work_group_id == this.activeWorkGroupId).length,
+      }];
+
+      this.tasks = this.tasks.map(t => 
+        t.task_id === taskToAdd.task_id ? { 
+          ...t, 
+          task_progress_type_id: assignedTaskProgressType.task_progress_type_id 
+        } : t
+      );
+      
+      this.dataService.setTasks(this.tasks);
+      this.taskService.$selectedTask.next(null);
     });
   }
 
@@ -192,25 +194,6 @@ export class TasksComponent implements OnInit {
   getAvailableTasks(): Task[] {
     const assignedTaskIds = this.workGroupTasks.map(wgt => wgt.task_id);
     return this.tasks.filter(task => !assignedTaskIds.includes(task.task_id));
-  }
-
-  // Helper method to update task progress type after task removal
-  private updateTaskAfterRemoval(task: Task | undefined, taskToRemove: any) {
-    if (task) {
-      const notAssignedTaskProgressType = this.progressTypes.find(progressType => progressType.task_progress_type_name === "Nije dodijeljeno");
-      
-      if (notAssignedTaskProgressType) {
-        task.task_progress_type_id = notAssignedTaskProgressType.task_progress_type_id;
-        
-        this.tasks = this.tasks.map(t => 
-          t.task_id === task.task_id ? { ...t, task_progress_type_id: notAssignedTaskProgressType.task_progress_type_id } : t
-        );
-
-        this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
-        this.dataService.setWorkGroupTasks(this.workGroupTasks);
-        this.dataService.setTasks(this.tasks);
-      }
-    }
   }
 
   applyFilters(){

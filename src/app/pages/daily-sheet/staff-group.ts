@@ -8,6 +8,7 @@ import { MenuItem } from 'primeng/api';
 import { StaffCardComponent } from './staff-card';
 import { WorkGroupService } from '../service/work-group.service';
 import { ProfileService } from '../service/profile.service';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-staff-group',
@@ -29,17 +30,15 @@ import { ProfileService } from '../service/profile.service';
         </div>
       </ng-template>
       <div class="staff-list">
-        @for (member of availableStaff; track member.id) {
+        @for (profile of availableProfiles; track profile.id) {
           <app-staff-card 
-            [staff]="member"
+            [profile]="profile"
             [canBeAssigned]="hasActiveWorkGroup"
-            (staffClicked)="onStaffClicked(member)"
+            (staffClicked)="onStaffClicked(profile)"
           ></app-staff-card>
         }
       </div>
     </p-panel>
-
-    <p-contextMenu #cm [model]="menuItems"></p-contextMenu>
   `,
   styles: `
     :host ::ng-deep {
@@ -110,32 +109,13 @@ export class StaffGroup implements OnInit, OnChanges {
   
   selectedProfile?: Profile;
   hasActiveWorkGroup: boolean = false;
-  availableStaff: Profile[] = [];
+  availableProfiles: Profile[] = [];
   workGroups: WorkGroup[] = [];
   workGroupProfiles: WorkGroupProfile[] = [];
 
   profileRoles: ProfileRole[] = [];
   repairProfileRoles: ProfileRole[] = [];
   cleaningProfileRoles: ProfileRole[] = [];
-
-  menuItems: MenuItem[] = [
-    {
-      label: 'View Profile',
-      icon: 'pi pi-user',
-      command: () => this.viewProfile()
-    },
-    {
-      label: 'Edit',
-      icon: 'pi pi-pencil',
-      command: () => this.editProfile()
-    },
-    { separator: true },
-    {
-      label: 'Remove from Group',
-      icon: 'pi pi-times',
-      command: () => this.removeFromGroup()
-    }
-  ];
 
   constructor(
     private workGroupService: WorkGroupService,
@@ -147,28 +127,32 @@ export class StaffGroup implements OnInit, OnChanges {
         if (groupId !== undefined) {
           this.updateAvailableStaff(groupId);
         } else {
-          this.availableStaff = this.staffMembers;
+          this.availableProfiles = this.staffMembers;
         }
       }
     );    
   }
 
   ngOnInit() {
-    this.availableStaff = this.staffMembers;
+    this.availableProfiles = this.staffMembers;
 
-    this.dataService.workGroups$.subscribe(workGroups => {
+    combineLatest([
+      this.dataService.workGroups$,
+      this.dataService.workGroupProfiles$,
+      this.dataService.profileRoles$
+    ]).subscribe(([workGroups, workGroupProfiles, profileRoles]) => {
       this.workGroups = workGroups;
-    });
-
-    this.dataService.workGroupProfiles$.subscribe(workGroupProfiles => {
       this.workGroupProfiles = workGroupProfiles;
-    });
-
-    this.dataService.profileRoles$.subscribe(profileRoles => {
       this.profileRoles = profileRoles;
-      this.repairProfileRoles = profileRoles.filter(pr => pr.name == 'Kucni majstor' || pr.name == 'Odrzavanje');
-      this.cleaningProfileRoles = profileRoles.filter(pr => pr.name == 'Voditelj domacinstva' || pr.name == 'Sobarica' || pr.name == 'Terasar');
-    })
+
+      this.repairProfileRoles = profileRoles.filter(pr =>
+        pr.name === 'Kucni majstor' || pr.name === 'Odrzavanje'
+      );
+
+      this.cleaningProfileRoles = profileRoles.filter(pr =>
+        pr.name === 'Voditelj domacinstva' || pr.name === 'Sobarica' || pr.name === 'Terasar'
+      );
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -177,36 +161,35 @@ export class StaffGroup implements OnInit, OnChanges {
       if (activeGroupId !== undefined) {
         this.updateAvailableStaff(activeGroupId);
       } else {
-        this.availableStaff = this.staffMembers;
+        this.availableProfiles = this.staffMembers;
       }
     }
   }
 
   updateAvailableStaff(workGroupId: number) {
-    this.dataService.getAssignedStaffForWorkGroup(workGroupId).subscribe(assignedStaff => {
-        const assignedIds = assignedStaff.map(staff => staff.id);
-        const selectedWorkGroup = this.workGroups.find(workGroup => workGroup.work_group_id == workGroupId);
-        const selectedWorkGroupsDay = selectedWorkGroup?.created_at.split('T')[0] ?? new Date().toISOString();
-        const workGroupsForSelectedDay = this.workGroups.filter(wg => wg.created_at.startsWith(selectedWorkGroupsDay));
+    const filteredWorkGroupProfiles = this.workGroupService.getWorkGroupProfilesByWorkGroupId(workGroupId);
+    const assignedProfiles = this.profileService.getAllProfiles().filter(profile => filteredWorkGroupProfiles.some(wgp => wgp.profile_id == profile.id));
 
-        const workGroupProfilesForSelectedDayIds = this.workGroupProfiles
-          .filter(wgp => workGroupsForSelectedDay.some(wg => wg.work_group_id == wgp.work_group_id))
-          .map(wgp => {
-            return wgp.profile_id;
-          });
+    const selectedWorkGroup = this.workGroups.find(workGroup => workGroup.work_group_id == workGroupId);
+    const selectedWorkGroupsDay = selectedWorkGroup?.created_at.split('T')[0] ?? new Date().toISOString();
+    const workGroupsForSelectedDay = this.workGroups.filter(wg => wg.created_at.startsWith(selectedWorkGroupsDay));
 
-        if(selectedWorkGroup?.is_repair){
-          this.staffMembers = this.staffMembers.filter(profile => this.cleaningProfileRoles.every(pr => pr.id != profile.role_id));
-        } else if(!selectedWorkGroup?.is_repair){
-          this.staffMembers = this.staffMembers.filter(profile => this.repairProfileRoles.every(pr => pr.id != profile.role_id));
-        }
+    const workGroupProfilesForSelectedDayIds = this.workGroupProfiles
+      .filter(wgp => workGroupsForSelectedDay.some(wg => wg.work_group_id == wgp.work_group_id))
+      .map(wgp => {
+        return wgp.profile_id;
+      });
 
-        this.availableStaff = this.staffMembers.filter(staff => 
-          staff.id && 
-          !assignedIds.includes(staff.id) && 
-          !workGroupProfilesForSelectedDayIds.includes(staff.id)
-        );
-      }
+    if(selectedWorkGroup?.is_repair){
+      this.staffMembers = this.staffMembers.filter(profile => this.cleaningProfileRoles.every(pr => pr.id != profile.role_id));
+    } else if(!selectedWorkGroup?.is_repair){
+      this.staffMembers = this.staffMembers.filter(profile => this.repairProfileRoles.every(pr => pr.id != profile.role_id));
+    }
+
+    this.availableProfiles = this.staffMembers.filter(staff => 
+      staff.id && 
+      !assignedProfiles.some(ap => ap.id == staff.id) && 
+      !workGroupProfilesForSelectedDayIds.includes(staff.id)
     );
   }
 
@@ -225,27 +208,6 @@ export class StaffGroup implements OnInit, OnChanges {
     if (activeGroupId !== undefined && staff.id) {
       this.profileService.$staffToAdd.next(staff);
       this.updateAvailableStaff(activeGroupId);
-    }
-  }
-
-  viewProfile() {
-    if (this.selectedProfile) {
-      //console.log('View profile:', this.selectedProfile);
-      // Implement view profile logic
-    }
-  }
-
-  editProfile() {
-    if (this.selectedProfile) {
-      //console.log('Edit profile:', this.selectedProfile);
-      // Implement edit profile logic
-    }
-  }
-
-  removeFromGroup() {
-    if (this.selectedProfile) {
-      //console.log('Remove from group:', this.selectedProfile);
-      // Implement remove from group logic
     }
   }
 } 

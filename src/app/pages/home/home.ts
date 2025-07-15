@@ -102,8 +102,7 @@ interface SpecialLocation {
                                     @if (houseService.hasNotCompletedTasks(house.house_id)) {
                                         @for (task of houseService.getTasksForHouse(house.house_id); track task.task_id) {
                                             @if (!taskService.isTaskCompleted(task)){
-                                                <i 
-                                                    class="fa"
+                                                <i
                                                     [ngClass]="[
                                                         getTaskIcon(task),
                                                         taskService.isTaskInProgress(task) 
@@ -174,8 +173,7 @@ interface SpecialLocation {
                                         @if (houseService.hasNotCompletedTasks(house.house_id)) {
                                             @for (task of houseService.getTasksForHouse(house.house_id); track task.task_id) {
                                                 @if (!taskService.isTaskCompleted(task)){
-                                                    <i 
-                                                        class="fa"
+                                                    <i
                                                         [ngClass]="[
                                                             getTaskIcon(task),
                                                             taskService.isTaskInProgress(task) 
@@ -245,8 +243,7 @@ interface SpecialLocation {
                                         @if (houseService.hasNotCompletedTasks(house.house_id)) {
                                             @for (task of houseService.getTasksForHouse(house.house_id); track task.task_id) {
                                                 @if (!taskService.isTaskCompleted(task)){
-                                                    <i 
-                                                        class="fa"
+                                                    <i
                                                         [ngClass]="[
                                                             getTaskIcon(task),
                                                             taskService.isTaskInProgress(task) 
@@ -957,7 +954,6 @@ export class Home implements OnInit, OnDestroy {
     locationTypeForTask: string = 'house';
     selectedTaskType: TaskType | null = null;
     taskDescription: string = '';
-    taskTypes = signal<TaskType[]>([]);
     tasks: Task[] = [];
 
     isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
@@ -993,7 +989,6 @@ export class Home implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        // Load houses
         this.subscriptions.push(
             this.dataService.houses$.subscribe(houses => {
                 const filteredHouses = houses.filter(h => h.house_number > 0);
@@ -1033,27 +1028,16 @@ export class Home implements OnInit, OnDestroy {
             this.applyFilters();
         }));
 
-        this.subscriptions.push(this.dataService.taskTypes$.subscribe((types) => {
-            this.taskTypes.set(types);
-        }));
-
-        this.subscriptions.push(this.dataService.getTaskTypes().subscribe());
-
-        // Subscribe to house types
         this.subscriptions.push(
             this.dataService.houseTypes$.subscribe(types => {
                 this.houseTypes.set(types);
-                // If currently sorted by type, update the grouping
                 if (this.sortType === 'type') {
                     this.applyFilters();
                 }
             })
         );
         
-        // Load house types if not already loaded
         this.subscriptions.push(this.dataService.getHouseTypes().subscribe());
-        
-        // Make sure the number sort is applied initially
         this.applyFilters();
     }
 
@@ -1528,15 +1512,10 @@ export class Home implements OnInit, OnDestroy {
 
     getTaskIcon(task: Task): string {
         if (this.isUrgentIconVisibleMap[task.task_id]) {
-            return 'fa-exclamation-triangle';
+            return 'fa fa-exclamation-triangle';
         }
 
-        if (this.taskService.isRepairTask(task)) return 'fa-wrench';
-        if (this.taskService.isHouseCleaningTask(task)) return 'fa-house';
-        if (this.taskService.isTowelChangeTask(task)) return 'fa-bookmark';
-        if (this.taskService.isDeckCleaningTask(task)) return 'fa-umbrella-beach';
-        if (this.taskService.isSheetChangeTask(task)) return 'fa-bed';
-        return 'fa-file';
+        return this.taskService.getTaskIcon(task.task_type_id);
     }
 
     getHouseStatus(house: House): 'OCCUPIED' | 'ARRIVAL-DAY' | 'NOT-CLEANED' | 'FREE' {

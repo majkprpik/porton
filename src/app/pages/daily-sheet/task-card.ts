@@ -180,7 +180,7 @@ export class TaskCardComponent {
       });
     }
 
-    this.taskIcon = this.taskService.getTaskIcon(this.taskService.taskTypes.find(tt => tt.task_type_id == this.task.task_type_id)?.task_type_id);
+    this.taskIcon = this.taskService.getTaskIcon(this.task.task_type_id);
   }
 
   ngOnDestroy(): void {

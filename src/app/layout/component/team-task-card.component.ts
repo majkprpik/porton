@@ -1,4 +1,4 @@
-import { DataService, Profile, Task, WorkGroup } from './../../pages/service/data.service';
+import { DataService, Profile, Task, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
 import { Component, Input, SimpleChanges } from '@angular/core';
 import { TabViewModule } from 'primeng/tabview';
 import { TaskService } from '../../pages/service/task.service';
@@ -34,13 +34,13 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
       <div class="team-content">
           <div class="section">
             <h4>{{ 'TEAMS.TEAM-TASK-CARD.TEAM-MEMBERS' | translate }}</h4>
-            @if (workGroupStaff.length === 0) {
+            @if (assignedProfiles.length === 0) {
               <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-STAFF' | translate }}</p>
             } @else {
               <div class="staff-list">
-                  @for (staff of workGroupStaff; track staff.id) {
+                  @for (profile of assignedProfiles; track profile.id) {
                     <app-staff-card
-                      [staff]="staff"
+                      [profile]="profile"
                       [canBeAssigned]="false"
                       [isInActiveGroup]="false"
                       [isClickedFromTeamDetails]="true"
@@ -53,11 +53,11 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
 
           <div class="section">
             <h4>{{ 'TEAMS.TEAM-TASK-CARD.TASKS' | translate }}</h4>
-            @if (workGroupTasks.length === 0) {
+            @if (assignedTasks.length === 0) {
               <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-TASKS' | translate }}</p>
             } @else {
               <div class="tasks-list">
-                @for (task of workGroupTasks | tasksIndexSort; track task.task_id) {
+                @for (task of assignedTasks | tasksIndexSort; track task.task_id) {
                   <app-task-card 
                     [task]="task"
                     [canBeAssigned]="false"
@@ -278,35 +278,30 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
   `
 })
 export class TeamTaskCardComponent {
-  @Input() workGroup: WorkGroup | undefined = undefined;
-  @Input() workGroupTasks: Task[] = [];
-  @Input() workGroupStaff: Profile[] = [];
+  @Input() workGroup?: WorkGroup;
+  @Input() assignedTasks: Task[] = [];
+  @Input() assignedProfiles: Profile[] = [];
   @Input() isRepairGroup: boolean = false;
-  taskIcon: any;
-  isUrgentIconVisible: any;
   isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
   urgentIconSubscriptions: Subscription[] = [];
 
   constructor(
     public taskService: TaskService,
     public houseService: HouseService,
-    private router: Router
-  ) {
-        
-  }
+    private router: Router,
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['workGroupTasks'] && this.workGroupTasks.length > 0) {
+    if (changes['workGroupTasks'] && this.assignedTasks.length > 0) {
       this.setupUrgentIcons();
     }
   }
 
   private setupUrgentIcons(): void {
-    // Unsubscribe from previous subscriptions
     this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
     this.urgentIconSubscriptions = [];
 
-    this.workGroupTasks.forEach(task => {
+    this.assignedTasks.forEach(task => {
       if (task.is_unscheduled) {
         const sub = this.taskService.isUrgentIconVisible$.subscribe(visible => {
           this.isUrgentIconVisibleMap[task.task_id] = visible;
@@ -321,15 +316,10 @@ export class TeamTaskCardComponent {
   }
 
   onTaskClick(event: MouseEvent, task: Task) {
-    event.stopPropagation(); // Prevents the parent click
+    event.stopPropagation();
     if (this.workGroup?.is_locked) {
       this.taskService.$taskModalData.next(task);
     }
-  }
-  
-  getStaffFullName(staff: Profile): string {
-    if (!staff.first_name && !staff.last_name) return 'Nepoznat';
-    return [staff.first_name, staff.last_name].filter(Boolean).join(' ');
   }
 
   navigateToDetail(workGroupId: number | undefined) {

@@ -10,9 +10,9 @@ import { SpeedDialModule } from 'primeng/speeddial';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService, MenuItem } from 'primeng/api';
-import { DataService, House, RepairTaskComment, Task, TaskProgressType, TaskType } from '../../pages/service/data.service';
-import { TaskService } from '../../pages/service/task.service';
+import { ConfirmationService } from 'primeng/api';
+import { DataService, House, RepairTaskComment, Task, TaskType } from '../../pages/service/data.service';
+import { TaskService, TaskTypeName } from '../../pages/service/task.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { NotesComponent } from './notes.component';
@@ -29,6 +29,7 @@ import { SelectModule } from 'primeng/select';
 import { LanguageService } from '../../pages/language/language.service';
 import { PushNotificationsService } from '../../pages/service/push-notifications.service';
 import { MultiSelect } from 'primeng/multiselect';
+import { HouseService } from '../../pages/service/house.service';
 
 @Component({
     selector: 'app-layout',
@@ -152,7 +153,7 @@ import { MultiSelect } from 'primeng/multiselect';
                         </div>
                     </ng-template>
                     <p-tabs [(value)]="selectedTabIndex">
-                        @if (getTaskTypeName(task) == 'Popravak'){
+                        @if (taskService.isRepairTask(task)){
                             <p-tablist>
                                 <p-tab value="0">{{ 'APP-LAYOUT.TASK-DETAILS.TABS.DETAILS' | translate }}</p-tab>
                                 <p-tab value="1">
@@ -173,18 +174,18 @@ import { MultiSelect } from 'primeng/multiselect';
                             <p-tabpanel value="0">
                                 <div class="details">
                                     <div>
-                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.HOUSE' | translate }}:</b> {{ getHouseForTask(task)?.house_name }}</span>
+                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.HOUSE' | translate }}:</b> {{ houseService.getHouseName(task?.house_id) }}</span>
                                     </div>
     
                                     <div>
                                         <span>
-                                            <b>{{ 'APP-LAYOUT.TASK-DETAILS.TYPE' | translate }}:</b> {{ ('TASK-TYPES.' + getTaskTypeName(task)) | translate }}
+                                            <b>{{ 'APP-LAYOUT.TASK-DETAILS.TYPE' | translate }}:</b> {{ ('TASK-TYPES.' + taskService.getTaskTypeById(task?.task_type_id)?.task_type_name) | translate }}
                                         </span>
                                     </div>
     
                                     <div>
                                         <span>
-                                            <b>{{ 'APP-LAYOUT.TASK-DETAILS.STATUS' | translate }}:</b> {{ ('TASK-PROGRESS-TYPES.' + getTaskProgressTypeName(task)) | translate }}
+                                            <b>{{ 'APP-LAYOUT.TASK-DETAILS.STATUS' | translate }}:</b> {{ ('TASK-PROGRESS-TYPES.' + taskService.getTaskProgressTypeById(task?.task_progress_type_id)?.task_progress_type_name) | translate }}
                                         </span>
                                     </div>
     
@@ -193,29 +194,29 @@ import { MultiSelect } from 'primeng/multiselect';
                                     </div>
     
                                     <div>
-                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.CREATED-AT' | translate }}: </b> {{ task.created_at | date: 'dd MMM yyyy' }} </span>
+                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.CREATED-AT' | translate }}: </b> {{ task?.created_at | date: 'dd MMM yyyy' }} </span>
                                     </div>
 
-                                    @if(task.start_time){
+                                    @if(task?.start_time){
                                         <div>
-                                            <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.START-TIME' | translate }}: </b> {{ task.start_time | date: 'dd MMM yyyy - HH:mm' : 'UTC' }} </span>
+                                            <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.START-TIME' | translate }}: </b> {{ task?.start_time | date: 'dd MMM yyyy - HH:mm' : 'UTC' }} </span>
                                         </div>
                                     }
 
-                                    @if(task.end_time){
+                                    @if(task?.end_time){
                                         <div>
-                                            <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.END-TIME' | translate }}: </b> {{ task.end_time | date: 'dd MMM yyyy - HH:mm' : 'UTC' }} </span>
+                                            <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.END-TIME' | translate }}: </b> {{ task?.end_time | date: 'dd MMM yyyy - HH:mm' : 'UTC' }} </span>
                                         </div>
                                     }
 
-                                    @if(task.completed_by){
+                                    @if(task?.completed_by){
                                         <div>
-                                            <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.COMPLETED-BY' | translate }}: </b> {{ profileService.findProfile(task.completed_by)?.first_name }}</span>
+                                            <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.COMPLETED-BY' | translate }}: </b> {{ profileService.getProfileById(task?.completed_by)?.first_name }}</span>
                                         </div>   
                                     }
                                 </div>
                             </p-tabpanel>
-                            @if (getTaskTypeName(task) == 'Popravak'){
+                            @if (taskService.isRepairTask(task)){
                                 <p-tabpanel value="1">
                                     @if (!capturedImage) {
                                         <div class="upload-a-photo">
@@ -265,7 +266,7 @@ import { MultiSelect } from 'primeng/multiselect';
                                         } @else {
                                             @for (comment of commentsForTask; track $index) {
                                                 <span>
-                                                    <b>{{ findProfileNameForComment(comment) }} - {{ comment.created_at | date: 'HH:mm' : 'UTC' }}:</b> {{ comment.comment }}
+                                                    <b>{{ profileService.getProfileNameForComment(comment) }} - {{ comment.created_at | date: 'HH:mm' : 'UTC' }}:</b> {{ comment.comment }}
                                                 </span>
                                             }
                                         }
@@ -916,7 +917,6 @@ export class AppLayout {
     @ViewChild(AppSidebar) appSidebar!: AppSidebar;
     @ViewChild(AppTopbar) appTopBar!: AppTopbar;
 
-    // Dialog visibility flags
     faultReportVisible: boolean = false;
     isUnscheduledTaskVisible: boolean = false;
     isNotesWindowVisible: boolean = false;
@@ -936,9 +936,8 @@ export class AppLayout {
     houses: House[] = [];
     taskTypes: TaskType[] = [];
     otherTaskTypes: TaskType[] = [];
-    taskProgressTypes: TaskProgressType[] = [];
     profileRoles: ProfileRole[] = [];
-    task: any = {};
+    task?: Task;
     tasks: Task[] = [];
     profileModalData: any
     profiles: Profile[] = [];
@@ -985,6 +984,7 @@ export class AppLayout {
         private workGroupService: WorkGroupService,
         private languageService: LanguageService,
         private pushNotificationsService: PushNotificationsService,
+        public houseService: HouseService,
     ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
@@ -1014,7 +1014,6 @@ export class AppLayout {
             this.dataService.repairTaskComments$,
             this.dataService.houses$,
             this.dataService.taskTypes$,
-            this.dataService.taskProgressTypes$,
             this.dataService.tasks$,
             this.dataService.workGroups$,
             this.dataService.workGroupTasks$,
@@ -1026,7 +1025,7 @@ export class AppLayout {
             this.dataService.profileRoles$,
             this.dataService.profileWorkSchedule$,
         ]).subscribe({
-            next: ([repairTaskComments, houses, taskTypes, taskProgressTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles, fullWorkSchedule]) => {
+            next: ([repairTaskComments, houses, taskTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles, fullWorkSchedule]) => {
                 this.storedUserId = this.authService.getStoredUserId();
 
                 this.comments = repairTaskComments;
@@ -1038,7 +1037,6 @@ export class AppLayout {
                     ...taskType, 
                     translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskService.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
                 }));
-                this.taskProgressTypes = taskProgressTypes;
                 this.tasks = tasks;
                 this.workGroups = workGroups;
                 this.workGroupTasks = workGroupTasks;
@@ -1089,232 +1087,12 @@ export class AppLayout {
                 }
         	});
 
-        this.taskService.$taskModalData.subscribe((res) => {
-            if (res) {
-                this.resetForm('fault-report');
-
-                this.task = this.tasks.find((task) => task.task_id == res.task_id);
-
-                this.isTaskDetailsWindowVisible = true;
-                this.faultReportVisible = false;
-
-                
-                if (this.getTaskTypeName(this.task) == 'Popravak') {
-                    this.getStoredImagesForTask(this.task);
-                    this.commentsForTask = this.comments.filter((comments) => comments.task_id == this.task.task_id);
-                    this.areCommentsLoaded = true;
-                } else {
-                    this.taskImages = [];
-                    this.commentsForTask = [];
-                    this.areCommentsLoaded = false;
-                }
-            } else {
-                this.isTaskDetailsWindowVisible = false;
-            }
-        });
-
-        this.profileService.$profileModalData.subscribe((profileData) => {
-            if(profileData){
-                this.profileModalData = this.profiles.find(profile => profile.id == profileData.id)
-
-                this.isProfileDetailsWindowVisible = true;
-
-                const profileRoleName = this.getProfileRoleNameById(profileData.role_id);
-
-                if(profileRoleName){
-                    this.profileModalData = {
-                        ...this.profileModalData,
-                        email: this.authService.normalizeEmail(profileData.first_name),
-                        translated_role: this.languageService.getSelectedLanguageCode() == 'en' ? this.profileService.translationMap[profileRoleName] : profileRoleName,
-                    }
-                }
-            }
-        });
-
-        // Load initial data
-        this.dataService.loadHouses().subscribe();
-        this.dataService.getTaskTypes().subscribe();
+        this.subscribeToModalData();
+        this.subscribeToDataUpdates();
 
         if(this.router.url == '/home'){
             this.loadStoredWindowPositions();
         }
-
-        this.dataService.$repairTaskCommentsUpdate.subscribe((res) => {
-            if (res && res.eventType == 'INSERT') {
-                let existingComment = this.comments.find((comment) => comment.id == res.new.id);
-
-                if (!existingComment) {
-                    this.comments = [...this.comments, res.new];
-                    this.commentsForTask = this.comments.filter((comments) => comments.task_id == this.task.task_id);
-                }
-            }
-        });
-
-        this.dataService.$workGroupsUpdate.subscribe((res) => {
-            if (res && res.eventType == 'INSERT') {
-                if (!this.workGroups.find((wg) => wg.work_group_id == res.new.work_group_id)) {
-                    this.workGroups = [...this.workGroups, res.new];
-                    this.dataService.setWorkGroups(this.workGroups);
-                }
-            } else if (res && res.eventType == 'UPDATE') {
-                let workGroupIndex = this.workGroups.findIndex((wg) => wg.work_group_id == res.new.work_group_id);
-
-                if (workGroupIndex != -1) {
-                    this.workGroups = [...this.workGroups.slice(0, workGroupIndex), res.new, ...this.workGroups.slice(workGroupIndex + 1)];
-                    this.dataService.setWorkGroups(this.workGroups);
-                }
-            } else if (res && res.eventType == 'DELETE') {
-                this.workGroups = this.workGroups.filter((wg) => wg.work_group_id != res.old.work_group_id);
-                this.dataService.setWorkGroups(this.workGroups);
-            }
-        });
-
-        this.dataService.$tasksUpdate.subscribe((res) => {
-            if (res && res.eventType == 'INSERT') {
-                if (!this.tasks.find((task) => task.task_id == res.new.task_id)) {
-                    this.tasks = [...this.tasks, res.new];
-                    this.dataService.setTasks(this.tasks);
-                }
-            } else if (res && res.eventType == 'UPDATE') {
-                let taskIndex = this.tasks.findIndex((task) => task.task_id == res.new.task_id);
-
-                if (taskIndex != -1) {
-                    this.tasks = this.tasks.map((task) => (task.task_id === res.new.task_id ? res.new : task));
-
-                    this.dataService.setTasks(this.tasks);
-
-                    if(
-                        this.taskService.isTaskCompleted(res.new) && 
-                        this.taskService.isOtherTask(res.new) &&
-                        this.loggedUser && this.loggedUser.first_name == 'Test User2'
-                    ){
-                        this.pushNotificationsService.sendTaskCompletedNotification(this.tasks[taskIndex]);
-                    }
-                }
-            } else if (res && res.eventType == 'DELETE') {
-                this.tasks = this.tasks.filter((task) => task.task_id != res.old.task_id);
-                this.dataService.setTasks(this.tasks);
-            }
-        });
-
-        this.dataService.$workGroupTasksUpdate.subscribe((res) => {
-            if (res && res.eventType == 'INSERT') {
-                if (!this.workGroupTasks.find((wgt) => wgt.task_id == res.new.task_id)) {
-                    this.workGroupTasks = [...this.workGroupTasks, res.new];
-                    this.dataService.setWorkGroupTasks(this.workGroupTasks);
-                }
-            } else if (res && res.eventType == 'DELETE') {
-                this.workGroupTasks = this.workGroupTasks.filter((wgt) => wgt.task_id != res.old.task_id);
-                this.dataService.setWorkGroupTasks(this.workGroupTasks);
-            }
-        });
-
-        this.dataService.$workGroupProfilesUpdate.subscribe((res) => {
-            if (res && res.eventType == 'INSERT') {
-                if(!this.workGroupProfiles.find(wgp => wgp.profile_id == res.new.profile_id && wgp.work_group_id == res.new.work_group_id)){
-                    this.workGroupProfiles = [...this.workGroupProfiles, res.new];
-                    this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
-                }
-            } else if (res && res.eventType == 'DELETE') {
-                this.workGroupProfiles = this.workGroupProfiles.filter((wgp) => !(wgp.profile_id == res.old.profile_id && wgp.work_group_id == res.old.work_group_id));
-                this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
-            }
-        });
-
-        this.dataService.$houseAvailabilitiesUpdate.subscribe((res) => {
-            if(res && res.eventType == 'INSERT') {
-                if(!this.houseAvailabilities().find(ha => ha.house_availability_id == res.new.house_availability_id)){
-                    this.houseAvailabilities.update(current => [...current, res.new]);
-                    this.dataService.setHouseAvailabilites(this.houseAvailabilities());
-                }
-            }
-            else if (res && res.eventType == 'UPDATE') {
-                let houseAvailabilityIndex = this.houseAvailabilities().findIndex((ha) => ha.house_availability_id == res.new.house_availability_id);
-
-                if (houseAvailabilityIndex != -1) {
-                    const updatedHouseAvailabilites = [...this.houseAvailabilities()];
-                    updatedHouseAvailabilites[houseAvailabilityIndex] = res.new;
-                    this.dataService.setHouseAvailabilites(updatedHouseAvailabilites);
-                }
-            } else if(res && res.eventType == 'DELETE'){
-                const filtered = this.houseAvailabilities().filter(ha => ha.house_availability_id !== res.old.house_availability_id);
-                this.houseAvailabilities.set(filtered);
-                this.dataService.setHouseAvailabilites(filtered);
-            }
-        });
-
-        this.dataService.$tempHouseAvailabilitiesUpdate.subscribe((res) => {
-            if(res && res.eventType == 'INSERT'){
-                if(!this.tempHouseAvailabilities.find(tha => tha.house_availability_id == res.new.house_availability_id)){
-                    this.tempHouseAvailabilities = [...this.tempHouseAvailabilities, res.new];
-                    this.dataService.setTempHouseAvailabilities(this.tempHouseAvailabilities);
-                }
-            } else if(res && res.eventType == 'UPDATE'){
-                const tempHouseAvailabilitiesIndex = this.tempHouseAvailabilities.findIndex(tha => tha.house_availability_id == res.new.house_availability_id);
-
-                if(tempHouseAvailabilitiesIndex != -1){
-                    const updatedTempHouseAvailabilities = [...this.tempHouseAvailabilities];
-                    updatedTempHouseAvailabilities[tempHouseAvailabilitiesIndex] = res.new;
-                    this.dataService.setTempHouseAvailabilities(updatedTempHouseAvailabilities);
-                }
-            } else if(res && res.eventType == 'DELETE'){
-                this.tempHouseAvailabilities = this.tempHouseAvailabilities.filter(tha => tha.house_availability_id != res.old.house_availability_id);
-                this.dataService.setTempHouseAvailabilities(this.tempHouseAvailabilities);
-            }
-        });
-
-        this.dataService.$profileWorkScheduleUpdate.subscribe(res => {
-            if(res && res.eventType == 'INSERT'){
-                if(!this.fullWorkSchedule.find(sch => sch.id == res.new.id)){
-                    this.fullWorkSchedule = [...this.fullWorkSchedule, res.new];
-                    this.dataService.setFullWorkSchedule(this.fullWorkSchedule);
-                }
-            } else if(res && res.eventType == 'UPDATE'){
-                const profileWorkScheduleIndex = this.fullWorkSchedule.findIndex(schedule => schedule.id == res.new.id);
-
-                if(profileWorkScheduleIndex != -1){
-                    const updatedFullWorkSchedule = [...this.fullWorkSchedule];
-                    updatedFullWorkSchedule[profileWorkScheduleIndex] = res.new;
-                    this.dataService.setFullWorkSchedule(updatedFullWorkSchedule);
-                }
-            } else if(res && res.eventType == 'DELETE'){
-                this.fullWorkSchedule = this.fullWorkSchedule.filter(schedule => schedule.id != res.old.id);
-                this.dataService.setFullWorkSchedule(this.fullWorkSchedule);
-            }
-        });
-
-        this.dataService.$profilesUpdate.subscribe((res) => {
-            if(res && res.eventType == 'INSERT'){
-                if(!this.profiles.find(profile => profile.id == res.new.id)){
-                    this.profiles = [...this.profiles, res.new];
-                    this.dataService.setProfiles(this.profiles);
-                }
-            } else if(res && res.eventType == 'UPDATE'){
-                let profileIndex = this.profiles.findIndex(profile => profile.id == res.new.id);
-
-                if(profileIndex != -1){
-                    const updatedProfiles = [...this.profiles];
-                    updatedProfiles[profileIndex] = res.new;
-                    this.dataService.setProfiles(updatedProfiles);
-                }
-            } else if (res && res.eventType == 'DELETE'){
-                this.profiles = this.profiles.filter(profile => profile.id != res.old.id);
-                this.dataService.setProfiles(this.profiles);
-
-                if(res.old.id == this.storedUserId){
-                    this.authService.logout();
-                }
-            }
-        });
-
-        this.dataService.$notesUpdate.subscribe(res => {
-            if(res && res.eventType == 'INSERT'){
-                if(!this.notes.find(note => note.id == res.new.id)){
-                    this.notes = [...this.notes, res.new];
-                    this.dataService.setNotes(this.notes);
-                }
-            }
-        });
     }
 
     buildSpeedDialItems(){
@@ -1356,27 +1134,19 @@ export class AppLayout {
         }
     }
 
-    getProfileRoleNameById(roleId: number){
-        return this.profileRoles.find(role => role.id == roleId)?.name;
-    }
-
-    isLoggedUserDeleted(){
-        return !this.profiles.find(profile => profile.id == this.storedUserId);
-    }
-
     loadStoredWindowPositions(){
         const saved = localStorage.getItem('windowPositions');
 
-        if (saved) {
-            this.positions = JSON.parse(saved);
-    
-            if (this.positions['notes']) {
-                this.isNotesWindowVisible = true;
-            }
-    
-            if (this.positions['arrivals']) {
-                this.isArrivalsAndDeparturesWindowVisible = true;
-            }
+        if(!saved) return;
+
+        this.positions = JSON.parse(saved);
+
+        if (this.positions['notes']) {
+            this.isNotesWindowVisible = true;
+        }
+
+        if (this.positions['arrivals']) {
+            this.isArrivalsAndDeparturesWindowVisible = true;
         }
     }
 
@@ -1480,7 +1250,7 @@ export class AppLayout {
         this.taskService.createTaskForHouse(
             this.selectedHouseForFaultReport!.house_id.toString(),
             this.faultDescription,
-            'Popravak',
+            TaskTypeName.Repair,
             true
         ).then(async result => {
             if (result) {
@@ -1513,13 +1283,13 @@ export class AppLayout {
         if (!this.isUnscheduledTaskFormValid()) return;
 
         const createPromises = this.selectedHouseNamesForTaskReport.map(houseName => {
-            const house = this.houses.find(h => h.house_name == houseName);
+            const house = this.houseService.getHouseByName(houseName);
             if (!house) return Promise.resolve(null);
 
             return this.taskService.createTaskForHouse(
                 house.house_id.toString(),
                 this.taskDescription,
-                this.selectedTaskType!.task_type_name,
+                this.selectedTaskType!.task_type_name as TaskTypeName,
                 true
             );
         });
@@ -1638,7 +1408,8 @@ export class AppLayout {
             this.selectedTabIndex = "0";
             this.taskService.$taskModalData.next(null);
         }
-        this.task = {};
+
+        this.task = undefined;
     }
 
     removeImage(imageToRemove: any, event: any, window: string) {
@@ -1659,7 +1430,7 @@ export class AppLayout {
                     severity: 'danger'
                 },
                 accept: async () => {
-                    this.taskService.removeImageForTask(imageToRemove, this.task.task_id);
+                    this.taskService.removeImageForTask(imageToRemove, this.task!.task_id);
                     this.messageService.add({ severity: 'info', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.UPDATED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.REMOVE-IMAGE.SUCCESS') });
                     this.taskImages = this.taskImages.filter((ti) => ti.url != imageToRemove.url);
                 },
@@ -1693,27 +1464,6 @@ export class AppLayout {
         }
     }
 
-    getHouseForTask(task: any) {
-        if (task) {
-            return this.houses.find((house) => house.house_id == task.house_id);
-        }
-        return;
-    }
-
-    getTaskTypeName(task: any) {
-        if (task) {
-            return this.taskTypes.find((tt) => tt.task_type_id == task.task_type_id || tt.task_type_id == task.taskTypeId)?.task_type_name;
-        }
-        return;
-    }
-
-    getTaskProgressTypeName(task: any) {
-        if (task) {
-            return this.taskProgressTypes.find((tpt) => tpt.task_progress_type_id == task.task_progress_type_id || tpt.task_progress_type_id == task.taskProgressTypeId)?.task_progress_type_name;
-        }
-        return;
-    }
-
     onDragEnd(windowKey: string, event: CdkDragEnd) {
         const pos = event.source.getFreeDragPosition();
         this.positions[windowKey] = { x: pos.x, y: pos.y };
@@ -1730,50 +1480,265 @@ export class AppLayout {
         this.comment = this.comment.trim();
 
         if (this.comment) {
-            this.taskService.addCommentOnRepairTask(this.comment, this.task.task_id);
+            this.taskService.addCommentOnRepairTask(this.comment, this.task!.task_id);
             this.comment = '';
         }
     }
 
-    deleteTask(event: any, task: Task){
-        this.confirmationService.confirm({
-                target: event.target,
-                message: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.WARNING'),
-                header: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.HEADER'),
-                icon: 'pi pi-exclamation-triangle',
-                rejectLabel: 'Cancel',
-                rejectButtonProps: {
-                    label: this.translateService.instant('BUTTONS.CANCEL'),
-                    severity: 'secondary',
-                    outlined: true
-                },
-                acceptButtonProps: {
-                    label: this.translateService.instant('BUTTONS.CONFIRM'),
-                    severity: 'danger'
-                },
-                accept: async () => {
-                    this.taskService.deleteTask(task.task_id)
-                        .then(res => {
-                            if(res){
-                                this.isTaskDetailsWindowVisible = false;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error deleting task: ', error);
-                        });
-                    this.messageService.add({ severity: 'info', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.UPDATED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.SUCCESS') });
-                },
-                reject: () => {
-                    this.messageService.add({ severity: 'warn', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.CANCELLED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.CANCELLED') });
-                }
-            });
-    }
+    deleteTask(event: any, task: Task | undefined){
+        if(!task) return;
 
-    findProfileNameForComment(comment: RepairTaskComment){
-        return this.profiles.find(profile => profile.id == comment.user_id)?.first_name;
+        this.confirmationService.confirm({
+            target: event.target,
+            message: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.WARNING'),
+            header: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.HEADER'),
+            icon: 'pi pi-exclamation-triangle',
+            rejectLabel: 'Cancel',
+            rejectButtonProps: {
+                label: this.translateService.instant('BUTTONS.CANCEL'),
+                severity: 'secondary',
+                outlined: true
+            },
+            acceptButtonProps: {
+                label: this.translateService.instant('BUTTONS.CONFIRM'),
+                severity: 'danger'
+            },
+            accept: async () => {
+                this.taskService.deleteTask(task.task_id)
+                    .then(res => {
+                        if(res){
+                            this.isTaskDetailsWindowVisible = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting task: ', error);
+                    });
+                this.messageService.add({ severity: 'info', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.UPDATED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.SUCCESS') });
+            },
+            reject: () => {
+                this.messageService.add({ severity: 'warn', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.CANCELLED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.TASK-DELETE.CANCELLED') });
+            }
+        });
     }
 
     closeSpeedDial(){
         this.isSpeedDialVisible = false;
+    }
+
+    subscribeToModalData(){
+        this.taskService.$taskModalData.subscribe((res) => {
+            if(!res) {
+                this.isTaskDetailsWindowVisible = false;
+                return;
+            }
+
+            this.resetForm('fault-report');
+            this.task = this.tasks.find((task) => task.task_id == res.task_id);
+            this.isTaskDetailsWindowVisible = true;
+            this.faultReportVisible = false;
+
+            if (this.task && this.taskService.isRepairTask(this.task)) {
+                this.getStoredImagesForTask(this.task);
+                this.commentsForTask = this.comments.filter((comments) => comments.task_id == this.task!.task_id);
+                this.areCommentsLoaded = true;
+            } else {
+                this.taskImages = [];
+                this.commentsForTask = [];
+                this.areCommentsLoaded = false;
+            }
+        });
+
+        this.profileService.$profileModalData.subscribe((profileData) => {
+            if(!profileData) return;
+
+            this.profileModalData = this.profiles.find(profile => profile.id == profileData.id);
+            this.isProfileDetailsWindowVisible = true;
+            const profileRoleName = this.profileService.getProfileRoleNameById(this.profileModalData.role_id);
+
+            this.profileModalData = {
+                ...this.profileModalData,
+                email: this.authService.normalizeEmail(this.profileModalData.first_name),
+                translated_role: this.languageService.getSelectedLanguageCode() == 'en' ? this.profileService.translationMap[profileRoleName] : profileRoleName,
+            }
+        });
+    }
+
+    subscribeToDataUpdates(){
+        this.dataService.$repairTaskCommentsUpdate.subscribe((res) => {
+            if (res && res.new.id && res.eventType == 'INSERT') {
+                let existingComment = this.comments.find((comment) => comment.id == res.new.id);
+
+                if (!existingComment) {
+                    this.comments = [...this.comments, res.new];
+                    this.commentsForTask = this.comments.filter((comments) => comments.task_id == this.task?.task_id);
+                }
+            }
+        });
+
+        this.dataService.$workGroupsUpdate.subscribe((res) => {
+            if (res && res.new.work_group_id && res.eventType == 'INSERT') {
+                if (!this.workGroups.find((wg) => wg.work_group_id == res.new.work_group_id)) {
+                    this.workGroups = [...this.workGroups, res.new];
+                    this.dataService.setWorkGroups(this.workGroups);
+                }
+            } else if (res && res.new.work_group_id && res.eventType == 'UPDATE') {
+                let workGroupIndex = this.workGroups.findIndex((wg) => wg.work_group_id == res.new.work_group_id);
+
+                if (workGroupIndex != -1) {
+                    this.workGroups = [...this.workGroups.slice(0, workGroupIndex), res.new, ...this.workGroups.slice(workGroupIndex + 1)];
+                    this.dataService.setWorkGroups(this.workGroups);
+                }
+            } else if (res && res.old.work_group_id && res.eventType == 'DELETE') {
+                this.workGroups = this.workGroups.filter((wg) => wg.work_group_id != res.old.work_group_id);
+                this.dataService.setWorkGroups(this.workGroups);
+            }
+        });
+
+        this.dataService.$tasksUpdate.subscribe((res) => {
+            if (res && res.new.task_id && res.eventType == 'INSERT') {
+                if (!this.tasks.find((task) => task.task_id == res.new.task_id)) {
+                    this.tasks = [...this.tasks, res.new];
+                    this.dataService.setTasks(this.tasks);
+                }
+            } else if (res && res.new.task_id && res.eventType == 'UPDATE') {
+                let taskIndex = this.tasks.findIndex((task) => task.task_id == res.new.task_id);
+
+                if (taskIndex != -1) {
+                    this.tasks = this.tasks.map((task) => (task.task_id === res.new.task_id ? res.new : task));
+
+                    this.dataService.setTasks(this.tasks);
+
+                    if(
+                        this.taskService.isTaskCompleted(res.new) && 
+                        this.taskService.isOtherTask(res.new) &&
+                        this.loggedUser && this.loggedUser.first_name == 'Test User2'
+                    ){
+                        this.pushNotificationsService.sendTaskCompletedNotification(this.tasks[taskIndex]);
+                    }
+                }
+            } else if (res && res.old.task_id && res.eventType == 'DELETE') {
+                this.tasks = this.tasks.filter((task) => task.task_id != res.old.task_id);
+                this.dataService.setTasks(this.tasks);
+            }
+        });
+
+        this.dataService.$workGroupTasksUpdate.subscribe((res) => {
+            if (res && res.new.task_id && res.eventType == 'INSERT') {
+                if (!this.workGroupTasks.find((wgt) => wgt.task_id == res.new.task_id)) {
+                    this.workGroupTasks = [...this.workGroupTasks, res.new];
+                    this.dataService.setWorkGroupTasks(this.workGroupTasks);
+                }
+            } else if (res && res.old.task_id && res.eventType == 'DELETE') {
+                this.workGroupTasks = this.workGroupTasks.filter((wgt) => wgt.task_id != res.old.task_id);
+                this.dataService.setWorkGroupTasks(this.workGroupTasks);
+            }
+        });
+
+        this.dataService.$workGroupProfilesUpdate.subscribe((res) => {
+            if (res && res.new.work_group_id && res.eventType == 'INSERT') {
+                if(!this.workGroupProfiles.find(wgp => wgp.profile_id == res.new.profile_id && wgp.work_group_id == res.new.work_group_id)){
+                    this.workGroupProfiles = [...this.workGroupProfiles, res.new];
+                    this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+                }
+            } else if (res && res.old.profile_id && res.old.work_group_id && res.eventType == 'DELETE') {
+                this.workGroupProfiles = this.workGroupProfiles.filter((wgp) => !(wgp.profile_id == res.old.profile_id && wgp.work_group_id == res.old.work_group_id));
+                this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+            }
+        });
+
+        this.dataService.$houseAvailabilitiesUpdate.subscribe((res) => {
+            if(res && res.new.house_availability_id && res.eventType == 'INSERT') {
+                if(!this.houseAvailabilities().find(ha => ha.house_availability_id == res.new.house_availability_id)){
+                    this.houseAvailabilities.update(current => [...current, res.new]);
+                    this.dataService.setHouseAvailabilites(this.houseAvailabilities());
+                }
+            }
+            else if (res && res.new.house_availability_id && res.eventType == 'UPDATE') {
+                let houseAvailabilityIndex = this.houseAvailabilities().findIndex((ha) => ha.house_availability_id == res.new.house_availability_id);
+
+                if (houseAvailabilityIndex != -1) {
+                    const updatedHouseAvailabilites = [...this.houseAvailabilities()];
+                    updatedHouseAvailabilites[houseAvailabilityIndex] = res.new;
+                    this.dataService.setHouseAvailabilites(updatedHouseAvailabilites);
+                }
+            } else if(res && res.old.house_availability_id && res.eventType == 'DELETE'){
+                const filtered = this.houseAvailabilities().filter(ha => ha.house_availability_id !== res.old.house_availability_id);
+                this.houseAvailabilities.set(filtered);
+                this.dataService.setHouseAvailabilites(filtered);
+            }
+        });
+
+        this.dataService.$tempHouseAvailabilitiesUpdate.subscribe((res) => {
+            if(res && res.new.house_availability_id && res.eventType == 'INSERT'){
+                if(!this.tempHouseAvailabilities.find(tha => tha.house_availability_id == res.new.house_availability_id)){
+                    this.tempHouseAvailabilities = [...this.tempHouseAvailabilities, res.new];
+                    this.dataService.setTempHouseAvailabilities(this.tempHouseAvailabilities);
+                }
+            } else if(res && res.new.house_availability_id && res.eventType == 'UPDATE'){
+                const tempHouseAvailabilitiesIndex = this.tempHouseAvailabilities.findIndex(tha => tha.house_availability_id == res.new.house_availability_id);
+
+                if(tempHouseAvailabilitiesIndex != -1){
+                    const updatedTempHouseAvailabilities = [...this.tempHouseAvailabilities];
+                    updatedTempHouseAvailabilities[tempHouseAvailabilitiesIndex] = res.new;
+                    this.dataService.setTempHouseAvailabilities(updatedTempHouseAvailabilities);
+                }
+            } else if(res && res.old.house_availability_id && res.eventType == 'DELETE'){
+                this.tempHouseAvailabilities = this.tempHouseAvailabilities.filter(tha => tha.house_availability_id != res.old.house_availability_id);
+                this.dataService.setTempHouseAvailabilities(this.tempHouseAvailabilities);
+            }
+        });
+
+        this.dataService.$profileWorkScheduleUpdate.subscribe(res => {
+            if(res && res.new.id && res.eventType == 'INSERT'){
+                if(!this.fullWorkSchedule.find(sch => sch.id == res.new.id)){
+                    this.fullWorkSchedule = [...this.fullWorkSchedule, res.new];
+                    this.dataService.setFullWorkSchedule(this.fullWorkSchedule);
+                }
+            } else if(res && res.new.id && res.eventType == 'UPDATE'){
+                const profileWorkScheduleIndex = this.fullWorkSchedule.findIndex(schedule => schedule.id == res.new.id);
+
+                if(profileWorkScheduleIndex != -1){
+                    const updatedFullWorkSchedule = [...this.fullWorkSchedule];
+                    updatedFullWorkSchedule[profileWorkScheduleIndex] = res.new;
+                    this.dataService.setFullWorkSchedule(updatedFullWorkSchedule);
+                }
+            } else if(res && res.old.id && res.eventType == 'DELETE'){
+                this.fullWorkSchedule = this.fullWorkSchedule.filter(schedule => schedule.id != res.old.id);
+                this.dataService.setFullWorkSchedule(this.fullWorkSchedule);
+            }
+        });
+
+        this.dataService.$profilesUpdate.subscribe((res) => {
+            if(res && res.new.id && res.eventType == 'INSERT'){
+                if(!this.profiles.find(profile => profile.id == res.new.id)){
+                    this.profiles = [...this.profiles, res.new];
+                    this.dataService.setProfiles(this.profiles);
+                }
+            } else if(res && res.new.id && res.eventType == 'UPDATE'){
+                let profileIndex = this.profiles.findIndex(profile => profile.id == res.new.id);
+
+                if(profileIndex != -1){
+                    const updatedProfiles = [...this.profiles];
+                    updatedProfiles[profileIndex] = res.new;
+                    this.dataService.setProfiles(updatedProfiles);
+                }
+            } else if (res && res.old.id && res.eventType == 'DELETE'){
+                this.profiles = this.profiles.filter(profile => profile.id != res.old.id);
+                this.dataService.setProfiles(this.profiles);
+
+                if(res.old.id == this.storedUserId){
+                    this.authService.logout();
+                }
+            }
+        });
+
+        this.dataService.$notesUpdate.subscribe(res => {
+            if(res && res.new.id && res.eventType == 'INSERT'){
+                if(!this.notes.find(note => note.id == res.new.id)){
+                    this.notes = [...this.notes, res.new];
+                    this.dataService.setNotes(this.notes);
+                }
+            }
+        });
     }
 }

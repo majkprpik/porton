@@ -28,7 +28,7 @@ import { combineLatest } from 'rxjs';
         <div class="field">
           <label for="location" class="font-bold block mb-2">{{ 'TASK-ARCHIVE.FIELDS.TASK-TYPES.TITLE' | translate }}</label>
           <p-multiselect 
-            [options]="taskTypes" 
+            [options]="taskService.getAllTaskTypes()" 
             [(ngModel)]="selectedTaskTypes"
             optionLabel="task_type_name" 
             [placeholder]="'TASK-ARCHIVE.FIELDS.TASK-TYPES.SELECT-TYPE' | translate"
@@ -148,7 +148,6 @@ export class TaskArchiveComponent {
   completedTasks: Task[] = [];
   filteredTasks: Task[] = [];
 
-  taskTypes: TaskType[] = [];
   selectedTaskTypes: TaskType[] = [];
   searchTerm: string = '';
 
@@ -156,15 +155,13 @@ export class TaskArchiveComponent {
 
   constructor(
     private dataService: DataService,
-    private taskService: TaskService,
+    public taskService: TaskService,
   ) {
     combineLatest([
       this.dataService.tasks$,
-      this.dataService.taskTypes$,
       this.dataService.houses$
-    ]).subscribe(([tasks, taskTypes, houses]) => {
+    ]).subscribe(([tasks, houses]) => {
       this.tasks = tasks;
-      this.taskTypes = taskTypes;
       this.houses = houses;
 
       this.completedTasks = this.tasks
@@ -172,7 +169,6 @@ export class TaskArchiveComponent {
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       this.filteredTasks = this.completedTasks;
-
       this.filterTasks();
     });
   }

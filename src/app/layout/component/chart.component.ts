@@ -553,20 +553,20 @@ export class ChartComponent {
       );
     }
   
-    if(!metric.includes('Total')){
-      if(metric.includes('Repair')){
-        tasks = tasks.filter(task => this.taskService.isRepairTask(task));
-      } else if(metric.includes('House')){
-        tasks = tasks.filter(task => this.taskService.isHouseCleaningTask(task));
-      } else if(metric.includes('Deck')){
-        tasks = tasks.filter(task => this.taskService.isDeckCleaningTask(task));
-      } else if(metric.includes('Unscheduled')){
-        tasks = tasks.filter(task => task.is_unscheduled);
-      } else if(metric.includes('Towel')){
-        tasks = tasks.filter(task => this.taskService.isTowelChangeTask(task));
-      } else if(metric.includes('Sheet')){
-        tasks = tasks.filter(task => this.taskService.isSheetChangeTask(task));
-      }
+    if(metric.includes('Total')) return tasks;
+
+    if(metric.includes('Repair')){
+      tasks = tasks.filter(task => this.taskService.isRepairTask(task));
+    } else if(metric.includes('House')){
+      tasks = tasks.filter(task => this.taskService.isHouseCleaningTask(task));
+    } else if(metric.includes('Deck')){
+      tasks = tasks.filter(task => this.taskService.isDeckCleaningTask(task));
+    } else if(metric.includes('Unscheduled')){
+      tasks = tasks.filter(task => task.is_unscheduled);
+    } else if(metric.includes('Towel')){
+      tasks = tasks.filter(task => this.taskService.isTowelChangeTask(task));
+    } else if(metric.includes('Sheet')){
+      tasks = tasks.filter(task => this.taskService.isSheetChangeTask(task));
     }
 
     return tasks;

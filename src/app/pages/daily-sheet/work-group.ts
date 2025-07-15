@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { Task, Profile, DataService, House, TaskType, WorkGroup as WorkGroupObject } from '../service/data.service';
+import { Task, Profile, DataService, House, TaskType, WorkGroup as WorkGroupObject, WorkGroupTask, WorkGroupProfile } from '../service/data.service';
 import { TaskCardComponent } from './task-card';
 import { TagModule } from 'primeng/tag';
 import { StaffCardComponent } from './staff-card';
@@ -9,7 +9,7 @@ import { MenuItem } from 'primeng/api';
 import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
 import { combineLatest } from 'rxjs';
 import { DragDropModule } from 'primeng/dragdrop';
-import { TaskService } from '../service/task.service';
+import { TaskProgressTypeName, TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
 import { ConfirmationService } from 'primeng/api';
 import { ProfileService } from '../service/profile.service';
@@ -101,12 +101,12 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
             <div class="drop-area">{{ 'DAILY-SHEET.WORK-GROUPS.CLICK-STAFF' | translate }}</div>
           } @else {
             <div class="staff-list">
-              @for (staff of assignedStaff; track staff.id) {
+              @for (profile of assignedStaff; track profile.id) {
                 <app-staff-card 
-                  [staff]="staff"
+                  [profile]="profile"
                   [isInActiveGroup]="isActive"
-                  (removeFromGroup)="onRemoveStaff(staff)"
-                  (contextmenu)="onStaffContextMenu($event, staff)"
+                  (removeFromGroup)="onRemoveStaff(profile)"
+                  (contextmenu)="onStaffContextMenu($event, profile)"
                 ></app-staff-card>
               }
             </div>
@@ -138,7 +138,7 @@ import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
               [class.completed]="taskService.isTaskCompleted(task)"
             >
               <div class="house-number">
-                {{houseService.getHouseNumber(task.house_id)}}
+                {{houseService.getHouseName(task.house_id)}}
               </div>
   
               <div class="task-icon">
@@ -491,12 +491,10 @@ export class WorkGroup implements OnInit {
     return this.groupColorNames[index];
   }
   
-  taskProgressTypes: any;
-  tasks: any;
-  workGroupTasks: any;
-  workGroupProfiles: any;
-  houses: House[] = [];
-  taskTypes: TaskType[] = [];
+  tasks: Task[] = [];
+  profiles: Profile[] = [];
+  workGroupTasks: WorkGroupTask[] = [];
+  workGroupProfiles: WorkGroupProfile[] = [];
   workGroups: WorkGroupObject[] = [];
 
   constructor(
@@ -511,23 +509,18 @@ export class WorkGroup implements OnInit {
 
   ngOnInit() {
     combineLatest([
-      this.dataService.taskProgressTypes$,
       this.dataService.tasks$,
       this.dataService.workGroupTasks$,
-      this.dataService.houses$,
-      this.dataService.taskTypes$,
       this.dataService.workGroupProfiles$,
       this.dataService.workGroups$,
+      this.dataService.profiles$,
     ]).subscribe({
-      next: ([taskProgressTypes, tasks, workGroupTasks, houses, taskTypes, workGroupProfiles, workGroups]) => {
-        this.taskProgressTypes = taskProgressTypes;
+      next: ([tasks, workGroupTasks, workGroupProfiles, workGroups, profiles]) => {
         this.tasks = tasks;
         this.workGroupTasks = workGroupTasks;
-        this.houses = houses;
-        this.taskTypes = taskTypes;
         this.workGroupProfiles = workGroupProfiles;
         this.workGroups = workGroups;
-
+        this.profiles = profiles;
       },
       error: (error) => {
         console.error(error);
@@ -543,205 +536,166 @@ export class WorkGroup implements OnInit {
 
     if (this.workGroup) {
       this.taskService.$selectedTask.subscribe(selectedTask => {
-        if(selectedTask && !this.workGroupTasks.some((wgt: any) => wgt.task_id == selectedTask.task_id)){
-          const activeGroup = this.workGroupService.getActiveGroup();
-          
-          if(activeGroup && this.workGroup && this.workGroup?.work_group_id == activeGroup){
-            this.workGroup.is_locked = false;
-            let lockedTeams = this.workGroupService.getLockedTeams();
-            let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup)
+        if(!selectedTask || this.workGroupTasks.some((wgt: any) => wgt.task_id == selectedTask.task_id)) return;
 
-            if(lockedTeam && !lockedTeam.tasks?.find(task => task.task_id == selectedTask.task_id)){
-              if(selectedTask.task_progress_type_id == this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Nije dodijeljeno").task_progress_type_id){
-                selectedTask.task_progress_type_id = this.taskProgressTypes.find((taskProgressType: any) => taskProgressType.task_progress_type_name == "Dodijeljeno").task_progress_type_id;
-              }
+        const activeGroup = this.workGroupService.getActiveGroup();
+        if(!activeGroup || !this.workGroup || this.workGroup?.work_group_id != activeGroup) return;
+        
+        let lockedTeams = this.workGroupService.getLockedTeams();
+        let lockedTeam = lockedTeams.find(lockedTeam => lockedTeam.id == activeGroup);
+        if(!lockedTeam || lockedTeam.tasks?.find(task => task.task_id == selectedTask.task_id)) return;
 
-              if(!lockedTeam.tasks){
-                lockedTeam.tasks = [];
-              }
-
-              this.workGroupTasks = [...this.workGroupTasks, {
-                work_group_id: activeGroup,
-                task_id: selectedTask.task_id,
-                index: this.workGroupTasks.filter((wgt: any) => wgt.work_group_id == activeGroup).length,
-              }];
-
-              const wgtIndex = this.workGroups.findIndex((wgt: any) => wgt.work_group_id == this.workGroup?.work_group_id);
-              this.workGroups[wgtIndex] = this.workGroup;
-
-              lockedTeam.isLocked = false;
-              lockedTeam.tasks.push(selectedTask);
-              this.workGroupService.updateLockedTeam(lockedTeam);
-              this.dataService.setWorkGroupTasks(this.workGroupTasks);
-              this.dataService.setWorkGroups(this.workGroups);
-              this.taskService.$selectedTask.next(null);
-            }
-          }
+        if(this.taskService.isTaskNotAssigned(selectedTask)){
+          selectedTask.task_progress_type_id = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Assigned)?.task_progress_type_id;
         }
-      });
 
-      this.loadAssignedStaff();
+        this.workGroupTasks = [...this.workGroupTasks, {
+          work_group_id: activeGroup,
+          task_id: selectedTask.task_id,
+          index: this.workGroupTasks.filter((wgt: any) => wgt.work_group_id == activeGroup).length,
+        }];
+        
+        this.workGroup.is_locked = false;
+        const wgtIndex = this.workGroups.findIndex((wgt: any) => wgt.work_group_id == this.workGroup?.work_group_id);
+        this.workGroups[wgtIndex] = this.workGroup;
+
+        lockedTeam.tasks ??= [];
+        lockedTeam.isLocked = false;
+        lockedTeam.tasks.push(selectedTask);
+        this.workGroupService.updateLockedTeam(lockedTeam);
+        this.dataService.setWorkGroupTasks(this.workGroupTasks);
+        this.dataService.setWorkGroups(this.workGroups);
+        this.taskService.$selectedTask.next(null);
+      });
     }
 
     this.profileService.$staffToAdd.subscribe(staffToAdd => {
-        if(staffToAdd){
-          const activeGroup = this.workGroupService.getActiveGroup();
+      const activeGroup = this.workGroupService.getActiveGroup();
 
-          if(this.workGroup){
-            if(activeGroup && this.workGroup.work_group_id == activeGroup){
-              this.workGroup.is_locked = false;
-              let lockedTeams = this.workGroupService.getLockedTeams();
-              let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == activeGroup);
-  
-              if(lockedTeam && !lockedTeam.members?.find(member => member.id == staffToAdd.id)){
-                if(!lockedTeam?.members){
-                  lockedTeam.members = [];
-                }
-  
-                this.workGroupProfiles = [...this.workGroupProfiles, {
-                  work_group_id: parseInt(lockedTeam.id),
-                  profile_id: staffToAdd.id,
-                }];
-  
-                lockedTeam.isLocked = false;
-                lockedTeam.members.push(staffToAdd);
-                this.workGroupService.updateLockedTeam(lockedTeam);
-                this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
-                this.profileService.$staffToAdd.next(null);
-              }
-            }
-          }
-        }
-      });
+      if(!staffToAdd || !this.workGroup || !activeGroup || this.workGroup.work_group_id != activeGroup) return;
+
+      let lockedTeams = this.workGroupService.getLockedTeams();
+      let lockedTeam = lockedTeams.find(lockedTeam => lockedTeam.id == activeGroup);
+      
+      if(!lockedTeam || lockedTeam.members?.find(member => member.id == staffToAdd.id)) return;
+      
+      this.workGroupProfiles = [...this.workGroupProfiles, {
+        work_group_id: lockedTeam.id,
+        profile_id: staffToAdd.id,
+      }];
+      
+      this.workGroup.is_locked = false;
+      lockedTeam.members ??= [];
+      lockedTeam.isLocked = false;
+      lockedTeam.members.push(staffToAdd);
+
+      this.workGroupService.updateLockedTeam(lockedTeam);
+      this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+      this.profileService.$staffToAdd.next(null);
+    });
 
     this.dataService.$workGroupProfilesUpdate.subscribe(res => {
       if(res && res.eventType == 'INSERT'){
         let lockedTeams = this.workGroupService.getLockedTeams();
         let lockedTeam = lockedTeams.find(lt => lt.id == res.new.work_group_id);
 
-        if(lockedTeam && !lockedTeam.members?.find(member => member.id == res.new.profile_id)){
-          if(!lockedTeam?.members){
-            lockedTeam.members = [];
-          }
+        if(!lockedTeam || lockedTeam.members?.find(member => member.id == res.new.profile_id)) return;
 
-          lockedTeam.isLocked = false;
-          lockedTeam.members.push(res.new);
+        lockedTeam.tasks ??= [];
+        lockedTeam.isLocked = false;
+        lockedTeam.members.push(res.new);
 
-          this.workGroupService.updateLockedTeam(lockedTeam);
-          this.profileService.$staffToAdd.next(null);
-        }
+        this.workGroupService.updateLockedTeam(lockedTeam);
+        this.profileService.$staffToAdd.next(null);
       }
     });
 
     this.dataService.$workGroupTasksUpdate.subscribe(res => {
       if(res && res.eventType == 'INSERT'){
-        if(!this.workGroupTasks.find((wgt: any) => wgt.task_id == res.new.task_id)){
-          let lockedTeams = this.workGroupService.getLockedTeams();
-          let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == res.new.work_group_id);
+        if(this.workGroupTasks.find((wgt: any) => wgt.task_id == res.new.task_id)) return;
 
-          if(lockedTeam && !lockedTeam.tasks?.find(task => task.task_id == res.new.task_id)){
-            if(!lockedTeam.tasks){
-              lockedTeam.tasks = [];
-            }
-            let task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
-  
-            lockedTeam.isLocked = true;
-            lockedTeam.tasks.push(task);
-            this.workGroupService.updateLockedTeam(lockedTeam);
-          }
-        }
+        let lockedTeams = this.workGroupService.getLockedTeams();
+        let lockedTeam = lockedTeams.find(lockedTeam => lockedTeam.id == res.new.work_group_id);
+
+        if(!lockedTeam || lockedTeam.tasks?.find(task => task.task_id == res.new.task_id)) return;
+
+        let task = this.tasks.find((task: any) => task.task_id == res.new.task_id);
+        if(!task) return;
+
+        lockedTeam.tasks ??= [];
+        lockedTeam.isLocked = true;
+        lockedTeam.tasks.push(task);
+        this.workGroupService.updateLockedTeam(lockedTeam);
       } else if(res && res.eventType == 'DELETE'){
-        if(this.workGroupTasks.find((wgt: any) => wgt.task_id == res.old.task_id)){
-          let lockedTeams = this.workGroupService.getLockedTeams();
-          let lockedTeam = lockedTeams.find(lockedTeam => parseInt(lockedTeam.id) == res.old.work_group_id);
+        if(!this.workGroupTasks.find((wgt: any) => wgt.task_id == res.old.task_id)) return;
 
-          if(lockedTeam && !lockedTeam?.tasks){
-            lockedTeam.tasks = [];
-          }
+        let lockedTeams = this.workGroupService.getLockedTeams();
+        let lockedTeam = lockedTeams.find(lockedTeam => lockedTeam.id == res.old.work_group_id);
 
-          if(lockedTeam && lockedTeam?.tasks){
-            lockedTeam.tasks = lockedTeam?.tasks?.filter(task => task.task_id != res.old.task_id);
-            this.workGroupService.updateLockedTeam(lockedTeam);
-          }
-        }
+        if(!lockedTeam) return
+      
+        lockedTeam.tasks ??= [];
+        lockedTeam.tasks = lockedTeam?.tasks?.filter(task => task.task_id != res.old.task_id);
+        this.workGroupService.updateLockedTeam(lockedTeam);
       }
     });
   }
 
-  loadAssignedStaff() {
-    if (this.workGroup?.work_group_id) {
-      this.dataService.getAssignedStaffForWorkGroup(this.workGroup.work_group_id)
-        .subscribe(staff => {
-          this.assignedStaff = staff;
-        });
-    }
-  }
-
-  isTaskCompleted(task: Task){
-    let completedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Završeno');
-    return completedTaskProgressType.task_progress_type_id == task.task_progress_type_id;
-  }
-
   onGroupClick() {
-    if (this.isActive) {
-      if(this.workGroup){
-        this.workGroupService.updateLockedTeam({
-          id: this.workGroup?.work_group_id.toString(),
-          name: "Team " + this.workGroup.work_group_id,
-          members: this.assignedStaff,
-          tasks: this.assignedTasks,
-          homes: [],
-          isLocked: this.workGroup.is_locked,
-        });
-      }
+    if(!this.isActive){
+      this.groupSelected.emit();
+      return;
+    }
 
-      let lockedTeams = this.workGroupService.getLockedTeams();
-      let lockedWorkGroupTasks: any[] = [];
-      let lockedWorkGroupProfiles: any[] = [];
-      
-      lockedTeams.forEach(lockedTeam => {
-        lockedTeam.tasks?.forEach((task) => {
-          lockedWorkGroupTasks.push({
-            work_group_id: parseInt(lockedTeam.id),
-            task_id: task.task_id,
-            index: this.workGroupTasks.find((wgt: any) => wgt.task_id == task.task_id)?.index ?? 0,
-          });
-        });
+    if(this.workGroup){
+      this.workGroupService.updateLockedTeam({
+        id: this.workGroup?.work_group_id,
+        name: "Team " + this.workGroup.work_group_id,
+        members: this.assignedStaff,
+        tasks: this.assignedTasks,
+        isLocked: this.workGroup.is_locked,
+      });
+    }
 
-        lockedTeam.members?.forEach(member => {
-          lockedWorkGroupProfiles.push({
-            work_group_id: parseInt(lockedTeam.id),
-            profile_id: member.id,
-          });
-        })
+    let lockedTeams = this.workGroupService.getLockedTeams();
+    let lockedWorkGroupTasks: WorkGroupTask[] = [];
+    let lockedWorkGroupProfiles: WorkGroupProfile[] = [];
+    
+    lockedTeams.forEach(lockedTeam => {
+      lockedTeam.tasks?.forEach((task) => {
+        lockedWorkGroupTasks.push({
+          work_group_id: lockedTeam.id,
+          task_id: task.task_id,
+          index: this.workGroupTasks.find((wgt: any) => wgt.task_id == task.task_id)?.index ?? 0,
+        });
       });
 
-      this.dataService.setWorkGroupTasks(lockedWorkGroupTasks);
-      this.dataService.setWorkGroupProfiles(lockedWorkGroupProfiles);
-      this.workGroupService.setActiveGroup(undefined);
-    } else {
-      this.groupSelected.emit();
-    }
+      lockedTeam.members?.forEach(member => {
+        lockedWorkGroupProfiles.push({
+          work_group_id: lockedTeam.id,
+          profile_id: member.id,
+        });
+      })
+    });
+
+    this.dataService.setWorkGroupTasks(lockedWorkGroupTasks);
+    this.dataService.setWorkGroupProfiles(lockedWorkGroupProfiles);
+    this.workGroupService.setActiveGroup(undefined);
   }
 
   onDeleteClick(event: Event) {
     event.stopPropagation();
 
-    if(this.assignedTasks && this.assignedTasks.length > 0){
-      const inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "U tijeku");
-      const pausedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == "Pauzirano");
+    if(this.assignedTasks.find(task => this.taskService.isTaskInProgress(task) || this.taskService.isTaskPaused(task))){
+      this.confirmationService.confirm({
+        message: this.translateService.instant('DAILY-SHEET.WORK-GROUPS.DELETE.TASK-IN-PROGRESS'),
+        header: this.translateService.instant('DAILY-SHEET.WORK-GROUPS.DELETE.HEADER'),
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: this.translateService.instant('BUTTONS.OK'),
+        rejectVisible: false,
+      });
 
-      if(this.assignedTasks.find(task => task.task_progress_type_id == inProgressTaskProgressType.task_progress_type_id || task.task_progress_type_id == pausedTaskProgressType.task_progress_type_id)){
-        this.confirmationService.confirm({
-          message: this.translateService.instant('DAILY-SHEET.WORK-GROUPS.DELETE.TASK-IN-PROGRESS'),
-          header: this.translateService.instant('DAILY-SHEET.WORK-GROUPS.DELETE.HEADER'),
-          icon: 'pi pi-exclamation-triangle',
-          acceptLabel: this.translateService.instant('BUTTONS.OK'),
-          rejectVisible: false,
-        });
-
-        return; 
-      }
+      return; 
     }
 
     this.confirmationService.confirm({
@@ -763,39 +717,34 @@ export class WorkGroup implements OnInit {
   }
 
   onRemoveTask(taskToRemove: Task) {
-    let completedTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'Završeno');
-    let inProgressTaskProgressType = this.taskProgressTypes.find((tpt: any) => tpt.task_progress_type_name == 'U tijeku');
-
     if(
-      taskToRemove.task_progress_type_id == completedTaskProgressType.task_progress_type_id || 
-      taskToRemove.task_progress_type_id == inProgressTaskProgressType.task_progress_type_id
-    ) {
-      return;
+      this.taskService.isTaskCompleted(taskToRemove) || 
+      this.taskService.isTaskInProgress(taskToRemove) ||
+      this.taskService.isTaskPaused(taskToRemove)
+    ) return;
+    
+    if(!this.workGroup?.work_group_id) return;
+
+    if(this.workGroup.work_group_id == this.workGroupService.getActiveGroup()){
+      this.workGroup.is_locked = false;
     }
 
-    if (this.workGroup?.work_group_id) {
-      if(this.workGroup.work_group_id == this.workGroupService.getActiveGroup()){
-        this.workGroup.is_locked = false;
-      }
-
-      this.taskService.$taskToRemove.next(taskToRemove);
-    }
+    this.taskService.$taskToRemove.next(taskToRemove);
   }
 
   onRemoveStaff(staff: Profile) {
-    if (staff.id && this.workGroup?.work_group_id) {
-      this.workGroupProfiles = this.workGroupProfiles.filter((wgp: any) => !(wgp.profile_id == staff.id && wgp.work_group_id == this.workGroup?.work_group_id));
-      this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
-      this.workGroup.is_locked = false;
+    if(!staff.id || !this.workGroup?.work_group_id) return;
 
-      const lockedTeam = this.workGroupService.getLockedTeams().find(lockedTeam => parseInt(lockedTeam.id) == this.workGroup?.work_group_id);
+    const lockedTeam = this.workGroupService.getLockedTeams().find(lockedTeam => lockedTeam.id == this.workGroup?.work_group_id);
+    if(!lockedTeam) return; 
 
-      if(lockedTeam){
-        lockedTeam.isLocked = false;
-        lockedTeam.members.filter(member => member.id != staff.id);
-        this.workGroupService.updateLockedTeam(lockedTeam);
-      }
-    }
+    this.workGroup.is_locked = false;
+    this.workGroupProfiles = this.workGroupProfiles.filter((wgp: any) => !(wgp.profile_id == staff.id && wgp.work_group_id == this.workGroup?.work_group_id));
+    this.dataService.setWorkGroupProfiles(this.workGroupProfiles);
+    
+    lockedTeam.isLocked = false;
+    lockedTeam.members = lockedTeam.members.filter(member => member.id != staff.id);
+    this.workGroupService.updateLockedTeam(lockedTeam);
   }
 
   openSortDialog(){
@@ -803,11 +752,9 @@ export class WorkGroup implements OnInit {
   }
 
   drop(event: any) {
-    let lockedTeam = this.workGroupService.getLockedTeams().find(lt => parseInt(lt.id) == this.workGroup?.work_group_id);
+    let lockedTeam = this.workGroupService.getLockedTeams().find(lt => lt.id == this.workGroup?.work_group_id);
 
-    if(!this.workGroup || !lockedTeam){
-      return;
-    }
+    if(!this.workGroup || !lockedTeam) return;
 
     this.workGroup.is_locked = false;
     lockedTeam.isLocked = false;

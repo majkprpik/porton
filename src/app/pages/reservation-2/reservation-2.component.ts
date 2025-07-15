@@ -110,17 +110,11 @@ export class Reservation2Component implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.renderStartTime = performance.now();
         
-        // Load houses data if not already loaded
         this.dataService.loadHouses().pipe(takeUntil(this.destroy$)).subscribe();
-        
-        // Load house availabilities data if not already loaded
         this.dataService.loadHouseAvailabilities().pipe(takeUntil(this.destroy$)).subscribe();
-        
-        // Load house types data
         this.dataService.getHouseTypes().pipe(takeUntil(this.destroy$)).subscribe(types => {
             this.houseTypes.set(types.filter(t => t.house_type_name != 'dodatno'));
             
-            // Always select the first house type by default if there are any
             if (types && types.length > 0) {
                 this.setSelectedHouseType(types[0].house_type_id);
             }
@@ -130,14 +124,12 @@ export class Reservation2Component implements OnInit, OnDestroy {
             this.tempHouses = tempHouses;
         });
         
-        // Subscribe to houses data from DataService
         this.dataService.houses$
             .pipe(takeUntil(this.destroy$))
             .subscribe(houses => {
                 this.houses.set(houses);
                 this.updateGridMatrix();
                 
-                // Only scroll to today on first load
                 if (this.isFirstLoad && houses.length > 0) {
                     this.scrollToToday();
                 }

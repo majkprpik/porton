@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { DataService, WorkGroup, Profile, Task, House, LockedTeam, TaskProgressType, TaskType, WorkGroupTask, WorkGroupProfile } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, LockedTeam, WorkGroupTask, WorkGroupProfile } from '../service/data.service';
 import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
@@ -13,7 +13,7 @@ import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../service/auth.service';
 import { ProfileService } from '../service/profile.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-teams',
@@ -80,8 +80,8 @@ import { ActivatedRoute, Router } from '@angular/router';
                                     }
                                     <app-team-task-card
                                         [workGroup]="group"
-                                        [workGroupTasks]="getAssignedTasks(group.work_group_id)"
-                                        [workGroupStaff]="getAssignedStaff(group.work_group_id)"
+                                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                                        [assignedProfiles]="getAssignedProfiles(group.work_group_id)"
                                         [isRepairGroup]="group.is_repair"
                                     ></app-team-task-card> 
                                 }
@@ -125,8 +125,8 @@ import { ActivatedRoute, Router } from '@angular/router';
                                     }
                                     <app-team-task-card
                                         [workGroup]="group"
-                                        [workGroupTasks]="getAssignedTasks(group.work_group_id)"
-                                        [workGroupStaff]="getAssignedStaff(group.work_group_id)"
+                                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                                        [assignedProfiles]="getAssignedProfiles(group.work_group_id)"
                                         [isRepairGroup]="group.is_repair"
                                    ></app-team-task-card> 
                                 }
@@ -307,15 +307,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class Teams implements OnInit {
     loading = true;
     workGroups: WorkGroup[] = [];
-    workGroupTasks: { [key: number]: Task[] } = {};
-    workGroupStaff: { [key: number]: Profile[] } = {};
-    allTasks: Task[] = [];
-    allProfiles: Profile[] = [];
+    workGroupTasks: WorkGroupTask[] = [];
+    tasks: Task[] = [];
+    profiles: Profile[] = [];
     houses: House[] = [];
     teams: LockedTeam[] = [];
-    taskProgressTypes: TaskProgressType[] = [];
-    taskTypes: TaskType[] = [];
-    allWorkGroupTasks: WorkGroupTask[] = [];
     taskImages: any[] = [];
     workGroupProfiles: WorkGroupProfile[] = [];
     storedUserId: string | null = '';
@@ -354,57 +350,23 @@ export class Teams implements OnInit {
             this.dataService.workGroupProfiles$,
             this.dataService.profiles$,
             this.dataService.houses$,
-            this.dataService.taskProgressTypes$,
-            this.dataService.taskTypes$,
             this.dataService.workGroupTasks$
         ]).subscribe({
-            next: ([workGroups, tasks, workGroupProfiles, profiles, houses, taskProgressTypes, taskTypes, workGroupTasks]) => {
+            next: ([workGroups, tasks, workGroupProfiles, profiles, houses, workGroupTasks]) => {
                 this.storedUserId = this.authService.getStoredUserId();
-
                 this.workGroups = workGroups;
-                this.allTasks = tasks;
-                this.allProfiles = profiles;
+                this.tasks = tasks;
+                this.profiles = profiles;
                 this.houses = houses;
-                this.taskProgressTypes = taskProgressTypes;
-                this.taskTypes = taskTypes;
-                this.allWorkGroupTasks = workGroupTasks;
+                this.workGroupTasks = workGroupTasks;
                 this.workGroupProfiles = workGroupProfiles;
-                
-                // Map work group staff
-                this.workGroupStaff = {};
-                workGroupProfiles.forEach(workGroupProfile => {
-                    if (!this.workGroupStaff[workGroupProfile.work_group_id]) {
-                        this.workGroupStaff[workGroupProfile.work_group_id] = [];
-                    }
-                    const profile = profiles.find(p => p.id === workGroupProfile.profile_id);
-                    if (profile) {
-                        this.workGroupStaff[workGroupProfile.work_group_id] = [...this.workGroupStaff[workGroupProfile.work_group_id], profile];
-                    }
-                });
 
-                this.workGroupTasks = {};
-                workGroupTasks.forEach(workGroupTask => {
-                    if (!this.workGroupTasks[workGroupTask.work_group_id]) {
-                        this.workGroupTasks[workGroupTask.work_group_id] = [];
-                    }
-                    const task = this.allTasks.find(t => t.task_id === workGroupTask.task_id);
-                    if (task) {
-                        this.workGroupTasks[workGroupTask.work_group_id] = [...this.workGroupTasks[workGroupTask.work_group_id], task];
-                    }
-                });
-
-                if(
-                    this.profileService.isHousekeeper(this.storedUserId) || 
-                    this.profileService.isCustomerService(this.storedUserId)
-                ){
+                if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isCustomerService(this.storedUserId)) {
                     const today = new Date();
                     const workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.storedUserId);
                     const todaysWorkGroup = this.workGroups.find(wg => workGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id) && wg.created_at.startsWith(today.toISOString().split('T')[0]));
 
-                    if (
-                        todaysWorkGroup &&
-                        this.router.url == '/teams'
-                    ) {
+                    if (todaysWorkGroup && this.router.url == '/teams') {
                         this.router.navigate(['/teams', todaysWorkGroup.work_group_id]);
                     }
                 }
@@ -419,24 +381,25 @@ export class Teams implements OnInit {
     }
 
     getAssignedTasks(workGroupId: number): Task[] {
-        const workGroupTasks = this.allWorkGroupTasks.filter(tasks => tasks.work_group_id == workGroupId);
-
-        if(!this.workGroupTasks[workGroupId]){
-            return [];
-        }
-
-        return this.workGroupTasks[workGroupId].map(wgt => {
-            const workGroupTask = workGroupTasks.find(task => task.task_id == wgt.task_id);
-
-            return {
-                ...wgt,
-                index: workGroupTask?.index ?? 0
-            }
-        });
+        const filteredWorkGroupTaks = this.workGroupTasks.filter(wgt => wgt.work_group_id == workGroupId);
+        return this.tasks
+            .filter(task => filteredWorkGroupTaks.some(wgt => wgt.task_id == task.task_id))
+            .map(task => {
+                const wgt = filteredWorkGroupTaks.find(wgt => wgt.task_id == task.task_id);
+                if(wgt?.task_id == task.task_id){
+                    return {
+                        ...task,
+                        index: wgt.index,
+                    }
+                } else {
+                    return task;
+                }
+            });
     }
 
-    getAssignedStaff(workGroupId: number): Profile[] {
-        return this.workGroupStaff[workGroupId] || [];
+    getAssignedProfiles(workGroupId: number): Profile[] {
+        const filteredWorkGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.work_group_id == workGroupId);
+        return this.profiles.filter(profile => filteredWorkGroupProfiles.some(wgp => wgp.profile_id == profile.id));
     }
 
     async getStoredImagesForTask(task: Task) {

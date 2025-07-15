@@ -345,7 +345,7 @@ export class ArrivalsAndDeparturesComponent {
     });
 
     this.dataService.$houseAvailabilitiesUpdate.subscribe(res => {
-      if(res && res.eventType == 'UPDATE'){
+      if(res && res.new.house_availability_id && res.eventType == 'UPDATE'){
         if(this.arrivals.find(arrival => arrival.house_availability_id == res.new.house_availability_id)) {
           let arrivalIndex = this.arrivals.findIndex(arrival => arrival.house_availability_id == res.new.house_availability_id);
           let house = this.houses.find(house => house.house_id == res.new.house_id);

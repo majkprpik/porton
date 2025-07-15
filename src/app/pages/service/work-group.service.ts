@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { LockedTeam, WorkGroup } from './data.service';
+import { DataService, LockedTeam, WorkGroup, WorkGroupProfile, WorkGroupTask } from './data.service';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
@@ -11,11 +11,28 @@ export class WorkGroupService {
   private lockedTeams: LockedTeam[] = [];
   activeGroupId$ = this.activeGroupIdSubject.asObservable();
   $newGroupWhileGroupActive = new BehaviorSubject<boolean>(false);
+  workGroupProfiles: WorkGroupProfile[] = [];
+  workGroupTasks: WorkGroupTask[] = [];
 
   constructor(
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private dataService: DataService,
   ) {
-    
+    this.dataService.workGroupProfiles$.subscribe(workGroupProfiles => {
+      this.workGroupProfiles = workGroupProfiles;
+    });
+
+    this.dataService.workGroupTasks$.subscribe(workGroupTasks => {
+      this.workGroupTasks = workGroupTasks;
+    });
+  }
+
+  getWorkGroupTasksByWorkGroupId(workGroupId: number | undefined){
+    return this.workGroupTasks.filter(wgt => wgt.work_group_id == workGroupId);
+  }
+
+  getWorkGroupProfilesByWorkGroupId(workGroupId: number | undefined){
+    return this.workGroupProfiles.filter(wgp => wgp.work_group_id == workGroupId);
   }
 
   setActiveGroup(groupId: number | undefined) {

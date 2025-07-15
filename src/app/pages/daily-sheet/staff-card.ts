@@ -18,7 +18,7 @@ import { ProfileService } from '../service/profile.service';
         <i class="pi pi-user"></i>
       </div>
       <div class="staff-info">
-        <span class="staff-name">{{getStaffName()}}</span>
+        <span class="staff-name">{{ profileService.getProfileById(profile?.id)?.first_name }}</span>
       </div>
     </div>
   `,
@@ -72,7 +72,7 @@ import { ProfileService } from '../service/profile.service';
   `
 })
 export class StaffCardComponent {
-  @Input() staff?: Profile;
+  @Input() profile?: Profile;
   @Input() canBeAssigned: boolean = false;
   @Input() isInActiveGroup: boolean = false;
   @Input() isClickedFromTeamDetails: boolean = false;
@@ -80,7 +80,7 @@ export class StaffCardComponent {
   @Output() staffClicked = new EventEmitter<void>();
   @Output() removeFromGroup = new EventEmitter<void>();
 
-  constructor(private profileService: ProfileService) {
+  constructor(public profileService: ProfileService) {
 
   }
 
@@ -92,12 +92,7 @@ export class StaffCardComponent {
     } else if (this.canBeAssigned) {
       this.staffClicked.emit();
     } else {
-      this.profileService.$profileModalData.next(this.staff);
+      this.profileService.$profileModalData.next(this.profile);
     }
-  }
-
-  getStaffName(): string {
-    if (!this.staff) return 'Unknown';
-    return `${this.staff.first_name}`.trim() || 'Unknown';
   }
 } 

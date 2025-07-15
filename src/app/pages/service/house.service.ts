@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, House, HouseAvailability, HouseAvailabilityType, Task, TaskProgressType } from './data.service';
+import { DataService, House, HouseAvailability, HouseAvailabilityType, Task } from './data.service';
 import { combineLatest } from 'rxjs';
+import { TaskProgressTypeName, TaskService } from './task.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,22 +11,20 @@ export class HouseService {
   houseAvailabilityTypes: HouseAvailabilityType[] = [];
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
-  taskProgressTypes: TaskProgressType[] = [];
   tasks: Task[] = [];
 
   constructor(
     private supabase: SupabaseService,
     private dataService: DataService,
+    private taskService: TaskService,
   ) {
     combineLatest([
-      this.dataService.taskProgressTypes$,
       this.dataService.houseAvailabilityTypes$,
       this.dataService.houseAvailabilities$,
       this.dataService.houses$,
       this.dataService.tasks$,
     ]).subscribe({
-      next: ([taskProgressTypes, houseAvailabilityTypes, houseAvailabilities, houses, tasks]) => {
-        this.taskProgressTypes = taskProgressTypes;
+      next: ([houseAvailabilityTypes, houseAvailabilities, houses, tasks]) => {
         this.houseAvailabilityTypes = houseAvailabilityTypes;
         this.houseAvailabilities = houseAvailabilities;
         this.houses = houses;
@@ -94,23 +93,21 @@ export class HouseService {
     return false;
   }
 
-  hasNotCompletedTasks(houseId: number): boolean{
-    const finishedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
+  hasNotCompletedTasks(houseId: number): boolean {
     const notCompletedTasksForHouse = this.tasks
       .filter(task => 
         task.house_id == houseId && 
-        task.task_progress_type_id != finishedTaskProgressType?.task_progress_type_id
+        task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Completed)?.task_progress_type_id
       );
 
     return !!notCompletedTasksForHouse.length;
   }
 
   hasScheduledNotCompletedTasks(houseId: number): boolean {
-    const finishedTaskProgressType = this.taskProgressTypes.find(tpt => tpt.task_progress_type_name == 'Završeno');
     const notCompletedTasksForHouse = this.tasks
       .filter(task => 
         task.house_id == houseId &&
-        task.task_progress_type_id != finishedTaskProgressType?.task_progress_type_id &&
+        task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Completed)?.task_progress_type_id &&
         !task.is_unscheduled
       );
 
@@ -121,14 +118,16 @@ export class HouseService {
     return this.tasks.filter(task => task.house_id == houseId);
   }
 
-  getHouseNumber(houseId: number) {
-    const house = this.houses.find(h => h.house_id === houseId);
-    return house ? house?.house_number : -1;
+  getHouseByName(name: string){
+    return this.houses.find(house => house.house_name == name);
   }
 
-  getHouseName(houseId: number){
-    const house = this.houses.find(h => h.house_id === houseId);
-    return house ? house.house_name.toString() : '?';
+  getHouseNumber(houseId: number) {
+    return this.houses.find(h => h.house_id === houseId)?.house_number;
+  }
+
+  getHouseName(houseId: number | undefined){
+    return this.houses.find(h => h.house_id === houseId)?.house_name;
   }
 
   getTodaysHouseAvailabilityForHouse(houseId: number){

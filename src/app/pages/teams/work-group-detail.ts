@@ -3,16 +3,17 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
-import { DataService, WorkGroup, Profile, Task, House, TaskType, TaskProgressType, HouseAvailability, WorkGroupProfile } from '../service/data.service';
+import { DataService, WorkGroup, Profile, Task, House, HouseAvailability, WorkGroupProfile, WorkGroupTask } from '../service/data.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { HouseService } from '../service/house.service';
-import { TaskService } from '../service/task.service';
+import { TaskProgressTypeName, TaskService } from '../service/task.service';
 import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProfileService } from '../service/profile.service';
 import { StaffCardComponent } from '../daily-sheet/staff-card';
 import { AuthService } from '../service/auth.service';
+import { WorkGroupService } from '../service/work-group.service';
 
 @Component({
     selector: 'app-work-group-detail',
@@ -58,12 +59,12 @@ import { AuthService } from '../service/auth.service';
                     <div class="section staff-section">
                         <h3>{{ 'TEAMS.TEAM-TASK-CARD.TEAM-MEMBERS' | translate }}</h3>
                         <div class="staff-list">
-                            @if (assignedStaff.length === 0) {
+                            @if (assignedProfiles.length == 0) {
                                 <p class="empty-section">{{ 'TEAMS.TEAM-TASK-CARD.NO-ASSIGNED-STAFF' | translate }}</p>
                             } @else {
-                                @for (staff of assignedStaff; track staff.id) {
+                                @for (profile of assignedProfiles; track profile.id) {
                                     <app-staff-card
-                                        [staff]="staff"
+                                        [profile]="profile"
                                         [canBeAssigned]="false"
                                         [isInActiveGroup]="true"
                                         [isClickedFromTeamDetails]="true"
@@ -99,12 +100,12 @@ import { AuthService } from '../service/auth.service';
                                                             </div>
                                                         } @else {
                                                             <div class="task-icon">
-                                                                <i [class]="getTaskTypeIcon(task.task_type_id)"></i>
+                                                                <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
                                                             </div>
                                                         }
                                                     } @else {
                                                         <div class="task-icon">
-                                                            <i [class]="getTaskTypeIcon(task.task_type_id)"></i>
+                                                            <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
                                                         </div>
                                                     }
                                                 </div>
@@ -145,8 +146,8 @@ import { AuthService } from '../service/auth.service';
                                                 
                                             </div>
                                             <div class="task-status">
-                                                <i class="status-icon" [class]="getTaskStatusIcon(task)"></i>
-                                                <span>{{ 'TASK-PROGRESS-TYPES.' + getTaskStatusText(task) | translate }}</span>
+                                                <i class="status-icon" [class]="taskService.getTaskStatusIcon(task)"></i>
+                                                <span>{{ 'TASK-PROGRESS-TYPES.' + taskService.getTaskProgressTypeById(task.task_progress_type_id)?.task_progress_type_name | translate }}</span>
                                             </div>
                                         </div>
                                         <div class="task-actions">
@@ -190,7 +191,7 @@ import { AuthService } from '../service/auth.service';
                                                             (onClick)="handleTaskAction($event, task)"
                                                         ></p-button>
                                                         
-                                                        @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
+                                                        @if (taskService.isHouseCleaningTask(task) && taskService.isTaskInProgress(task)) {
                                                             <p-button 
                                                                 [label]="'BUTTONS.PAUSE' | translate"
                                                                 severity="warn" 
@@ -209,7 +210,7 @@ import { AuthService } from '../service/auth.service';
                                                             (onClick)="handleTaskAction($event, task)"
                                                         ></p-button>
                                                         
-                                                        @if (isCleaningHouseTask(task) && taskService.isTaskInProgress(task)) {
+                                                        @if (taskService.isHouseCleaningTask(task) && taskService.isTaskInProgress(task)) {
                                                             <p-button 
                                                                 [label]="'BUTTONS.PAUSE' | translate"
                                                                 severity="warn" 
@@ -529,20 +530,15 @@ import { AuthService } from '../service/auth.service';
 })
 export class WorkGroupDetail implements OnInit {
     loading = true;
-    workGroup: WorkGroup | null = null;
+    workGroup?: WorkGroup;
     assignedTasks: Task[] = [];
-    team: any;
-    teams: any[] = [];
-    taskTypes: TaskType[] = [];
-    progressTypes: TaskProgressType[] = [];
-    assignedStaff: Profile[] = [];
+    assignedProfiles: Profile[] = [];
     houses: House[] = [];
-    profiles: any;
-    workGroupTasks: any;
-    tasks: any;
+    profiles: Profile[] = [];
+    workGroupTasks: WorkGroupTask[] = [];
+    tasks: Task[] = [];
     houseAvailabilities: HouseAvailability[] = [];
     workGroupProfiles: WorkGroupProfile[] = [];
-    taskIcon: any;
     isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
     urgentIconSubscriptions: Subscription[] = [];
     storedUserId: string | null = '';
@@ -555,6 +551,7 @@ export class WorkGroupDetail implements OnInit {
         private profileService: ProfileService,
         private authService: AuthService,
         private router: Router,
+        public workGroupService: WorkGroupService,
     ) {}
 
     ngOnInit() {
@@ -565,45 +562,37 @@ export class WorkGroupDetail implements OnInit {
             this.dataService.workGroupProfiles$,
             this.dataService.profiles$,
             this.dataService.houses$,
-            this.dataService.taskTypes$,
-            this.dataService.taskProgressTypes$,
             this.dataService.houseAvailabilities$
         ]).subscribe({
-            next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, taskTypes, taskProgressTypes, houseAvailabilities]) => {
+            next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, houseAvailabilities]) => {
                 const workGroupId = Number(this.route.snapshot.paramMap.get('id'));
                 this.storedUserId = this.authService.getStoredUserId();
                 
-                this.workGroup = workGroups.find(wg => wg.work_group_id == workGroupId) ?? null;
+                this.workGroup = workGroups.find(wg => wg.work_group_id == workGroupId) ?? undefined;
                 this.houses = houses;
                 this.workGroupTasks = workGroupTasks;
-                this.taskTypes = taskTypes;
-                this.progressTypes = taskProgressTypes;
                 this.houseAvailabilities = houseAvailabilities;
                 this.tasks = tasks;
                 this.profiles = profiles;
                 this.workGroupProfiles = workGroupProfiles;
 
-                // Get tasks for this work group
-                const groupTaskIds = workGroupTasks
-                    .filter(wgt => wgt.work_group_id == workGroupId)
-                    .map(wgt => wgt.task_id);
-
-                this.assignedTasks = tasks
-                    .filter(task => groupTaskIds.includes(task.task_id))
+                const filteredWorkGroupTasks = this.workGroupService.getWorkGroupTasksByWorkGroupId(workGroupId);
+                this.assignedTasks = this.tasks
+                    .filter(task => filteredWorkGroupTasks.some(wgt => wgt.task_id == task.task_id))
                     .map(task => {
-                        const workGroupTask = workGroupTasks.find(wgt => wgt.task_id === task.task_id);
-                        return {
-                          ...task,
-                          index: workGroupTask?.index ?? 0
-                        };
+                        const wgt = filteredWorkGroupTasks.find(wgt => wgt.task_id == task.task_id);
+                        if(wgt) {
+                            return {
+                                ...task,
+                                index: wgt.index,
+                            }
+                        } else {
+                            return task;
+                        }
                     });
 
-                // Get staff for this work group
-                const groupProfileIds = workGroupProfiles
-                    .filter(wgp => wgp.work_group_id === workGroupId)
-                    .map(wgp => wgp.profile_id);
-
-                this.assignedStaff = profiles.filter(profile => groupProfileIds.includes(profile.id));
+                const filteredWorkGroupProfiles = this.workGroupService.getWorkGroupProfilesByWorkGroupId(workGroupId);
+                this.assignedProfiles = this.profiles.filter(profile => filteredWorkGroupProfiles.some(wgp => wgp.profile_id == profile.id));
                     
                 if(houseAvailabilities && houseAvailabilities.length > 0 && this.assignedTasks && this.assignedTasks.length > 0){
                     this.assignedTasks.forEach(task => {
@@ -611,10 +600,7 @@ export class WorkGroupDetail implements OnInit {
                     });
                 }
 
-                if(
-                    this.profileService.isHousekeeper(this.storedUserId) || 
-                    this.profileService.isCustomerService(this.storedUserId)
-                ){
+                if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isCustomerService(this.storedUserId)) {
                     const housekeepingWorkGroupProfile = this.workGroupProfiles.find(wgp => wgp.profile_id == this.authService.getStoredUserId());
                     const todaysWorkGroup = workGroups.find(wg => 
                         wg.work_group_id == housekeepingWorkGroupProfile?.work_group_id &&
@@ -641,7 +627,6 @@ export class WorkGroupDetail implements OnInit {
     }
 
     private setupUrgentIcons(): void {
-      // Unsubscribe from previous
       this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
       this.urgentIconSubscriptions = [];
 
@@ -657,56 +642,6 @@ export class WorkGroupDetail implements OnInit {
 
     ngOnDestroy() {
       this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
-    }
-
-    getStaffFullName(staff: Profile): string {
-        if (!staff.first_name && !staff.last_name) return 'Nepoznat';
-        return [staff.first_name, staff.last_name].filter(Boolean).join(' ');
-    }
-
-    getTaskTypeIcon(taskTypeId: number): string {
-        switch(taskTypeId){
-            case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje kućice")?.task_type_id: 
-              return 'fa fa-house';
-            case this.taskTypes.find(tt => tt.task_type_name == "Čišćenje terase")?.task_type_id: 
-              return 'fa fa-umbrella-beach';
-            case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje posteljine")?.task_type_id: 
-              return 'fa fa-bed';
-            case this.taskTypes.find(tt => tt.task_type_name == "Mijenjanje ručnika")?.task_type_id: 
-              return 'fa fa-bookmark';
-            case this.taskTypes.find(tt => tt.task_type_name == "Popravak")?.task_type_id: 
-              return 'fa fa-wrench';
-            default: 
-              return 'fa fa-file';
-        }
-    }
-
-    getTaskStatusIcon(task: Task): string {
-        if (this.taskService.isTaskCompleted(task)) {
-            return 'fa fa-check-circle';
-        } else if (this.taskService.isTaskInProgress(task)) {
-            return 'fa fa-sync fa-spin';
-        } else if (this.taskService.isTaskPaused(task)) {
-            return 'fa fa-pause-circle';
-        } else if (this.taskService.isTaskAssigned(task)) {
-            return 'fa fa-user-check';
-        } else {
-            return 'fa fa-clock';
-        }
-    }
-
-    getTaskStatusText(task: Task): string {
-        // Find the progress type by ID from our progressTypes array
-        const progressType = this.progressTypes.find((pt: any) => pt.task_progress_type_id === task.task_progress_type_id);
-        if (progressType) {
-            return progressType.task_progress_type_name;
-        }
-        
-        // Fallback
-        if (this.taskService.isTaskCompleted(task)) return 'Završeno';
-        if (this.taskService.isTaskInProgress(task)) return 'U tijeku';
-        if (this.taskService.isTaskPaused(task)) return 'Pauzirano';
-        return 'Nije dodijeljeno';
     }
 
     getActionButtonLabel(task: Task): string {
@@ -727,50 +662,38 @@ export class WorkGroupDetail implements OnInit {
         return 'primary';
     }
 
-    isCleaningHouseTask(task: Task): boolean {
-        const cleaningHouseType = this.taskTypes.find(tt => tt.task_type_name === "Čišćenje kućice");
-        return task.task_type_id === cleaningHouseType?.task_type_id;
-    }
-
     handleTaskAction(event: any, task: Task) {
         event.stopPropagation();
-        let newProgressTypeName: string;
+        let newProgressTypeName: TaskProgressTypeName;
         
         if (this.taskService.isTaskInProgress(task)) {
-            newProgressTypeName = "Završeno";
-        } else if (this.taskService.isTaskPaused(task)) {
-            newProgressTypeName = "U tijeku";
+            newProgressTypeName = TaskProgressTypeName.Completed;
         } else {
-            newProgressTypeName = "U tijeku";
+            newProgressTypeName = TaskProgressTypeName.InProgress;
         }
         
-        // Get progress type ID from name
-        const progressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === newProgressTypeName);
+        const progressType = this.taskService.getTaskProgressTypeByName(newProgressTypeName);
         if (!progressType) {
             console.error(`Progress type not found: ${newProgressTypeName}`);
             return;
         }
         
-        this.taskService.updateTaskProgressType(task.task_id, progressType.task_progress_type_id);
+        this.taskService.updateTaskProgressType(task, progressType.task_progress_type_id);
     }
     
     handleTaskPause(event: any, task: Task) {
         event.stopPropagation();
-        // Find Pauza progress type
-        const pauseProgressType = this.progressTypes.find((pt: any) => pt.task_progress_type_name === "Pauzirano");
-        if (!pauseProgressType) {
+        
+        const pausedProgressType = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Paused);
+        if (!pausedProgressType) {
             console.error("Pause progress type not found");
             return;
         }
         
-        this.taskService.updateTaskProgressType(task.task_id, pauseProgressType.task_progress_type_id);
+        this.taskService.updateTaskProgressType(task, pausedProgressType.task_progress_type_id);
     }
 
     openTaskDetails(task: Task){
         this.taskService.$taskModalData.next(task);
-    }
-
-    openProfileDetails(profile: Profile){
-        this.profileService.$profileModalData.next(profile);
     }
 } 

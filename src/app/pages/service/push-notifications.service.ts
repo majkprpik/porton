@@ -10,8 +10,6 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class PushNotificationsService {
-  taskTypes: TaskType[] = [];
-  
   private fcmTokenSource = new BehaviorSubject<string | null>(null);
   fcmToken$ = this.fcmTokenSource.asObservable();
   
@@ -19,12 +17,7 @@ export class PushNotificationsService {
   
   constructor(
     private http: HttpClient,
-    private dataService: DataService,
   ) { 
-    this.dataService.taskTypes$.subscribe(taskTypes => {
-      this.taskTypes = taskTypes;
-    });
-
     onMessage(this.messaging, (payload) => {
       console.log('💬 FCM message received in foreground:', payload);
       
@@ -98,7 +91,5 @@ export class PushNotificationsService {
 
       return;
     }
-
-    const taskType = this.taskTypes.find(taskType => taskType.task_type_id == task.task_type_id);
   }
 }

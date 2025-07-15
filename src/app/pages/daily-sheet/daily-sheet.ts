@@ -4,8 +4,6 @@ import { WorkGroups } from './work-groups';
 import { StaffComponent } from './staff';
 import { CommonModule } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
-import { DataService, House, TaskProgressType, TaskType } from '../service/data.service';
-import { combineLatest } from 'rxjs';
 @Component({
   selector: 'app-daily-sheet',
   standalone: true,
@@ -57,33 +55,5 @@ import { combineLatest } from 'rxjs';
   `
 })
 export class DailySheetComponent {
-  isModalVisible = false;
-  task: any;
-  houses: House[] = [];
-  taskTypes: TaskType[] = [];
-  taskProgressTypes: TaskProgressType[] = [];
-  taskImages: any;
 
-  constructor(
-    private dataService: DataService,
-  ) {
-        
-  }
-
-  ngOnInit(){
-    combineLatest([
-      this.dataService.houses$,
-      this.dataService.taskTypes$,
-      this.dataService.taskProgressTypes$,
-    ]).subscribe({
-      next: ([houses, taskTypes, taskProgressTypes,]) => {
-        this.houses = houses;
-        this.taskTypes = taskTypes;
-        this.taskProgressTypes = taskProgressTypes;
-      },
-      error: (error) => {
-        console.error(error);
-      }
-    });
-  }
 }

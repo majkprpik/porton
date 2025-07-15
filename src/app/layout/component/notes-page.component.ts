@@ -99,128 +99,128 @@ import { TranslateModule } from '@ngx-translate/core';
     </div>
   `,
   styles: `
-    .notes-container{
-      height: 80vh;
-      border-radius: 10px;
-      border: 1px solid #e5e7eb;
+  .notes-container{
+    height: 80vh;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .header-container{
+      width: 100%;
+      height: 60px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px 10px 0 0;
+      border-bottom: 1px solid #e5e7eb;
+      background-color: var(--surface-ground);
+
+      .notes-header{
+        width: 80%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px 0 10px;
+
+        .notes-title{
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+
+          #notes{
+            font-size: 21px;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+
+    .notes-content{
+      height: calc(100% - 100px);
+      box-sizing: border-box;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      overflow-y: auto;
+      overflow-x: hidden;
+      word-wrap: break-word;
+      align-items: flex-start;
+      background-color: var(--surface-card);
+      scrollbar-gutter: stable;
 
-      .header-container{
+      .date-sent{
         width: 100%;
-        height: 60px;
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
-        border-radius: 10px 10px 0 0;
-        border-bottom: 1px solid #e5e7eb;
-        background-color: var(--surface-ground);
 
-        .notes-header{
-          width: 80%;
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 10px 0 10px;
-  
-          .notes-title{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-  
-            #notes{
-              font-size: 21px;
-              font-weight: bold;
-            }
-          }
-        }
-      }
-
-      .notes-content{
-        height: calc(100% - 100px);
-        box-sizing: border-box;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-        overflow-x: hidden;
-        word-wrap: break-word;
-        align-items: flex-start;
-        background-color: var(--surface-card);
-        scrollbar-gutter: stable;
-
-        .date-sent{
-          width: 100%;
+        span{
+          width: 200px;
+          color: var(--text-color-secondary);
           display: flex;
           flex-direction: row;
           align-items: center;
           justify-content: center;
-
-          span{
-            width: 200px;
-            color: var(--text-color-secondary);
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-          }
-        }
-
-        .note-entry {
-          display: block;
-          width: 100%;
-          text-align: left;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          white-space: normal;
-          font-size: 14px;
         }
       }
 
-      .notes-footer{
-        height: 50px;
+      .note-entry {
+        display: block;
         width: 100%;
-        border-radius: 0 0 10px 10px;
-        border-top: 1px solid #e5e7eb;
-
-        textarea{
-          width: 100%;
-          height: 100%;
-          border-radius: 0 0 10px 10px;
-          resize: none;
-          box-sizing: border-box; 
-          padding: 10px;
-          outline: none;
-
-          &:disabled {
-            background-color: var(--surface-ground);
-          }
-        }
+        text-align: left;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        font-size: 14px;
       }
     }
 
-    .left-half-line{
-      height: 1px;
-      background-color: var(--surface-ground); 
+    .notes-footer{
+      height: 50px;
       width: 100%;
-    }
+      border-radius: 0 0 10px 10px;
+      border-top: 1px solid #e5e7eb;
 
-    .right-half-line{
-      height: 1px;
-      background-color: var(--surface-ground); 
-      width: 100%;
-    }`
+      textarea{
+        width: 100%;
+        height: 100%;
+        border-radius: 0 0 10px 10px;
+        resize: none;
+        box-sizing: border-box; 
+        padding: 10px;
+        outline: none;
+
+        &:disabled {
+          background-color: var(--surface-ground);
+        }
+      }
+    }
+  }
+
+  .left-half-line{
+    height: 1px;
+    background-color: var(--surface-ground); 
+    width: 100%;
+  }
+
+  .right-half-line{
+    height: 1px;
+    background-color: var(--surface-ground); 
+    width: 100%;
+  }`
 })
 export class NotesPageComponent {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   
   note: string = '';
   notes: Note[] = [];
-  daysIndex = 0; 
-  areNotesLoaded = false;
+  daysIndex: number = 0; 
+  areNotesLoaded: boolean = false;
   selectedDate: Date = new Date();
   profiles: Profile[] = [];
 

@@ -218,8 +218,8 @@ export class NotesComponent {
 
   note: string = '';
   notes: Note[] = [];
-  daysIndex = 0; 
-  areNotesLoaded = false;
+  daysIndex: number = 0; 
+  areNotesLoaded: boolean = false;
   selectedDate: Date = new Date();
   profiles: Profile[] = [];
 
@@ -356,11 +356,9 @@ export class NotesComponent {
   }
 
   areDaysEqual(date1: string | undefined, date2: string | undefined){
-    if(date1 && date2) {
-      return date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2];
-    }
-
-    return false;
+    return (date1 && date2) 
+      ? date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2] 
+      : false;
   }
 
   hasMoreThan5MinutesPassedBetweenMessages(note1: Note, note2: Note){

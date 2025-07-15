@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { BehaviorSubject, catchError, from, Observable, throwError } from 'rxjs';
-import { DataService, Profile, ProfileRole } from './data.service';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { DataService, Profile, ProfileRole, RepairTaskComment } from './data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -35,23 +35,38 @@ export class ProfileService {
     private supabase: SupabaseService,
     private dataService: DataService
   ) {
-    this.dataService.profiles$.subscribe(profiles => {
+    combineLatest([
+      this.dataService.profiles$,
+      this.dataService.profileRoles$
+    ]).subscribe(([profiles, profileRoles]) => {
       this.profiles = profiles;
-    }); 
-
-    this.dataService.profileRoles$.subscribe(profileRole => {
-      this.profileRoles = profileRole;
+      this.profileRoles = profileRoles;
     });
   }
 
-  findProfile(profileId: string){
-    let foundUser = this.profiles.find(profile => profile.id == profileId);
+  getAllProfiles(){
+    return this.profiles;
+  }
+
+  getProfileRoleNameById(roleId: number){
+    return this.profileRoles.find(role => role.id == roleId)!.name;
+  }
+
+  getProfileNameForComment(comment: RepairTaskComment){
+    return this.profiles.find(profile => profile.id == comment.user_id)?.first_name;
+  }
+
+  getProfileById(profileId: string | undefined | null){
+    if(!profileId) return;
+
+    let profile = this.profiles.find(profile => profile.id == profileId);
+    if(!profile) return;
     
-    if(foundUser && !foundUser?.first_name){
-      foundUser.first_name = this.profileRoles.find(profileRole => profileRole.id == foundUser.role_id)?.name + ' ' + 'user'
+    if(!profile?.first_name){
+      profile.first_name = this.profileRoles.find(profileRole => profileRole.id == profile.role_id)?.name + ' ' + 'user'
     }
 
-    return foundUser
+    return profile;
   }
 
   isHousekeeper(profileId: string | null){
@@ -85,54 +100,6 @@ export class ProfileService {
     }
 
     return false;
-  }
-
-  /**
-   * Get all profiles
-   * @returns Observable of Profile array
-   */
-  getProfiles(): Observable<Profile[]> {
-    return from(this.fetchProfiles()).pipe(
-      catchError(error => {
-        console.error('Error fetching profiles:', error);
-        return throwError(() => new Error('Failed to fetch profiles'));
-      })
-    );
-  }
-
-  /**
-   * Get a profile by ID
-   * @param id Profile ID
-   * @returns Observable of Profile
-   */
-  getProfileById(id: string): Observable<Profile> {
-    return from(this.fetchProfileById(id)).pipe(
-      catchError(error => {
-        console.error(`Error fetching profile with ID ${id}:`, error);
-        return throwError(() => new Error(`Failed to fetch profile with ID ${id}`));
-      })
-    );
-  }
-
-  /**
-   * Fetch all profiles from Supabase
-   * @returns Promise of Profile array
-   */
-  private async fetchProfiles(): Promise<Profile[]> {
-    try {
-      const { data, error } = await this.supabase.getClient()
-        .schema('porton')
-        .from('profiles')
-        .select('*')
-        .order('last_name', { ascending: true });
-
-      if (error) throw error;
-
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching profiles from Supabase:', error);
-      throw error;
-    }
   }
 
   /**

@@ -61,10 +61,9 @@ export interface WorkGroup {
 }
 
 export interface LockedTeam {
-  id: string;
+  id: number;
   name: string;
   members: Profile[];
-  homes?: House[];
   tasks?: Task[];
   isLocked?: boolean;
   isPublished?: boolean;
@@ -170,15 +169,12 @@ export interface Language {
   providedIn: 'root',
 })
 export class DataService {
-  // Debug flag
   private debug = false;
-  // Schema name for all tables
   private schema = 'porton';
 
   private loadingSubject = new BehaviorSubject<boolean>(false);
   private errorSubject = new BehaviorSubject<string | null>(null);
 
-  // BehaviorSubjects for enum types and data
   private houseAvailabilityTypesSubject = new BehaviorSubject<HouseAvailabilityType[]>([]);
   private taskTypesSubject = new BehaviorSubject<TaskType[]>([]);
   private taskProgressTypesSubject = new BehaviorSubject<TaskProgressType[]>([]);
@@ -199,7 +195,6 @@ export class DataService {
   private shiftTypesSubject = new BehaviorSubject<ShiftType[]>([]);
   private profileWorkScheduleSubject = new BehaviorSubject<ProfileWorkSchedule[]>([]);
 
-  // Public Observables
   loading$ = this.loadingSubject.asObservable();
   error$ = this.errorSubject.asObservable();
   houseAvailabilityTypes$ = this.houseAvailabilityTypesSubject.asObservable();
@@ -239,9 +234,7 @@ export class DataService {
   private realtimeChannel: RealtimeChannel | null = null;
 
   constructor(private supabaseService: SupabaseService) {
-    // Load all enum types when service is initialized
     this.loadAllEnumTypes();
-    // Load all data
     this.loadInitialData();
   }
 
@@ -281,6 +274,7 @@ export class DataService {
     }
   }
 
+  //filter deleted user
   setProfiles(profiles: Profile[]){
     if(profiles){
       this.profilesSubject.next(profiles.filter(profile => profile.id != '11111111-1111-1111-1111-111111111111'));
@@ -320,12 +314,11 @@ export class DataService {
     return throwError(() => error);
   }
 
-  // Method to load all initial data
   loadInitialData(): void {
     if (this.debug) {
       //console.log('[DataService] Loading initial data...');
     }
-    // Then load other data
+    
     this.loadHouseAvailabilities().subscribe();
     this.loadTempHouseAvailabilities().subscribe();
     this.loadTasks().subscribe();
@@ -336,6 +329,7 @@ export class DataService {
     this.loadProfileRoles().subscribe();
     this.loadHouses().subscribe();
     this.loadTempHouses().subscribe();
+    this.getHouseTypes().subscribe();
     this.loadNotes().subscribe();
     this.loadRepairTaskComments().subscribe();
     this.loadShiftTypes().subscribe();
@@ -343,14 +337,11 @@ export class DataService {
     // this.loadAuthUsers().subscribe();
   }
 
-  // Method to load all enum types at once
   private loadAllEnumTypes(): void {
     if (this.debug) {
       //console.log('[DataService] Loading enum types...');
     }
-    // Load house availability types first
     this.getHouseAvailabilityTypes().subscribe();
-    // Then load other enum types
     this.getTaskTypes().subscribe();
     this.getTaskProgressTypes().subscribe();
     this.getHouseTypes().subscribe();
@@ -403,14 +394,12 @@ export class DataService {
   getTaskProgressTypes(): Observable<TaskProgressType[]> {
     this.loadingSubject.next(true);
 
-    // If we already have data cached in the subject, use it
     if (this.taskProgressTypesSubject.value.length > 0) {
       this.logData('Task Progress Types (cached)', this.taskProgressTypesSubject.value);
       this.loadingSubject.next(false);
       return this.taskProgressTypes$;
     }
 
-    // Otherwise fetch from the server
     return from(this.supabaseService.getData('task_progress_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
@@ -432,7 +421,6 @@ export class DataService {
   getHouseTypes(): Observable<HouseType[]> {
     this.loadingSubject.next(true);
 
-    // If we already have data cached in the subject, use it
     if (this.houseTypesSubject.value.length > 0) {
       console.log('Using cached house types data');
       this.logData('House Types (cached)', this.houseTypesSubject.value);
@@ -440,7 +428,6 @@ export class DataService {
       return this.houseTypes$;
     }
 
-    // Otherwise fetch from the server
     return from(this.supabaseService.getData('house_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
@@ -465,7 +452,7 @@ export class DataService {
     return from(this.supabaseService.getData('house_availabilities', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          this.houseAvailabilitiesSubject.next(data);
+          this.setHouseAvailabilites(data);
           this.logData('House Availabilities', data);
         }
       }),
@@ -481,7 +468,7 @@ export class DataService {
     return from(this.supabaseService.getData('temp_house_availabilities', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          this.tempHouseAvailabilitiesSubject.next(data);
+          this.setTempHouseAvailabilities(data);
           this.logData('Temp House Availabilities', data);
         }
       }),
@@ -491,35 +478,13 @@ export class DataService {
     );
   }
 
-  async loadTasksFromDb(){
-    try{
-      
-      this.loadingSubject.next(true);
-      const { data: tasks, error: tasksError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('tasks')
-        .select('*');
-
-      if(tasksError) throw tasksError
-
-      this.tasksSubject.next(tasks);
-      this.loadingSubject.next(false)
-
-      return tasks;
-    } catch (error) {
-      console.error('Error fetching task type ids', error);
-      this.loadingSubject.next(false)
-      return null;
-    }
-  }
-
   loadTasks(): Observable<Task[]> {
     this.loadingSubject.next(true);
 
     return from(this.supabaseService.getData('tasks', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          this.tasksSubject.next(data);
+          this.setTasks(data);
           this.logData('Tasks', data);
         }
       }),
@@ -535,7 +500,7 @@ export class DataService {
     return from(this.supabaseService.getData('work_groups', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          this.workGroupsSubject.next(data);
+          this.setWorkGroups(data);
           this.logData('Work Groups', data);
         }
       }),
@@ -551,7 +516,7 @@ export class DataService {
     return from(this.supabaseService.getData('work_group_profiles', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          this.workGroupProfilesSubject.next(data);
+          this.setWorkGroupProfiles(data);
           this.logData('Work Group Profiles', data);
         }
       }),
@@ -567,7 +532,7 @@ export class DataService {
     return from(this.supabaseService.getData('work_group_tasks', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          this.workGroupTasksSubject.next(data);
+          this.setWorkGroupTasks(data);
           this.logData('Work Group Tasks', data);
         }
       }),
@@ -647,7 +612,7 @@ export class DataService {
     return from(this.supabaseService.getData('notes', this.schema)).pipe(
       tap((data) => {
         if (data) {
-          this.notesSubject.next(data);
+          this.setNotes(data);
           this.logData('Notes', data);
           this.$areNotesLoaded.next(true);
         }
@@ -707,7 +672,6 @@ export class DataService {
     );
   }
 
-  // Method to create a new work group
   createWorkGroup(isRepairWorkGroup: boolean): Observable<WorkGroup | null> {
     this.loadingSubject.next(true);
 
@@ -725,7 +689,6 @@ export class DataService {
     );
   }
 
-  // Method to update a profile
   updateProfile(id: string, updates: Partial<Omit<Profile, 'id' | 'created_at'>>): Observable<Profile | null> {
     this.loadingSubject.next(true);
 
@@ -745,7 +708,6 @@ export class DataService {
     );
   }
 
-  // Method to save a house availability to the backend
   saveHouseAvailability(reservation: HouseAvailability): Observable<HouseAvailability | null> {
     this.loadingSubject.next(true);
     
@@ -1029,62 +991,6 @@ export class DataService {
       return null;
     }
   }
-
-  // Method to refresh all data
-  refreshData(): void {
-    if (this.debug) {
-      //console.log('[DataService] Refreshing all data...');
-    }
-    this.houseAvailabilityTypesSubject.next([]);
-    this.taskTypesSubject.next([]);
-    this.taskProgressTypesSubject.next([]);
-    this.houseTypesSubject.next([]);
-    this.houseAvailabilitiesSubject.next([]);
-    this.tasksSubject.next([]);
-    this.workGroupsSubject.next([]);
-    this.workGroupProfilesSubject.next([]);
-    this.workGroupTasksSubject.next([]);
-    this.profilesSubject.next([]);
-    this.housesSubject.next([]);
-    this.loadAllEnumTypes();
-    this.loadInitialData();
-  }
-
-  async getTaskProgressTypeIdByTaskProgressTypeName(taskProgressTypeName: string){
-    try{
-      const { data: existingProgressTypeId, error: progressTypeIdError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('task_progress_types')
-        .select('task_progress_type_id')
-        .eq('task_progress_type_name', taskProgressTypeName)
-        .single();
-
-      if(progressTypeIdError) throw progressTypeIdError
-
-      return existingProgressTypeId?.task_progress_type_id;
-    } catch (error) {
-      console.error('Error fetching task type ids', error);
-      return null;
-    }
-  }
-
-  async getTaskTypeIdByTaskName(taskName: string){
-    try{
-      const { data: existingTaskTypeId, error: taskTypeIdError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('task_types')
-        .select('task_type_id')
-        .eq('task_type_name', taskName)
-        .single();
-
-      if(taskTypeIdError) throw taskTypeIdError
-
-      return existingTaskTypeId?.task_type_id;
-    } catch (error) {
-      console.error('Error fetching task type ids', error);
-      return null;
-    }
-  }
   
   getAssignedStaffForWorkGroup(workGroupId: number): Observable<Profile[]> {
     return combineLatest([
@@ -1101,7 +1007,6 @@ export class DataService {
     );
   }
 
-  // Method to delete work group
   deleteWorkGroup(workGroupId: number): Observable<any> {
     const filter = `work_group_id = ${workGroupId}`;
 
@@ -1226,7 +1131,6 @@ export class DataService {
     .subscribe();
   }
 
-  // Method to load authenticated users
   loadAuthUsers(): Observable<Profile[]> {
     this.loadingSubject.next(true);
 
@@ -1243,7 +1147,6 @@ export class DataService {
     );
   }
 
-  // Method to create a new task progress type
   createTaskProgressType(type: TaskProgressType): Observable<TaskProgressType | null> {
     this.loadingSubject.next(true);
     
@@ -1263,7 +1166,6 @@ export class DataService {
     );
   }
 
-  // Method to update a task progress type
   updateTaskProgressType2(type: TaskProgressType): Observable<TaskProgressType | null> {
     this.loadingSubject.next(true);
     
@@ -1290,7 +1192,6 @@ export class DataService {
     );
   }
 
-  // Method to delete a task progress type
   deleteTaskProgressType(id: number): Observable<any> {
     this.loadingSubject.next(true);
     
@@ -1307,7 +1208,6 @@ export class DataService {
     );
   }
 
-  // Method to create a new house type
   createHouseType(type: HouseType): Observable<HouseType | null> {
     this.loadingSubject.next(true);
     console.log('Creating house type:', type);
@@ -1337,7 +1237,6 @@ export class DataService {
     );
   }
 
-  // Method to update a house type
   updateHouseType(type: HouseType): Observable<HouseType | null> {
     this.loadingSubject.next(true);
     console.log('Updating house type:', type);
@@ -1372,7 +1271,6 @@ export class DataService {
     );
   }
 
-  // Method to delete a house type
   deleteHouseType(id: number): Observable<any> {
     this.loadingSubject.next(true);
     console.log('Deleting house type with id:', id);
