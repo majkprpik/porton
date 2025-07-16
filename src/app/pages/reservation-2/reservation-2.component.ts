@@ -1,11 +1,12 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, HostListener } from '@angular/core';
-import { CommonModule, TitleCasePipe } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, HostListener } from '@angular/core';
+import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
-import { Subject, takeUntil, forkJoin, combineLatest } from 'rxjs';
+import { Subject, takeUntil, forkJoin, combineLatest, firstValueFrom } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ReservationFormComponent } from '../reservations/reservation-form/reservation-form.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 interface CellData {
     isReserved: boolean;
@@ -34,6 +35,7 @@ interface CellData {
         ButtonModule,
         TitleCasePipe,
     ],
+    providers: [DatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush
 }) 
 export class Reservation2Component implements OnInit, OnDestroy {
@@ -58,11 +60,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
     
     // Add destroy subject for takeUntil pattern
     private destroy$ = new Subject<void>();
-    
-    // Performance monitoring
-    private renderStartTime: number = 0;
-    private updateStartTime: number = 0;
-    private totalCells: number = 0;
     
     // Add observer for calendar
     private calendarObserver?: MutationObserver;
@@ -92,24 +89,25 @@ export class Reservation2Component implements OnInit, OnDestroy {
     // Add a signal to track the currently selected reservation ID
     selectedReservationId = signal<number | null>(null);
 
+    droppableSpots: any = [];
+    reservationToMove: any;
+
     // Add a flag to track whether the page has been loaded for the first time
     private isFirstLoad = true;
 
     colors = ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA', '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'];
 
-    constructor(private dataService: DataService) {
-        // Monitor grid matrix updates
-        effect(() => {
-            const grid = this.gridMatrix();
-            if (grid.length > 0) {
-                this.totalCells = grid.length * grid[0].length;
-            }
-        });
+    constructor(
+        private dataService: DataService,
+        private messageService: MessageService,
+        private translateService: TranslateService,
+        private confirmationService: ConfirmationService,
+        private datePipe: DatePipe,
+    ) {
+
     }
 
     ngOnInit(): void {
-        this.renderStartTime = performance.now();
-        
         this.dataService.loadHouses().pipe(takeUntil(this.destroy$)).subscribe();
         this.dataService.loadHouseAvailabilities().pipe(takeUntil(this.destroy$)).subscribe();
         this.dataService.getHouseTypes().pipe(takeUntil(this.destroy$)).subscribe(types => {
@@ -170,8 +168,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
             
         // Monitor initial render
         setTimeout(() => {
-            const renderTime = performance.now() - this.renderStartTime;
-            
             // Scroll to today after the initial render if it's the first load
             if (this.isFirstLoad) {
                 this.scrollToToday();
@@ -204,8 +200,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
     
     // Update the grid matrix when data changes - from original component
     private updateGridMatrix(): void {
-        this.updateStartTime = performance.now();
-        
         // Use filteredHouses instead of houses directly
         const houses = this.filteredHouses();
         const days = this.days();
@@ -254,9 +248,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
         this.gridMatrix.set(grid);
 
-        // Verify the grid dimensions match filtered houses
-        const selectedTypeId = this.selectedHouseTypeId();
-
         // Count reserved cells to verify data
         let reservedCellCount = 0;
         grid.forEach(row => {
@@ -264,11 +255,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 if (cell.isReserved) reservedCellCount++;
             });
         });
-
-        // Log update performance
-        setTimeout(() => {
-            const updateTime = performance.now() - this.updateStartTime;
-        }, 0);
     }
 
     private getReservationKey(houseId: number, date: Date): string {
@@ -356,6 +342,112 @@ export class Reservation2Component implements OnInit, OnDestroy {
         }
 
         return cellData;
+    }
+
+    clearAvailableSpaces(){
+        this.reservationToMove = undefined;
+        this.droppableSpots = [];
+    }
+
+    getReservationByRowAndColumn(row: number, col: number){
+        const houses = this.filteredHouses();
+        const days = this.days();
+
+        const house = houses[row];
+        const day = days[col];
+        
+        const key = this.getReservationKey(house.house_id, day);
+        const reservation = this.reservationMap.get(key);
+
+        return reservation;
+    }
+
+    isSpotAvailable(row: number, col: number){
+        if(!this.droppableSpots.length) return;
+
+        const house = this.filteredHouses()[row];
+        const day = this.days()[col];
+
+        return this.droppableSpots.some((ds: any) => ds.house_id == house.house_id && ds.date.getTime() == day.getTime());
+    }
+
+    getDroppableSpotsForReservation(event: any, row: any, col: any){
+        event.stopPropagation();
+        this.droppableSpots = [];
+
+        const reservation = this.getReservationByRowAndColumn(row, col);
+        if(!reservation) return;
+
+        if(this.reservationToMove && reservation.house_availability_id == this.reservationToMove.house_availability_id){
+            this.clearAvailableSpaces();
+            return;
+        }
+
+        this.reservationToMove = reservation;
+        const houses = this.filteredHouses();
+        const days = this.days();
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const reservationLength = this.getSelectedReservationLength(this.reservationToMove);
+
+        houses.forEach(house => {
+            days.forEach(day => {
+                if(day < today) return;
+
+                const k = this.getReservationKey(house.house_id, day);
+                const res = this.reservationMap.get(k);
+                let isDroppable = false;
+
+                if(!res){
+                    isDroppable = this.isNumberOfDaysAvailableInTheFuture(day, house.house_id, reservationLength);
+                } else if(res && res.house_availability_id == this.reservationToMove.house_availability_id){
+                    isDroppable = this.isNumberOfDaysAvailableInTheFuture(day, house.house_id, reservationLength);
+                } else if(res && res.house_availability_id != this.reservationToMove.house_availability_id){
+                    return;
+                }
+
+                if(isDroppable){
+                    this.droppableSpots.push({
+                        house_id: house.house_id,
+                        date: day,
+                    });
+                }
+            });
+        });
+    }
+
+    isNumberOfDaysAvailableInTheFuture(startDay: Date, houseId: number, numberOfDays: number): boolean{
+        const house = this.filteredHouses().find(house => house.house_id == houseId);
+        if(!house) return false;
+
+        const days = this.days();
+        let daysCount = 0;
+
+        for(let day of days){
+            if(day < startDay) continue;
+    
+            const k = this.getReservationKey(house.house_id, day);
+            const res = this.reservationMap.get(k);
+    
+            if(res && res.house_availability_id != this.reservationToMove.house_availability_id) return false;
+    
+            daysCount++;
+            
+            if(daysCount >= numberOfDays) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private getSelectedReservationLength(reservation: HouseAvailability){
+        const start = new Date(reservation.house_availability_start_date);
+        const end = new Date(reservation.house_availability_end_date);
+        const timeDiff = end.getTime() - start.getTime();
+        return Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
     }
 
     // Generate array of dates for the current view
@@ -1000,8 +1092,86 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return this.isDateInPast(days[col]);
     }
 
+    moveReservation(row: number, col: number){
+        if(!this.reservationToMove) return;
+
+        const reservationLength = this.getSelectedReservationLength(this.reservationToMove);
+        const selectedHouse = this.filteredHouses()[row];
+        const selectedDay = this.days()[col];
+
+        const endDate = new Date(selectedDay);
+        endDate.setDate(endDate.getDate() + reservationLength - 1)
+
+        const houseToMove = this.houses().find(house => house.house_id == this.reservationToMove.house_id);
+        const dayToMove = this.reservationToMove.house_availability_start_date;
+
+        this.confirmationService.confirm({
+            header: this.translateService.instant('RESERVATIONS.MODAL.MOVE-RESERVATION'),
+            message: this.translateService.instant('RESERVATIONS.MESSAGES.CONFIRM-MOVE-RESERVATION', {
+                name: this.reservationToMove.last_name || 'Guest',
+                old_house_number: houseToMove?.house_number || 'N/A',
+                old_start_date: this.datePipe.transform(dayToMove, 'dd.MM'),
+                new_house_number: selectedHouse?.house_number || 'N/A',
+                new_start_date: this.datePipe.transform(selectedDay, 'dd.MM')
+            }),
+            icon: 'pi pi-exclamation-triangle',
+            rejectLabel: 'Cancel',
+            rejectButtonProps: {
+                label: this.translateService.instant('BUTTONS.CANCEL'),
+                severity: 'secondary',
+                outlined: true
+            },
+            acceptButtonProps: {
+                label: this.translateService.instant('BUTTONS.CONFIRM'),
+                severity: 'danger'
+            },
+            accept: async () => {
+                const reservationCopy = { 
+                    ...this.reservationToMove,
+                    house_id: selectedHouse.house_id,
+                    house_availability_start_date: selectedDay.toLocaleDateString('en-CA').split('T')[0],
+                    house_availability_end_date: endDate.toLocaleDateString('en-CA').split('T')[0],
+                };
+
+                //ne moze update jer je nekad temp_house_availability, a nekad house_availability, zato ide delete pa create novi
+                try {
+                    const deleted = await firstValueFrom(
+                        this.dataService.deleteHouseAvailability(
+                            this.reservationToMove.house_availability_id,
+                            this.reservationToMove.house_id
+                        )
+                    );
+
+                    if (deleted) {
+                        const saved = await firstValueFrom(
+                            this.dataService.saveHouseAvailability(reservationCopy)
+                        );
+
+                        if (saved) {
+                            this.clearAvailableSpaces();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error while moving reservation:', error);
+                    this.clearAvailableSpaces();
+                }
+            },
+            reject: () => {
+                this.messageService.add({ severity: 'warn', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.CANCELLED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.REMOVE-IMAGE.CANCELLED') });
+                this.clearAvailableSpaces();
+            }
+        });
+    }
+
     // Handle mouse down on a cell to start selection
     onCellMouseDown(event: MouseEvent, row: number, col: number): void {
+        if(this.isSpotAvailable(row, col)){
+            this.moveReservation(row, col);
+            return;
+        }
+
+        this.clearAvailableSpaces();
+
         // Only allow selection on cells that don't have reservations
         if (this.hasCellReservation(row, col)) {
             return;

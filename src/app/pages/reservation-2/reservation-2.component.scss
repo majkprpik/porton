@@ -60,7 +60,6 @@
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 8px;
-    // border-bottom: 1px solid #e0e0e0;
     padding-bottom: 5px;
 }
 
@@ -290,17 +289,21 @@
         border-top: 1px solid rgba(33, 150, 243, 0.4) !important;
         border-bottom: 1px solid rgba(33, 150, 243, 0.4) !important;
     }
+
+    .free-column {
+        background-color: greenyellow !important;
+
+        &:hover{
+            cursor: pointer;
+        }
+    }
     
     .saturday-column {
         box-shadow: inset 0 0 0 1000px rgba(255, 240, 240, 0.3) !important;
-        // border-right: 2px solid rgba(255, 200, 200, 0.5) !important;
-        // border-left: 2px solid rgba(255, 200, 200, 0.5) !important;
     }
     
     .sunday-column {
         box-shadow: inset 0 0 0 1000px rgba(255, 238, 238, 0.3) !important;
-        // border-right: 2px solid rgba(255, 180, 180, 0.5) !important;
-        // border-left: 2px solid rgba(255, 180, 180, 0.5) !important;
     }
     
     .reserved-cell {
@@ -316,10 +319,6 @@
         
         padding: 5px 2px;
         box-sizing: border-box;
-        
-        // &:hover {
-        //     box-shadow: inset 0 0 0 1px rgba(255, 0, 0, 0.2);
-        // }
         
         &.saturday-column, &.sunday-column, &.today-column {
             background-color: inherit;
@@ -524,6 +523,20 @@ td.selected-reservation {
     
     .reservation-text {
         flex: 1;
+    }
+}
+
+.row{
+    .tabs{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+
+        .cancel-selection-button{
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+        }
     }
 }
 

@@ -1,7 +1,6 @@
 <div class="reservations-container">
     <div class="row">
-        <!-- House Type Filter -->
-        <div class="col-12 mb-3">
+        <div class="tabs">
             <div class="house-type-tabs">
                 @for (type of houseTypes(); track type.house_type_id) {
                     <p-button 
@@ -11,6 +10,14 @@
                     </p-button>  
                 }
             </div>
+            @if(droppableSpots.length){
+                <p-button 
+                    class="cancel-selection-button"
+                    [label]="'BUTTONS.CANCEL-SELECTION' | translate" 
+                    severity="danger"
+                    (click)="clearAvailableSpaces()">
+                </p-button>  
+            }
         </div>
     </div>
 
@@ -38,7 +45,8 @@
                     <tr>
                         <th class="row-header" [ngClass]="{'active-row': selectedCellRowIndex() === i}">{{ house.house_name || house.house_number }}</th>
                         @for (day of days(); track day.getTime(); let j = $index) {
-                            <td (dblclick)="onCellDoubleClick($event, i, j)"
+                            <td 
+                                (dblclick)="onCellDoubleClick($event, i, j)"
                                 (mousedown)="onCellMouseDown($event, i, j)"
                                 (mousemove)="onCellMouseMove($event, i, j)"
                                 (click)="gridMatrix()[i][j].isReserved ? onReservationCellClick($event, i, j) : onCellClick($event, i, j)"
@@ -58,12 +66,13 @@
                                     'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationEnd,
                                     'border-top-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
                                     'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
+                                    'free-column': isSpotAvailable(i, j),
                                 }"
                                 [style.background-color]="gridMatrix()[i][j].color">
                                 <!-- Simple reservation cell without drag functionality -->
                                 @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j].isReservationStart) {
                                     <div class="reservation-item">
-                                        <span class="handle-icon">&#9776;</span>
+                                        <i class="pi pi-arrows-alt handle-icon" (click)="getDroppableSpotsForReservation($event, i, j)"></i>
                                         {{ gridMatrix()[i][j].displayText }}
                                     </div>
                                 } @else {

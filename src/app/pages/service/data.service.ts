@@ -756,29 +756,11 @@ export class DataService {
 
     if(reservation.house_id > 0){
       return from(this.supabaseService.insertData('house_availabilities', cleanSaveData, this.schema)).pipe(
-        tap((data) => {
-          if (data && data.length > 0) {
-            // Update the local BehaviorSubject with the new data
-            const currentAvailabilities = this.houseAvailabilitiesSubject.value;
-            this.houseAvailabilitiesSubject.next([...currentAvailabilities, data[0]]);
-            this.logData('Created House Availability', data[0]);
-          }
-        }),
-        map((data) => (data && data.length > 0 ? data[0] : null)),
         catchError((error) => this.handleError(error)),
         tap(() => this.loadingSubject.next(false))
       );
     } else {
       return from(this.supabaseService.insertData('temp_house_availabilities', cleanSaveData, this.schema)).pipe(
-        tap((data) => {
-          if (data && data.length > 0) {
-            // Update the local BehaviorSubject with the new data
-            const currentTempAvailabilities = this.houseAvailabilitiesSubject.value;
-            this.tempHouseAvailabilitiesSubject.next([...currentTempAvailabilities, data[0]]);
-            this.logData('Created Temp House Availability', data[0]);
-          }
-        }),
-        map((data) => (data && data.length > 0 ? data[0] : null)),
         catchError((error) => this.handleError(error)),
         tap(() => this.loadingSubject.next(false))
       );

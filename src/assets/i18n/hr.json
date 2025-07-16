@@ -31,7 +31,8 @@
         "SEASON": "Sezona",
         "MONTH": "Mjesec",
         "ADD-TO-HOME": "Dodaj na pregled",
-        "REMOVE-FROM-HOME": "Ukloni s pregleda"
+        "REMOVE-FROM-HOME": "Ukloni s pregleda",
+        "CANCEL-SELECTION": "Odustani"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Dodijeljeno",
@@ -358,6 +359,7 @@
             "CREATE-TEMP-RESERVATION": "Kreiraj privremenu rezervaciju",
             "EDIT-RESERVATION": "Uredi rezervaciju",
             "EDIT-TEMP-RESERVATION": "Uredi privremenu rezervaciju",
+            "MOVE-RESERVATION": "Premjesti rezervaciju",
             "LAST-NAME": "Prezime",
             "ADULTS": "Odrasli",
             "RESERVATION-NUMBER": "Broj rezervacije",
@@ -381,7 +383,8 @@
             "DELETED-SUCCESS": "Rezervacija obrisana",
             "HEADER": "Potvrdi brisanje rezervacije",
             "CONFIRM-DELETE": "Jeste li sigurni da želite obrisati rezervaciju?",
-            "CANCELLED-DELETE": "Promjena otkazana"
+            "CANCELLED-DELETE": "Promjena otkazana",
+            "CONFIRM-MOVE-RESERVATION": "Premjesti rezervaciju \"{{name}}\" iz kućice \"{{old_house_number}}\" ({{old_start_date}}) u kućicu \"{{new_house_number}}\" ({{new_start_date}})?"
         }
     },
     "HOME": {

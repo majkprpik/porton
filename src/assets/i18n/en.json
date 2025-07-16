@@ -31,7 +31,8 @@
         "SEASON": "Season",
         "MONTH": "Month",
         "ADD-TO-HOME": "Add to home",
-        "REMOVE-FROM-HOME": "Remove from home"
+        "REMOVE-FROM-HOME": "Remove from home",
+        "CANCEL-SELECTION": "Cancel selection"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Assigned",
@@ -358,6 +359,7 @@
             "CREATE-TEMP-RESERVATION": "Create temporary reservation",
             "EDIT-RESERVATION": "Edit reservation",
             "EDIT-TEMP-RESERVATION": "Edit temporary reservation",
+            "MOVE-RESERVATION": "Move reservation",
             "LAST-NAME": "Last name",
             "ADULTS": "Adults",
             "RESERVATION-NUMBER": "Reservation number",
@@ -381,7 +383,8 @@
             "DELETED-SUCCESS": "Reservation deleted",
             "HEADER": "Confirm reservation delete",
             "CONFIRM-DELETE": "Are you sure you want to delete this reservation?",
-            "CANCELLED-DELETE": "Delete cancelled"
+            "CANCELLED-DELETE": "Delete cancelled",
+            "CONFIRM-MOVE-RESERVATION": "Move reservation \"{{name}}\" from house \"{{old_house_number}}\" ({{old_start_date}}) to house \"{{new_house_number}}\" ({{new_start_date}})?"
         }
     },
     "HOME": {
