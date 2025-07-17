@@ -33,11 +33,7 @@ bootstrapApplication(AppComponent, {
 }).catch((err) => console.error(err));
 
 if ('serviceWorker' in navigator && environment.production) {
-  navigator.serviceWorker.register('ngsw-worker.js')
-    .then(() => {
-      console.log('Angular service worker registered');
-      return navigator.serviceWorker.register('firebase-messaging-sw.js');
-    })
-    .then(() => console.log('Firebase Messaging SW registered'))
-    .catch(err => console.error('SW registration failed:', err));
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(() => console.log('✅ Firebase Messaging SW registered'))
+    .catch(err => console.error('🚫 SW registration failed:', err));
 }

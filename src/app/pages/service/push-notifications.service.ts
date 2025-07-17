@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { DataService, Task, TaskType } from './data.service';
+import { Task } from './data.service';
 import { Messaging as AngularMessaging  } from '@angular/fire/messaging';
 import { getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
