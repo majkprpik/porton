@@ -1038,6 +1038,7 @@ export class DataService {
         table: 'tasks'
       },
       async (payload: any) => {
+        console.log('Task payload: ', payload);
         this.$tasksUpdate.next(payload);
       }
     ).on(
