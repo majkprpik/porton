@@ -542,6 +542,7 @@ export class WorkGroupDetail implements OnInit {
     isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
     urgentIconSubscriptions: Subscription[] = [];
     storedUserId: string | null = '';
+    workGroups: WorkGroup[] = [];
 
     constructor(
         private route: ActivatedRoute,
@@ -575,45 +576,13 @@ export class WorkGroupDetail implements OnInit {
                 this.tasks = tasks;
                 this.profiles = profiles;
                 this.workGroupProfiles = workGroupProfiles;
+                this.workGroups = workGroups;
 
-                const filteredWorkGroupTasks = this.workGroupService.getWorkGroupTasksByWorkGroupId(workGroupId);
-                this.assignedTasks = this.tasks
-                    .filter(task => filteredWorkGroupTasks.some(wgt => wgt.task_id == task.task_id))
-                    .map(task => {
-                        const wgt = filteredWorkGroupTasks.find(wgt => wgt.task_id == task.task_id);
-                        if(wgt) {
-                            return {
-                                ...task,
-                                index: wgt.index,
-                            }
-                        } else {
-                            return task;
-                        }
-                    });
-
-                const filteredWorkGroupProfiles = this.workGroupService.getWorkGroupProfilesByWorkGroupId(workGroupId);
-                this.assignedProfiles = this.profiles.filter(profile => filteredWorkGroupProfiles.some(wgp => wgp.profile_id == profile.id));
-                    
-                if(houseAvailabilities && houseAvailabilities.length > 0 && this.assignedTasks && this.assignedTasks.length > 0){
-                    this.assignedTasks.forEach(task => {
-                        this.houseService.isHouseOccupied(task.house_id);
-                    });
-                }
+                this.assignedTasks = this.getAssignedTasks(workGroupId)
+                this.assignedProfiles = this.getAssignedProfiles(workGroupId);
 
                 if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isCustomerService(this.storedUserId)) {
-                    const housekeepingWorkGroupProfile = this.workGroupProfiles.find(wgp => wgp.profile_id == this.authService.getStoredUserId());
-                    const todaysWorkGroup = workGroups.find(wg => 
-                        wg.work_group_id == housekeepingWorkGroupProfile?.work_group_id &&
-                        wg.created_at.startsWith(new Date().toISOString().split('T')[0])
-                    );
-
-                    if(
-                        !todaysWorkGroup && 
-                        this.router.url.includes('/teams') && 
-                        this.router.url != '/teams'
-                    ) {
-                        this.router.navigate(['/teams']);
-                    }
+                    this.redirectToTeamsIfNoTodaysWorkGroup();
                 }
 
                 this.setupUrgentIcons();
@@ -624,6 +593,28 @@ export class WorkGroupDetail implements OnInit {
                 this.loading = false;
             }
         });
+    }
+
+    getAssignedTasks(workGroupId: number){
+        const filteredWorkGroupTasks = this.workGroupService.getWorkGroupTasksByWorkGroupId(workGroupId);
+        return this.tasks
+            .filter(task => filteredWorkGroupTasks.some(wgt => wgt.task_id == task.task_id))
+            .map(task => {
+                const wgt = filteredWorkGroupTasks.find(wgt => wgt.task_id == task.task_id);
+                if(wgt) {
+                    return {
+                        ...task,
+                        index: wgt.index,
+                    }
+                } else {
+                    return task;
+                }
+            });
+    }
+
+    getAssignedProfiles(workGroupId: number){
+        const filteredWorkGroupProfiles = this.workGroupService.getWorkGroupProfilesByWorkGroupId(workGroupId);
+        return this.profiles.filter(profile => filteredWorkGroupProfiles.some(wgp => wgp.profile_id == profile.id));
     }
 
     private setupUrgentIcons(): void {
@@ -695,5 +686,17 @@ export class WorkGroupDetail implements OnInit {
 
     openTaskDetails(task: Task){
         this.taskService.$taskModalData.next(task);
+    }
+
+    redirectToTeamsIfNoTodaysWorkGroup(){
+        const housekeepingWorkGroupProfile = this.workGroupProfiles.find(wgp => wgp.profile_id == this.authService.getStoredUserId());
+        const todaysWorkGroup = this.workGroups.find(wg => 
+            wg.work_group_id == housekeepingWorkGroupProfile?.work_group_id &&
+            wg.created_at.startsWith(new Date().toISOString().split('T')[0])
+        );
+
+        if(!todaysWorkGroup && this.router.url.includes('/teams') && this.router.url != '/teams') {
+            this.router.navigate(['/teams']);
+        }
     }
 } 

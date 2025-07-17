@@ -7,6 +7,7 @@ import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-staff-groups',
@@ -175,23 +176,23 @@ export class StaffGroups implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.workGroupService.activeGroupId$.subscribe(
-      (groupId: number | undefined) => {
+    this.workGroupService.activeGroupId$.subscribe((groupId: number | undefined) => {
         this.activeWorkGroupId = groupId;
       }
     );
 
-    this.dataService.profileRoles$.subscribe(profileRoles => {
-      this.profileRoles = profileRoles;
-    })
-
-    this.dataService.profiles$.subscribe({
-      next: profiles => {
+    combineLatest([
+      this.dataService.profileRoles$,
+      this.dataService.profiles$
+    ]).subscribe({
+      next: ([profileRoles, profiles]) => {
+        this.profileRoles = profileRoles;
         this.profiles = profiles;
+        
         this.loading = false;
       },
       error: error => {
-        console.error('Error loading profiles:', error);
+        console.error('Error loading data:', error);
         this.loading = false;
       }
     });

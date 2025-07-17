@@ -989,23 +989,11 @@ export class Home implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.subscriptions.push(
-            this.dataService.houses$.subscribe(houses => {
-                const filteredHouses = houses.filter(h => h.house_number > 0);
-                this.houses.set(filteredHouses);
-                this.filteredHouses.set(filteredHouses);
-                this.updateLocationOptions();
-                this.applyFilters();
-            })
-        );
-
         this.layoutService.$chartToRemove.subscribe(chartToRemove => {
             this.pinnedCharts = this.pinnedCharts.filter(pinnedChart => pinnedChart != chartToRemove);
         });
 
         this.loadPinnedCharts();
-
-        this.subscriptions.push(this.dataService.loadHouseAvailabilities().subscribe());
 
         this.subscriptions.push(
             combineLatest([
@@ -1014,31 +1002,35 @@ export class Home implements OnInit, OnDestroy {
             ]).subscribe(([tasks, visible]) => {
                 this.tasks = tasks;
                 this.isUrgentIconVisibleMap = {};
-                
-                this.tasks.forEach(task => {
-                    if (task.is_unscheduled) {
-                        this.isUrgentIconVisibleMap[task.task_id] = visible;
-                    }
-                });
+                this.setUrgentIconsMap(visible);
             })
         );
-
-        this.subscriptions.push(this.dataService.houseAvailabilities$.subscribe((availabilities) => {
-            this.houseAvailabilities.set(availabilities);
-            this.applyFilters();
-        }));
 
         this.subscriptions.push(
-            this.dataService.houseTypes$.subscribe(types => {
-                this.houseTypes.set(types);
-                if (this.sortType === 'type') {
-                    this.applyFilters();
-                }
+            combineLatest([
+                this.dataService.houseAvailabilities$,
+                this.dataService.houseTypes$,
+                this.dataService.houses$
+            ]).subscribe(([availabilities, houseTypes, houses]) => {
+                this.houseAvailabilities.set(availabilities);
+                this.houseTypes.set(houseTypes);
+            
+                const filteredHouses = houses.filter(h => h.house_number > 0);
+                this.houses.set(filteredHouses);
+                this.filteredHouses.set(filteredHouses);
+            
+                this.updateLocationOptions();
+                this.applyFilters();
             })
         );
-        
-        this.subscriptions.push(this.dataService.getHouseTypes().subscribe());
-        this.applyFilters();
+    }
+
+    setUrgentIconsMap(visible: boolean){
+        this.tasks.forEach(task => {
+            if (task.is_unscheduled) {
+                this.isUrgentIconVisibleMap[task.task_id] = visible;
+            }
+        });
     }
 
     loadPinnedCharts(){
@@ -1474,8 +1466,8 @@ export class Home implements OnInit, OnDestroy {
             const statusOrder = ['OCCUPIED', 'ARRIVAL-DAY', 'NOT-CLEANED', 'FREE'];
             
             result.sort((a, b) => {
-                const statusA = this.getHouseStatus(a);
-                const statusB = this.getHouseStatus(b);
+                const statusA = this.houseService.getHouseStatus(a);
+                const statusB = this.houseService.getHouseStatus(b);
                 const orderDiff = statusOrder.indexOf(statusA) - statusOrder.indexOf(statusB);
                 if (orderDiff !== 0) return orderDiff;
                 return a.house_number - b.house_number;
@@ -1485,7 +1477,7 @@ export class Home implements OnInit, OnDestroy {
             const grouped = statusOrder.map(status => {
                 return {
                     status,
-                    houses: result.filter(h => this.getHouseStatus(h) === status)
+                    houses: result.filter(h => this.houseService.getHouseStatus(h) === status)
                 };
             }).filter(group => group.houses.length > 0);
 
@@ -1516,13 +1508,5 @@ export class Home implements OnInit, OnDestroy {
         }
 
         return this.taskService.getTaskIcon(task.task_type_id);
-    }
-
-    getHouseStatus(house: House): 'OCCUPIED' | 'ARRIVAL-DAY' | 'NOT-CLEANED' | 'FREE' {
-        if (this.houseService.isHouseOccupied(house.house_id)) return 'OCCUPIED';
-        if (!this.houseService.isHouseOccupied(house.house_id) && this.houseService.hasScheduledNotCompletedTasks(house.house_id)) return 'NOT-CLEANED';
-        if (!this.houseService.isHouseOccupied(house.house_id) && this.houseService.isHouseReservedToday(house.house_id)) return 'ARRIVAL-DAY';
-        if(!this.houseService.isHouseOccupied(house.house_id) && !this.houseService.hasScheduledNotCompletedTasks(house.house_id)) return 'FREE';
-        return 'FREE';
     }
 }

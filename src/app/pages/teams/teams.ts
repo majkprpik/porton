@@ -362,13 +362,7 @@ export class Teams implements OnInit {
                 this.workGroupProfiles = workGroupProfiles;
 
                 if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isCustomerService(this.storedUserId)) {
-                    const today = new Date();
-                    const workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.storedUserId);
-                    const todaysWorkGroup = this.workGroups.find(wg => workGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id) && wg.created_at.startsWith(today.toISOString().split('T')[0]));
-
-                    if (todaysWorkGroup && this.router.url == '/teams') {
-                        this.router.navigate(['/teams', todaysWorkGroup.work_group_id]);
-                    }
+                    this.navigateToTodaysWorkGroup();
                 }
 
                 this.loading = false;
@@ -442,5 +436,15 @@ export class Teams implements OnInit {
         const todaysWorkGroup = this.workGroups.find(wg => workGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id) && wg.created_at.startsWith(today.toISOString().split('T')[0]));
 
         return !!todaysWorkGroup;
+    }
+
+    navigateToTodaysWorkGroup(){
+        const today = new Date();
+        const workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.storedUserId);
+        const todaysWorkGroup = this.workGroups.find(wg => workGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id) && wg.created_at.startsWith(today.toISOString().split('T')[0]));
+
+        if (todaysWorkGroup && this.router.url == '/teams') {
+            this.router.navigate(['/teams', todaysWorkGroup.work_group_id]);
+        }
     }
 } 

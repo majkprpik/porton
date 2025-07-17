@@ -249,19 +249,27 @@ export class HouseService {
   }
 
   getCurrentNumberOfAdults(houseId: number){
-    return this.getCurrentOccupantCount(houseId, 'adults');
+    return this.getCurrentOccupantCount(houseId, HouseOccupant.Adults);
   }
 
   getCurrentNumberOfBabies(houseId: number){
-    return this.getCurrentOccupantCount(houseId, 'babies');
+    return this.getCurrentOccupantCount(houseId, HouseOccupant.Children);
   }
 
   getCurrentNumberOfCribs(houseId: number){
-    return this.getCurrentOccupantCount(houseId, 'cribs');
+    return this.getCurrentOccupantCount(houseId, HouseOccupant.Cribs);
   }
 
   getCurrentNumberOfPets(houseId: number){
-    return this.getCurrentOccupantCount(houseId, 'dogs_d');
+    return this.getCurrentOccupantCount(houseId, HouseOccupant.Pets);
+  }
+
+  getHouseStatus(house: House): 'OCCUPIED' | 'ARRIVAL-DAY' | 'NOT-CLEANED' | 'FREE' {
+    if (this.isHouseOccupied(house.house_id)) return 'OCCUPIED';
+    if (!this.isHouseOccupied(house.house_id) && this.hasScheduledNotCompletedTasks(house.house_id)) return 'NOT-CLEANED';
+    if (!this.isHouseOccupied(house.house_id) && this.isHouseReservedToday(house.house_id)) return 'ARRIVAL-DAY';
+    if (!this.isHouseOccupied(house.house_id) && !this.hasScheduledNotCompletedTasks(house.house_id)) return 'FREE';
+    return 'FREE';
   }
 
   async setHouseAvailabilityDeparted(houseAvailabilityId: number, state: boolean){
@@ -358,4 +366,11 @@ export class HouseService {
       return false;
     }
   }
+}
+
+export enum HouseOccupant {
+  Adults = 'adults',
+  Children = 'babies',
+  Cribs = 'cribs',
+  Pets = 'dogs_d',
 }
