@@ -2,7 +2,7 @@ import { HouseAvailability, Note, Profile, ProfileRole, ProfileWorkSchedule, Wor
 import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { combineLatest, filter, Subscription } from 'rxjs';
+import { combineLatest, filter, fromEvent, Subscription } from 'rxjs';
 import { AppTopbar } from './app.topbar';
 import { AppSidebar } from './app.sidebar';
 import { LayoutService } from '../service/layout.service';
@@ -970,6 +970,8 @@ export class AppLayout {
 
     loggedUser: Profile | undefined = undefined;
 
+    private visibilityChangeSub!: Subscription;
+
     constructor(
         public layoutService: LayoutService,
         public renderer: Renderer2,
@@ -986,6 +988,8 @@ export class AppLayout {
         private pushNotificationsService: PushNotificationsService,
         public houseService: HouseService,
     ) {
+        this.onAppVisibilityChange();
+
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
                 this.menuOutsideClickListener = this.renderer.listen('document', 'click', (event) => {
@@ -1003,6 +1007,21 @@ export class AppLayout {
         this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
             this.hideMenu();
         });
+    }
+
+    onAppVisibilityChange(){
+        this.visibilityChangeSub = fromEvent(document, 'visibilitychange').subscribe(() => {
+            if (document.visibilityState === 'visible') {
+                this.onAppVisible();
+            }
+        });
+    }
+
+    private onAppVisible() {
+        console.log('App is now visible — refresh or reconnect!');
+        this.dataService.loadInitialData();
+        this.pushNotificationsService.requestFirebaseMessaging();
+        this.dataService.listenToDatabaseChanges(); 
     }
 
     ngOnInit() {
@@ -1227,6 +1246,8 @@ export class AppLayout {
     }
 
     ngOnDestroy() {
+        this.visibilityChangeSub.unsubscribe();
+
         if (this.overlayMenuOpenSubscription) {
             this.overlayMenuOpenSubscription.unsubscribe();
         }
