@@ -19,6 +19,7 @@ import { NotesPageComponent } from './app/layout/component/notes-page.component'
 import { StatisticsComponent } from './app/layout/component/statistics.component';
 import { TaskArchiveComponent } from './app/layout/component/task-archive.component';
 import { WorkScheduleComponent } from './app/layout/component/work-schedule.component';
+import { ConsoleMessagesComponent } from './app/layout/component/console-messages.component';
 
 export const appRoutes: Routes = [
     {
@@ -97,6 +98,11 @@ export const appRoutes: Routes = [
             {
                 path: 'work-schedule',
                 component: WorkScheduleComponent,
+                data: { roles: ['Voditelj kampa', 'Uprava'] }
+            },
+            {
+                path: 'console-messages',
+                component: ConsoleMessagesComponent,
                 data: { roles: ['Voditelj kampa', 'Uprava'] }
             },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },

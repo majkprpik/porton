@@ -30,6 +30,7 @@ import { LanguageService } from '../../pages/language/language.service';
 import { PushNotificationsService } from '../../pages/service/push-notifications.service';
 import { MultiSelect } from 'primeng/multiselect';
 import { HouseService } from '../../pages/service/house.service';
+import { ErrorLoggingService } from '../../pages/service/error-logging.service';
 
 @Component({
     selector: 'app-layout',
@@ -987,7 +988,9 @@ export class AppLayout {
         private languageService: LanguageService,
         private pushNotificationsService: PushNotificationsService,
         public houseService: HouseService,
+        private errorLogger: ErrorLoggingService,
     ) {
+        this.captureConsoleMessages();
         this.onAppVisibilityChange();
 
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
@@ -1014,6 +1017,39 @@ export class AppLayout {
             if (document.visibilityState === 'visible') {
                 this.onAppVisible();
             }
+        });
+    }
+
+    captureConsoleMessages() {
+        const originalLog = console.log;
+        console.log = (...args: any[]) => {
+            args.forEach(arg => this.errorLogger.logMessage(arg));
+            originalLog.apply(console, args);
+        };
+
+        const originalConsoleError = console.error;
+        console.error = (...args: any[]) => {
+            args.forEach(arg => this.errorLogger.logError(arg));
+            originalConsoleError.apply(console, args);
+        };
+
+        const originalConsoleWarn = console.warn;
+        console.warn = (...args: any[]) => {
+            args.forEach(arg => this.errorLogger.logWarning(arg));
+            originalConsoleWarn.apply(console, args);
+        };
+
+        window.onerror = (message, source, lineno, colno, error) => {
+            this.errorLogger.logError(
+            error instanceof Error
+                ? error
+                : `Unhandled Error: ${message} at ${source}:${lineno}:${colno}`
+            );
+            return false;
+        };
+
+        window.addEventListener('unhandledrejection', (event) => {
+            this.errorLogger.logError(event.reason);
         });
     }
 

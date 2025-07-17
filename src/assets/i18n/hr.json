@@ -11,7 +11,8 @@
         "NOTES": "Bilješke",
         "STATISTICS": "Statistika",
         "ARCHIVE": "Arhiva zadataka",
-        "WORK-SCHEDULE": "Raspored"
+        "WORK-SCHEDULE": "Raspored",
+        "CONSOLE-MESSAGES": "Console messages"
     },
     "BUTTONS": {
         "REPORT": "Prijavi",

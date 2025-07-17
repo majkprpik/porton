@@ -11,7 +11,8 @@
         "NOTES": "Notes",
         "STATISTICS": "Statistics",
         "ARCHIVE": "Task archive",
-        "WORK-SCHEDULE": "Work schedule"
+        "WORK-SCHEDULE": "Work schedule",
+        "CONSOLE-MESSAGES": "Console messages"
     },
     "BUTTONS": {
         "REPORT": "Report",
