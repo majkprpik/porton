@@ -1653,14 +1653,18 @@ export class AppLayout {
 
         this.dataService.$tasksUpdate.subscribe((res) => {
             if (res && res.new.task_id && res.eventType == 'INSERT') {
+                console.log("Insert on tasks: ", res);
                 if (!this.tasks.find((task) => task.task_id == res.new.task_id)) {
+                    console.log("A new task has arrived: ", res);
                     this.tasks = [...this.tasks, res.new];
                     this.dataService.setTasks(this.tasks);
                 }
             } else if (res && res.new.task_id && res.eventType == 'UPDATE') {
+                console.log("Update on tasks: ", res);
                 let taskIndex = this.tasks.findIndex((task) => task.task_id == res.new.task_id);
 
                 if (taskIndex != -1) {
+                    console.log("A task has been updated: ", res);
                     this.tasks = this.tasks.map((task) => (task.task_id === res.new.task_id ? res.new : task));
 
                     this.dataService.setTasks(this.tasks);
@@ -1674,6 +1678,7 @@ export class AppLayout {
                     }
                 }
             } else if (res && res.old.task_id && res.eventType == 'DELETE') {
+                console.log("Delete on tasks: ", res);
                 this.tasks = this.tasks.filter((task) => task.task_id != res.old.task_id);
                 this.dataService.setTasks(this.tasks);
             }
