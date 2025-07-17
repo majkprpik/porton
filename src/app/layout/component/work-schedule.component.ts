@@ -173,7 +173,6 @@ interface CellData {
     }
 
     .work-schedule-container {
-      background-color: red;
       height: 82vh;
       width: 100%;
       background-color: white;
