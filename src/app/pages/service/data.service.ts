@@ -1006,6 +1006,7 @@ export class DataService {
   }
 
   listenToDatabaseChanges(){
+    console.log('Database listening called! Realtime channel: ', this.realtimeChannel);
     if (this.realtimeChannel) return;
 
     this.realtimeChannel = this.supabaseService.getClient().channel('realtime:porton')
@@ -1111,6 +1112,8 @@ export class DataService {
       }
     )
     .subscribe();
+
+    console.log('New realtime channel: ', this.realtimeChannel);
   }
 
   loadAuthUsers(): Observable<Profile[]> {

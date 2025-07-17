@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
 import { ErrorLoggingService } from '../../pages/service/error-logging.service';
 import { ButtonModule } from 'primeng/button';
 
@@ -11,8 +10,9 @@ import { ButtonModule } from 'primeng/button';
   template: `
     <div class="console-messages-container">
       <div class="buttons">
-        <p-button type="button" (onClick)="logError()" [rounded]="true" label="Error" severity="danger" />
-        <p-button type="button" (onClick)="logWarning()" [rounded]="true" label="Warning" severity="warn" />
+        <p-button type="button" (onClick)="logError()" [rounded]="true" label="Log Error" severity="danger" />
+        <p-button type="button" (onClick)="logWarning()" [rounded]="true" label="Log Warning" severity="warn" />
+        <p-button type="button" (onClick)="errorLogger.clear()" [rounded]="true" label="Clear data" severity="secondary" />
       </div>
       <h2>App Console Logs</h2>
       
@@ -92,7 +92,7 @@ export class ConsoleMessagesComponent {
   warnings: string[] = [];
   logs: string[] = [];
 
-  constructor(private errorLogger: ErrorLoggingService) {}
+  constructor(public errorLogger: ErrorLoggingService) {}
 
   ngOnInit() {
     this.errorLogger.errors$.subscribe(errs => {
