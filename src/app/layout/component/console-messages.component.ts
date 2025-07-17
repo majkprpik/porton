@@ -20,7 +20,7 @@ import { ButtonModule } from 'primeng/button';
         <h3 style="color: red">Errors</h3>
         <ul>
           @for(err of errors; track $index){
-            <li>{{ err }}</li>
+            <li class="console-entry">{{ err }}</li>
           }
         </ul>
       }
@@ -29,7 +29,7 @@ import { ButtonModule } from 'primeng/button';
         <h3 style="color: orange">Warnings</h3>
         <ul>
           @for(warning of warnings; track $index){
-            <li>{{ warning }}</li>
+            <li class="console-entry">{{ warning }}</li>
           }
         </ul>
       }
@@ -38,7 +38,7 @@ import { ButtonModule } from 'primeng/button';
         <h3>Logs</h3>
         <ul>
           @for(log of logs; track $index){
-            <li>{{ log }}</li>
+            <li class="console-entry">{{ log }}</li>
           }
         </ul>
       }
@@ -59,6 +59,16 @@ import { ButtonModule } from 'primeng/button';
         display: flex;
         flex-direction: row;
         gap: 20px;
+      }
+
+      .console-entry {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        font-family: monospace;
+        white-space: pre-wrap;
       }
     }
   `
