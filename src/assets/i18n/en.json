@@ -457,5 +457,15 @@
             "SELECT-START-TIME": "Select start time",
             "SELECT-END-TIME": "Select end time"
         }
+    },
+    "NOTIFICATIONS": {
+        "TEST": {
+            "TITLE": "Test notificaion",
+            "BODY": "Test notification"
+        },
+        "UNSCHEDULED-TASK": {
+            "TITLE": "Task assigned",
+            "BODY": "An unscheduled task has been assigned to you"
+        }
     }
 }

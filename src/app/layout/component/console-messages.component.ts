@@ -4,6 +4,7 @@ import { ErrorLoggingService } from '../../pages/service/error-logging.service';
 import { ButtonModule } from 'primeng/button';
 import { DataService, Profile, Task } from '../../pages/service/data.service';
 import { AuthService } from '../../pages/service/auth.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-console-messages',
@@ -95,7 +96,6 @@ export class ConsoleMessagesComponent {
   errors: string[] = [];
   warnings: string[] = [];
   logs: string[] = [];
-  emptyTask?: Task;
   loggedUser?: Profile;
   profiles: Profile[] = [];
 
@@ -104,6 +104,7 @@ export class ConsoleMessagesComponent {
     public pushNotificationsService: PushNotificationsService,
     private dataService: DataService,
     private authService: AuthService,
+    private translateService: TranslateService,
   ) {
     this.dataService.profiles$.subscribe(profiles => {
       this.profiles = profiles;
@@ -129,7 +130,12 @@ export class ConsoleMessagesComponent {
     const profilesToReceiveNotification = this.profiles.filter(profile => profile.first_name == 'Test User2');
     
     profilesToReceiveNotification.forEach(user => {
-      this.pushNotificationsService.sendTaskCompletedNotification(user.id, this.emptyTask);
+      this.pushNotificationsService.sendNotification(
+        user.id, 
+        { 
+          title: this.translateService.instant('NOTIFICATIONS.TEST.TITLE'), 
+          body: this.translateService.instant('NOTIFICATIONS.TEST.BODY'),
+        });
     })
   }
 

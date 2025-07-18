@@ -11,7 +11,9 @@ import { forkJoin } from 'rxjs';
 import { WorkGroupService } from '../service/work-group.service';
 import { TaskProgressTypeName, TaskService } from '../service/task.service';
 import { PanelModule } from 'primeng/panel';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { PushNotificationsService } from '../service/push-notifications.service';
+import { ProfileService } from '../service/profile.service';
 
 @Component({
   selector: 'app-work-groups',
@@ -367,6 +369,7 @@ export class WorkGroups implements OnInit {
   isCleaningCollapsed: boolean = false;
   tasksToRemove: Task[] = [];
   profiles: Profile[] = [];
+  tasksToAdd: Task[] = [];
 
   get cleaningGroups() {
     return this.workGroups
@@ -384,6 +387,9 @@ export class WorkGroups implements OnInit {
     private dataService: DataService,
     public workGroupService: WorkGroupService,
     private taskService: TaskService,
+    private pushNotificationsService: PushNotificationsService,
+    private translateService: TranslateService,
+    private profileService: ProfileService,
   ) {}
 
   ngOnInit() {
@@ -451,11 +457,13 @@ export class WorkGroups implements OnInit {
     this.taskService.$taskToRemove.subscribe(res => {
       if(res){
         this.tasksToRemove.push(res);
+        this.tasksToAdd = this.tasksToAdd.filter(task => task.task_id != res.task_id);
       }
     });
 
     this.taskService.$selectedTask.subscribe(res => {
       if(res){
+        this.tasksToAdd.push(res);
         this.tasksToRemove = this.tasksToRemove.filter(ttrm => ttrm.task_id != res.task_id);
       }
     })
@@ -635,6 +643,27 @@ export class WorkGroups implements OnInit {
         ...createProfilePromises,
         ...updateRemovedTasksPromises
       ]);
+
+      const testUser2Profile = this.profiles.find(profile => profile.first_name == 'Test User2');
+
+      if(testUser2Profile){
+        this.tasksToAdd.forEach(task => {
+          if(!task.is_unscheduled) return;
+  
+          const houseTechnicians = lockedWorkGroup.members.filter(member => this.profileService.isHouseTechnician(member.id));
+  
+          houseTechnicians.forEach(member => {
+            this.pushNotificationsService.sendNotification(
+              testUser2Profile.id, 
+              { 
+                title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'), 
+                body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
+              });
+          });
+        });
+      }
+
+      this.tasksToAdd = [];
     });
   
     await Promise.all(workGroupPromises);

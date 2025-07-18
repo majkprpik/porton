@@ -1666,7 +1666,6 @@ export class AppLayout {
                 if (taskIndex != -1) {
                     console.log("A task has been updated: ", res);
                     this.tasks = this.tasks.map((task) => (task.task_id === res.new.task_id ? res.new : task));
-
                     this.dataService.setTasks(this.tasks);
                 }
             } else if (res && res.old.task_id && res.eventType == 'DELETE') {

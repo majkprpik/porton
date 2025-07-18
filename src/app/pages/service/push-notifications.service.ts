@@ -89,7 +89,7 @@ export class PushNotificationsService {
     return this.fcmTokenSource.getValue();
   }
 
-  async sendTaskCompletedNotification(profileId: string, task: Task | null | undefined){
+  async sendNotification(profileId: string, notification: { title: string; body: string; icon?: string }){
     const token = localStorage.getItem('supabase_access_token');
     
     if (!token) {
@@ -108,8 +108,8 @@ export class PushNotificationsService {
       {
         fcmToken: device.fcm_token,
         notification: {
-          title: 'Test Notification',
-          body: 'Testing',
+          title: notification.title,
+          body: notification.body,
           icon: '/assets/icons/icon-72x72.png'
         },
       }, 

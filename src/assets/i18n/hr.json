@@ -457,5 +457,15 @@
             "SELECT-START-TIME": "Odabrei početak smjene",
             "SELECT-END-TIME": "Odaberi kraj smjene"
         }
+    },
+    "NOTIFICATIONS": {
+        "TEST": {
+            "TITLE": "Testna obavijest",
+            "BODY": "Testna obavijest"
+        },
+        "UNSCHEDULED-TASK": {
+            "TITLE": "Zadatak dodijeljen",
+            "BODY": "Dodijeljen vam je izvanredan zadatak"
+        }
     }
 }
