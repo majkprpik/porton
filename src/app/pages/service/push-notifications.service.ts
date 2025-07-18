@@ -28,7 +28,13 @@ export class PushNotificationsService {
           icon: payload.notification?.icon || '/assets/icons/icon-72x72.png',
         };
 
-        new Notification(notificationTitle, notificationOptions);
+        navigator.serviceWorker.getRegistration().then(registration => {
+          if (registration) {
+            registration.showNotification(notificationTitle, notificationOptions);
+          } else {
+            console.warn('No service worker registration available');
+          }
+        });
       }
     });
   }
