@@ -1,6 +1,7 @@
+import { PushNotificationsService } from './push-notifications.service';
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, Task, TaskProgressType, TaskType } from './data.service';
+import { DataService, Profile, Task, TaskProgressType, TaskType } from './data.service';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 import { AuthService } from './auth.service';
@@ -15,6 +16,9 @@ export class TaskService {
 
   private taskProgressTypes: TaskProgressType[] = [];
   private taskTypes: TaskType[] = [];
+
+  loggedUser?: Profile;
+  storedUserId?: string | null;
   
   taskTypesTranslationMap: { [key: string]: string } = { 
     "Čišćenje kućice": "House cleaning",
@@ -28,20 +32,30 @@ export class TaskService {
   private isUrgentIconVisibleSubject = new BehaviorSubject<boolean>(false);
   isUrgentIconVisible$ = this.isUrgentIconVisibleSubject.asObservable();
   private intervalId: any;
+  tasks: Task[] = [];
+  profiles: Profile[] = [];
 
   constructor(
     private supabaseService: SupabaseService,
     private dataService: DataService,
     private authService: AuthService,
+    private pushNotificationsService: PushNotificationsService,
   ) {
     this.startUrgencyInterval();
+    this.storedUserId = this.authService.getStoredUserId();
 
     combineLatest([
       this.dataService.taskProgressTypes$,
       this.dataService.taskTypes$,
-    ]).subscribe(([taskProgressTypes, taskTypes]) => {
+      this.dataService.tasks$,
+      this.dataService.profiles$,
+    ]).subscribe(([taskProgressTypes, taskTypes, tasks, profiles]) => {
       this.taskProgressTypes = taskProgressTypes;
       this.taskTypes = taskTypes;
+      this.tasks = tasks;
+      this.profiles = profiles;
+
+      this.loggedUser = this.profiles.find(profile => profile.id == this.storedUserId);
     });
   }
 
@@ -215,6 +229,15 @@ export class TaskService {
         .select();
 
       if(taskError) throw taskError
+      if(!updatedTask) return;
+
+      if(
+        this.isTaskCompleted(updatedTask[0]) && 
+        this.isOtherTask(updatedTask[0]) &&
+        this.loggedUser && this.loggedUser.first_name == 'Test User2'
+      ){
+        this.pushNotificationsService.sendTaskCompletedNotification(updatedTask[0]);
+      }
       
       return updatedTask;
     } catch (error) {
@@ -233,6 +256,10 @@ export class TaskService {
     const compressedImage = await imageCompression(image, options);
 
     return compressedImage;
+  }
+
+  getAllTasks(){
+    return this.tasks;
   }
 
   getAllTaskTypes(){

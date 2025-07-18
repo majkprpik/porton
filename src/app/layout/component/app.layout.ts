@@ -1668,14 +1668,6 @@ export class AppLayout {
                     this.tasks = this.tasks.map((task) => (task.task_id === res.new.task_id ? res.new : task));
 
                     this.dataService.setTasks(this.tasks);
-
-                    if(
-                        this.taskService.isTaskCompleted(res.new) && 
-                        this.taskService.isOtherTask(res.new) &&
-                        this.loggedUser && this.loggedUser.first_name == 'Test User2'
-                    ){
-                        this.pushNotificationsService.sendTaskCompletedNotification(this.tasks[taskIndex]);
-                    }
                 }
             } else if (res && res.old.task_id && res.eventType == 'DELETE') {
                 console.log("Delete on tasks: ", res);
