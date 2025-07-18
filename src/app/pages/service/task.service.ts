@@ -231,12 +231,12 @@ export class TaskService {
       if(taskError) throw taskError
       if(!updatedTask) return;
 
-      if(
-        this.isTaskCompleted(updatedTask[0]) && 
-        this.isOtherTask(updatedTask[0]) &&
-        this.loggedUser && this.loggedUser.first_name == 'Test User2'
-      ){
-        this.pushNotificationsService.sendTaskCompletedNotification(updatedTask[0]);
+      if(this.isTaskCompleted(updatedTask[0]) && this.isOtherTask(updatedTask[0])) {
+        const usersToReceiveNotifications = this.profiles.filter(profile => profile.first_name == 'Test User2');
+        
+        usersToReceiveNotifications.forEach(user => {
+          this.pushNotificationsService.sendTaskCompletedNotification(user.id, updatedTask[0]);
+        });
       }
       
       return updatedTask;

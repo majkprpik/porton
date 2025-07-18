@@ -97,6 +97,7 @@ export class ConsoleMessagesComponent {
   logs: string[] = [];
   emptyTask?: Task;
   loggedUser?: Profile;
+  profiles: Profile[] = [];
 
   constructor(
     public errorLogger: ErrorLoggingService,
@@ -105,6 +106,7 @@ export class ConsoleMessagesComponent {
     private authService: AuthService,
   ) {
     this.dataService.profiles$.subscribe(profiles => {
+      this.profiles = profiles;
       this.loggedUser = profiles.find(profile => profile.id == this.authService.getStoredUserId());
     });
   }
@@ -124,9 +126,11 @@ export class ConsoleMessagesComponent {
   }
 
   sendTestNotification(){
-    if(this.loggedUser && this.loggedUser.first_name == 'Test User2'){
-      this.pushNotificationsService.sendTaskCompletedNotification(this.emptyTask);
-    }
+    const profilesToReceiveNotification = this.profiles.filter(profile => profile.first_name == 'Test User2');
+    
+    profilesToReceiveNotification.forEach(user => {
+      this.pushNotificationsService.sendTaskCompletedNotification(user.id, this.emptyTask);
+    })
   }
 
   logError(){
