@@ -65,7 +65,7 @@ export class PushNotificationsService {
     return this.fcmTokenSource.getValue();
   }
 
-  async sendTaskCompletedNotification(task: Task){
+  async sendTaskCompletedNotification(task: Task | null | undefined){
     const token = localStorage.getItem('supabase_access_token');
     
     if (!token) {

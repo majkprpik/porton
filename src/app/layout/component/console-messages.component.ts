@@ -1,6 +1,9 @@
+import { PushNotificationsService } from './../../pages/service/push-notifications.service';
 import { Component } from '@angular/core';
 import { ErrorLoggingService } from '../../pages/service/error-logging.service';
 import { ButtonModule } from 'primeng/button';
+import { DataService, Profile, Task } from '../../pages/service/data.service';
+import { AuthService } from '../../pages/service/auth.service';
 
 @Component({
   selector: 'app-console-messages',
@@ -13,6 +16,7 @@ import { ButtonModule } from 'primeng/button';
         <p-button type="button" (onClick)="logError()" [rounded]="true" label="Log Error" severity="danger" />
         <p-button type="button" (onClick)="logWarning()" [rounded]="true" label="Log Warning" severity="warn" />
         <p-button type="button" (onClick)="errorLogger.clear()" [rounded]="true" label="Clear data" severity="secondary" />
+        <p-button type="button" (onClick)="sendTestNotification()" [rounded]="true" label="Send test notification" severity="primary" />
       </div>
       <h2>App Console Logs</h2>
       
@@ -91,8 +95,19 @@ export class ConsoleMessagesComponent {
   errors: string[] = [];
   warnings: string[] = [];
   logs: string[] = [];
+  emptyTask?: Task;
+  loggedUser?: Profile;
 
-  constructor(public errorLogger: ErrorLoggingService) {}
+  constructor(
+    public errorLogger: ErrorLoggingService,
+    public pushNotificationsService: PushNotificationsService,
+    private dataService: DataService,
+    private authService: AuthService,
+  ) {
+    this.dataService.profiles$.subscribe(profiles => {
+      this.loggedUser = profiles.find(profile => profile.id == this.authService.getStoredUserId());
+    });
+  }
 
   ngOnInit() {
     this.errorLogger.errors$.subscribe(errs => {
@@ -106,6 +121,12 @@ export class ConsoleMessagesComponent {
     this.errorLogger.logs$.subscribe(logs => {
       this.logs = logs;
     });
+  }
+
+  sendTestNotification(){
+    if(this.loggedUser && this.loggedUser.first_name == 'Test User2'){
+      this.pushNotificationsService.sendTaskCompletedNotification(this.emptyTask);
+    }
   }
 
   logError(){
