@@ -186,6 +186,23 @@ export class PushNotificationsService {
     }
   }
 
+  async deleteUserDeviceData(profileId: string, fcmToken: string){
+    try{
+      const { data: userDeviceData, error: deleteUserDeviceDataError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('user_devices')
+        .delete()
+        .match({ profile_id: profileId, fcm_token: fcmToken });
+  
+      if(deleteUserDeviceDataError) throw deleteUserDeviceDataError;
+  
+      return true;
+    } catch(error){
+      console.error('Error deleting user device data:', error);
+      return false;
+    }
+  }
+
   isDeviceIdStored(){
     return localStorage.getItem('porton_device_id');
   }

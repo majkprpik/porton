@@ -5,6 +5,7 @@ import { SupabaseService } from './supabase.service';
 import { ProfileService } from './profile.service';
 import { DataService, ProfileRole } from './data.service';
 import { LayoutService } from '../../layout/service/layout.service';
+import { PushNotificationsService } from './push-notifications.service';
 
 @Injectable({
   providedIn: 'root'
@@ -21,6 +22,7 @@ export class AuthService {
     private profileService: ProfileService,
     private dataService: DataService,
     private layoutService: LayoutService,
+    private pushNotificationsService: PushNotificationsService,
   ) {
     this.dataService.profileRoles$.subscribe(profileRoles => {
       this.profileRoles = profileRoles;
@@ -74,6 +76,11 @@ export class AuthService {
 
   async logout(): Promise<void> {
     try {
+      const storedUserID = this.getStoredUserId();
+      const fcmToken = this.pushNotificationsService.getFirebaseMessagingSubscription();
+      if(storedUserID && fcmToken){
+        this.pushNotificationsService.deleteUserDeviceData(storedUserID, fcmToken);
+      }
       await this.supabaseService.getClient().auth.signOut();
       localStorage.clear();
       this.usernameSubject.next(null);
