@@ -6,7 +6,6 @@ import { Messaging as AngularMessaging  } from '@angular/fire/messaging';
 import { getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from './supabase.service';
-import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +19,6 @@ export class PushNotificationsService {
   constructor(
     private http: HttpClient,
     private supabaseService: SupabaseService,
-    private authService: AuthService,
   ) { 
     onMessage(this.messaging, (payload) => {
       console.log('💬 FCM message received in foreground:', payload);
@@ -150,7 +148,7 @@ export class PushNotificationsService {
   async storeUserDeviceData(){
     if(this.isDeviceIdStored()) return;
 
-    const storedUserId = this.authService.getStoredUserId();
+    const storedUserId = localStorage.getItem('profileId');;
     if(!storedUserId) {
       console.error('User ID not found!');
       return;
