@@ -47,7 +47,6 @@ export class PushNotificationsService {
     });
   }
 
-  // New method: request permission and get FCM token
   async requestFirebaseMessaging(): Promise<void> {
     const permission = Notification.permission;
 
@@ -73,12 +72,6 @@ export class PushNotificationsService {
         console.log('✅ FCM Token:', token);
         this.setFirebaseMessaingSubscription(token);
         this.storeUserDeviceData();
-        const supabaseToken = await this.supabaseService.getSession();
-    
-        if (!supabaseToken) {
-          console.error('No supabase access token found');
-          return;
-        }
       } else {
         console.warn('⚠️ No FCM token received. Permission denied?');
       }
@@ -153,9 +146,7 @@ export class PushNotificationsService {
   }
 
   async storeUserDeviceData(){
-    if(this.isDeviceIdStored()) return;
-
-    const storedUserId = localStorage.getItem('profileId');;
+    const storedUserId = localStorage.getItem('profileId');
     if(!storedUserId) {
       console.error('User ID not found!');
       return;
@@ -163,21 +154,29 @@ export class PushNotificationsService {
 
     const fcmToken = this.getFirebaseMessagingSubscription();
     if(!fcmToken){
-      console.error('FCM token not found!');
+      console.error('FCM token not found while storing user data!');
       return;
+    }
+
+    let deviceId = this.getDeviceId();
+    if(!deviceId){
+      this.createDeviceId();
+      deviceId = this.getDeviceId();
     }
 
     try{
       const { data: userDeviceData, error: storeUserDeviceDataError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('user_devices')
-        .insert({
+        .upsert({
           profile_id: storedUserId,
-          device_id: this.getOrCreateDeviceId(),
+          device_id: deviceId,
           fcm_token: fcmToken,
           device_info: this.getDeviceInfo(),
           last_updated: this.supabaseService.formatDateTimeForSupabase(new Date()),
           created_at: this.supabaseService.formatDateTimeForSupabase(new Date()),
+        }, {
+          onConflict: 'profile_id,device_id'
         })
         .select()
         .single();
@@ -191,13 +190,13 @@ export class PushNotificationsService {
     }
   }
 
-  async deleteUserDeviceData(profileId: string, fcmToken: string){
+  async deleteUserDeviceData(profileId: string, deviceId: string){
     try{
       const { data: userDeviceData, error: deleteUserDeviceDataError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('user_devices')
         .delete()
-        .match({ profile_id: profileId, fcm_token: fcmToken });
+        .match({ profile_id: profileId, device_id: deviceId });
   
       if(deleteUserDeviceDataError) throw deleteUserDeviceDataError;
   
@@ -208,20 +207,12 @@ export class PushNotificationsService {
     }
   }
 
-  isDeviceIdStored(){
+  getDeviceId(){
     return localStorage.getItem('porton_device_id');
   }
 
-  getOrCreateDeviceId(): string {
-    const key = 'porton_device_id';
-    let deviceId = localStorage.getItem(key);
-
-    if (!deviceId) {
-      deviceId = crypto.randomUUID();
-      localStorage.setItem(key, deviceId);
-    }
-
-    return deviceId;
+  createDeviceId(){
+    localStorage.setItem('porton_device_id', crypto.randomUUID());
   }
 
   getDeviceInfo(): string {

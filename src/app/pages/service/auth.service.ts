@@ -77,9 +77,9 @@ export class AuthService {
   async logout(): Promise<void> {
     try {
       const storedUserID = this.getStoredUserId();
-      const fcmToken = this.pushNotificationsService.getFirebaseMessagingSubscription();
-      if(storedUserID && fcmToken){
-        this.pushNotificationsService.deleteUserDeviceData(storedUserID, fcmToken);
+      const deviceId = this.pushNotificationsService.getDeviceId();
+      if(storedUserID && deviceId){
+        this.pushNotificationsService.deleteUserDeviceData(storedUserID, deviceId);
       }
       await this.supabaseService.getClient().auth.signOut();
       localStorage.clear();
