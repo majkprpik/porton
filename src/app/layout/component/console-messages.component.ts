@@ -8,6 +8,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { InputText } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-console-messages',
@@ -15,17 +16,15 @@ import { MultiSelectModule } from 'primeng/multiselect';
     ButtonModule,
     SelectModule,
     FormsModule,
-    MultiSelectModule
+    MultiSelectModule,
+    InputText
   ],
   template: `
     <div class="console-messages-container">
-      <div class="buttons">
-        <div class="log-buttons">
-          <p-button type="button" (onClick)="logError()" [rounded]="true" label="Log Error" severity="danger" />
-          <p-button type="button" (onClick)="logWarning()" [rounded]="true" label="Log Warning" severity="warn" />
-          <p-button type="button" (onClick)="errorLogger.clear()" [rounded]="true" label="Clear data" severity="secondary" />
-        </div>
-        <div class="test-notification">
+      <h2>Send test notification</h2>
+      <div class="test-notification">
+        <div class="field">
+          <label for="notificationTitle" class="font-bold block mb-2">Profiles</label>
           <p-multiselect 
               id="profiles-select"
               [options]="profiles" 
@@ -38,11 +37,37 @@ import { MultiSelectModule } from 'primeng/multiselect';
                 <span>{{ item.first_name }}</span>
               </ng-template>
           </p-multiselect>
-          <p-button type="button" (onClick)="sendTestNotification()" [rounded]="true" label="Send test notification" severity="primary" />
         </div>
+        <div class="field mt-4">
+          <label for="notificationTitle" class="font-bold block mb-2">Title</label>
+          <input 
+            type="text"
+            pInputText 
+            [style]="{ width: '200px' }" 
+            [placeholder]="'Title'" 
+            [(ngModel)]="notificationTitle"
+          >
+        </div>
+        <div class="field mt-4">
+          <label for="notificationBody" class="font-bold block mb-2">Body</label>
+          <input 
+            type="text"
+            pInputText 
+            [style]="{ width: '200px' }" 
+            [placeholder]="'Body'" 
+            [(ngModel)]="notificationBody"
+          >
+        </div>
+        <p-button type="button" (onClick)="sendTestNotification()" [rounded]="true" label="Send" severity="primary" />
       </div>
       <h2>App Console Logs</h2>
-      
+    
+      <div class="log-buttons">
+        <p-button type="button" (onClick)="logError()" [rounded]="true" label="Log Error" severity="danger" />
+        <p-button type="button" (onClick)="logWarning()" [rounded]="true" label="Log Warning" severity="warn" />
+        <p-button type="button" (onClick)="errorLogger.clear()" [rounded]="true" label="Clear data" severity="secondary" />
+      </div>
+
       @if(errors.length){
         <h3 style="color: red">Errors</h3>
         <ul>
@@ -82,24 +107,18 @@ import { MultiSelectModule } from 'primeng/multiselect';
       overflow-y: auto;
       position: relative;
 
-      .buttons{
+      .log-buttons{
+        display: flex;
+        flex-direction: row;
+        gap: 10px;  
+      }
+
+      .test-notification{
         display: flex;
         flex-direction: column;
-        gap: 20px;
-
-        .log-buttons{
-          display: flex;
-          flex-direction: row;
-          gap: 10px;  
-        }
-
-        .test-notification{
-          display: flex;
-          flex-direction: row;
-          align-items: end;
-          width: 40%;
-          gap: 10px;
-        }
+        align-items: center;
+        width: 200px;
+        gap: 10px;
       }
 
       .console-entry {
@@ -135,6 +154,8 @@ export class ConsoleMessagesComponent {
   loggedUser?: Profile;
   profiles: Profile[] = [];
   selectedProfiles: Profile[] = [];
+  notificationTitle: string = '';
+  notificationBody: string = '';
 
   constructor(
     public errorLogger: ErrorLoggingService,
@@ -168,8 +189,8 @@ export class ConsoleMessagesComponent {
       this.pushNotificationsService.sendNotification(
         user.id, 
         { 
-          title: this.translateService.instant('NOTIFICATIONS.TEST.TITLE'), 
-          body: this.translateService.instant('NOTIFICATIONS.TEST.BODY'),
+          title: this.notificationTitle, 
+          body: this.notificationBody,
         });
     })
   }
