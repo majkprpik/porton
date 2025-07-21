@@ -494,7 +494,7 @@ export class WorkGroups implements OnInit {
     this.lockedTeams = [];
 
     this.workGroups.forEach(workGroup => {
-      if (!workGroup.is_repair && this.is3DaysOld(workGroup)){
+      if (!workGroup.is_repair && this.is2DaysOld(workGroup)){
         const workGroupTasks = this.workGroupTasks.filter(wgt => wgt.work_group_id == workGroup.work_group_id);
         const filteredTasks = this.tasks.filter(task => workGroupTasks.some(wgt => wgt.task_id == task.task_id));
         const hasTasksInprogress = filteredTasks.some(task => this.taskService.isTaskInProgress(task) || this.taskService.isTaskPaused(task));
@@ -669,11 +669,11 @@ export class WorkGroups implements OnInit {
     return (date1 && date2) ? date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2] : false;
   }
 
-  is3DaysOld(workGroup: WorkGroupObject): boolean {
+  is2DaysOld(workGroup: WorkGroupObject): boolean {
     const createdAt = new Date(workGroup.created_at);
     const threeDaysAgo = new Date();
 
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
 
     return createdAt < threeDaysAgo;
   }
