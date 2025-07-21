@@ -644,24 +644,20 @@ export class WorkGroups implements OnInit {
         ...updateRemovedTasksPromises
       ]);
 
-      const testUser2Profile = this.profiles.find(profile => profile.first_name == 'Matej Adrić');
+      this.tasksToAdd.forEach(task => {
+        if(!task.is_unscheduled) return;
 
-      if(testUser2Profile){
-        this.tasksToAdd.forEach(task => {
-          if(!task.is_unscheduled) return;
-  
-          const houseTechnicians = lockedWorkGroup.members.filter(member => this.profileService.isHouseTechnician(member.id));
-  
-          houseTechnicians.forEach(member => {
-            this.pushNotificationsService.sendNotification(
-              testUser2Profile.id, 
-              { 
-                title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'), 
-                body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
-              });
-          });
+        const houseTechnicians = lockedWorkGroup.members.filter(member => this.profileService.isHouseTechnician(member.id));
+
+        houseTechnicians.forEach(member => {
+          this.pushNotificationsService.sendNotification(
+            member.id, 
+            { 
+              title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'), 
+              body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
+            });
         });
-      }
+      });
 
       this.tasksToAdd = [];
     });
