@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { Task } from './data.service';
+import { DataService, Profile, Task } from './data.service';
 import { Messaging as AngularMessaging  } from '@angular/fire/messaging';
 import { getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
@@ -13,13 +13,19 @@ import { SupabaseService } from './supabase.service';
 export class PushNotificationsService {
   private fcmTokenSource = new BehaviorSubject<string | null>(null);
   fcmToken$ = this.fcmTokenSource.asObservable();
+  profiles: Profile[] = [];
   
   private messaging = inject(AngularMessaging);
   
   constructor(
     private http: HttpClient,
     private supabaseService: SupabaseService,
+    private dataService: DataService,
   ) { 
+    this.dataService.profiles$.subscribe(profiles => {
+      this.profiles = profiles;
+    })
+
     onMessage(this.messaging, (payload) => {
       console.log('💬 FCM message received in foreground:', payload);
       
@@ -99,9 +105,10 @@ export class PushNotificationsService {
 
     const userDeviceData = await this.getUserDeviceData(profileId);
     if(!userDeviceData || userDeviceData.length == 0) {
-      console.error('User with profile ID: ' + profileId + ' has no registered devices');
+      const profile = this.profiles.find(profile => profile.id == profileId);
+      console.error('User ' + (profile?.first_name ?? profileId) + ' has no registered devices');
       return;
-    };
+    }
 
     userDeviceData.forEach((device: any) => {
       this.http.post('https://portonnotifications-l3crl2uwyq-uc.a.run.app/fcm-notifications', 
