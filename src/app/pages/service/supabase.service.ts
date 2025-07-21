@@ -29,6 +29,7 @@ export class SupabaseService {
 
   async getSession(): Promise<string | null> {
     const { data, error } = await this.supabase.auth.getSession();
+    
     if (error) {
       console.error('Error fetching session:', error);
       return null;

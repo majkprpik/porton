@@ -16,6 +16,7 @@ import { SelectModule } from 'primeng/select';
 import { ProfileService } from '../../pages/service/profile.service';
 import { PushNotificationsService } from '../../pages/service/push-notifications.service';
 import { combineLatest } from 'rxjs';
+import { SupabaseService } from '../../pages/service/supabase.service';
 
 @Component({
     selector: 'app-topbar',
@@ -129,6 +130,7 @@ export class AppTopbar {
         public languageService: LanguageService,
         public profileService: ProfileService,
         private pushNotificationService: PushNotificationsService,
+        private supabaseService: SupabaseService,
     ) {
     }
 
@@ -158,7 +160,7 @@ export class AppTopbar {
         this.layoutService.layoutConfig.update((state) => ({ ...state, darkTheme: !state.darkTheme }));
     }
 
-    confirm1(event: Event) {    
+    async confirm1(event: Event) {    
         const userId = this.authService.getStoredUserId();
         const profile = this.profiles.find(p => p.id == userId);
         const email = this.authService.getStoredUsername() || '';
@@ -176,7 +178,7 @@ export class AppTopbar {
                         <div class="new-profile-row"><b>Email:</b> ${email}</div>
                         <div class="new-profile-row"><b>Mobitel:</b> ${phone}</div>
                         <div class="new-profile-row"><b>Pozicija:</b> ${role}</div>
-                        <div class="new-profile-row"><b>Access token:</b> ${localStorage.getItem('supabase_access_token')}</div>
+                        <div class="new-profile-row"><b>Access token:</b> ${await this.supabaseService.getSession()}</div>
                         <div class="new-profile-row"><b>fcmToken:</b> ${this.pushNotificationService.getFirebaseMessagingSubscription()}</div> 
                     </div>`,
                 acceptButtonProps: {

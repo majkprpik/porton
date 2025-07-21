@@ -67,7 +67,7 @@ export class PushNotificationsService {
         console.log('✅ FCM Token:', token);
         this.setFirebaseMessaingSubscription(token);
         this.storeUserDeviceData();
-        const supabaseToken = localStorage.getItem('supabase_access_token');
+        const supabaseToken = await this.supabaseService.getSession();
     
         if (!supabaseToken) {
           console.error('No supabase access token found');
@@ -90,8 +90,8 @@ export class PushNotificationsService {
   }
 
   async sendNotification(profileId: string, notification: { title: string; body: string; icon?: string }){
-    const token = localStorage.getItem('supabase_access_token');
-    
+    const token = await this.supabaseService.getSession();
+
     if (!token) {
       console.error('No supabase access token found');
       return;
