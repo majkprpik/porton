@@ -644,7 +644,7 @@ export class WorkGroups implements OnInit {
         ...updateRemovedTasksPromises
       ]);
 
-      const testUser2Profile = this.profiles.find(profile => profile.first_name == 'Test User2');
+      const testUser2Profile = this.profiles.find(profile => profile.first_name == 'Matej Adrić');
 
       if(testUser2Profile){
         this.tasksToAdd.forEach(task => {

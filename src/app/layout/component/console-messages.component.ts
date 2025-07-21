@@ -127,7 +127,7 @@ export class ConsoleMessagesComponent {
   }
 
   sendTestNotification(){
-    const profilesToReceiveNotification = this.profiles.filter(profile => profile.first_name == 'Test User2');
+    const profilesToReceiveNotification = this.profiles.filter(profile => profile.first_name == 'Matej Adrić');
     
     profilesToReceiveNotification.forEach(user => {
       this.pushNotificationsService.sendNotification(
