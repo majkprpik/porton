@@ -5,19 +5,41 @@ import { ButtonModule } from 'primeng/button';
 import { DataService, Profile, Task } from '../../pages/service/data.service';
 import { AuthService } from '../../pages/service/auth.service';
 import { TranslateService } from '@ngx-translate/core';
+import { SelectModule } from 'primeng/select';
+import { FormsModule } from '@angular/forms';
+import { MultiSelectModule } from 'primeng/multiselect';
 
 @Component({
   selector: 'app-console-messages',
   imports: [
-    ButtonModule
+    ButtonModule,
+    SelectModule,
+    FormsModule,
+    MultiSelectModule
   ],
   template: `
     <div class="console-messages-container">
       <div class="buttons">
-        <p-button type="button" (onClick)="logError()" [rounded]="true" label="Log Error" severity="danger" />
-        <p-button type="button" (onClick)="logWarning()" [rounded]="true" label="Log Warning" severity="warn" />
-        <p-button type="button" (onClick)="errorLogger.clear()" [rounded]="true" label="Clear data" severity="secondary" />
-        <p-button type="button" (onClick)="sendTestNotification()" [rounded]="true" label="Send test notification" severity="primary" />
+        <div class="log-buttons">
+          <p-button type="button" (onClick)="logError()" [rounded]="true" label="Log Error" severity="danger" />
+          <p-button type="button" (onClick)="logWarning()" [rounded]="true" label="Log Warning" severity="warn" />
+          <p-button type="button" (onClick)="errorLogger.clear()" [rounded]="true" label="Clear data" severity="secondary" />
+        </div>
+        <div class="test-notification">
+          <p-multiselect 
+              id="profiles-select"
+              [options]="profiles" 
+              [(ngModel)]="selectedProfiles"
+              optionLabel="first_name" 
+              [placeholder]="'Select profiles...'" 
+              [style]="{ width: '200px' }" 
+            >
+              <ng-template let-item pTemplate="item">
+                <span>{{ item.first_name }}</span>
+              </ng-template>
+          </p-multiselect>
+          <p-button type="button" (onClick)="sendTestNotification()" [rounded]="true" label="Send test notification" severity="primary" />
+        </div>
       </div>
       <h2>App Console Logs</h2>
       
@@ -62,8 +84,22 @@ import { TranslateService } from '@ngx-translate/core';
 
       .buttons{
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         gap: 20px;
+
+        .log-buttons{
+          display: flex;
+          flex-direction: row;
+          gap: 10px;  
+        }
+
+        .test-notification{
+          display: flex;
+          flex-direction: row;
+          align-items: end;
+          width: 40%;
+          gap: 10px;
+        }
       }
 
       .console-entry {
@@ -98,6 +134,7 @@ export class ConsoleMessagesComponent {
   logs: string[] = [];
   loggedUser?: Profile;
   profiles: Profile[] = [];
+  selectedProfiles: Profile[] = [];
 
   constructor(
     public errorLogger: ErrorLoggingService,
@@ -127,9 +164,7 @@ export class ConsoleMessagesComponent {
   }
 
   sendTestNotification(){
-    const profilesToReceiveNotification = this.profiles.filter(profile => profile.first_name == 'Matej Adrić');
-    
-    profilesToReceiveNotification.forEach(user => {
+    this.selectedProfiles.forEach(user => {
       this.pushNotificationsService.sendNotification(
         user.id, 
         { 
