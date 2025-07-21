@@ -521,6 +521,8 @@ export class WorkGroup implements OnInit {
         this.workGroupProfiles = workGroupProfiles;
         this.workGroups = workGroups;
         this.profiles = profiles;
+
+        this.deleteCompletedWorkGroupTasks();
       },
       error: (error) => {
         console.error(error);
@@ -778,5 +780,26 @@ export class WorkGroup implements OnInit {
 
     this.dataService.setWorkGroupTasks(this.workGroupTasks);
     this.workGroupService.updateLockedTeam(lockedTeam);
+  }
+
+  deleteCompletedWorkGroupTasks(){
+    const workGroupTasks = this.workGroupTasks.filter(wgt => wgt.work_group_id == this.workGroup?.work_group_id);
+    const tasks = this.tasks.filter(task => workGroupTasks.some(wgt => wgt.task_id == task.task_id));
+
+    tasks.forEach(task => {
+      if(this.taskService.isTaskCompleted(task) && this.isTaskOlderThan2Days(task)){
+        this.workGroupService.deleteWorkGroupTask(task.task_id);
+      }
+    });
+  }
+
+  isTaskOlderThan2Days(task: Task){
+    if(!task.end_time) return;
+
+    const taskCreatedDate = new Date(task.end_time);
+    const now = new Date();
+    const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+
+    return taskCreatedDate < twoDaysAgo;
   }
 } 

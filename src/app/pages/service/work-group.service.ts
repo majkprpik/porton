@@ -163,6 +163,23 @@ export class WorkGroupService {
     }
   }
 
+  async deleteWorkGroupTask(taskId: number){
+    try{
+      const { error: deleteWorkGroupTaskError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_tasks')
+        .delete()
+        .eq('task_id', taskId);
+
+      if(deleteWorkGroupTaskError) throw deleteWorkGroupTaskError
+
+      return true;
+    } catch(error) {
+      console.log(error);
+      return false;
+    }
+  }
+
   async deleteAllWorkGroupProfilesByWorkGroupId(workGroupId: number){
     try{
       const { error: deleteWorkGroupProfilesError } = await this.supabaseService.getClient()
