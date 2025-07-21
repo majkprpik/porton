@@ -1,7 +1,7 @@
 import { PushNotificationsService } from './push-notifications.service';
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, Profile, Task, TaskProgressType, TaskType } from './data.service';
+import { DataService, House, Profile, Task, TaskProgressType, TaskType } from './data.service';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 import { AuthService } from './auth.service';
@@ -29,11 +29,18 @@ export class TaskService {
     "Ostalo": "Other"
   };
 
+  private profilesToReceiveTaskCompletedNotification = [
+    'Matej Adrić',
+    'Mia Lukić',
+    'Marko Sovulj',
+  ]
+
   private isUrgentIconVisibleSubject = new BehaviorSubject<boolean>(false);
   isUrgentIconVisible$ = this.isUrgentIconVisibleSubject.asObservable();
   private intervalId: any;
   tasks: Task[] = [];
   profiles: Profile[] = [];
+  houses: House[] = [];
 
   constructor(
     private supabaseService: SupabaseService,
@@ -49,11 +56,13 @@ export class TaskService {
       this.dataService.taskTypes$,
       this.dataService.tasks$,
       this.dataService.profiles$,
-    ]).subscribe(([taskProgressTypes, taskTypes, tasks, profiles]) => {
+      this.dataService.houses$
+    ]).subscribe(([taskProgressTypes, taskTypes, tasks, profiles, houses]) => {
       this.taskProgressTypes = taskProgressTypes;
       this.taskTypes = taskTypes;
       this.tasks = tasks;
       this.profiles = profiles;
+      this.houses = houses;
 
       this.loggedUser = this.profiles.find(profile => profile.id == this.storedUserId);
     });
@@ -229,7 +238,25 @@ export class TaskService {
         .select();
 
       if(taskError) throw taskError
-      
+
+      if(this.isTaskCompleted(updatedTask[0]) && updatedTask[0].is_unscheduled && this.isRepairTask(updatedTask[0])){
+        const profilesToReceiveNotification = this.profiles.filter(profile => 
+          this.profilesToReceiveTaskCompletedNotification.some(p => p == profile.first_name));
+
+        let completedBy: any = this.profiles.find(profile => profile.id == updatedTask[0].completed_by)?.first_name;
+        if(!completedBy) completedBy = 'User';
+
+        let houseNumber = this.houses.find(house => house.house_id == updatedTask[0].house_id)?.house_name;
+        if(!houseNumber) houseNumber = '0';
+
+        profilesToReceiveNotification.forEach(profile => {
+          this.pushNotificationsService.sendNotification(profile.id, {
+            title: 'Task completed',
+            body: completedBy + ' completed a repair task on house ' + houseNumber,
+          });
+        });
+      }
+
       return updatedTask;
     } catch (error) {
       console.error('Error updating task progress type: ', error);
