@@ -34,13 +34,14 @@ import { ChartComponent } from './chart.component';
       width: 100%;
       display: flex;
       flex-direction: column;
+      background-color: transparent;
       align-items: center;
       gap: 20px;
 
       .general-statistics-container, .occupancy-container{
         height: 900px;
         width: 100%;
-        background-color: white;
+        background-color: var(--surface-card);
         border-radius: 10px;
         box-sizing: border-box;
         padding: 20px;

@@ -31,8 +31,10 @@
                         <th class="day-header" 
                             [ngClass]="{
                                 'today-column': isToday(day),
-                                'saturday-column': isSaturday(day),
-                                'sunday-column': isSunday(day)
+                                'saturday-column-day': isSaturday(day) && !isNightMode,
+                                'saturday-column-night': isSaturday(day) && isNightMode,
+                                'sunday-column-day': isSunday(day) && !isNightMode,
+                                'sunday-column-night': isSunday(day) && isNightMode,
                             }"
                             [title]="day.toLocaleDateString()">
                             <div>{{ formatDate(day) }}</div>
@@ -57,8 +59,10 @@
                                     'selection-end': i === selectedCellRowIndex() && j === getEndColIndex(),
                                     'past-date': isCellInPast(j),
                                     'today-column': isToday(days()[j]),
-                                    'saturday-column': isSaturday(days()[j]),
-                                    'sunday-column': isSunday(days()[j]),
+                                    'saturday-column-day': isSaturday(days()[j]) && !isNightMode,
+                                    'saturday-column-night': isSaturday(days()[j]) && isNightMode,
+                                    'sunday-column-day': isSunday(days()[j]) && !isNightMode,
+                                    'sunday-column-night': isSunday(days()[j]) && isNightMode,
                                     'reservation-start': gridMatrix()[i][j].isReservationStart,
                                     'reservation-middle': gridMatrix()[i][j].isReservationMiddle,
                                     'reservation-end': gridMatrix()[i][j].isReservationEnd,

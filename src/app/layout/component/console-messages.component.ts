@@ -100,7 +100,7 @@ import { InputText } from 'primeng/inputtext';
    .console-messages-container {
       height: 82vh;
       width: 100%;
-      background-color: white;
+      background-color: var(--surface-card);
       border-radius: 10px;
       box-sizing: border-box;
       padding: 20px;
@@ -142,7 +142,7 @@ import { InputText } from 'primeng/inputtext';
       }
 
       .log{
-
+        background-color: var(--surface-card);
       }
     }
   `

@@ -84,7 +84,7 @@ import { combineLatest } from 'rxjs';
   styles: `
     .archive-container {
       height: 90vh;
-      background-color: white;
+      background-color: var(--surface-card);
       border-radius: 10px;
       box-sizing: border-box;
       padding: 20px;

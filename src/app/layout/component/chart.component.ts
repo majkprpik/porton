@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject, Input, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectorRef, Component, effect, inject, Input, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
@@ -300,7 +300,16 @@ export class ChartComponent {
     private taskService: TaskService,
     private layoutService: LayoutService,
   ) {
-        
+    effect(() => {
+      const isDark = this.layoutService.layoutConfig().darkTheme;
+      console.log('Dark mode changed:', isDark);
+
+      if(this.chartType == 'pie' || this.chartType == 'doughnut'){
+        this.initPieChart();
+      } else {
+        this.initChart();
+      }
+    });
   }
 
   ngOnInit(){
@@ -781,7 +790,10 @@ export class ChartComponent {
   initPieChart(){
     if(isPlatformBrowser(this.platformId)){
       const documentStyle = getComputedStyle(document.documentElement);
-      const textColor = documentStyle.getPropertyValue('--p-text-color');
+
+      const isNightMode = this.layoutService._config.darkTheme
+
+      const textColor = isNightMode ? 'white' : 'black';
 
       let pieData: number[] = [];
       let pieColors: string[] = [];
@@ -836,9 +848,12 @@ export class ChartComponent {
   initChart() {
     if (isPlatformBrowser(this.platformId)) {
       const documentStyle = getComputedStyle(document.documentElement);
-      const textColor = documentStyle.getPropertyValue('--p-text-color');
-      const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
-      const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color');
+
+      const isNightMode = this.layoutService._config.darkTheme
+
+      const textColor = isNightMode ? 'white' : 'black';
+      const textColorSecondary = isNightMode ? 'white' : 'gray';
+      const surfaceBorder = isNightMode ? 'gray' : 'lightgray';
 
       const allValues = Object.values(this.dataToDisplay).flat();
       const maxDataValue = Math.max(...allValues);

@@ -2,8 +2,7 @@
     .p-dialog {
         .p-dialog-header {
             padding: 1rem 1.5rem;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
+            background-color: var(--surface-ground);
             border-radius: 10px 10px 0 0;
 
             h3{

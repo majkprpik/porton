@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, HostListener, effect } from '@angular/core';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
 import { Subject, takeUntil, forkJoin, combineLatest, firstValueFrom } from 'rxjs';
@@ -7,6 +7,7 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { LayoutService } from '../../layout/service/layout.service';
 
 interface CellData {
     isReserved: boolean;
@@ -97,14 +98,20 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     colors = ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA', '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'];
 
+    isNightMode: boolean | undefined = undefined;
+
     constructor(
         private dataService: DataService,
         private messageService: MessageService,
         private translateService: TranslateService,
         private confirmationService: ConfirmationService,
         private datePipe: DatePipe,
+        private layoutService: LayoutService,
     ) {
 
+        effect(() => {
+            this.isNightMode = this.layoutService.layoutConfig().darkTheme;
+        });
     }
 
     ngOnInit(): void {
@@ -264,7 +271,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
     private createCellData(day: Date, reservation?: HouseAvailability): CellData {
         const cellData: CellData = {
             isReserved: false,
-            color: 'transparent',
+            color: '',
             displayText: '',
             tooltip: '',
             identifier: '',

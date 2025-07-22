@@ -92,7 +92,8 @@ import { TranslateModule } from '@ngx-translate/core';
                   </div>
                   <div class="house-container">
                     <label for="departure-checkbox-{{ departure.house_number }}">
-                      {{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.HOUSE' | translate }}: <span class="house-number">{{ departure.house_number }}</span>
+                      <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.HOUSE' | translate }}:</span> 
+                      <span class="house-number">{{ departure.house_number }}</span>
                     </label>
                   </div>
                   <div class="time-container">
@@ -136,7 +137,8 @@ import { TranslateModule } from '@ngx-translate/core';
                   </div>
                   <div class="house-container">
                     <label for="arrival-checkbox-{{ arrival.house_number }}">
-                      {{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.HOUSE' | translate }}: <span class="house-number">{{ arrival.house_number }}</span>
+                      <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.HOUSE' | translate }}:</span>
+                      <span class="house-number">{{ arrival.house_number }}</span>
                     </label>
                   </div>
                   <div class="time-container">
@@ -187,6 +189,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
         .selected-date{
           width: 95px;
+          color: var(--text-color);
         }
 
         .section-header {
@@ -256,16 +259,27 @@ import { TranslateModule } from '@ngx-translate/core';
     .house-container {
       flex: 1;
       min-width: 0;
+
+      label{
+        display: flex;
+        flex-direction: column;
+
+        span{
+          color: var(--text-color);
+        }
+
+        .house-number {
+          font-weight: 600;
+          color: var(--primary-color);
+        }
+      }
     }
 
     .time-container {
       flex: 0 0 80px;
     }
 
-    .house-number {
-      font-weight: 600;
-      color: var(--primary-color);
-    }
+    
 
     .empty-message {
       display: flex;

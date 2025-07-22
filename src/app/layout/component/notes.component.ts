@@ -104,7 +104,6 @@ import { DatePickerModule } from 'primeng/datepicker';
       height: 350px;
       width: 500px;
       border-radius: 10px;
-      border: 1px solid #e5e7eb;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -117,7 +116,6 @@ import { DatePickerModule } from 'primeng/datepicker';
         align-items: center;
         justify-content: center;
         border-radius: 10px 10px 0 0;
-        border-bottom: 1px solid #e5e7eb;
         background-color: var(--surface-ground);
 
         .notes-header{
@@ -151,7 +149,7 @@ import { DatePickerModule } from 'primeng/datepicker';
         overflow-x: hidden;
         word-wrap: break-word;
         align-items: flex-start;
-        background-color: white;
+        background-color: var(--surface-card);
         scrollbar-gutter: stable;
 
         .date-sent{
@@ -163,7 +161,6 @@ import { DatePickerModule } from 'primeng/datepicker';
 
           span{
             width: 200px;
-            color: var(--text-color-secondary);
           }
         }
 
@@ -202,13 +199,13 @@ import { DatePickerModule } from 'primeng/datepicker';
 
     .left-half-line{
       height: 1px;
-      background-color: var(--surface-ground); 
+      background-color: #e5e7eb; 
       width: 100%;
     }
 
     .right-half-line{
       height: 1px;
-      background-color: var(--surface-ground); 
+      background-color: #e5e7eb; 
       width: 92%;
     }
   `

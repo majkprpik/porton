@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, effect, signal } from '@angular/core';
 import { DataService, Profile, ProfileRole, ProfileWorkSchedule, ShiftType } from '../../pages/service/data.service';
 import { combineLatest } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { WorkScheduleFormComponent } from './work-schedule-form.component';
 import { ButtonModule } from 'primeng/button';
+import { LayoutService } from '../service/layout.service';
 
 interface CellData {
   isReserved: boolean;
@@ -58,8 +59,10 @@ interface CellData {
                     class="day-header"
                     [ngClass]="{
                       'today-column': isToday(day),
-                      'saturday-column': isSaturday(day),
-                      'sunday-column': isSunday(day)
+                      'saturday-column-day': isSaturday(day) && !isNightMode,
+                      'saturday-column-night': isSaturday(day) && isNightMode,
+                      'sunday-column-day': isSunday(day) && !isNightMode,
+                      'sunday-column-night': isSunday(day) && isNightMode,
                     }"
                     [title]="day.toLocaleDateString()"
                   >
@@ -84,8 +87,10 @@ interface CellData {
                         'selection-end': i === selectedCellRowIndex() && j === getEndColIndex(),
                         'past-date': isCellInPast(j),
                         'today-column': isToday(days()[j]),
-                        'saturday-column': isSaturday(days()[j]),
-                        'sunday-column': isSunday(days()[j]),
+                        'saturday-column-day': isSaturday(days()[j]) && !isNightMode,
+                        'saturday-column-night': isSaturday(days()[j]) && isNightMode,
+                        'sunday-column-day': isSunday(days()[j]) && !isNightMode,
+                        'sunday-column-night': isSunday(days()[j]) && isNightMode,
                         'reservation-start': gridMatrix()[i][j].isReservationStart,
                         'reservation-middle': gridMatrix()[i][j].isReservationMiddle,
                         'reservation-end': gridMatrix()[i][j].isReservationEnd,
@@ -175,7 +180,7 @@ interface CellData {
     .work-schedule-container {
       height: 82vh;
       width: 100%;
-      background-color: white;
+      background-color: var(--surface-card);
       border-radius: 10px;
       box-sizing: border-box;
       padding: 20px;
@@ -250,7 +255,7 @@ interface CellData {
           }
 
           .house-header {
-            background-color: white !important;
+            background-color: var(--surface-card) !important;
             font-weight: bold;
             position: sticky;
             top: 0;
@@ -264,7 +269,7 @@ interface CellData {
           }
 
           .day-header {
-            background-color: white;
+            background-color: var(--surface-card);
             font-weight: bold;
             position: sticky;
             top: 0;
@@ -281,15 +286,15 @@ interface CellData {
               border-bottom: 2px solid #2196f3 !important;
             }
 
-            &.saturday-column {
-              background-color: #f8f8f8;
+            &.saturday-column-day, &.saturday-column-night {
+              background-color: var(--surface-card);
               font-style: italic;
               color: var(--p-red-400);
               font-size: 15px;
             }
 
-            &.sunday-column {
-              background-color: #f8f8f8;
+            &.sunday-column-day, &.sunday-column-night {
+              background-color: var(--surface-card);
               font-style: italic;
               color: var(--p-red-500);
               font-size: 15px;
@@ -332,8 +337,10 @@ interface CellData {
               border-right: none !important;
             }
 
-            &.saturday-column,
-            &.sunday-column,
+            &.saturday-column-day,
+            &.saturday-column-night,
+            &.sunday-column-day,
+            &.sunday-column-night,
             &.today-column {
               border-left: none !important;
               border-right: none !important;
@@ -353,7 +360,7 @@ interface CellData {
           }
 
           .row-header {
-            background-color: white;
+            background-color: var(--surface-card);
             font-weight: bold;
             position: sticky;
             left: 0;
@@ -402,12 +409,20 @@ interface CellData {
             border-bottom: 1px solid rgba(33, 150, 243, 0.4) !important;
           }
 
-          .saturday-column {
+          .saturday-column-day {
             box-shadow: inset 0 0 0 1000px rgba(255, 240, 240, 0.3) !important;
           }
 
-          .sunday-column {
+          .sunday-column-day {
             box-shadow: inset 0 0 0 1000px rgba(255, 238, 238, 0.3) !important;
+          }
+
+          .saturday-column-night {
+            box-shadow: inset 0 0 0 1000px rgba(255, 240, 240, 0.09) !important;
+          }
+
+          .sunday-column-night {
+            box-shadow: inset 0 0 0 1000px rgba(255, 238, 238, 0.09) !important;
           }
 
           .reserved-cell {
@@ -424,8 +439,10 @@ interface CellData {
             padding: 5px 2px;
             box-sizing: border-box;
 
-            &.saturday-column,
-            &.sunday-column,
+            &.saturday-column-day,
+            &.saturday-column-night,
+            &.sunday-column-day,
+            &.sunday-column-night,
             &.today-column {
               background-color: inherit;
             }
@@ -452,18 +469,6 @@ interface CellData {
 
     :host ::ng-deep .today-column {
       box-shadow: inset 0 0 0 1000px rgba(255, 255, 0, 0.15) !important;
-    }
-
-    :host ::ng-deep .saturday-column {
-      box-shadow: inset 0 0 0 1000px rgba(220, 220, 220, 0.2) !important;
-      border-right: 2px solid rgba(220, 220, 220, 0.6) !important;
-      border-left: 2px solid rgba(220, 220, 220, 0.6) !important;
-    }
-
-    :host ::ng-deep .sunday-column {
-      box-shadow: inset 0 0 0 1000px rgba(220, 220, 220, 0.3) !important;
-      border-right: 2px solid rgba(200, 200, 200, 0.7) !important;
-      border-left: 2px solid rgba(200, 200, 200, 0.7) !important;
     }
 
     @keyframes cell-selected-pulse {
@@ -547,7 +552,16 @@ export class WorkScheduleComponent {
 
   filteredProfiles: Profile[] = [];
 
-  constructor(private dataService: DataService) { }
+  isNightMode: boolean | undefined = undefined;
+
+  constructor(
+    private dataService: DataService,
+    private layoutService: LayoutService,
+  ) {
+    effect(() => {
+      this.isNightMode = this.layoutService.layoutConfig().darkTheme;
+    });
+  }
 
   ngOnInit() {
     combineLatest([
@@ -585,16 +599,24 @@ export class WorkScheduleComponent {
     this.selectedDepartment = department;
     let filteredRoles: ProfileRole[] = [];
 
-    if(department == 'all'){
-      filteredRoles = this.profileRoles;
-    } else if(department == 'housekeeping'){
-      filteredRoles = this.profileRoles.filter(role => this.housekeepingRoles.some(hr => hr == role.name));
-    } else if(department == 'technical'){
-      filteredRoles = this.profileRoles.filter(role => this.technicalRoles.some(hr => hr == role.name));
-    } else if(department == 'reception'){
-      filteredRoles = this.profileRoles.filter(role => this.receptionRoles.some(hr => hr == role.name));
-    } else if(department == 'management'){
-      filteredRoles = this.profileRoles.filter(role => this.managementRoles.some(hr => hr == role.name));
+    switch(department) {
+      case 'all':
+        filteredRoles = this.profileRoles;
+        break;
+      case 'housekeeping':
+        filteredRoles = this.profileRoles.filter(role => this.housekeepingRoles.includes(role.name));
+        break;
+      case 'technical':
+        filteredRoles = this.profileRoles.filter(role => this.technicalRoles.includes(role.name));
+        break;
+      case 'reception':
+        filteredRoles = this.profileRoles.filter(role => this.receptionRoles.includes(role.name));
+        break;
+      case 'management':
+        filteredRoles = this.profileRoles.filter(role => this.managementRoles.includes(role.name));
+        break;
+      default:
+        filteredRoles = [];
     }
 
     this.filteredProfiles = this.profiles.filter(profile => filteredRoles.some(role => role.id == profile.role_id));
@@ -648,7 +670,7 @@ export class WorkScheduleComponent {
   private createCellData(day: Date, schedule?: ProfileWorkSchedule): CellData {
     const cellData: CellData = {
       isReserved: false,
-      color: 'white',
+      color: '',
       displayText: '',
       tooltip: '',
       identifier: '',
