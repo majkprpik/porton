@@ -796,10 +796,10 @@ export class WorkGroup implements OnInit {
   isTaskOlderThan2Days(task: Task){
     if(!task.end_time) return;
 
-    const taskCreatedDate = new Date(task.end_time);
+    const taskEndDate = new Date(task.end_time);
     const now = new Date();
     const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
 
-    return taskCreatedDate < twoDaysAgo;
+    return taskEndDate < twoDaysAgo;
   }
 } 

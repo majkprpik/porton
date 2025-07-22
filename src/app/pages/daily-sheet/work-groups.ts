@@ -671,11 +671,11 @@ export class WorkGroups implements OnInit {
 
   is2DaysOld(workGroup: WorkGroupObject): boolean {
     const createdAt = new Date(workGroup.created_at);
-    const threeDaysAgo = new Date();
+    const twoDaysAgo = new Date();
 
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
-    return createdAt < threeDaysAgo;
+    return createdAt < twoDaysAgo;
   }
   
   isToday(time_sent: string | Date): boolean {
