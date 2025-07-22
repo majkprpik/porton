@@ -31,6 +31,7 @@ import { PushNotificationsService } from '../../pages/service/push-notifications
 import { MultiSelect } from 'primeng/multiselect';
 import { HouseService } from '../../pages/service/house.service';
 import { ErrorLoggingService } from '../../pages/service/error-logging.service';
+import { SupabaseService } from '../../pages/service/supabase.service';
 
 @Component({
     selector: 'app-layout',
@@ -988,6 +989,7 @@ export class AppLayout {
         private pushNotificationsService: PushNotificationsService,
         public houseService: HouseService,
         private errorLogger: ErrorLoggingService,
+        private supabaseService: SupabaseService,
     ) {
         this.captureConsoleMessages();
         this.onAppVisibilityChange();
@@ -1064,6 +1066,11 @@ export class AppLayout {
         this.pushNotificationsService.requestFirebaseMessaging();
         this.dataService.listenToDatabaseChanges(); 
 
+        this.setupAuthStateListener();
+        this.handleNavigationChange();
+        this.subscribeToModalData();
+        this.subscribeToDataUpdates();
+
         combineLatest([
             this.dataService.repairTaskComments$,
             this.dataService.houses$,
@@ -1127,7 +1134,9 @@ export class AppLayout {
                 console.error(error);
             }
         });
+    }
 
+    handleNavigationChange(){
         this.router.events
             .pipe(filter(e => e instanceof NavigationEnd))
         	.subscribe((e: NavigationEnd) => {
@@ -1140,13 +1149,15 @@ export class AppLayout {
                     this.isArrivalsAndDeparturesWindowVisible = false;
                 }
         	});
+    }
 
-        this.subscribeToModalData();
-        this.subscribeToDataUpdates();
-
-        if(this.router.url == '/home'){
-            this.loadStoredWindowPositions();
-        }
+    setupAuthStateListener(){
+        this.supabaseService.getClient().auth.onAuthStateChange((event, session) =>
+        {
+            if(!session){
+                this.authService.logout();
+            }
+        });
     }
 
     buildSpeedDialItems(){
