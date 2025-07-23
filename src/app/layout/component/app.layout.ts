@@ -970,6 +970,7 @@ export class AppLayout {
     selectedTabIndex: string = "0";
 
     loggedUser: Profile | undefined = undefined;
+    isLoggingOut = false;
 
     private visibilityChangeSub!: Subscription;
 
@@ -1066,7 +1067,7 @@ export class AppLayout {
         this.pushNotificationsService.requestFirebaseMessaging();
         this.dataService.listenToDatabaseChanges(); 
 
-        this.setupAuthStateListener();
+        this.authService.setupAuthStateListener();
         this.handleNavigationChange();
         this.subscribeToModalData();
         this.subscribeToDataUpdates();
@@ -1149,15 +1150,6 @@ export class AppLayout {
                     this.isArrivalsAndDeparturesWindowVisible = false;
                 }
         	});
-    }
-
-    setupAuthStateListener(){
-        this.supabaseService.getClient().auth.onAuthStateChange((event, session) =>
-        {
-            if(!session){
-                this.authService.logout();
-            }
-        });
     }
 
     buildSpeedDialItems(){

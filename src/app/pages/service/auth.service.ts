@@ -15,6 +15,7 @@ export class AuthService {
   private usernameSubject = new BehaviorSubject<string | null>(this.getStoredUsername());
   public userProfile = new BehaviorSubject<any>(null);
   profileRoles: ProfileRole[] = [];
+  private isLoggingOut = false;
 
   constructor(
     private router: Router,
@@ -75,11 +76,15 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
+    if (this.isLoggingOut) return;
+
+    this.isLoggingOut = true;
+
     try {
       const storedUserID = this.getStoredUserId();
       const deviceId = this.pushNotificationsService.getDeviceId();
       if(storedUserID && deviceId){
-        this.pushNotificationsService.deleteUserDeviceData(storedUserID, deviceId);
+        await this.pushNotificationsService.deleteUserDeviceData(storedUserID, deviceId);
       }
       await this.supabaseService.getClient().auth.signOut();
       localStorage.clear();
@@ -91,7 +96,18 @@ export class AuthService {
       console.error('Logout error:', error);
       // Force navigation to login even if signOut fails
       await this.router.navigate(['/auth/login']);
+    } finally {
+      this.isLoggingOut = false;
     }
+  }
+  
+  setupAuthStateListener(){
+    this.supabaseService.getClient().auth.onAuthStateChange((event, session) =>
+    {
+      if(!session && !this.isLoggingOut){
+        this.logout();
+      }
+    });
   }
 
   isLoggedIn(): boolean {
