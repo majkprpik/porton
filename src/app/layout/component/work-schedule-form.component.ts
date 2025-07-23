@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
-import { DataService, Profile, ProfileWorkSchedule, ShiftType } from '../../pages/service/data.service';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { DataService, Profile, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
@@ -8,6 +8,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 @Component({
   selector: 'app-work-schedule-form',
@@ -19,6 +20,7 @@ import { ButtonModule } from 'primeng/button';
     DatePickerModule,
     SelectModule,
     ButtonModule,
+    RadioButtonModule,
   ],
   template: `
   <p-dialog 
@@ -34,98 +36,143 @@ import { ButtonModule } from 'primeng/button';
         {{ profileWorkSchedule?.id ? ('WORK-SCHEDULE.MODAL.EDIT-SCHEDULE' | translate) : ('WORK-SCHEDULE.MODAL.CREATE-SCHEDULE' | translate) }}
       </h3>
     </ng-template>
-    <div class="p-fluid">
-      <!-- Two-column layout -->
-      <div class="form-grid">
-        <!-- Left column -->
-        <div class="form-col">
-          @if(profile){
-            <div class="field">
-              <label for="lastName">{{ 'WORK-SCHEDULE.MODAL.EMPLOYEE' | translate }}</label>
-              <span id="employee-name">{{ profile.first_name }}</span>
-            </div>
-          }
-          <div class="field">
-              <label for="startDate">{{ 'WORK-SCHEDULE.MODAL.START-DATE' | translate }}</label>
-              <p-datePicker  
-                id="startDate" 
-                [(ngModel)]="startDate" 
-                [readonlyInput]="true" 
-                dateFormat="dd.mm.yy"
-                [minDate]="minStartDate" 
-                [maxDate]="maxDate" 
-                [showIcon]="true"
-                [placeholder]="'WORK-SCHEDULE.MODAL.SELECT-START-DATE' | translate" 
-                (onSelect)="onStartDateChange()"
-                appendTo="body"
-              >
-              </p-datePicker>
-          </div>
+
+    <div class="top">
+      @if(profile){
+        <div class="field">
+          <label for="lastName">{{ 'WORK-SCHEDULE.MODAL.EMPLOYEE' | translate }}</label>
+          <span id="employee-name">{{ profile.first_name }}</span>
         </div>
-        
-        <!-- Right column -->
-        <div class="form-col">
-          <div class="field">
-            <label for="colors">{{ 'WORK-SCHEDULE.MODAL.SHIFT' | translate }}</label>
-            <p-select 
-              [options]="shiftTypes" 
-              [(ngModel)]="selectedShift"
-              optionLabel="name"
-              [ngStyle]="{ 'width': '210px'}"
-              [panelStyle]="{ 'max-height': '200px' }"
-              [placeholder]="'WORK-SCHEDULE.MODAL.SELECT-A-SHIFT' | translate"
-              appendTo="body"
-            >
-              <ng-template let-option pTemplate="item">
-                <div>{{ option.name | titlecase }}</div>
-              </ng-template>
-              <ng-template let-selectedOption pTemplate="selectedItem">
-                <div>{{ selectedOption.name | titlecase }}</div>
-              </ng-template>
-            </p-select>
-          </div>
-          <div class="field">
-            <label for="endDate">{{ 'WORK-SCHEDULE.MODAL.END-DATE' | translate }}</label>
+      }
+
+      <div class="field">
+        <label for="colors">{{ 'RESERVATIONS.MODAL.COLOR' | translate }}</label>
+        <p-select 
+          [options]="colors" 
+          [(ngModel)]="selectedColor"
+          [ngStyle]="{ 'width': '210px'}"
+          [panelStyle]="{ 'max-height': '200px' }"
+          [placeholder]="'RESERVATIONS.MODAL.SELECT-A-COLOR' | translate"
+          appendTo="body"
+        >
+          <ng-template let-option pTemplate="item">
+            <div class="color-item" [style.background]="option"></div>
+          </ng-template>
+          <ng-template let-selectedOption pTemplate="selectedItem">
+            <div class="color-item" [style.background]="selectedOption"></div>
+          </ng-template>
+        </p-select>
+      </div>
+    </div>
+
+
+    @if(workDays.length > 1){
+      <div class="set-all-schedule">
+        <div class="set-schedule">
+          <label id="set-all-schedule-label">
+            <p-radiobutton 
+              name="scheduleMode" 
+              [(ngModel)]="scheduleMode"
+              value="all"
+              (ngModelChange)="onScheduleModeChange($event)"
+            ></p-radiobutton>
+            Set whole schedule
+          </label>
+  
+          <label id="set-schedule-label">
+            <p-radiobutton 
+              name="scheduleMode" 
+              [(ngModel)]="scheduleMode"
+              value="dayByDay"
+              (ngModelChange)="onScheduleModeChange($event)"
+            ></p-radiobutton>
+            Set by day
+          </label>
+        </div>
+        <div 
+          class="days"
+          [ngStyle]="{
+            'display': scheduleMode == 'dayByDay' ? 'none' : '',
+          }"
+        >
+          <b>{{ startDate | date: 'dd.MM.' }} - {{ endDate | date: 'dd.MM.' }}</b>
+          <div class="start-time">
+            <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
             <p-datePicker  
-              id="endDate" 
-              [(ngModel)]="endDate" 
+              id="startDate" 
               [readonlyInput]="true" 
-              dateFormat="dd.mm.yy"
-              [minDate]="minEndDate" 
-              [maxDate]="maxDate" 
+              [timeOnly]="true"
               [showIcon]="true"
-              [placeholder]="'WORK-SCHEDULE.MODAL.SELECT-END-DATE' | translate" 
-              (onSelect)="checkForDateConflicts()"
+              [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
               appendTo="body"
+              [(ngModel)]="everyDayStart"
             >
             </p-datePicker>
           </div>
+
+          <div class="end-time">
+            <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
+            <p-datePicker  
+              id="endDate" 
+              [readonlyInput]="true" 
+              [timeOnly]="true"
+              [showIcon]="true"
+              [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
+              appendTo="body"
+              [(ngModel)]="everyDayEnd"
+            >
+            </p-datePicker>
           </div>
         </div>
       </div>
+    }
 
-      <!-- Full width notes field -->
-      <!-- <div class="field mt-3">
-          <label for="notes">{{ 'WORK-SCHEDULE.MODAL.NOTES' | translate }}</label>
-          <textarea 
-              id="notes" 
-              rows="4" 
-              class="p-inputtext"
-              pTextarea  
-              [(ngModel)]="notes" 
-              [placeholder]="'WORK-SCHEDULE.MODAL.NOTES-ENTER-INFO' | translate">
-          </textarea>
-      </div> -->
-      
-      @if(dateConflictError){
-        <div class="field">
-          <div class="p-error">{{dateConflictError}}</div>
-        </div>
-      }
+    <div class="schedule">
+      <div 
+        class="days" 
+        [ngStyle]="{
+          'display': scheduleMode == 'all' ? 'none' : '',
+        }"
+      >
+        @for(day of workDays; let i = $index; track i){
+          <div class="day">
+            <b>{{ day.day | date: 'dd.MM.' }}</b>
+            <div class="start-time">
+              <label for="endDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
+              <p-datePicker  
+                id="endDate" 
+                [readonlyInput]="true" 
+                [timeOnly]="true"
+                [showIcon]="true"
+                [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
+                appendTo="body"
+                [(ngModel)]="day.start_time"
+              >
+              </p-datePicker>
+            </div>
+  
+            <div class="end-time">
+              <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
+              <p-datePicker  
+                id="endDate" 
+                [readonlyInput]="true" 
+                [timeOnly]="true"
+                [showIcon]="true"
+                [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate"
+                appendTo="body"
+                [(ngModel)]="day.end_time"
+              >
+              </p-datePicker>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
     <ng-template pTemplate="footer">
       <div class="form-footer">
         <div class="left-buttons">
-          @if(isEditMode){
+          @if(profileWorkSchedule?.id){
             <p-button
               [label]="'BUTTONS.DELETE' | translate"
               icon="pi pi-trash" 
@@ -136,51 +183,140 @@ import { ButtonModule } from 'primeng/button';
         </div>
         <div class="right-buttons">
           <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
-          <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="onSave()" [disabled]="!!dateConflictError" styleClass="p-button-text"></p-button>
+          <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="onSave()" styleClass="p-button-text"></p-button>
         </div>
       </div>
     </ng-template>
   </p-dialog> 
   `,
-  styles: `:host ::ng-deep {
+  styles: `
+  :host ::ng-deep {
     .p-dialog {
-        .p-dialog-header {
-            padding: 1rem 1.5rem;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            border-radius: 10px 10px 0 0;
+      .p-dialog-header {
+        padding: 1rem 1.5rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        border-radius: 10px 10px 0 0;
 
-            h3{
-                margin: 0;
+        h3{
+        margin: 0;
+        }
+      }
+
+      .top{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+      }
+      
+      .p-dialog-content {
+        padding: 1.5rem;
+      }
+      
+      .p-dialog-footer {
+        padding: 1rem;
+      }
+
+      .schedule{
+        display: flex;
+        flex-direction: column; 
+        gap: 10px;
+
+        #set-schedule-label{
+          width: 100px;
+          padding-bottom: 10px;
+        }
+
+        .days{
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          justify-content: space-between;
+          box-sizing: border-box;
+          padding: 5px;
+          border-radius: 10px;
+
+          .day{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            padding-bottom: 10px;
+
+            b{
+              display: flex;
+              flex-direction: row;
+              align-items: center;
             }
+  
+            .start-time, .end-time{
+              display: flex;
+              flex-direction: column;
+            }
+          }
+        }
+
+        .no-click:hover {
+          cursor: not-allowed;
+        }
+      }
+
+      .set-all-schedule{
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding-bottom: 10px;
+
+        .set-schedule{
+          display: flex;
+          flex-direction: row;
+          gap: 20px;
+          padding: 10px 0 10px 0;
+        }
+
+        #set-all-schedule-label{
+          width: 150px;
+          padding-bottom: 10px;
         }
         
-        .p-dialog-content {
-            padding: 1.5rem;
+        .days{
+          display: flex;
+          flex-direction: row;
+          justify-content: flex-end;
+          gap: 96px;
+          width: 100%;
+          box-sizing: border-box;
+          padding: 5px;
+          border-radius: 10px;
+
+          b{
+            width: 140px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+          }
+
+          .start-time, .end-time{
+            display: flex;
+            flex-direction: column;
+          }
         }
-        
-        .p-dialog-footer {
-            padding: 1rem;
+
+        .no-click:hover {
+          cursor: not-allowed !important;
         }
+      }
     }
     
     // Simple two-column grid layout
     .form-grid {
-        display: grid;
-        grid-template-columns: 1fr; // One column by default (mobile)
-        gap: 1rem;
-        
-        @media (min-width: 768px) {
-            grid-template-columns: 1fr 1fr; // Two columns on wider screens
-        }
-    }
-    
-    // Each form column
-    .form-col {
-        padding: 0 0.5rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr; // One column by default (mobile)
+      gap: 1rem;
+      
+      @media (min-width: 768px) {
+        grid-template-columns: 1fr 1fr; // Two columns on wider screens
+      }
     }
     
     .field {
@@ -225,114 +361,66 @@ import { ButtonModule } from 'primeng/button';
     }
 
     .form-footer {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      
+      .left-buttons {
         display: flex;
-        justify-content: space-between;
-        width: 100%;
+        justify-content: flex-start;
+      }
+      
+      .right-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+      }
+      
+      @media (max-width: 576px) {
+        flex-direction: column;
+        gap: 1rem;
         
         .left-buttons {
-            display: flex;
-            justify-content: flex-start;
+          justify-content: center;
+          
+          .p-button {
+            width: 100%;
+          }
         }
         
         .right-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.5rem;
-        }
-        
-        // Responsive styling for small screens
-        @media (max-width: 576px) {
-            flex-direction: column;
-            gap: 1rem;
-            
-            .left-buttons {
-                justify-content: center;
-                
-                .p-button {
-                    width: 100%;
-                }
-            }
-            
-            .right-buttons {
-                justify-content: space-between;
-                
-                .p-button {
-                    flex: 1;
-                }
-            }
-        }
-    }
-
-    .babies-cribs-row, .pets-row {
-        display: flex;
-        width: 100%;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        
-        .half-field {
+          justify-content: space-between;
+          
+          .p-button {
             flex: 1;
-            min-width: 0;
-            margin-right: 1rem;
+          }
         }
-
-        .half-field:last-child {
-            margin-right: 0;
-        }
-        
-        .p-inputnumber{
-            width: 100% !important;
-        }
-
-        .p-inputnumber-input{
-            width: 40px !important;
-        }
+      }
     }
-} `
+  }
+`
 })
 export class WorkScheduleFormComponent {
   @Input() visible = false;
   @Input() profileWorkSchedule?: Partial<ProfileWorkSchedule>;
   @Input() profileId!: string;
-  @Input() profile: Profile | undefined = undefined;
+  @Input() profile?: Profile;
   @Input() startDate!: Date;
   @Input() endDate!: Date;
   @Input() fullWorkSchedule: ProfileWorkSchedule[] = [];
+  @Input() colors: any[] = [];
 
-  notes: string = '';
-  minEndDate!: Date;
-  selectedShift: ShiftType | undefined = undefined;
-  shiftTypes: ShiftType[] = [];
+  workDays: ProfileWorkDay[] = [];
+  profileWorkDays: ProfileWorkDay[] = [];
 
-  // New computed property to determine if we're editing an existing reservation
-  get isEditMode(): boolean {
-    return !!(this.profileWorkSchedule && this.profileWorkSchedule.id && this.profileWorkSchedule.id < 1000000);
-  }
+  everyDayStart: Date = new Date();
+  everyDayEnd: Date = new Date();
 
-  private _minStartDate: Date | null = null;
-
-  get minStartDate(): Date {
-    if (this.isEditMode) {
-      if (!this._minStartDate) {
-        this._minStartDate = new Date(1900, 0, 1);
-      }
-      return this._minStartDate;
-    }
-
-    if (!this._minStartDate || this._minStartDate.getFullYear() != new Date().getFullYear()) {
-      this._minStartDate = new Date();
-      this._minStartDate.setHours(0, 0, 0, 0);
-    }
-
-    return this._minStartDate;
-  }
-
-  // Max date is 2 years from now
-  maxDate: Date = new Date(new Date().setFullYear(new Date().getFullYear() + 2));
-  dateConflictError: string | null = null;
+  scheduleMode: 'all' | 'dayByDay' = 'all';
+  selectedColor: string = '';
 
   @Output() visibleChange = new EventEmitter<boolean>();
-  @Output() save = new EventEmitter<ProfileWorkSchedule>();
+  @Output() save = new EventEmitter<{ profileWorkDays: ProfileWorkDay[]; profileWorkSchedule: Partial<ProfileWorkSchedule>}>();
   @Output() delete = new EventEmitter<{ scheduleId: number; profileId: string }>();
 
   constructor(
@@ -345,159 +433,140 @@ export class WorkScheduleFormComponent {
   }
 
   ngOnInit() {
-    this.dataService.shiftTypes$.subscribe(shiftTypes => {
-      this.shiftTypes = shiftTypes;
-
-      if (this.profileWorkSchedule?.shift_type_id) {
-        this.selectedShift = shiftTypes.find(st => st.id == this.profileWorkSchedule?.shift_type_id);
-      } else {
-        this.selectedShift = shiftTypes.find(st => st.name == 'morning');
-      }
+    this.dataService.profiles$.subscribe(profiles => {
+      this.profile = profiles.find(profile => profile.id == this.profileId);
     });
 
-    this.dataService.profiles$.subscribe(profiles => {
-      this.profile = profiles.find(profile => profile.id == this.profileWorkSchedule?.profile_id);
+    this.dataService.profileWorkDays$.subscribe(pwd => {
+      this.profileWorkDays = pwd;
+      this.setProfileWorkDays();
+      this.setInitColor();
     })
 
-    this.updateMinEndDate();
-    this.ensureDatesAreValid();
+    this.preSelectScheduleMode();
+    this.setDefaultTimes();
   }
 
-  private ensureDatesAreValid() {
-    if (typeof this.startDate === 'string') {
-      this.startDate = new Date(this.startDate);
-    }
-
-    if (typeof this.endDate === 'string') {
-      this.endDate = new Date(this.endDate);
-    }
-
-    if (!(this.startDate instanceof Date) || isNaN(this.startDate.getTime())) {
-      this.startDate = new Date();
-    }
-
-    if (!(this.endDate instanceof Date) || isNaN(this.endDate.getTime())) {
-      this.endDate = new Date(this.startDate);
-    }
-
-    this.startDate.setHours(0, 0, 0, 0);
-    this.endDate.setHours(0, 0, 0, 0);
+  preSelectScheduleMode(){
+    this.scheduleMode = this.profileWorkSchedule?.id ? 'dayByDay' : 'all';
   }
 
-  updateMinEndDate() {
-    if (this.isEditMode) {
-      this.minEndDate = new Date(this.startDate);
-      return;
-    }
+  setProfileWorkDays(){
+    if(this.profileWorkSchedule?.id){
+      this.workDays = this.profileWorkDays.filter(pwd => 
+        pwd.profile_id == this.profileId &&
+        pwd.profile_work_schedule_id == this.profileWorkSchedule?.id
+      );
 
-    if (!this.startDate) {
-      this.minEndDate = this.minStartDate;
-      return;
-    }
-
-    const startDate = new Date(this.startDate);
-    startDate.setHours(0, 0, 0, 0);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (startDate.getTime() >= today.getTime()) {
-      startDate.setDate(startDate.getDate() + 1);
-      this.minEndDate = startDate;
+      this.workDays = this.workDays.map(wd => {
+        return {
+          ...wd,
+          start_time: wd.start_time.slice(0, 5),
+          end_time: wd.end_time.slice(0, 5),
+        }
+      })
     } else {
-      this.minEndDate = today;
+      this.workDays = this.getProfileWorkDays();
     }
   }
 
-  onStartDateChange(): void {
-    if (!this.startDate || !(this.startDate instanceof Date) || isNaN(this.startDate.getTime())) {
-      if (this.isEditMode && this.profileWorkSchedule?.start_date) {
-        this.startDate = new Date(this.profileWorkSchedule.start_date);
+  setInitColor(){
+    if (this.colors.length > 0 && !this.selectedColor) {
+      if(this.profileWorkSchedule?.id){
+        const color = this.workDays[0].color;
+        this.selectedColor = color;
       } else {
-        this.startDate = new Date();
+        this.selectedColor = this.colors[0];
       }
-
-      this.startDate.setHours(0, 0, 0, 0);
-    } else {
-      this.startDate.setHours(0, 0, 0, 0);
-      this.profileWorkSchedule!.start_date = this.startDate.toLocaleDateString('en-CA').split('T')[0];
     }
-
-    if (
-      !this.endDate ||
-      !(this.endDate instanceof Date) ||
-      isNaN(this.endDate.getTime()) ||
-      new Date(this.endDate).getTime() < new Date(this.startDate).getTime()
-    ) {
-      this.endDate = new Date(this.startDate);
-      this.endDate.setHours(0, 0, 0, 0);
-    }
-
-    this.updateMinEndDate();
-    this.checkForDateConflicts();
   }
 
-  // Add this method to check if the selected dates conflict with existing reservations
-  checkForDateConflicts(): void {
-    if (!this.startDate || !this.endDate) {
-      this.dateConflictError = null;
-      return;
+  stringToTimeDate(timeStr: string): Date {
+    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, seconds || 0, 0);
+    return date;
+  }
+
+  onScheduleModeChange(newMode: 'all' | 'dayByDay'){
+    this.scheduleMode = newMode;
+  }
+
+  setDefaultTimes() {
+    const start = new Date();
+    start.setHours(9, 0, 0, 0);
+    this.everyDayStart = start;
+
+    const end = new Date();
+    end.setHours(17, 0, 0, 0);
+    this.everyDayEnd = end;
+  }
+
+  getProfileWorkDays() {
+    const workDays: ProfileWorkDay[] = [];
+
+    const current = new Date(this.startDate);
+    const end = new Date(this.endDate);
+
+    current.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    while (current <= end) {
+      const pwd: ProfileWorkDay = {
+        profile_id: this.profileId,
+        start_time: '09:00',
+        end_time: '17:00',
+        day: current.toLocaleDateString('en-CA').split('T')[0],
+        color: this.selectedColor,
+      }
+      workDays.push(pwd);
+      current.setDate(current.getDate() + 1);
     }
 
-    const startMs = new Date(this.startDate).setHours(0, 0, 0, 0);
-    const endMs = new Date(this.endDate).setHours(0, 0, 0, 0);
-
-    const conflictingProfileWorkSchedule = this.fullWorkSchedule.find(schedule => {
-      if (this.profileWorkSchedule?.id == schedule.id) {
-        return false;
-      }
-
-      if (schedule.profile_id !== this.profileId) {
-        return false;
-      }
-
-      const reservationStartMs = new Date(schedule.start_date).setHours(0, 0, 0, 0);
-      const reservationEndMs = new Date(schedule.end_date).setHours(0, 0, 0, 0);
-
-      return (startMs >= reservationStartMs && startMs <= reservationEndMs) ||
-        (endMs >= reservationStartMs && endMs <= reservationEndMs) ||
-        (startMs <= reservationStartMs && endMs >= reservationEndMs);
-    });
-
-    if (conflictingProfileWorkSchedule) {
-      this.dateConflictError = `This date range conflicts with a reservation for ${conflictingProfileWorkSchedule.profile_id || 'Unknown'}`;
-    } else {
-      this.profileWorkSchedule!.end_date = this.endDate.toLocaleDateString('en-CA').split('T')[0];
-      this.dateConflictError = null;
-    }
+    return workDays;
   }
 
   onSave(): void {
-    this.checkForDateConflicts();
-    if (this.dateConflictError) {
-      return;
-    }
+    if(!this.profileWorkSchedule) return;
 
-    const adjustedEndDate = new Date(this.endDate);
-    adjustedEndDate.setDate(adjustedEndDate.getDate() - 1);
+    if(this.scheduleMode == 'all'){
+      this.workDays.forEach(workDay => {
+        workDay.start_time = this.formatDateToHHMM(this.everyDayStart);
+        workDay.end_time = this.formatDateToHHMM(this.everyDayEnd);
+        this.setWorkDayColor(workDay);
+      });
+    } else if(this.scheduleMode == 'dayByDay'){
+      this.workDays.forEach(workDay => {
+        if(typeof workDay.start_time !== 'string'){
+          workDay.start_time = this.formatDateToHHMM(workDay.start_time);
+        }
+        if(typeof workDay.end_time !== 'string'){
+          workDay.end_time = this.formatDateToHHMM(workDay.end_time);
+        }
+        this.setWorkDayColor(workDay);
+      });
+    } 
 
-    const profileWorkSchedule: ProfileWorkSchedule = {
-      ...this.profileWorkSchedule,
-      shift_type_id: this.selectedShift!.id,
-    } as ProfileWorkSchedule;
-
-    this.save.emit(profileWorkSchedule);
+    this.save.emit({ profileWorkDays: this.workDays, profileWorkSchedule: this.profileWorkSchedule});
     this.visibleChange.emit(false);
   }
 
+  setWorkDayColor(workDay: ProfileWorkDay){
+    workDay.color = this.selectedColor;
+  }
+
+  formatDateToHHMM(date: Date){
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
   onCancel(): void {
-    this.notes = '';
     this.visibleChange.emit(false);
   }
 
   onDelete(): void {
-    if (this.isEditMode && this.profileWorkSchedule?.id) {
-      // Confirm deletion
+    if (this.profileWorkSchedule?.id) {
       this.confirmationService.confirm({
         message: this.translateService.instant('WORK-SCHEDULE.MESSAGES.CONFIRM-DELETE'),
         header: this.translateService.instant('WORK-SCHEDULE.MESSAGES.HEADER'),
@@ -514,7 +583,7 @@ export class WorkScheduleFormComponent {
         },
         accept: async () => {
           this.delete.emit({
-            scheduleId: this.profileWorkSchedule?.id ?? -1,
+            scheduleId: this.profileWorkSchedule!.id!,
             profileId: this.profileId
           });
 
@@ -532,7 +601,7 @@ export class WorkScheduleFormComponent {
             detail: this.translateService.instant('WORK-SCHEDULE.MESSAGES.CANCELLED-DELETE')
           });
         }
-      })
+      });
     }
   }
 }

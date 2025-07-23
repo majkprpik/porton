@@ -1,4 +1,4 @@
-import { HouseAvailability, Note, Profile, ProfileRole, ProfileWorkSchedule, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
+import { HouseAvailability, Note, Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
 import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -964,6 +964,7 @@ export class AppLayout {
     tempHouseAvailabilities: HouseAvailability[] = [];
 
     fullWorkSchedule: ProfileWorkSchedule[] = [];
+    profileWorkDays: ProfileWorkDay[] = [];
 
     notes: Note[] = [];
 
@@ -1086,8 +1087,9 @@ export class AppLayout {
             this.dataService.notes$,
             this.dataService.profileRoles$,
             this.dataService.profileWorkSchedule$,
+            this.dataService.profileWorkDays$,
         ]).subscribe({
-            next: ([repairTaskComments, houses, taskTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles, fullWorkSchedule]) => {
+            next: ([repairTaskComments, houses, taskTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles, fullWorkSchedule, profileWorkDays]) => {
                 this.storedUserId = this.authService.getStoredUserId();
 
                 this.comments = repairTaskComments;
@@ -1109,6 +1111,7 @@ export class AppLayout {
                 this.notes = notes;
                 this.profileRoles = profileRoles;
                 this.fullWorkSchedule = fullWorkSchedule;
+                this.profileWorkDays = profileWorkDays;
                 
                 this.loggedUser = this.profiles.find(profile => profile.id == this.storedUserId);
 
@@ -1655,23 +1658,18 @@ export class AppLayout {
 
         this.dataService.$tasksUpdate.subscribe((res) => {
             if (res && res.new.task_id && res.eventType == 'INSERT') {
-                console.log("Insert on tasks: ", res);
                 if (!this.tasks.find((task) => task.task_id == res.new.task_id)) {
-                    console.log("A new task has arrived: ", res);
                     this.tasks = [...this.tasks, res.new];
                     this.dataService.setTasks(this.tasks);
                 }
             } else if (res && res.new.task_id && res.eventType == 'UPDATE') {
-                console.log("Update on tasks: ", res);
                 let taskIndex = this.tasks.findIndex((task) => task.task_id == res.new.task_id);
 
                 if (taskIndex != -1) {
-                    console.log("A task has been updated: ", res);
                     this.tasks = this.tasks.map((task) => (task.task_id === res.new.task_id ? res.new : task));
                     this.dataService.setTasks(this.tasks);
                 }
             } else if (res && res.old.task_id && res.eventType == 'DELETE') {
-                console.log("Delete on tasks: ", res);
                 this.tasks = this.tasks.filter((task) => task.task_id != res.old.task_id);
                 this.dataService.setTasks(this.tasks);
             }
@@ -1760,6 +1758,26 @@ export class AppLayout {
             } else if(res && res.old.id && res.eventType == 'DELETE'){
                 this.fullWorkSchedule = this.fullWorkSchedule.filter(schedule => schedule.id != res.old.id);
                 this.dataService.setFullWorkSchedule(this.fullWorkSchedule);
+            }
+        });
+
+        this.dataService.$profileWorkDaysUpdate.subscribe(res => {
+            if(res && res.new.id && res.eventType == 'INSERT'){
+                if(!this.profileWorkDays.find(pwd => pwd.id == res.new.id)){
+                    this.profileWorkDays = [...this.profileWorkDays, res.new];
+                    this.dataService.setProfileWorkDays(this.profileWorkDays);
+                }
+            } else if(res && res.new.id && res.eventType == 'UPDATE'){
+                const profileWorkDayIndex = this.profileWorkDays.findIndex(workDay => workDay.id == res.new.id);
+
+                if(profileWorkDayIndex != -1){
+                    const updatedProfileWorkDays = [...this.profileWorkDays];
+                    updatedProfileWorkDays[profileWorkDayIndex] = res.new;
+                    this.dataService.setProfileWorkDays(updatedProfileWorkDays)
+                }
+            } else if(res && res.old.id && res.eventType == 'DELETE'){
+                this.profileWorkDays = this.profileWorkDays.filter(pwd => pwd.id != res.old.id);
+                this.dataService.setProfileWorkDays(this.profileWorkDays);
             }
         });
 

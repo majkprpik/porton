@@ -456,6 +456,14 @@
             "END-TIME": "End time",
             "SELECT-START-TIME": "Select start time",
             "SELECT-END-TIME": "Select end time"
+        },
+        "MESSAGES": {
+            "UPDATED": "Update",
+            "CANCELLED": "Cancelled",
+            "DELETED-SUCCESS": "Schedule deleted",
+            "HEADER": "Confirm schedule delete",
+            "CONFIRM-DELETE": "Are you sure you want to delete this schedule?",
+            "CANCELLED-DELETE": "Delete cancelled"
         }
     },
     "NOTIFICATIONS": {

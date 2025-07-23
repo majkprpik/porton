@@ -456,6 +456,14 @@
             "END-TIME": "Kraj smjene",
             "SELECT-START-TIME": "Odabrei početak smjene",
             "SELECT-END-TIME": "Odaberi kraj smjene"
+        },
+        "MESSAGES": {
+            "UPDATED": "Promjena",
+            "CANCELLED": "Otkazano",
+            "DELETED-SUCCESS": "Raspored obrisan",
+            "HEADER": "Potvrdi brisanje rasporeda",
+            "CONFIRM-DELETE": "Jeste li sigurni da želite obrisati raspored?",
+            "CANCELLED-DELETE": "Promjena otkazana"
         }
     },
     "NOTIFICATIONS": {

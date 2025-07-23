@@ -1,5 +1,5 @@
 import { Component, effect, signal } from '@angular/core';
-import { DataService, Profile, ProfileRole, ProfileWorkSchedule, ShiftType } from '../../pages/service/data.service';
+import { DataService, Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule, ShiftType } from '../../pages/service/data.service';
 import { combineLatest } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -32,7 +32,7 @@ interface CellData {
     ButtonModule
   ],
   template: `
-      <div class="legend-container">
+      <!-- <div class="legend-container">
         <div class="legend-wrapper">
           <div class="legend-items">
             <div class="legend-item"><span class="legend-color legend-lightgreen"></span> {{ 'WORK-SCHEDULE.LEGEND.MORNING-SHIFT' | translate }}</div>
@@ -40,7 +40,7 @@ interface CellData {
             <div class="legend-item"><span class="legend-color legend-lightblue"></span> {{ 'WORK-SCHEDULE.LEGEND.EVENING-SHIFT' | translate }}</div>
           </div>
         </div>
-      </div>
+      </div> -->
       <div class="work-schedule-container">
         <div class="profile-buttons">
           <p-button [severity]="selectedDepartment == 'all' ? 'primary': 'secondary'" label="All" (click)="filterProfilesByDepartment('all')"></p-button>  
@@ -100,7 +100,9 @@ interface CellData {
                         'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd
                       }"
                       [style.background-color]="gridMatrix()[i][j].color"
-                    ></td>
+                    >
+                      {{gridMatrix()[i][j].displayText}}
+                    </td>
                   }
                 </tr>
               }
@@ -118,6 +120,7 @@ interface CellData {
             [startDate]="selectedStartDate"
             [endDate]="selectedEndDate"
             [fullWorkSchedule]="fullWorkSchedule"
+            [colors]="colors"
             (save)="handleProfileScheduleSave($event)"
             (delete)="handleDeleteReservation($event)"
             (visibleChange)="handleVisibilityChange($event)"
@@ -178,7 +181,7 @@ interface CellData {
     }
 
     .work-schedule-container {
-      height: 82vh;
+      height: 88vh;
       width: 100%;
       background-color: var(--surface-card);
       border-radius: 10px;
@@ -515,6 +518,7 @@ export class WorkScheduleComponent {
   fullWorkSchedule: ProfileWorkSchedule[] = [];
   profiles: Profile[] = [];
   shiftTypes: ShiftType[] = [];
+  profileWorkDays: ProfileWorkDay[] = [];
 
   gridMatrix = signal<CellData[][]>([]);
 
@@ -568,12 +572,14 @@ export class WorkScheduleComponent {
       this.dataService.profiles$, 
       this.dataService.profileWorkSchedule$, 
       this.dataService.shiftTypes$,
-      this.dataService.profileRoles$
-    ]).subscribe(([profiles, schedule, shiftTypes, profileRoles]) => {
+      this.dataService.profileRoles$,
+      this.dataService.profileWorkDays$,
+    ]).subscribe(([profiles, schedule, shiftTypes, profileRoles, profileWorkDays]) => {
         this.profiles = profiles;
         this.fullWorkSchedule = schedule;
         this.shiftTypes = shiftTypes;
         this.profileRoles = profileRoles;
+        this.profileWorkDays = profileWorkDays;
 
         this.filterProfilesByDepartment(this.selectedDepartment);
         this.updateGridMatrix();
@@ -668,10 +674,19 @@ export class WorkScheduleComponent {
   }
 
   private createCellData(day: Date, schedule?: ProfileWorkSchedule): CellData {
+    let workDay;
+    if(schedule){
+      workDay = this.profileWorkDays.find(workDay =>
+        workDay.profile_work_schedule_id == schedule.id &&
+        workDay.profile_id == schedule?.profile_id &&
+        workDay.day == day.toLocaleDateString('en-CA').split('T')[0]
+      );
+    }
+
     const cellData: CellData = {
       isReserved: false,
       color: '',
-      displayText: '',
+      displayText: workDay ? (workDay.start_time.slice(0, 5) + ' - ' + workDay.end_time.slice(0, 5)) : '',
       tooltip: '',
       identifier: '',
       isToday: this.isToday(day),
@@ -684,7 +699,7 @@ export class WorkScheduleComponent {
 
     if (schedule) {
       // Calculate color
-      const baseColor = this.colors[schedule.shift_type_id - 1];
+      const baseColor = workDay?.color ?? 'lightgreen';
       const opacity = 0.7;
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor);
 
@@ -824,9 +839,9 @@ export class WorkScheduleComponent {
     return `${year}-${month}-${day}`;
   }
 
-  handleProfileScheduleSave(profileSchedule: ProfileWorkSchedule): void {
-    let startDateStr = profileSchedule.start_date;
-    let endDateStr = profileSchedule.end_date;
+  handleProfileScheduleSave(data: {profileWorkDays: ProfileWorkDay[], profileWorkSchedule: Partial<ProfileWorkSchedule>}): void {
+    let startDateStr = data.profileWorkSchedule.start_date;
+    let endDateStr = data.profileWorkSchedule.end_date;
 
     const startDate = new Date(startDateStr!);
     const endDate = new Date(endDateStr!);
@@ -835,10 +850,10 @@ export class WorkScheduleComponent {
 
     if (endDate < startDate) return;
 
-    const isEditing = profileSchedule.id && profileSchedule.id < 1000000;
-    const currentProfileScheduleId = isEditing ? profileSchedule.id : undefined;
+    const isEditing = data.profileWorkSchedule.id && data.profileWorkSchedule.id < 1000000;
+    const currentProfileScheduleId = isEditing ? data.profileWorkSchedule.id : undefined;
 
-    const nextReservation = this.findNextProfileSchedule(profileSchedule.profile_id!, startDate, currentProfileScheduleId);
+    const nextReservation = this.findNextProfileSchedule(data.profileWorkSchedule.profile_id!, startDate, currentProfileScheduleId);
     if (nextReservation) {
       const nextStartDate = new Date(nextReservation.start_date);
 
@@ -849,7 +864,7 @@ export class WorkScheduleComponent {
     const formattedEndDate = this.formatDateToYYYYMMDD(endDate);
 
     const updatedProfileSchedule: Partial<ProfileWorkSchedule> = {
-      ...profileSchedule,
+      ...data.profileWorkSchedule,
       start_date: formattedStartDate,
       end_date: formattedEndDate
     };
@@ -857,9 +872,24 @@ export class WorkScheduleComponent {
     this.showReservationForm = false;
 
     if (isEditing) {
-      this.dataService.updateProfileWorkSchedule(updatedProfileSchedule).subscribe();
+      this.dataService.updateProfileWorkSchedule(updatedProfileSchedule).subscribe(res => {
+        if(!res) return;
+        
+        this.dataService.updateProfileWorkDays(data.profileWorkDays).subscribe();
+      });
     } else {
-      this.dataService.saveProfileWorkSchedule(updatedProfileSchedule).subscribe();
+      this.dataService.saveProfileWorkSchedule(updatedProfileSchedule).subscribe(res => {
+        if(!res) return;
+
+        const pwd = data.profileWorkDays.map(day => {
+          return {
+            ...day,
+            profile_work_schedule_id: res.id,
+          }
+        });
+
+        this.dataService.saveProfileWorkDays(pwd).subscribe();
+      });
     }
   }
 

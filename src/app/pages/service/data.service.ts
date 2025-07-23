@@ -132,6 +132,16 @@ export interface ProfileWorkSchedule{
   shift_type_id: number;
 }
 
+export interface ProfileWorkDay{
+  id?: number;
+  profile_id: string;
+  day: string;
+  start_time: string;
+  end_time: string;
+  color: string;
+  profile_work_schedule_id?: number;
+}
+
 export interface ShiftType{
   id: number;
   name: string;
@@ -194,6 +204,7 @@ export class DataService {
   private profileRolesSubject = new BehaviorSubject<ProfileRole[]>([]);
   private shiftTypesSubject = new BehaviorSubject<ShiftType[]>([]);
   private profileWorkScheduleSubject = new BehaviorSubject<ProfileWorkSchedule[]>([]);
+  private profileWorkDaysSubject = new BehaviorSubject<ProfileWorkDay[]>([]);
 
   loading$ = this.loadingSubject.asObservable();
   error$ = this.errorSubject.asObservable();
@@ -216,6 +227,7 @@ export class DataService {
   profileRoles$ = this.profileRolesSubject.asObservable();
   shiftTypes$ = this.shiftTypesSubject.asObservable();
   profileWorkSchedule$ = this.profileWorkScheduleSubject.asObservable();
+  profileWorkDays$ = this.profileWorkDaysSubject.asObservable();
   
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tempHouseAvailabilitiesUpdate = new BehaviorSubject<any>('');
@@ -227,6 +239,7 @@ export class DataService {
   $repairTaskCommentsUpdate = new BehaviorSubject<any>('');
   $profilesUpdate = new BehaviorSubject<any>('');
   $profileWorkScheduleUpdate = new BehaviorSubject<any>('');
+  $profileWorkDaysUpdate = new BehaviorSubject<any>('');
 
   $areNotesLoaded = new BehaviorSubject<boolean>(false);
   $areRepairTaskCommentsLoaded = new BehaviorSubject<boolean>(false);
@@ -299,6 +312,12 @@ export class DataService {
     }
   }
 
+  setProfileWorkDays(fullWorkDay: ProfileWorkDay[]){
+    if(fullWorkDay){
+      this.profileWorkDaysSubject.next(fullWorkDay);
+    }
+  }
+
   private logData(source: string, data: any): void {
     if (this.debug) {
       //console.log(`[DataService] ${source}:`, data);
@@ -334,6 +353,7 @@ export class DataService {
     this.loadRepairTaskComments().subscribe();
     this.loadShiftTypes().subscribe();
     this.loadProfileWorkSchedule().subscribe();
+    this.loadProfileWorkDays().subscribe();
     // this.loadAuthUsers().subscribe();
   }
 
@@ -784,6 +804,119 @@ export class DataService {
     );
   }
 
+  loadProfileWorkDays(){
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('profile_work_days', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.profileWorkDaysSubject.next(data);
+          this.logData('Profile work days', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  saveProfileWorkDay(newProfileDay: ProfileWorkDay){
+    this.loadingSubject.next(true);
+    const { id, ...scheduleWithoutId } = newProfileDay;
+
+    return from(this.supabaseService.insertData('profile_work_days', scheduleWithoutId, this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          const currentWorkDays = this.profileWorkDaysSubject.value;
+          this.setProfileWorkDays([...currentWorkDays, data]);
+          this.logData('Created Profile Work Day', data);
+        }
+      }),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  saveProfileWorkDays(profileWorkDays: ProfileWorkDay[]){
+    this.loadingSubject.next(true);
+    const payload = profileWorkDays.map(({ id, ...rest }) => rest);
+
+    return from(this.supabaseService.insertMultipleData('profile_work_days', payload, this.schema)).pipe(
+      tap((data) => {
+        if (data && data.length > 0) {
+          const currentWorkDays = this.profileWorkDaysSubject.value;
+          const newDays = data as ProfileWorkDay[];
+
+          const combined = [...currentWorkDays, ...newDays];
+          const uniqueById: ProfileWorkDay[] = Array.from(
+            new Map(combined.map(day => [day.id, day])).values()
+          );
+
+          this.setProfileWorkDays(uniqueById);
+          this.logData('Created Profile Work Day', data);
+        }
+      }),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  updateProfileWorkDay(updatedWorkDay: ProfileWorkDay){
+    this.loadingSubject.next(true);
+
+    if(!updatedWorkDay.id){
+      console.error('Cannot update profile work day without an ID');
+      return throwError(() => new Error('Missing profile work day id'));
+    }
+
+    return from(this.supabaseService.updateData('profile_work_days', updatedWorkDay, updatedWorkDay.id.toString(), this.schema)).pipe(
+      tap((data) => {
+        if (data && data.length > 0) {
+          const fullProfileWorkDays = this.profileWorkDaysSubject.value;
+          const updatedFullProfileDays = fullProfileWorkDays.map(schedule => {
+            if(schedule.id == data[0].id){
+              return data[0];
+            } else {
+              return schedule;
+            }
+          });
+
+          this.setProfileWorkDays(updatedFullProfileDays);
+          this.logData('Updated Profile Work Day', data[0]);
+        }
+      }),
+      map((data) => (data && data.length > 0 ? data[0] : null)),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  updateProfileWorkDays(profileWorkDays: ProfileWorkDay[]) {
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.updateMultipleData('profile_work_days', profileWorkDays, this.schema)).pipe(
+      tap((data) => {
+        if (data && data.length > 0) {
+          const currentWorkDays = this.profileWorkDaysSubject.value;
+          const updatedIds = new Set(profileWorkDays.map(day => day.id));
+
+          const remaining = currentWorkDays.filter(day => !updatedIds.has(day.id));
+          const updated = data as ProfileWorkDay[];
+
+          const combined = [...remaining, ...updated];
+          const uniqueById: ProfileWorkDay[] = Array.from(
+            new Map(combined.map(day => [day.id, day])).values()
+          );
+
+          this.setProfileWorkDays(uniqueById);
+          this.logData('Updated Profile Work Day', data);
+        }
+      }),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
   updateProfileWorkSchedule(updatedSchedule: Partial<ProfileWorkSchedule>){
     this.loadingSubject.next(true);
 
@@ -1110,6 +1243,16 @@ export class DataService {
       },
       async (payload: any) => {
         this.$profileWorkScheduleUpdate.next(payload);
+      }
+    ).on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'porton',
+        table: 'profile_work_days'
+      },
+      async (payload: any) => {
+        this.$profileWorkDaysUpdate.next(payload);
       }
     )
     .subscribe();

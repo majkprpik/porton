@@ -73,6 +73,48 @@ export class SupabaseService {
     return data.length > 0 ? data[0] : null;
   }
 
+  async insertMultipleData(table: string, newData: any | any[], schema: string) {
+    const payload = Array.isArray(newData) ? newData : [newData];
+
+    const { data, error } = await this.supabase
+      .schema(schema)
+      .from(table)
+      .insert(payload)
+      .select();
+
+    if (error) {
+      console.error('Error inserting data:', error.message);
+      return null;
+    }
+
+    return data;
+  }
+
+  async updateMultipleData(table: string, updates: any[], schema: string) {
+    const updatePromises = updates.map(async (item) => {
+      const { id, ...rest } = item;
+
+      const { data, error } = await this.supabase
+        .schema(schema)
+        .from(table)
+        .update(rest)
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        console.error(`Error updating record with id ${id}:`, error.message);
+        return null;
+      }
+
+      return data?.[0] ?? null;
+    });
+
+    const results = await Promise.all(updatePromises);
+
+    // Filter out failed updates
+    return results.filter(item => item !== null);
+  }
+
   // Update data in a table
   async updateData(table: string, updates: any, condition: string, schema: string) {
     let query;
