@@ -9,6 +9,8 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { MultiSelect } from 'primeng/multiselect';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-work-schedule-form',
@@ -21,6 +23,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
     SelectModule,
     ButtonModule,
     RadioButtonModule,
+    MultiSelect,
   ],
   template: `
   <p-dialog 
@@ -38,12 +41,28 @@ import { RadioButtonModule } from 'primeng/radiobutton';
     </ng-template>
 
     <div class="top">
-      @if(profile){
-        <div class="field">
-          <label for="lastName">{{ 'WORK-SCHEDULE.MODAL.EMPLOYEE' | translate }}</label>
-          <span id="employee-name">{{ profile.first_name }}</span>
-        </div>
-      }
+      <div class="field">
+        <label for="lastName">{{ 'WORK-SCHEDULE.MODAL.EMPLOYEE' | translate }}</label>
+        @if(profileWorkSchedule?.id) {
+          <div class="field">
+            <span id="employee-name">{{ profile?.first_name }}</span>
+          </div>
+        } @else {
+          <p-multiselect 
+            [options]="availableProfiles" 
+            [(ngModel)]="selectedProfilesForSchedule"
+            optionLabel="first_name" 
+            optionValue="id" 
+            [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-LOCATION' | translate" 
+            [style]="{ width: '100%' }" 
+            appendTo="body"
+          >
+            <ng-template let-item pTemplate="item">
+              <span>{{ item.first_name }}</span>
+            </ng-template>
+          </p-multiselect>
+        }
+      </div>
 
       <div class="field">
         <label for="colors">{{ 'RESERVATIONS.MODAL.COLOR' | translate }}</label>
@@ -64,7 +83,6 @@ import { RadioButtonModule } from 'primeng/radiobutton';
         </p-select>
       </div>
     </div>
-
 
     @if(workDays.length > 1){
       <div class="set-all-schedule">
@@ -183,7 +201,13 @@ import { RadioButtonModule } from 'primeng/radiobutton';
         </div>
         <div class="right-buttons">
           <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
-          <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="onSave()" styleClass="p-button-text"></p-button>
+          <p-button 
+            [label]="'BUTTONS.SAVE' | translate" 
+            icon="pi pi-check" 
+            (click)="onSave()" 
+            styleClass="p-button-text"
+            [disabled]="!profileWorkSchedule?.id && !this.selectedProfilesForSchedule.length"
+          ></p-button>
         </div>
       </div>
     </ng-template>
@@ -412,6 +436,9 @@ export class WorkScheduleFormComponent {
 
   workDays: ProfileWorkDay[] = [];
   profileWorkDays: ProfileWorkDay[] = [];
+  profiles: Profile[] = [];
+  selectedProfilesForSchedule: string[] = [];
+  availableProfiles: Profile[] = [];
 
   everyDayStart: Date = new Date();
   everyDayEnd: Date = new Date();
@@ -420,7 +447,7 @@ export class WorkScheduleFormComponent {
   selectedColor: string = '';
 
   @Output() visibleChange = new EventEmitter<boolean>();
-  @Output() save = new EventEmitter<{ profileWorkDays: ProfileWorkDay[]; profileWorkSchedule: Partial<ProfileWorkSchedule>}>();
+  @Output() save = new EventEmitter<{ profileWorkDays: ProfileWorkDay[]; profileWorkSchedule: Partial<ProfileWorkSchedule>[] }>();
   @Output() delete = new EventEmitter<{ scheduleId: number; profileId: string }>();
 
   constructor(
@@ -433,15 +460,23 @@ export class WorkScheduleFormComponent {
   }
 
   ngOnInit() {
-    this.dataService.profiles$.subscribe(profiles => {
-      this.profile = profiles.find(profile => profile.id == this.profileId);
-    });
-
-    this.dataService.profileWorkDays$.subscribe(pwd => {
+    combineLatest([
+      this.dataService.profiles$,
+      this.dataService.profileWorkDays$,
+    ]).subscribe(([profiles, pwd]) => {
+      this.profiles = profiles;
       this.profileWorkDays = pwd;
+      this.availableProfiles = this.getAvailableProfiles();
+      this.profile = profiles.find(profile => profile.id == this.profileId);
+
+      if(this.profile){
+        this.selectedProfilesForSchedule.push(this.profile.id);
+      }
+
       this.setProfileWorkDays();
+      this.getAvailableProfiles();
       this.setInitColor();
-    })
+    });
 
     this.preSelectScheduleMode();
     this.setDefaultTimes();
@@ -468,6 +503,24 @@ export class WorkScheduleFormComponent {
     } else {
       this.workDays = this.getProfileWorkDays();
     }
+  }
+
+  getAvailableProfiles() {
+    const start = this.setToMidnight(this.startDate);
+    const end = this.setToMidnight(this.endDate);
+
+    const conflictingDays = this.profileWorkDays.filter(day => {
+      const dayDate = this.setToMidnight(new Date(day.day));
+      return dayDate >= start && dayDate <= end;
+    });
+
+    return this.profiles.filter(profile => !conflictingDays.some(cd => cd.profile_id == profile.id));
+  }
+
+  setToMidnight(date: Date): Date {
+    const copy = new Date(date);
+    copy.setHours(0, 0, 0, 0);
+    return copy;
   }
 
   setInitColor(){
@@ -528,6 +581,7 @@ export class WorkScheduleFormComponent {
 
   onSave(): void {
     if(!this.profileWorkSchedule) return;
+    if(!this.selectedProfilesForSchedule.length) return; 
 
     if(this.scheduleMode == 'all'){
       this.workDays.forEach(workDay => {
@@ -547,7 +601,22 @@ export class WorkScheduleFormComponent {
       });
     } 
 
-    this.save.emit({ profileWorkDays: this.workDays, profileWorkSchedule: this.profileWorkSchedule});
+    let profileSchedules: Partial<ProfileWorkSchedule>[] = []; 
+
+    if(!this.profileWorkSchedule.id){
+      this.selectedProfilesForSchedule.forEach(profileId => {
+        profileSchedules.push({
+          profile_id: profileId,
+          start_date: this.startDate.toLocaleDateString('en-CA').split('T')[0],
+          end_date: this.endDate.toLocaleDateString('en-CA').split('T')[0],
+          shift_type_id: 1,
+        })
+      });
+    } else {
+      profileSchedules.push(this.profileWorkSchedule);
+    }
+
+    this.save.emit({ profileWorkDays: this.workDays, profileWorkSchedule: profileSchedules});
     this.visibleChange.emit(false);
   }
 

@@ -839,56 +839,54 @@ export class WorkScheduleComponent {
     return `${year}-${month}-${day}`;
   }
 
-  handleProfileScheduleSave(data: {profileWorkDays: ProfileWorkDay[], profileWorkSchedule: Partial<ProfileWorkSchedule>}): void {
-    let startDateStr = data.profileWorkSchedule.start_date;
-    let endDateStr = data.profileWorkSchedule.end_date;
+  handleProfileScheduleSave(data: {profileWorkDays: ProfileWorkDay[], profileWorkSchedule: Partial<ProfileWorkSchedule>[]}): void {
+    let startDateStr = data.profileWorkSchedule[0].start_date;
+    let endDateStr = data.profileWorkSchedule[0].end_date;
 
     const startDate = new Date(startDateStr!);
     const endDate = new Date(endDateStr!);
 
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
-
     if (endDate < startDate) return;
 
-    const isEditing = data.profileWorkSchedule.id && data.profileWorkSchedule.id < 1000000;
-    const currentProfileScheduleId = isEditing ? data.profileWorkSchedule.id : undefined;
-
-    const nextReservation = this.findNextProfileSchedule(data.profileWorkSchedule.profile_id!, startDate, currentProfileScheduleId);
-    if (nextReservation) {
-      const nextStartDate = new Date(nextReservation.start_date);
-
-      if (endDate >= nextStartDate) return;
-    }
+    const isEditing = !!(data.profileWorkSchedule.length == 1 && data.profileWorkSchedule[0].id);
 
     const formattedStartDate = this.formatDateToYYYYMMDD(startDate);
     const formattedEndDate = this.formatDateToYYYYMMDD(endDate);
 
-    const updatedProfileSchedule: Partial<ProfileWorkSchedule> = {
-      ...data.profileWorkSchedule,
-      start_date: formattedStartDate,
-      end_date: formattedEndDate
-    };
+    data.profileWorkSchedule = data.profileWorkSchedule.map(pws => {
+      return {
+        ...pws, 
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+      }
+    });
 
     this.showReservationForm = false;
 
     if (isEditing) {
-      this.dataService.updateProfileWorkSchedule(updatedProfileSchedule).subscribe(res => {
-        if(!res) return;
-        
-        this.dataService.updateProfileWorkDays(data.profileWorkDays).subscribe();
+      data.profileWorkSchedule.forEach(pws => {
+        this.dataService.updateProfileWorkSchedule(pws).subscribe(res => {
+          if(!res) return;
+          
+          this.dataService.updateProfileWorkDays(data.profileWorkDays).subscribe();
+        });
       });
     } else {
-      this.dataService.saveProfileWorkSchedule(updatedProfileSchedule).subscribe(res => {
-        if(!res) return;
-
-        const pwd = data.profileWorkDays.map(day => {
-          return {
-            ...day,
-            profile_work_schedule_id: res.id,
-          }
+      data.profileWorkSchedule.forEach(pws => {
+        this.dataService.saveProfileWorkSchedule(pws).subscribe(res => {
+          if(!res) return;
+  
+          const pwd = data.profileWorkDays.map(day => {
+            return {
+              ...day,
+              profile_id: res.profile_id,
+              profile_work_schedule_id: res.id,
+            }
+          });
+  
+          this.dataService.saveProfileWorkDays(pwd).subscribe();
         });
-
-        this.dataService.saveProfileWorkDays(pwd).subscribe();
       });
     }
   }
