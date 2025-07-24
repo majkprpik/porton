@@ -29,7 +29,11 @@ export class PushNotificationsService {
     onMessage(this.messaging, (payload) => {
       console.log('💬 FCM message received in foreground:', payload);
       
-      if ('Notification' in window && Notification.permission === 'granted') {
+      if (
+        document.visibilityState === 'visible' && 
+        'Notification' in window && 
+        Notification.permission === 'granted'
+      ) {
         const notificationTitle = payload.notification?.title ?? 'Notification';
         const notificationOptions = {
           body: payload.notification?.body,
