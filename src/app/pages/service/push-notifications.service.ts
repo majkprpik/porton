@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { DataService, Profile, Task } from './data.service';
+import { DataService, Profile } from './data.service';
 import { Messaging as AngularMessaging  } from '@angular/fire/messaging';
-import { getToken, onMessage } from 'firebase/messaging';
+import { deleteToken, getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from './supabase.service';
 
@@ -77,6 +77,20 @@ export class PushNotificationsService {
       }
     } catch (error) {
       console.error('🚫 Error getting FCM token', error);
+    }
+  }
+
+  async deleteFCMToken(){
+    try{
+      const deleted = await deleteToken(this.messaging);
+      if (deleted) {
+        this.setFirebaseMessaingSubscription(null);
+        console.log('✅ FCM token deleted from Firebase SDK');
+      } else {
+        console.warn('⚠️ No FCM token to delete or token already deleted');
+      }
+    } catch (error){
+      console.error('Error deleting FCM token:', error);
     }
   }
 

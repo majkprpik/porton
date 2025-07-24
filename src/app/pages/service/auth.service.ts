@@ -83,6 +83,7 @@ export class AuthService {
     try {
       const storedUserID = this.getStoredUserId();
       const deviceId = this.pushNotificationsService.getDeviceId();
+      this.pushNotificationsService.deleteFCMToken();
       if(storedUserID && deviceId){
         await this.pushNotificationsService.deleteUserDeviceData(storedUserID, deviceId);
       }
