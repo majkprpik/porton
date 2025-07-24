@@ -1071,17 +1071,23 @@ export class WorkScheduleComponent {
             this.selectedProfileId = profile.id;
             this.selectedProfile = profile;
 
-            this.openReservationForm(profile, dateRange.startDate, dateRange.endDate, row, col);
+            let day = this.days()[col];
+            if(day > dateRange.endDate){
+              day = dateRange.endDate;
+            } else if(day < dateRange.startDate){
+              day = dateRange.startDate;
+            }
+
+            this.openReservationForm(profile, dateRange.startDate, dateRange.endDate, row, day);
           }
         }
       }
     });
   }
 
-  private openReservationForm(profile: Profile, startDate: Date, endDate: Date, row: number, col: number): void {
+  private openReservationForm(profile: Profile, startDate: Date, endDate: Date, row: number, day: Date): void {
     this.editingReservation = undefined;
 
-    const day = this.days()[col];
     const key = this.getReservationKey(profile.id, day);
     const schedule = this.reservationMap.get(key);
 
