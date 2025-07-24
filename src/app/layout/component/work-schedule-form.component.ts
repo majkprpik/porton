@@ -84,66 +84,64 @@ import { combineLatest } from 'rxjs';
       </div>
     </div>
 
-    @if(workDays.length > 1){
-      <div class="set-all-schedule">
-        <div class="set-schedule">
-          <label id="set-all-schedule-label">
-            <p-radiobutton 
-              name="scheduleMode" 
-              [(ngModel)]="scheduleMode"
-              value="all"
-              (ngModelChange)="onScheduleModeChange($event)"
-            ></p-radiobutton>
-            Set whole schedule
-          </label>
-  
-          <label id="set-schedule-label">
-            <p-radiobutton 
-              name="scheduleMode" 
-              [(ngModel)]="scheduleMode"
-              value="dayByDay"
-              (ngModelChange)="onScheduleModeChange($event)"
-            ></p-radiobutton>
-            Set by day
-          </label>
-        </div>
-        <div 
-          class="days"
-          [ngStyle]="{
-            'display': scheduleMode == 'dayByDay' ? 'none' : '',
-          }"
-        >
-          <b>{{ startDate | date: 'dd.MM.' }} - {{ endDate | date: 'dd.MM.' }}</b>
-          <div class="start-time">
-            <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
-            <p-datePicker  
-              id="startDate" 
-              [readonlyInput]="true" 
-              [timeOnly]="true"
-              [showIcon]="true"
-              [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
-              appendTo="body"
-              [(ngModel)]="everyDayStart"
-            >
-            </p-datePicker>
-          </div>
+    <div class="set-all-schedule">
+      <div class="set-schedule">
+        <label id="set-all-schedule-label">
+          <p-radiobutton 
+            name="scheduleMode" 
+            [(ngModel)]="scheduleMode"
+            value="all"
+            (ngModelChange)="onScheduleModeChange($event)"
+          ></p-radiobutton>
+          Set whole schedule
+        </label>
 
-          <div class="end-time">
-            <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
-            <p-datePicker  
-              id="endDate" 
-              [readonlyInput]="true" 
-              [timeOnly]="true"
-              [showIcon]="true"
-              [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
-              appendTo="body"
-              [(ngModel)]="everyDayEnd"
-            >
-            </p-datePicker>
-          </div>
+        <label id="set-schedule-label">
+          <p-radiobutton 
+            name="scheduleMode" 
+            [(ngModel)]="scheduleMode"
+            value="dayByDay"
+            (ngModelChange)="onScheduleModeChange($event)"
+          ></p-radiobutton>
+          Set by day
+        </label>
+      </div>
+      <div 
+        class="days"
+        [ngStyle]="{
+          'display': scheduleMode == 'dayByDay' ? 'none' : '',
+        }"
+      >
+        <b>{{ startDate | date: 'dd.MM.' }} - {{ endDate | date: 'dd.MM.' }}</b>
+        <div class="start-time">
+          <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
+          <p-datePicker  
+            id="startDate" 
+            [readonlyInput]="true" 
+            [timeOnly]="true"
+            [showIcon]="true"
+            [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
+            appendTo="body"
+            [(ngModel)]="everyDayStart"
+          >
+          </p-datePicker>
+        </div>
+
+        <div class="end-time">
+          <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
+          <p-datePicker  
+            id="endDate" 
+            [readonlyInput]="true" 
+            [timeOnly]="true"
+            [showIcon]="true"
+            [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
+            appendTo="body"
+            [(ngModel)]="everyDayEnd"
+          >
+          </p-datePicker>
         </div>
       </div>
-    }
+    </div>
 
     <div class="schedule">
       <div 
@@ -154,7 +152,7 @@ import { combineLatest } from 'rxjs';
       >
         @for(day of workDays; let i = $index; track i){
           <div class="day">
-            <b>{{ day.day | date: 'dd.MM.' }}</b>
+            <b>{{ day.day | date: 'EEE' }} - {{ day.day | date: 'dd.MM.' }}</b>
             <div class="start-time">
               <label for="endDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
               <p-datePicker  

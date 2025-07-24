@@ -37,7 +37,7 @@
                                 'sunday-column-night': isSunday(day) && isNightMode,
                             }"
                             [title]="day.toLocaleDateString()">
-                            <div>{{ formatDate(day) }}</div>
+                            <div>{{ day | date: 'EEE' }} - {{ day | date: 'dd.M.' }}</div>
                         </th>
                     }
                 </tr>

@@ -66,7 +66,7 @@ interface CellData {
                     }"
                     [title]="day.toLocaleDateString()"
                   >
-                    <div>{{ formatDate(day) }}</div>
+                    <div>{{ day | date: 'EEE' }} - {{ day | date: 'dd.M.' }}</div>
                   </th>
                 }
               </tr>
@@ -779,12 +779,6 @@ export class WorkScheduleComponent {
 
   isSunday(date: Date): boolean {
     return date.getDay() === 0;
-  }
-
-  formatDate(date: Date): string {
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-    return `${day}.${month}`;
   }
 
   handleEditProfileWorkSchedule(row: number, col: number): void {

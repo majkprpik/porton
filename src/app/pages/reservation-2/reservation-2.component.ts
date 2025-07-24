@@ -493,14 +493,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
     isSunday(date: Date): boolean {
         return date.getDay() === 0;
     }
-
-    // Format date for column headers (make it public to use in template)
-    formatDate(date: Date): string {
-        // Croatian short date format: day.month (without leading zeros)
-        const day = date.getDate();
-        const month = date.getMonth() + 1; // getMonth() is 0-based
-        return `${day}.${month}`;
-    }
     
     getNumberOfAdults(grid: any){
         if(grid.tooltip){
