@@ -129,6 +129,8 @@ import { InputText } from 'primeng/inputtext';
         margin-bottom: 0.75rem;
         font-family: monospace;
         white-space: pre-wrap;
+        word-break: break-word;  
+        overflow-wrap: break-word;
       }
 
       .error{
