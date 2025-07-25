@@ -42,12 +42,37 @@ interface CellData {
         </div>
       </div> -->
       <div class="work-schedule-container">
-        <div class="profile-buttons">
-          <p-button [severity]="selectedDepartment == 'all' ? 'primary': 'secondary'" label="All" (click)="filterProfilesByDepartment('all')"></p-button>  
-          <p-button [severity]="selectedDepartment == 'housekeeping' ? 'primary': 'secondary'" label="Housekeeping" (click)="filterProfilesByDepartment('housekeeping')"></p-button>  
-          <p-button [severity]="selectedDepartment == 'technical' ? 'primary': 'secondary'" label="Technical" (click)="filterProfilesByDepartment('technical')"></p-button>  
-          <p-button [severity]="selectedDepartment == 'reception' ? 'primary': 'secondary'" label="Reception" (click)="filterProfilesByDepartment('reception')"></p-button>  
-          <p-button [severity]="selectedDepartment == 'management' ? 'primary': 'secondary'" label="Management" (click)="filterProfilesByDepartment('management')"></p-button>  
+        <div class="top">
+          <div class="profile-buttons">
+            <p-button [severity]="selectedDepartment == 'all' ? 'primary': 'secondary'" label="All" (click)="filterProfilesByDepartment('all')"></p-button>  
+            <p-button [severity]="selectedDepartment == 'housekeeping' ? 'primary': 'secondary'" label="Housekeeping" (click)="filterProfilesByDepartment('housekeeping')"></p-button>  
+            <p-button [severity]="selectedDepartment == 'technical' ? 'primary': 'secondary'" label="Technical" (click)="filterProfilesByDepartment('technical')"></p-button>  
+            <p-button [severity]="selectedDepartment == 'reception' ? 'primary': 'secondary'" label="Reception" (click)="filterProfilesByDepartment('reception')"></p-button>  
+            <p-button [severity]="selectedDepartment == 'management' ? 'primary': 'secondary'" label="Management" (click)="filterProfilesByDepartment('management')"></p-button>  
+          </div>
+          <div class="density">
+            <p-button
+              class="density-button"
+              [severity]="cellHeightInPx == 40 ? 'primary': 'secondary'" 
+              (click)="changeCellHeight(40)"
+            >
+              <i class="pi pi-equals"></i>
+            </p-button>  
+            <p-button
+              class="density-button"
+              [severity]="cellHeightInPx == 30 ? 'primary': 'secondary'" 
+              (click)="changeCellHeight(30)"
+              >
+              <i class="pi pi-bars"></i>
+            </p-button>  
+            <p-button
+              class="density-button"
+              [severity]="cellHeightInPx == 25 ? 'primary': 'secondary'" 
+              (click)="changeCellHeight(25)"
+            >
+              <i class="pi pi-align-justify"></i>
+            </p-button>  
+          </div>
         </div>
         <div class="table-container">
           <table class="reservation-table">
@@ -65,6 +90,7 @@ interface CellData {
                       'sunday-column-night': isSunday(day) && isNightMode,
                     }"
                     [title]="day.toLocaleDateString()"
+                    [ngStyle]="{'height': '30px'}"
                   >
                     <div>{{ day | date: 'EEE' }} - {{ day | date: 'dd.M.' }}</div>
                   </th>
@@ -74,7 +100,12 @@ interface CellData {
             <tbody>
               @for (profile of filteredProfiles; track profile.id; let i = $index) {
                 <tr>
-                  <th class="row-header" [ngClass]="{ 'active-row': selectedCellRowIndex() === i }">{{ profile.first_name }}</th>
+                  <th 
+                    class="row-header" 
+                    [ngClass]="{ 'active-row': selectedCellRowIndex() === i }"
+                  >
+                    {{ profile.first_name }}
+                  </th>
                   @for (day of days(); track day.getTime(); let j = $index) {
                     <td
                       (mousedown)="onCellMouseDown($event, i, j)"
@@ -97,7 +128,10 @@ interface CellData {
                         'border-left-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationStart,
                         'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationEnd,
                         'border-top-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
-                        'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd
+                        'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
+                        'height-25-important': cellHeightInPx == 25,
+                        'height-30-important': cellHeightInPx == 30,
+                        'height-40-important': cellHeightInPx == 40,
                       }"
                       [style.background-color]="gridMatrix()[i][j].color"
                     >
@@ -190,12 +224,36 @@ interface CellData {
       overflow-y: hidden;
       position: relative;
 
-      .profile-buttons{
+      .top{
         width: 100%;
         display: flex;
         flex-direction: row;
-        gap: 10px;
-        padding-bottom: 10px;
+        justify-content: space-between;
+
+        .profile-buttons{
+          width: 500px;
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          padding-bottom: 10px;
+        }
+
+        .density{
+          width: 500px;
+          display: flex;
+          flex-direction: row;
+          align-items: top;
+          justify-content: flex-end;
+          gap: 10px;
+
+          .density-button{
+            height: 33px;
+
+            i{
+              font-size: 16px;
+            }
+          }
+        }
       }
 
       .table-container {
@@ -223,7 +281,6 @@ interface CellData {
 
           th,td {
             border: 1px solid #ddd;
-            padding: 5px;
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
@@ -231,7 +288,18 @@ interface CellData {
             width: 120px !important;
             min-width: 120px;
             max-width: 120px;
-            height: 30px;
+          }
+
+          .height-25-important{
+            height: 25px !important;
+          }
+
+          .height-30-important{
+            height: 30px !important;
+          }
+
+          .height-40-important{
+            height: 40px !important;
           }
 
           tbody tr:nth-child(even) {
@@ -251,10 +319,6 @@ interface CellData {
             left: 0;
             z-index: 15 !important;
             box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1) !important;
-          }
-
-          .row-header {
-            height: 35px;
           }
 
           .house-header {
@@ -438,8 +502,6 @@ interface CellData {
             cursor: pointer;
             width: 120px;
             max-width: 120px;
-
-            padding: 5px 2px;
             box-sizing: border-box;
 
             &.saturday-column-day,
@@ -557,6 +619,8 @@ export class WorkScheduleComponent {
   filteredProfiles: Profile[] = [];
 
   isNightMode: boolean | undefined = undefined;
+
+  cellHeightInPx: number = 30;
 
   constructor(
     private dataService: DataService,
@@ -1181,5 +1245,9 @@ export class WorkScheduleComponent {
       startDate: new Date(days[startCol]),
       endDate: new Date(days[endCol])
     };
+  }
+
+  changeCellHeight(heightInPx: number){
+    this.cellHeightInPx = heightInPx;
   }
 }

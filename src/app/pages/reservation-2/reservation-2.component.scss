@@ -59,8 +59,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 8px;
-    padding-bottom: 5px;
 }
 
 .house-type-tab {
@@ -149,7 +147,6 @@
     
     th, td {
         border: 1px solid #ddd;
-        padding: 5px;
         text-align: center;
         white-space: nowrap;
         overflow: hidden;
@@ -157,7 +154,18 @@
         width: 120px !important;
         min-width: 120px;
         max-width: 120px;
-        height: 30px;
+    }
+
+    .height-25-important{
+      height: 25px !important;
+    }
+
+    .height-30-important{
+      height: 30px !important;
+    }
+
+    .height-40-important{
+      height: 40px !important;
     }
     
     /* Add subtle striping for better readability */
@@ -306,8 +314,6 @@
         cursor: pointer;
         width: 120px;
         max-width: 120px;
-        
-        padding: 5px 2px;
         box-sizing: border-box;
         
         &.saturday-column-day,
@@ -521,11 +527,30 @@ td.selected-reservation {
 }
 
 .row{
+    height: 45px;
+
     .tabs{
         display: flex;
         flex-direction: row;
-        align-items: center;
+        align-items: top;
         justify-content: space-between;
+
+        .density{
+          width: 500px;
+          display: flex;
+          flex-direction: row;
+          align-items: top;
+          justify-content: flex-end;
+          gap: 10px;
+
+          .density-button{
+            max-height: 33px;
+
+            i{
+              font-size: 16px;
+            }
+          }
+        }
 
         .cancel-selection-button{
             margin-bottom: 8px;

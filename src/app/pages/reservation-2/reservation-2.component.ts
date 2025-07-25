@@ -100,6 +100,8 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     isNightMode: boolean | undefined = undefined;
 
+    cellHeightInPx: number = 30;
+
     constructor(
         private dataService: DataService,
         private messageService: MessageService,
@@ -1546,5 +1548,9 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 console.error("Error reloading availabilities:", error);
             }
         });
+    }
+
+    changeCellHeight(cellHeightInPx: number){
+        this.cellHeightInPx = cellHeightInPx
     }
 }
