@@ -129,7 +129,7 @@ export interface ProfileWorkSchedule{
   profile_id: string; 
   start_date: string;
   end_date: string;
-  shift_type_id: number;
+  color: string;
 }
 
 export interface ProfileWorkDay{
@@ -138,15 +138,7 @@ export interface ProfileWorkDay{
   day: string;
   start_time: string;
   end_time: string;
-  color: string;
   profile_work_schedule_id?: number;
-}
-
-export interface ShiftType{
-  id: number;
-  name: string;
-  start_time: string | Date;
-  end_time: string | Date;
 }
 
 export interface Note {
@@ -202,7 +194,6 @@ export class DataService {
   private notesSubject = new BehaviorSubject<Note[]>([]);
   private repairTaskCommentsSubject = new BehaviorSubject<RepairTaskComment[]>([]);
   private profileRolesSubject = new BehaviorSubject<ProfileRole[]>([]);
-  private shiftTypesSubject = new BehaviorSubject<ShiftType[]>([]);
   private profileWorkScheduleSubject = new BehaviorSubject<ProfileWorkSchedule[]>([]);
   private profileWorkDaysSubject = new BehaviorSubject<ProfileWorkDay[]>([]);
 
@@ -225,7 +216,6 @@ export class DataService {
   notes$ = this.notesSubject.asObservable();
   repairTaskComments$ = this.repairTaskCommentsSubject.asObservable();
   profileRoles$ = this.profileRolesSubject.asObservable();
-  shiftTypes$ = this.shiftTypesSubject.asObservable();
   profileWorkSchedule$ = this.profileWorkScheduleSubject.asObservable();
   profileWorkDays$ = this.profileWorkDaysSubject.asObservable();
   
@@ -351,7 +341,6 @@ export class DataService {
     this.getHouseTypes().subscribe();
     this.loadNotes().subscribe();
     this.loadRepairTaskComments().subscribe();
-    this.loadShiftTypes().subscribe();
     this.loadProfileWorkSchedule().subscribe();
     this.loadProfileWorkDays().subscribe();
     // this.loadAuthUsers().subscribe();
@@ -635,22 +624,6 @@ export class DataService {
           this.setNotes(data);
           this.logData('Notes', data);
           this.$areNotesLoaded.next(true);
-        }
-      }),
-      map((data) => data || []),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  loadShiftTypes(){
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.getData('shift_types', this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          this.shiftTypesSubject.next(data);
-          this.logData('Shift types', data);
         }
       }),
       map((data) => data || []),

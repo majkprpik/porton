@@ -1,5 +1,5 @@
 import { Component, effect, signal } from '@angular/core';
-import { DataService, Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule, ShiftType } from '../../pages/service/data.service';
+import { DataService, Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.service';
 import { combineLatest } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -32,15 +32,6 @@ interface CellData {
     ButtonModule
   ],
   template: `
-      <!-- <div class="legend-container">
-        <div class="legend-wrapper">
-          <div class="legend-items">
-            <div class="legend-item"><span class="legend-color legend-lightgreen"></span> {{ 'WORK-SCHEDULE.LEGEND.MORNING-SHIFT' | translate }}</div>
-            <div class="legend-item"><span class="legend-color legend-lightyellow"></span> {{ 'WORK-SCHEDULE.LEGEND.AFTERNOON-SHIFT' | translate }}</div>
-            <div class="legend-item"><span class="legend-color legend-lightblue"></span> {{ 'WORK-SCHEDULE.LEGEND.EVENING-SHIFT' | translate }}</div>
-          </div>
-        </div>
-      </div> -->
       <div class="work-schedule-container">
         <div class="top">
           <div class="profile-buttons">
@@ -579,7 +570,6 @@ export class WorkScheduleComponent {
 
   fullWorkSchedule: ProfileWorkSchedule[] = [];
   profiles: Profile[] = [];
-  shiftTypes: ShiftType[] = [];
   profileWorkDays: ProfileWorkDay[] = [];
 
   gridMatrix = signal<CellData[][]>([]);
@@ -635,13 +625,11 @@ export class WorkScheduleComponent {
     combineLatest([
       this.dataService.profiles$, 
       this.dataService.profileWorkSchedule$, 
-      this.dataService.shiftTypes$,
       this.dataService.profileRoles$,
       this.dataService.profileWorkDays$,
-    ]).subscribe(([profiles, schedule, shiftTypes, profileRoles, profileWorkDays]) => {
+    ]).subscribe(([profiles, schedule, profileRoles, profileWorkDays]) => {
         this.profiles = profiles;
         this.fullWorkSchedule = schedule;
-        this.shiftTypes = shiftTypes;
         this.profileRoles = profileRoles;
         this.profileWorkDays = profileWorkDays;
 
@@ -737,6 +725,26 @@ export class WorkScheduleComponent {
     return `${profileId}-${date.getTime()}`;
   }
 
+  private createColor(color: string){
+    const baseColor = color ?? 'lightgreen';
+    const opacity = 0.7;
+
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor);
+    if(!result) return baseColor;
+
+    const r = parseInt(result[1], 16);
+    const g = parseInt(result[2], 16);
+    const b = parseInt(result[3], 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  private createTooltip(schedule: ProfileWorkSchedule){
+    const resStartDate = new Date(schedule.start_date);
+    const resEndDate = new Date(schedule.end_date);
+
+    return `\nFrom: ${resStartDate.toLocaleDateString()}` + `\nTo: ${resEndDate.toLocaleDateString()}`;
+  }
+
   private createCellData(day: Date, schedule?: ProfileWorkSchedule): CellData {
     let workDay;
     if(schedule){
@@ -762,19 +770,7 @@ export class WorkScheduleComponent {
     };
 
     if (schedule) {
-      // Calculate color
-      const baseColor = workDay?.color ?? 'lightgreen';
-      const opacity = 0.7;
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor);
-
-      if (result) {
-        const r = parseInt(result[1], 16);
-        const g = parseInt(result[2], 16);
-        const b = parseInt(result[3], 16);
-        cellData.color = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-      } else {
-        cellData.color = baseColor;
-      }
+      cellData.color = this.createColor(schedule.color);
 
       // Calculate display text - ensure single line
       const startDate = new Date(schedule.start_date);
@@ -800,11 +796,7 @@ export class WorkScheduleComponent {
         secondDay.setHours(0, 0, 0, 0);
       }
 
-      // Calculate tooltip - include all details here
-      const resStartDate = new Date(schedule.start_date);
-      const resEndDate = new Date(schedule.end_date);
-      cellData.tooltip += `\nFrom: ${resStartDate.toLocaleDateString()}`;
-      cellData.tooltip += `\nTo: ${resEndDate.toLocaleDateString()}`;
+      cellData.tooltip = this.createTooltip(schedule);
 
       // Set identifier
       cellData.identifier = `res-${schedule.id}-${new Date(schedule.start_date).getTime()}`;
@@ -1186,9 +1178,9 @@ export class WorkScheduleComponent {
       this.editingReservation = {
         id: this.selectedReservationId ?? undefined,
         profile_id: profile.id,
-        shift_type_id: schedule?.shift_type_id ?? this.shiftTypes.find((st) => st.name == 'morning')!.id,
         start_date: schedule?.start_date.split('T')[0] ?? this.formatDateToYYYYMMDD(formStartDate),
-        end_date: schedule?.end_date.split('T')[0] ?? this.formatDateToYYYYMMDD(formEndDate)
+        end_date: schedule?.end_date.split('T')[0] ?? this.formatDateToYYYYMMDD(formEndDate),
+        color: schedule?.color ?? 'lightblue',
       };
 
       if (this.showReservationForm) {

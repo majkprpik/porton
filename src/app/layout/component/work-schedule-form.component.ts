@@ -524,7 +524,7 @@ export class WorkScheduleFormComponent {
   setInitColor(){
     if (this.colors.length > 0 && !this.selectedColor) {
       if(this.profileWorkSchedule?.id){
-        const color = this.workDays[0].color;
+        const color = this.profileWorkSchedule.color!;
         this.selectedColor = color;
       } else {
         this.selectedColor = this.colors[0];
@@ -568,7 +568,6 @@ export class WorkScheduleFormComponent {
         start_time: '09:00',
         end_time: '17:00',
         day: current.toLocaleDateString('en-CA').split('T')[0],
-        color: this.selectedColor,
       }
       workDays.push(pwd);
       current.setDate(current.getDate() + 1);
@@ -585,7 +584,6 @@ export class WorkScheduleFormComponent {
       this.workDays.forEach(workDay => {
         workDay.start_time = this.formatDateToHHMM(this.everyDayStart);
         workDay.end_time = this.formatDateToHHMM(this.everyDayEnd);
-        this.setWorkDayColor(workDay);
       });
     } else if(this.scheduleMode == 'dayByDay'){
       this.workDays.forEach(workDay => {
@@ -595,7 +593,6 @@ export class WorkScheduleFormComponent {
         if(typeof workDay.end_time !== 'string'){
           workDay.end_time = this.formatDateToHHMM(workDay.end_time);
         }
-        this.setWorkDayColor(workDay);
       });
     } 
 
@@ -607,19 +604,16 @@ export class WorkScheduleFormComponent {
           profile_id: profileId,
           start_date: this.startDate.toLocaleDateString('en-CA').split('T')[0],
           end_date: this.endDate.toLocaleDateString('en-CA').split('T')[0],
-          shift_type_id: 1,
+          color: this.selectedColor,
         })
       });
     } else {
+      this.profileWorkSchedule.color = this.selectedColor;
       profileSchedules.push(this.profileWorkSchedule);
     }
 
-    this.save.emit({ profileWorkDays: this.workDays, profileWorkSchedule: profileSchedules});
+    this.save.emit({ profileWorkDays: this.workDays, profileWorkSchedule: profileSchedules });
     this.visibleChange.emit(false);
-  }
-
-  setWorkDayColor(workDay: ProfileWorkDay){
-    workDay.color = this.selectedColor;
   }
 
   formatDateToHHMM(date: Date){
