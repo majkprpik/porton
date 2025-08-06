@@ -282,39 +282,13 @@ export class TeamTaskCardComponent {
   @Input() assignedTasks: Task[] = [];
   @Input() assignedProfiles: Profile[] = [];
   @Input() isRepairGroup: boolean = false;
-  isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
-  urgentIconSubscriptions: Subscription[] = [];
 
   constructor(
     public taskService: TaskService,
     public houseService: HouseService,
     private router: Router,
   ) {}
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['workGroupTasks'] && this.assignedTasks.length > 0) {
-      this.setupUrgentIcons();
-    }
-  }
-
-  private setupUrgentIcons(): void {
-    this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
-    this.urgentIconSubscriptions = [];
-
-    this.assignedTasks.forEach(task => {
-      if (task.is_unscheduled) {
-        const sub = this.taskService.isUrgentIconVisible$.subscribe(visible => {
-          this.isUrgentIconVisibleMap[task.task_id] = visible;
-        });
-        this.urgentIconSubscriptions.push(sub);
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
-  }
-
+  
   onTaskClick(event: MouseEvent, task: Task) {
     event.stopPropagation();
     if (this.workGroup?.is_locked) {
