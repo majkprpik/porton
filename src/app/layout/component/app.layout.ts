@@ -1056,8 +1056,10 @@ export class AppLayout {
         });
     }
 
-    private onAppVisible() {
+    private async onAppVisible() {
         console.log('App is now visible — refresh or reconnect!');
+        
+        await this.authService.checkSession();
         this.dataService.loadInitialData();
         this.pushNotificationsService.requestFirebaseMessaging();
         this.dataService.listenToDatabaseChanges(); 

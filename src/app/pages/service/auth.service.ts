@@ -11,7 +11,6 @@ import { PushNotificationsService } from './push-notifications.service';
   providedIn: 'root'
 })
 export class AuthService {  
-  private readonly STORAGE_KEY = 'username';
   private usernameSubject = new BehaviorSubject<string | null>(this.getStoredUsername());
   public userProfile = new BehaviorSubject<any>(null);
   profileRoles: ProfileRole[] = [];
@@ -35,6 +34,20 @@ export class AuthService {
     });
   }
 
+  async checkSession(){
+    const { data, error } = await this.supabaseService.getClient().auth.getSession();
+
+    if (!data.session || error) {
+      console.log('Session is invalid or expired:', error);
+      if (!this.isLoggingOut) {
+        this.logout();
+      }
+    } else {
+      console.log('Session is still valid.');
+      await this.supabaseService.getClient().auth.refreshSession();
+    }
+  }
+
   private async initializeTestUsers(): Promise<void> {
     try {
       await this.createTestUsers();
@@ -54,17 +67,12 @@ export class AuthService {
       if (error) throw error;
 
       if (data.user) {
-        this.setUserName(this.STORAGE_KEY, email);
+        this.setUserName('username', email);
         this.setProfileId(data.user.id);
         this.usernameSubject.next(email);
         this.userProfile.next(await this.profileService.fetchProfileById(data.user.id));
         this.setUserProfile(JSON.stringify(this.userProfile.value));
         this.layoutService.setSpeedDialItems([]);
-
-        const accessToken = data.session?.access_token;
-        if (accessToken) {
-          this.setSupabaseAccessToken(accessToken);
-        }
 
         return true;
       }
@@ -83,16 +91,22 @@ export class AuthService {
     try {
       const storedUserID = this.getStoredUserId();
       const deviceId = this.pushNotificationsService.getDeviceId();
+      
       console.log("User: " + storedUserID);
       console.log("Device: " + deviceId);
+
       this.pushNotificationsService.deleteFCMToken();
+
       if(storedUserID && deviceId){
         await this.pushNotificationsService.deleteUserDeviceData(storedUserID, deviceId);
       }
       await this.supabaseService.getClient().auth.signOut();
+
       localStorage.clear();
+
       this.usernameSubject.next(null);
       this.userProfile.next(null);
+
       this.layoutService.setSpeedDialItems([]);
       await this.router.navigate(['/auth/login']);
     } catch (error) {
@@ -113,12 +127,13 @@ export class AuthService {
     });
   }
 
-  isLoggedIn(): boolean {
-    return !!this.getStoredUsername();
+  async isLoggedIn() {
+    const { data, error } = await this.supabaseService.getClient().auth.getSession();
+    return !!data.session?.user;
   }
 
   getStoredUsername(): string | null {
-    return localStorage.getItem(this.STORAGE_KEY);
+    return localStorage.getItem('username');
   }
 
   setUserName(userName: string, email: string){
@@ -143,10 +158,6 @@ export class AuthService {
 
   getUsername() {
     return this.usernameSubject.asObservable();
-  }
-
-  setSupabaseAccessToken(accessToken: string){
-    localStorage.setItem('supabase_access_token', accessToken);
   }
 
   /**
