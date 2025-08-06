@@ -98,7 +98,7 @@ export const appRoutes: Routes = [
             {
                 path: 'work-schedule',
                 component: WorkScheduleComponent,
-                data: { roles: ['Voditelj kampa', 'Uprava'] }
+                data: { roles: ['Voditelj kampa', 'Uprava', 'Voditelj domacinstva', 'Prodaja', 'Voditelj recepcije'] }
             },
             {
                 path: 'console-messages',

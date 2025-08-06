@@ -146,6 +146,20 @@ export class AppMenu implements OnInit {
         return allowedRoles.some(allowedRole => allowedRole.name == role);
     }
 
+    private canViewSchedule(role?: string): boolean {
+        if(!role) return false;
+
+        const allowedRoles = this.profileRoles.filter(profileRole => 
+            profileRole.name == 'Voditelj kampa' ||
+            profileRole.name == 'Uprava' || 
+            profileRole.name == 'Voditelj domacinstva' || 
+            profileRole.name == 'Voditelj recepcije' || 
+            profileRole.name == 'Prodaja'
+        );
+
+        return allowedRoles.some(allowedRole => allowedRole.name == role);
+    }
+
     private canViewDnevniList(role?: string): boolean {
         if (!role) return false;
 
@@ -196,6 +210,10 @@ export class AppMenu implements OnInit {
             menuItems.push({ label: this.translateService.instant('MENU.NOTES'), icon: 'pi pi-clipboard', routerLink: ['/notes'] });
         }
 
+        if(this.canViewSchedule(userRole?.name)){
+            menuItems.push({ label: this.translateService.instant('MENU.WORK-SCHEDULE'), icon: 'pi pi-calendar-clock', routerLink: ['/work-schedule'] });
+        }
+
         // Add Voditelj kampa only menu items
         if (this.isVoditeljKampa(userRole?.name)) {
             menuItems.push(
@@ -204,7 +222,6 @@ export class AppMenu implements OnInit {
                 { label: this.translateService.instant('MENU.HOUSE-TYPES'), icon: 'pi pi-fw pi-home', routerLink: ['/house-types'] },
                 { label: this.translateService.instant('MENU.STATISTICS'), icon: 'pi pi-chart-bar', routerLink: ['/statistics'] },
                 { label: this.translateService.instant('MENU.ARCHIVE'), icon: 'pi pi-book', routerLink: ['/archive'] },
-                { label: this.translateService.instant('MENU.WORK-SCHEDULE'), icon: 'pi pi-calendar-clock', routerLink: ['/work-schedule'] },
                 { label: this.translateService.instant('MENU.CONSOLE-MESSAGES'), icon: 'pi pi-bullseye', routerLink: ['/console-messages'] },
             );
         }
