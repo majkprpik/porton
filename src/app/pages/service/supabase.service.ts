@@ -242,48 +242,9 @@ export class SupabaseService {
 
     return data;
   }
-
-  // Update all records in a table
-  async updateAll(table: string, updates: any, schema: string) {
-    const { data, error } = await this.supabase
-      .schema(schema)
-      .from(table)
-      .update(updates)
-      .select();
-
-    if (error) {
-      console.error('Error updating data:', error.message);
-      return null;
-    }
-
-    return data;
-  }
-
-  // Update multiple records in a table by IDs
-  async updateByIds(table: string, updates: any, ids: number[], idColumn: string, schema: string) {
-    const { data, error } = await this.supabase
-      .schema(schema)
-      .from(table)
-      .update(updates)
-      .in(idColumn, ids)
-      .select();
-
-    if (error) {
-      console.error('Error updating data:', error.message);
-      return null;
-    }
-
-    return data;
-  }
   
   getAdminClient() {
     return this.supabaseAdmin;
-  }
-
-  listenToChanges(houseNumber: string) {
-    const channel = this.supabase.channel('realtime:porton' + houseNumber);
-
-    return channel;
   }
 
   public formatDateTimeForSupabase(date: Date): string {
