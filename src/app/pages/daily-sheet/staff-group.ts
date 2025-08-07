@@ -116,6 +116,7 @@ export class StaffGroup implements OnInit, OnChanges {
   profileRoles: ProfileRole[] = [];
   repairProfileRoles: ProfileRole[] = [];
   cleaningProfileRoles: ProfileRole[] = [];
+  profiles: Profile[] = [];
 
   constructor(
     private workGroupService: WorkGroupService,
@@ -139,11 +140,13 @@ export class StaffGroup implements OnInit, OnChanges {
     combineLatest([
       this.dataService.workGroups$,
       this.dataService.workGroupProfiles$,
-      this.dataService.profileRoles$
-    ]).subscribe(([workGroups, workGroupProfiles, profileRoles]) => {
+      this.dataService.profileRoles$,
+      this.dataService.profiles$,
+    ]).subscribe(([workGroups, workGroupProfiles, profileRoles, profiles]) => {
       this.workGroups = workGroups;
       this.workGroupProfiles = workGroupProfiles;
       this.profileRoles = profileRoles;
+      this.profiles = profiles;
 
       this.repairProfileRoles = profileRoles.filter(pr =>
         pr.name === 'Kucni majstor' || pr.name === 'Odrzavanje'
@@ -168,7 +171,7 @@ export class StaffGroup implements OnInit, OnChanges {
 
   updateAvailableStaff(workGroupId: number) {
     const filteredWorkGroupProfiles = this.workGroupService.getWorkGroupProfilesByWorkGroupId(workGroupId);
-    const assignedProfiles = this.profileService.getAllProfiles().filter(profile => filteredWorkGroupProfiles.some(wgp => wgp.profile_id == profile.id));
+    const assignedProfiles = this.profiles.filter(profile => filteredWorkGroupProfiles.some(wgp => wgp.profile_id == profile.id));
 
     const selectedWorkGroup = this.workGroups.find(workGroup => workGroup.work_group_id == workGroupId);
     const selectedWorkGroupsDay = selectedWorkGroup?.created_at.split('T')[0] ?? new Date().toISOString();

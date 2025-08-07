@@ -276,10 +276,6 @@ export class TaskService {
     return compressedImage;
   }
 
-  getAllTasks(){
-    return this.tasks;
-  }
-
   getAllTaskTypes(){
     return this.taskTypes;
   }

@@ -44,10 +44,6 @@ export class ProfileService {
     });
   }
 
-  getAllProfiles(){
-    return this.profiles;
-  }
-
   getProfileRoleNameById(roleId: number){
     return this.profileRoles.find(role => role.id == roleId)!.name;
   }
