@@ -52,8 +52,9 @@ export class PushNotificationsService {
   }
 
   async requestFirebaseMessaging(): Promise<void> {
-    const permission = Notification.permission;
+    if(this.getFirebaseMessagingSubscription()) return;
 
+    const permission = Notification.permission;
     if (permission === 'denied') {
       console.warn('🚫 Notifications have been blocked by the user.');
       return;
@@ -107,7 +108,7 @@ export class PushNotificationsService {
   }
 
   async sendNotification(profileId: string, notification: { title: string; body: string; icon?: string }){
-    const token = await this.supabaseService.getSession();
+    const token = await this.supabaseService.getAccessToken();
 
     if (!token) {
       console.error('No supabase access token found');

@@ -153,7 +153,7 @@ export class AppTopbar {
                         <div class="new-profile-row"><b>Email:</b> ${email}</div>
                         <div class="new-profile-row"><b>Mobitel:</b> ${phone}</div>
                         <div class="new-profile-row"><b>Pozicija:</b> ${role}</div>
-                        <div class="new-profile-row"><b>Access token:</b> ${await this.supabaseService.getSession()}</div>
+                        <div class="new-profile-row"><b>Access token:</b> ${await this.supabaseService.getAccessToken()}</div>
                         <div class="new-profile-row"><b>fcmToken:</b> ${this.pushNotificationService.getFirebaseMessagingSubscription()}</div> 
                     </div>`,
                 acceptButtonProps: {

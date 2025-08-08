@@ -35,16 +35,64 @@ export class AuthService {
   }
 
   async checkSession(){
-    const { data, error } = await this.supabaseService.getClient().auth.getSession();
-
-    if (!data.session || error) {
-      console.log('Session is invalid or expired:', error);
+    if (!await this.isSessionValid()) {
+      console.log('Session is invalid or expired');
       if (!this.isLoggingOut) {
         this.logout();
       }
+      return;
+    }
+    
+    const token = await this.supabaseService.getAccessToken();
+
+    if (this.isTokenExpired(token)) {
+      console.log('Token is expired or about to expire — refreshing...');
+      await this.supabaseService.refreshSession();
     } else {
       console.log('Session is still valid.');
-      await this.supabaseService.getClient().auth.refreshSession();
+    }
+  }
+
+  async isSessionValid(){
+    const { data, error } = await this.supabaseService.getSession();
+    const session = data.session;
+
+    if (!session || error) {
+      return false;
+    }
+
+    return true;
+  }
+
+  async checkRealtime(){
+    if(!await this.isSessionValid()) return;
+
+    const token = await this.supabaseService.getAccessToken();
+
+    if (this.isTokenExpired(token)) {
+      console.log('🔄 Token expired — refreshing session...');
+      const { data: refreshed, error: refreshError } = await this.supabaseService.refreshSession();
+      if (refreshError || !refreshed.session) {
+        console.error('❌ Failed to refresh session:', refreshError);
+        return;
+      }
+      console.log('✅ Session refreshed.');
+    }
+
+    await this.dataService.unsubscribeFromRealtime();
+    this.dataService.listenToDatabaseChanges();
+  }
+
+  isTokenExpired(jwt: string | null): boolean {
+    if(!jwt) return true;
+
+    try {
+      const payload = JSON.parse(atob(jwt.split('.')[1]));
+      const exp = payload.exp * 1000; // convert to ms
+      return Date.now() > exp - 60_000; // refresh if within 1 min of expiry
+    } catch (err) {
+      console.warn('⚠️ Invalid token:', err);
+      return true; // fallback to treat it as expired
     }
   }
 
@@ -95,6 +143,7 @@ export class AuthService {
       console.log("User: " + storedUserID);
       console.log("Device: " + deviceId);
 
+      await this.dataService.unsubscribeFromRealtime();
       this.pushNotificationsService.deleteFCMToken();
 
       if(storedUserID && deviceId){
@@ -119,16 +168,19 @@ export class AuthService {
   }
   
   setupAuthStateListener(){
-    this.supabaseService.getClient().auth.onAuthStateChange((event, session) =>
+    this.supabaseService.getClient().auth.onAuthStateChange(async (event, session) =>
     {
-      if(!session && !this.isLoggingOut){
+      if (!session && !this.isLoggingOut) {
         this.logout();
+      } else if (session) {
+        await this.dataService.unsubscribeFromRealtime();
+        this.dataService.listenToDatabaseChanges();
       }
     });
   }
 
   async isLoggedIn() {
-    const { data, error } = await this.supabaseService.getClient().auth.getSession();
+    const { data, error } = await this.supabaseService.getSession();
     return !!data.session?.user;
   }
 

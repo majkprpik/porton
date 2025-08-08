@@ -1060,9 +1060,10 @@ export class AppLayout {
         console.log('App is now visible — refresh or reconnect!');
         
         await this.authService.checkSession();
+        await this.authService.checkRealtime();
+
         this.dataService.loadInitialData();
         this.pushNotificationsService.requestFirebaseMessaging();
-        this.dataService.listenToDatabaseChanges(); 
     }
 
     ngOnInit() {
@@ -1443,6 +1444,8 @@ export class AppLayout {
     }
 
     onOpenImage(element: HTMLElement) {
+        if (!element) return;
+
         if(element){
             element.requestFullscreen();
         } else if ((element as any).webkitRequestFullscreen) { // Safari
