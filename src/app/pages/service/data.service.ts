@@ -1115,7 +1115,7 @@ export class DataService {
     console.log('Database listening called! Realtime channel: ', this.realtimeChannel);
     if (this.realtimeChannel) return;
 
-    this.realtimeChannel = this.supabaseService.getClient().channel('realtime:porton')
+    this.realtimeChannel = this.supabaseService.getClient().channel('porton')
     .on(
       'postgres_changes',
       { 
@@ -1231,6 +1231,14 @@ export class DataService {
     .subscribe();
 
     console.log('New realtime channel: ', this.realtimeChannel);
+  }
+
+  async unsubscribeFromRealtime() {
+    if (this.realtimeChannel) {
+      console.log('Unsubscribing from realtime channel...');
+      await this.supabaseService.getClient().removeChannel(this.realtimeChannel);
+      this.realtimeChannel = null;
+    }
   }
 
   loadAuthUsers(): Observable<Profile[]> {
