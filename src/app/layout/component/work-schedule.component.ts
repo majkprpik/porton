@@ -1,6 +1,6 @@
 import { Component, effect, signal } from '@angular/core';
 import { DataService, Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.service';
-import { combineLatest } from 'rxjs';
+import { combineLatest, firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -889,56 +889,46 @@ export class WorkScheduleComponent {
     return `${year}-${month}-${day}`;
   }
 
-  handleProfileScheduleSave(data: {profileWorkDays: ProfileWorkDay[], profileWorkSchedule: Partial<ProfileWorkSchedule>[]}): void {
-    let startDateStr = data.profileWorkSchedule[0].start_date;
-    let endDateStr = data.profileWorkSchedule[0].end_date;
-
-    const startDate = new Date(startDateStr!);
-    const endDate = new Date(endDateStr!);
-
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
-    if (endDate < startDate) return;
-
+  async handleProfileScheduleSave(data: {profileWorkDays: ProfileWorkDay[], profileWorkSchedule: Partial<ProfileWorkSchedule>[]}) {
     const isEditing = !!(data.profileWorkSchedule.length == 1 && data.profileWorkSchedule[0].id);
-
-    const formattedStartDate = this.formatDateToYYYYMMDD(startDate);
-    const formattedEndDate = this.formatDateToYYYYMMDD(endDate);
-
-    data.profileWorkSchedule = data.profileWorkSchedule.map(pws => {
-      return {
-        ...pws, 
-        start_date: formattedStartDate,
-        end_date: formattedEndDate,
-      }
-    });
 
     this.showReservationForm = false;
 
     if (isEditing) {
-      data.profileWorkSchedule.forEach(pws => {
-        this.dataService.updateProfileWorkSchedule(pws).subscribe(res => {
-          if(!res) return;
-          
-          this.dataService.updateProfileWorkDays(data.profileWorkDays).subscribe();
-        });
-      });
+      for (const pws of data.profileWorkSchedule) {
+        const res = await firstValueFrom(this.dataService.updateProfileWorkSchedule(pws));
+        if(!res) continue;
+
+        await firstValueFrom(this.dataService.updateProfileWorkDays(data.profileWorkDays));
+      }
     } else {
-      data.profileWorkSchedule.forEach(pws => {
-        this.dataService.saveProfileWorkSchedule(pws).subscribe(res => {
-          if(!res) return;
-  
-          const pwd = data.profileWorkDays.map(day => {
-            return {
-              ...day,
-              profile_id: res.profile_id,
-              profile_work_schedule_id: res.id,
-            }
-          });
-  
-          this.dataService.saveProfileWorkDays(pwd).subscribe();
-        });
-      });
+      for (const pws of data.profileWorkSchedule) {
+        const res = await firstValueFrom(this.dataService.saveProfileWorkSchedule(pws));
+        if(!res) continue;
+
+        const start = this.toLocalMidnight(res.start_date);
+        const end = this.toLocalMidnight(res.end_date);
+
+        const pwd = data.profileWorkDays
+          .filter(day => {
+            const d = this.toLocalMidnight(day.day);
+            return d >= start && d <= end;
+          })
+          .map(day => ({
+            ...day,
+            profile_id: res.profile_id,
+            profile_work_schedule_id: res.id,
+          }));
+
+        await firstValueFrom(this.dataService.saveProfileWorkDays(pwd));
+      }
     }
+  }
+
+  toLocalMidnight(dateStr: string) {
+    const d = new Date(dateStr);
+    d.setHours(0, 0, 0, 0);
+    return d;
   }
 
   handleVisibilityChange(isVisible: boolean): void {
@@ -1059,7 +1049,7 @@ export class WorkScheduleComponent {
   }
 
   onCellMouseDown(event: MouseEvent, row: number, col: number): void {
-    if (this.isCellInPast(col)) return;
+    // if (this.isCellInPast(col)) return;
 
     this.selectedCellRowIndex.set(row);
     this.selectedStartColIndex.set(col);
@@ -1073,7 +1063,7 @@ export class WorkScheduleComponent {
   onCellMouseMove(event: MouseEvent, row: number, col: number): void {
     if (this.isSelecting && row === this.selectedCellRowIndex()) {
       if (this.hasCellReservation(row, col)) return;
-      if (this.isCellInPast(col)) return;
+      // if (this.isCellInPast(col)) return;
 
       const startCol = this.selectedStartColIndex();
       const minCol = Math.min(startCol, col);
@@ -1081,13 +1071,13 @@ export class WorkScheduleComponent {
 
       // Check if any cells in the potential range have reservations or are in the past
       for (let checkCol = minCol; checkCol <= maxCol; checkCol++) {
-        if (this.hasCellReservation(row, checkCol) || this.isCellInPast(checkCol)) {
+        if (this.hasCellReservation(row, checkCol)) {
           // If a reservation or past date is found in the range, limit the selection
           if (col > startCol) {
             // Moving right - limit to the column before the reservation/past date
             let lastValidCol = startCol;
             for (let c = startCol + 1; c < checkCol; c++) {
-              if (!this.hasCellReservation(row, c) && !this.isCellInPast(c)) {
+              if (!this.hasCellReservation(row, c)) {
                 lastValidCol = c;
               }
             }
@@ -1096,7 +1086,7 @@ export class WorkScheduleComponent {
             // Moving left - limit to the column after the reservation/past date
             let lastValidCol = startCol;
             for (let c = startCol - 1; c > checkCol; c--) {
-              if (!this.hasCellReservation(row, c) && !this.isCellInPast(c)) {
+              if (!this.hasCellReservation(row, c)) {
                 lastValidCol = c;
               }
             }

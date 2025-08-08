@@ -139,6 +139,7 @@ export interface ProfileWorkDay{
   start_time: string;
   end_time: string;
   profile_work_schedule_id?: number;
+  is_checked?: boolean;
 }
 
 export interface Note {
@@ -795,7 +796,7 @@ export class DataService {
 
   saveProfileWorkDay(newProfileDay: ProfileWorkDay){
     this.loadingSubject.next(true);
-    const { id, ...scheduleWithoutId } = newProfileDay;
+    const { id, is_checked, ...scheduleWithoutId } = newProfileDay;
 
     return from(this.supabaseService.insertData('profile_work_days', scheduleWithoutId, this.schema)).pipe(
       tap((data) => {
@@ -812,7 +813,7 @@ export class DataService {
 
   saveProfileWorkDays(profileWorkDays: ProfileWorkDay[]){
     this.loadingSubject.next(true);
-    const payload = profileWorkDays.map(({ id, ...rest }) => rest);
+    const payload = profileWorkDays.map(({ id, is_checked, ...rest }) => rest);
 
     return from(this.supabaseService.insertMultipleData('profile_work_days', payload, this.schema)).pipe(
       tap((data) => {
@@ -836,13 +837,14 @@ export class DataService {
 
   updateProfileWorkDay(updatedWorkDay: ProfileWorkDay){
     this.loadingSubject.next(true);
+    const { is_checked, ...updatedWorkDayWithoutChecked } = updatedWorkDay;
 
-    if(!updatedWorkDay.id){
+    if(!updatedWorkDayWithoutChecked.id){
       console.error('Cannot update profile work day without an ID');
       return throwError(() => new Error('Missing profile work day id'));
     }
 
-    return from(this.supabaseService.updateData('profile_work_days', updatedWorkDay, updatedWorkDay.id.toString(), this.schema)).pipe(
+    return from(this.supabaseService.updateData('profile_work_days', updatedWorkDayWithoutChecked, updatedWorkDayWithoutChecked.id.toString(), this.schema)).pipe(
       tap((data) => {
         if (data && data.length > 0) {
           const fullProfileWorkDays = this.profileWorkDaysSubject.value;
@@ -866,8 +868,9 @@ export class DataService {
 
   updateProfileWorkDays(profileWorkDays: ProfileWorkDay[]) {
     this.loadingSubject.next(true);
+    const payload = profileWorkDays.map(({ is_checked, ...rest }) => rest);
 
-    return from(this.supabaseService.updateMultipleData('profile_work_days', profileWorkDays, this.schema)).pipe(
+    return from(this.supabaseService.updateMultipleData('profile_work_days', payload, this.schema)).pipe(
       tap((data) => {
         if (data && data.length > 0) {
           const currentWorkDays = this.profileWorkDaysSubject.value;

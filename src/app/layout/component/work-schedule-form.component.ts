@@ -11,6 +11,8 @@ import { ButtonModule } from 'primeng/button';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { MultiSelect } from 'primeng/multiselect';
 import { combineLatest } from 'rxjs';
+import { InputTextModule } from 'primeng/inputtext';
+import { CheckboxModule } from 'primeng/checkbox';
 
 @Component({
   selector: 'app-work-schedule-form',
@@ -24,26 +26,28 @@ import { combineLatest } from 'rxjs';
     ButtonModule,
     RadioButtonModule,
     MultiSelect,
+    InputTextModule,
+    CheckboxModule,
   ],
   template: `
   <p-dialog 
     [(visible)]="visible" 
     [modal]="true" 
-    [style]="{width: '700px'}" 
+    [style]="{width: '600px'}" 
     [draggable]="false" 
     [resizable]="false"
     (onHide)="onCancel()"
   >
     <ng-template pTemplate="header">
       <h3>
-        {{ profileWorkSchedule?.id ? ('WORK-SCHEDULE.MODAL.EDIT-SCHEDULE' | translate) : ('WORK-SCHEDULE.MODAL.CREATE-SCHEDULE' | translate) }}
+        {{ isEditing() ? ('WORK-SCHEDULE.MODAL.EDIT-SCHEDULE' | translate) : ('WORK-SCHEDULE.MODAL.CREATE-SCHEDULE' | translate) }}
       </h3>
     </ng-template>
 
     <div class="top">
       <div class="field">
         <label for="lastName">{{ 'WORK-SCHEDULE.MODAL.EMPLOYEE' | translate }}</label>
-        @if(profileWorkSchedule?.id) {
+        @if(isEditing()) {
           <div class="field">
             <span id="employee-name">{{ profile?.first_name }}</span>
           </div>
@@ -54,7 +58,7 @@ import { combineLatest } from 'rxjs';
             optionLabel="first_name" 
             optionValue="id" 
             [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-LOCATION' | translate" 
-            [style]="{ width: '100%' }" 
+            [style]="{ width: '300px' }" 
             appendTo="body"
           >
             <ng-template let-item pTemplate="item">
@@ -69,7 +73,7 @@ import { combineLatest } from 'rxjs';
         <p-select 
           [options]="colors" 
           [(ngModel)]="selectedColor"
-          [ngStyle]="{ 'width': '210px'}"
+          [ngStyle]="{ 'width': '210px' }"
           [panelStyle]="{ 'max-height': '200px' }"
           [placeholder]="'RESERVATIONS.MODAL.SELECT-A-COLOR' | translate"
           appendTo="body"
@@ -113,32 +117,27 @@ import { combineLatest } from 'rxjs';
         }"
       >
         <b>{{ startDate | date: 'dd.MM.' }} - {{ endDate | date: 'dd.MM.' }}</b>
-        <div class="start-time">
-          <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
-          <p-datePicker  
-            id="startDate" 
-            [readonlyInput]="true" 
-            [timeOnly]="true"
-            [showIcon]="true"
-            [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
-            appendTo="body"
-            [(ngModel)]="everyDayStart"
-          >
-          </p-datePicker>
-        </div>
 
-        <div class="end-time">
-          <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
-          <p-datePicker  
-            id="endDate" 
-            [readonlyInput]="true" 
-            [timeOnly]="true"
-            [showIcon]="true"
-            [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
-            appendTo="body"
-            [(ngModel)]="everyDayEnd"
-          >
-          </p-datePicker>
+        <div class="whole-schedule-times">
+          <div class="start-time">
+            <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
+            <input 
+              pInputText
+              type="time"
+              [(ngModel)]="everyDayStart"
+              step="60"
+            >
+          </div>
+  
+          <div class="end-time">
+            <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
+            <input 
+              pInputText
+              type="time"
+              [(ngModel)]="everyDayEnd"
+              step="60"
+            >
+          </div>
         </div>
       </div>
     </div>
@@ -152,33 +151,33 @@ import { combineLatest } from 'rxjs';
       >
         @for(day of workDays; let i = $index; track i){
           <div class="day">
-            <b>{{ day.day | date: 'EEE' }} - {{ day.day | date: 'dd.MM.' }}</b>
-            <div class="start-time">
-              <label for="endDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
-              <p-datePicker  
-                id="endDate" 
-                [readonlyInput]="true" 
-                [timeOnly]="true"
-                [showIcon]="true"
-                [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
-                appendTo="body"
-                [(ngModel)]="day.start_time"
-              >
-              </p-datePicker>
+            <div class="day-date">
+              @if(!isEditing()){
+                <p-checkbox [(ngModel)]="day.is_checked" [binary]="true" />
+              }
+              <b>{{ day.day | date: 'EEE' }} - {{ day.day | date: 'dd.MM.' }}</b>
             </div>
-  
-            <div class="end-time">
-              <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
-              <p-datePicker  
-                id="endDate" 
-                [readonlyInput]="true" 
-                [timeOnly]="true"
-                [showIcon]="true"
-                [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate"
-                appendTo="body"
-                [(ngModel)]="day.end_time"
-              >
-              </p-datePicker>
+
+            <div class="each-day-times">
+              <div class="start-time">
+                <label for="endDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
+                <input 
+                  pInputText
+                  type="time"
+                  [(ngModel)]="day.start_time"
+                  step="60"
+                >
+              </div>
+    
+              <div class="end-time">
+                <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
+                <input 
+                  pInputText
+                  type="time"
+                  [(ngModel)]="day.end_time"
+                  step="60"
+                >
+              </div>
             </div>
           </div>
         }
@@ -188,7 +187,7 @@ import { combineLatest } from 'rxjs';
     <ng-template pTemplate="footer">
       <div class="form-footer">
         <div class="left-buttons">
-          @if(profileWorkSchedule?.id){
+          @if(isEditing()){
             <p-button
               [label]="'BUTTONS.DELETE' | translate"
               icon="pi pi-trash" 
@@ -204,7 +203,7 @@ import { combineLatest } from 'rxjs';
             icon="pi pi-check" 
             (click)="onSave()" 
             styleClass="p-button-text"
-            [disabled]="!profileWorkSchedule?.id && !this.selectedProfilesForSchedule.length"
+            [disabled]="!selectedProfilesForSchedule.length || !isTimeValid()"
           ></p-button>
         </div>
       </div>
@@ -262,18 +261,33 @@ import { combineLatest } from 'rxjs';
           .day{
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
+            justify-content: space-evenly;
+            gap: 120px;
             padding-bottom: 10px;
 
-            b{
+            .day-date{
               display: flex;
               flex-direction: row;
               align-items: center;
+              gap: 20px;
+
+              b{
+                width: 80px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+              }
             }
-  
-            .start-time, .end-time{
+
+            .each-day-times{
               display: flex;
-              flex-direction: column;
+              flex-direction: row;
+              gap: 20px;
+
+              .start-time, .end-time{
+                display: flex;
+                flex-direction: column;
+              }
             }
           }
         }
@@ -304,7 +318,7 @@ import { combineLatest } from 'rxjs';
         .days{
           display: flex;
           flex-direction: row;
-          justify-content: flex-end;
+          justify-content: space-evenly;
           gap: 96px;
           width: 100%;
           box-sizing: border-box;
@@ -318,9 +332,15 @@ import { combineLatest } from 'rxjs';
             align-items: center;
           }
 
-          .start-time, .end-time{
+          .whole-schedule-times{
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            gap: 20px;
+
+            .start-time, .end-time{
+              display: flex;
+              flex-direction: column;
+            }
           }
         }
 
@@ -365,21 +385,21 @@ import { combineLatest } from 'rxjs';
     }
     
     textarea {
-        resize: vertical;
-        min-height: 80px;
+      resize: vertical;
+      min-height: 80px;
     }
     
     .p-error {
-        margin-top: 0.25rem;
-        color: #dc3545;
-        font-size: 0.875rem;
-        padding: 0.5rem;
-        background-color: rgba(220, 53, 69, 0.1);
-        border-radius: 4px;
+      margin-top: 0.25rem;
+      color: #dc3545;
+      font-size: 0.875rem;
+      padding: 0.5rem;
+      background-color: rgba(220, 53, 69, 0.1);
+      border-radius: 4px;
     }
 
     .mt-3 {
-        margin-top: 1rem;
+      margin-top: 1rem;
     }
 
     .form-footer {
@@ -438,8 +458,8 @@ export class WorkScheduleFormComponent {
   selectedProfilesForSchedule: string[] = [];
   availableProfiles: Profile[] = [];
 
-  everyDayStart: Date = new Date();
-  everyDayEnd: Date = new Date();
+  everyDayStart: string = '09:00';
+  everyDayEnd: string = '17:00';
 
   scheduleMode: 'all' | 'dayByDay' = 'all';
   selectedColor: string = '';
@@ -467,25 +487,28 @@ export class WorkScheduleFormComponent {
       this.availableProfiles = this.getAvailableProfiles();
       this.profile = profiles.find(profile => profile.id == this.profileId);
 
-      if(this.profile){
+      if(this.profile && !this.selectedProfilesForSchedule.some(sp => sp == this.profile?.id)){
         this.selectedProfilesForSchedule.push(this.profile.id);
       }
 
       this.setProfileWorkDays();
       this.getAvailableProfiles();
-      this.setInitColor();
+      this.setInitData();
     });
 
     this.preSelectScheduleMode();
-    this.setDefaultTimes();
+  }
+
+  isEditing(){
+    return this.profileWorkSchedule?.id;
   }
 
   preSelectScheduleMode(){
-    this.scheduleMode = this.profileWorkSchedule?.id ? 'dayByDay' : 'all';
+    this.scheduleMode = this.isEditing() ? 'dayByDay' : 'all';
   }
 
   setProfileWorkDays(){
-    if(this.profileWorkSchedule?.id){
+    if(this.isEditing()){
       this.workDays = this.profileWorkDays.filter(pwd => 
         pwd.profile_id == this.profileId &&
         pwd.profile_work_schedule_id == this.profileWorkSchedule?.id
@@ -521,15 +544,26 @@ export class WorkScheduleFormComponent {
     return copy;
   }
 
-  setInitColor(){
+  setInitData(){
     if (this.colors.length > 0 && !this.selectedColor) {
-      if(this.profileWorkSchedule?.id){
-        const color = this.profileWorkSchedule.color!;
+      if(this.isEditing()){
+        const color = this.profileWorkSchedule?.color!;
         this.selectedColor = color;
       } else {
         this.selectedColor = this.colors[0];
       }
     }
+
+    this.setAllWorkDaysChecked();
+  }
+
+  private setAllWorkDaysChecked(){
+    this.workDays = this.workDays.map(wd => {
+      return {
+        ...wd,
+        is_checked: true,
+      }
+    });
   }
 
   stringToTimeDate(timeStr: string): Date {
@@ -541,16 +575,6 @@ export class WorkScheduleFormComponent {
 
   onScheduleModeChange(newMode: 'all' | 'dayByDay'){
     this.scheduleMode = newMode;
-  }
-
-  setDefaultTimes() {
-    const start = new Date();
-    start.setHours(9, 0, 0, 0);
-    this.everyDayStart = start;
-
-    const end = new Date();
-    end.setHours(17, 0, 0, 0);
-    this.everyDayEnd = end;
   }
 
   getProfileWorkDays() {
@@ -576,43 +600,121 @@ export class WorkScheduleFormComponent {
     return workDays;
   }
 
+  isTimeValid(){
+    if(this.scheduleMode == 'all') {
+      return this.everyDayStart && this.everyDayEnd;
+    }
+
+    if(this.scheduleMode == 'dayByDay') {
+      return !this.workDays.some(wd => !wd.start_time || !wd.end_time);
+    }
+
+    return false;
+  }
+
   onSave(): void {
-    if(!this.profileWorkSchedule) return;
-    if(!this.selectedProfilesForSchedule.length) return; 
+    if(
+      !this.isTimeValid() || 
+      !this.profileWorkSchedule || 
+      !this.selectedProfilesForSchedule.length
+    ) {
+      return; 
+    };
 
     if(this.scheduleMode == 'all'){
+      this.setAllWorkDaysChecked();
+
       this.workDays.forEach(workDay => {
-        workDay.start_time = this.formatDateToHHMM(this.everyDayStart);
-        workDay.end_time = this.formatDateToHHMM(this.everyDayEnd);
+        workDay.start_time = this.everyDayStart;
+        workDay.end_time = this.everyDayEnd;
       });
-    } else if(this.scheduleMode == 'dayByDay'){
-      this.workDays.forEach(workDay => {
-        if(typeof workDay.start_time !== 'string'){
-          workDay.start_time = this.formatDateToHHMM(workDay.start_time);
-        }
-        if(typeof workDay.end_time !== 'string'){
-          workDay.end_time = this.formatDateToHHMM(workDay.end_time);
-        }
-      });
-    } 
+    }
 
     let profileSchedules: Partial<ProfileWorkSchedule>[] = []; 
 
-    if(!this.profileWorkSchedule.id){
-      this.selectedProfilesForSchedule.forEach(profileId => {
-        profileSchedules.push({
-          profile_id: profileId,
-          start_date: this.startDate.toLocaleDateString('en-CA').split('T')[0],
-          end_date: this.endDate.toLocaleDateString('en-CA').split('T')[0],
-          color: this.selectedColor,
-        })
-      });
-    } else {
+    if(this.isEditing()){
       this.profileWorkSchedule.color = this.selectedColor;
-      profileSchedules.push(this.profileWorkSchedule);
+      
+      if(this.scheduleMode == 'all') {
+        profileSchedules.push(this.profileWorkSchedule);
+      } else {
+        let tempWorkDays: ProfileWorkDay[] = [];
+
+
+        this.workDays.forEach((wd, index) => {
+          if(wd.is_checked) {
+            tempWorkDays.push(wd);
+
+            if(this.workDays.length - 1 == index) {
+              profileSchedules.push({
+                profile_id: wd.profile_id,
+                start_date: tempWorkDays[0].day,
+                end_date: tempWorkDays[tempWorkDays.length - 1].day,
+                color: this.selectedColor,
+              });
+  
+              tempWorkDays = [];
+            }
+          } else {
+            if(tempWorkDays.length > 0) {
+              profileSchedules.push({
+                profile_id: wd.profile_id,
+                start_date: tempWorkDays[0].day,
+                end_date: tempWorkDays[tempWorkDays.length - 1].day,
+                color: this.selectedColor,
+              });
+  
+              tempWorkDays = [];
+            }
+          }
+        });
+      }
+    } else {
+      if(this.scheduleMode == 'all'){
+        this.selectedProfilesForSchedule.forEach(profileId => {
+          profileSchedules.push({
+            profile_id: profileId,
+            start_date: this.startDate.toLocaleDateString('en-CA').split('T')[0],
+            end_date: this.endDate.toLocaleDateString('en-CA').split('T')[0],
+            color: this.selectedColor,
+          })
+        });
+      } else if (this.scheduleMode == 'dayByDay'){
+        let tempWorkDays: ProfileWorkDay[] = [];
+
+        this.selectedProfilesForSchedule.forEach(profileId => {
+          this.workDays.forEach((wd, index) => {
+            if(wd.is_checked) {
+              tempWorkDays.push(wd);
+  
+              if(this.workDays.length - 1 == index) {
+                profileSchedules.push({
+                  profile_id: profileId,
+                  start_date: tempWorkDays[0].day,
+                  end_date: tempWorkDays[tempWorkDays.length - 1].day,
+                  color: this.selectedColor,
+                });
+    
+                tempWorkDays = [];
+              }
+            } else {
+              if(tempWorkDays.length > 0) {
+                profileSchedules.push({
+                  profile_id: profileId,
+                  start_date: tempWorkDays[0].day,
+                  end_date: tempWorkDays[tempWorkDays.length - 1].day,
+                  color: this.selectedColor,
+                });
+    
+                tempWorkDays = [];
+              }
+            }
+          });
+        })
+      }
     }
 
-    this.save.emit({ profileWorkDays: this.workDays, profileWorkSchedule: profileSchedules });
+    this.save.emit({ profileWorkDays: this.workDays.filter(wd => wd.is_checked), profileWorkSchedule: profileSchedules });
     this.visibleChange.emit(false);
   }
 
