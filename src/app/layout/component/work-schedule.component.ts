@@ -1,5 +1,6 @@
+import { WorkScheduleExportFormComponent } from './work-schedule-export-form.component';
 import { Component, effect, signal } from '@angular/core';
-import { DataService, Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.service';
+import { Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.models';
 import { combineLatest, firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +8,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { WorkScheduleFormComponent } from './work-schedule-form.component';
 import { ButtonModule } from 'primeng/button';
 import { LayoutService } from '../service/layout.service';
+import { DataService } from '../../pages/service/data.service';
+import { TooltipModule } from 'primeng/tooltip';
 
 interface CellData {
   isReserved: boolean;
@@ -29,7 +32,9 @@ interface CellData {
     FormsModule, 
     TranslateModule, 
     WorkScheduleFormComponent, 
-    ButtonModule
+    ButtonModule,
+    WorkScheduleExportFormComponent,
+    TooltipModule,
   ],
   template: `
       <div class="work-schedule-container">
@@ -41,28 +46,48 @@ interface CellData {
             <p-button [severity]="selectedDepartment == 'reception' ? 'primary': 'secondary'" label="Reception" (click)="filterProfilesByDepartment('reception')"></p-button>  
             <p-button [severity]="selectedDepartment == 'management' ? 'primary': 'secondary'" label="Management" (click)="filterProfilesByDepartment('management')"></p-button>  
           </div>
-          <div class="density">
-            <p-button
-              class="density-button"
-              [severity]="cellHeightInPx == 40 ? 'primary': 'secondary'" 
-              (click)="changeCellHeight(40)"
+          <div class="schedule-buttons">
+            <div class="export"
+              pTooltip="Export schedule" 
+              tooltipPosition="top"
             >
-              <i class="pi pi-equals"></i>
-            </p-button>  
-            <p-button
-              class="density-button"
-              [severity]="cellHeightInPx == 30 ? 'primary': 'secondary'" 
-              (click)="changeCellHeight(30)"
+              <p-button
+                [severity]="'info'"
+                (click)="openExportSchedule()"
               >
-              <i class="pi pi-bars"></i>
-            </p-button>  
-            <p-button
-              class="density-button"
-              [severity]="cellHeightInPx == 25 ? 'primary': 'secondary'" 
-              (click)="changeCellHeight(25)"
+                <i class="pi pi-file-export"></i>
+              </p-button>
+            </div>
+            <div class="density"
             >
-              <i class="pi pi-align-justify"></i>
-            </p-button>  
+              <p-button
+                class="density-button"
+                [severity]="cellHeightInPx == 40 ? 'primary': 'secondary'" 
+                (click)="changeCellHeight(40)"
+                pTooltip="Row height: Spacious" 
+                tooltipPosition="top"
+              >
+                <i class="pi pi-equals"></i>
+              </p-button>  
+              <p-button
+                class="density-button"
+                [severity]="cellHeightInPx == 30 ? 'primary': 'secondary'" 
+                (click)="changeCellHeight(30)"
+                pTooltip="Row height: Comfortable" 
+                tooltipPosition="top"
+              >
+                <i class="pi pi-bars"></i>
+              </p-button>  
+              <p-button
+                class="density-button"
+                [severity]="cellHeightInPx == 25 ? 'primary': 'secondary'" 
+                (click)="changeCellHeight(25)"
+                pTooltip="Row height: Compact" 
+                tooltipPosition="left"
+              >
+                <i class="pi pi-align-justify"></i>
+              </p-button>  
+            </div>
           </div>
         </div>
         <div class="table-container">
@@ -83,7 +108,7 @@ interface CellData {
                     [title]="day.toLocaleDateString()"
                     [ngStyle]="{'height': '30px'}"
                   >
-                    <div>{{ day | date: 'EEE' }} - {{ day | date: 'dd.M.' }}</div>
+                    <div>{{ day | date: 'EEE' }} {{ day | date: 'dd.M.' }}</div>
                   </th>
                 }
               </tr>
@@ -135,7 +160,6 @@ interface CellData {
           </table>
         </div>
 
-        <!-- Reservation Form -->
         @if (showReservationForm) {
           <app-work-schedule-form
             [visible]="showReservationForm"
@@ -151,6 +175,17 @@ interface CellData {
             (visibleChange)="handleVisibilityChange($event)"
           >
           </app-work-schedule-form>
+        }
+
+        @if(showExportScheduleForm) {
+          <app-work-schedule-export-form
+            [visible]="showExportScheduleForm"
+            [filteredProfiles]="filteredProfiles"
+            [gridMatrix]="exportMatrix"
+            (visibleChange)="handleScheduleExportFormVisibilityChange($event)"
+            (weekChange)="handleWeekChange($event)"
+          >
+          </app-work-schedule-export-form>
         }
       </div>
     `,
@@ -229,19 +264,34 @@ interface CellData {
           padding-bottom: 10px;
         }
 
-        .density{
-          width: 500px;
+        .schedule-buttons{
           display: flex;
           flex-direction: row;
-          align-items: top;
-          justify-content: flex-end;
-          gap: 10px;
+          gap: 20px;
 
-          .density-button{
-            height: 33px;
+          .export{
+            p-button{
+              height: 33px;
+  
+              i{
+                font-size: 16px;
+              }
+            }
+          }
 
-            i{
-              font-size: 16px;
+          .density{
+            display: flex;
+            flex-direction: row;
+            align-items: top;
+            justify-content: flex-end;
+            gap: 10px;
+  
+            .density-button{
+              height: 33px;
+  
+              i{
+                font-size: 16px;
+              }
             }
           }
         }
@@ -573,10 +623,12 @@ export class WorkScheduleComponent {
   profileWorkDays: ProfileWorkDay[] = [];
 
   gridMatrix = signal<CellData[][]>([]);
+  exportMatrix = signal<CellData[][]>([]);
 
   private reservationMap = new Map<string, ProfileWorkSchedule>();
 
   showReservationForm = false;
+  showExportScheduleForm = false;
   selectedProfileId = '';
   selectedProfile: Profile | undefined = undefined;
   selectedStartDate: Date = new Date();
@@ -719,6 +771,26 @@ export class WorkScheduleComponent {
         if (cell.isReserved) reservedCellCount++;
       });
     });
+  }
+
+  private getExportMatrix(startDate: Date, endDate: Date): CellData[][] {
+    const days = this.days();
+    const startIndex = days.findIndex(d => this.isSameDay(d, startDate));
+    const endIndex = days.findIndex(d => this.isSameDay(d, endDate));
+
+    if (startIndex === -1 || endIndex === -1) {
+      throw new Error('Export range is outside current gridMatrix range');
+    }
+
+    // Slice columns in each row
+    return this.gridMatrix()
+      .map(row => row.slice(startIndex, endIndex + 1));
+  }
+
+  private isSameDay(a: Date, b: Date): boolean {
+    return a.getFullYear() === b.getFullYear() &&
+          a.getMonth() === b.getMonth() &&
+          a.getDate() === b.getDate();
   }
 
   private getReservationKey(profileId: string, date: Date): string {
@@ -945,6 +1017,10 @@ export class WorkScheduleComponent {
     } else if (isVisible) {
       this.updateNextProfileScheduleDate();
     }
+  }
+
+  handleScheduleExportFormVisibilityChange(isVisible: boolean){
+    this.showExportScheduleForm = isVisible;
   }
 
   private updateNextProfileScheduleDate(): void {
@@ -1231,5 +1307,24 @@ export class WorkScheduleComponent {
 
   changeCellHeight(heightInPx: number){
     this.cellHeightInPx = heightInPx;
+  }
+
+  openExportSchedule(){
+    const today = new Date();
+
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - today.getDay() + 1); // Monday
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6); // Sunday
+    sunday.setHours(23, 59, 59, 999);
+    
+    this.exportMatrix.set(this.getExportMatrix(monday, sunday));
+    this.showExportScheduleForm = true;
+  }
+
+  handleWeekChange(event: any){
+    this.exportMatrix.set(this.getExportMatrix(event.monday, event.sunday));
   }
 }

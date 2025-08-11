@@ -33,7 +33,8 @@
         "MONTH": "Month",
         "ADD-TO-HOME": "Add to home",
         "REMOVE-FROM-HOME": "Remove from home",
-        "CANCEL-SELECTION": "Cancel selection"
+        "CANCEL-SELECTION": "Cancel selection",
+        "EXPORT": "Export"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Assigned",
@@ -443,6 +444,7 @@
         "MODAL": {
             "CREATE-SCHEDULE": "Create schedule",
             "EDIT-SCHEDULE": "Edit schedule",
+            "EXPORT-SCHEDULE": "Export schedule",
             "EMPLOYEE": "Employee",
             "SHIFT": "Shift",
             "SELECT-A-SHIFT": "Select a shift",

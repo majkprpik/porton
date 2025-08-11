@@ -33,7 +33,8 @@
         "MONTH": "Mjesec",
         "ADD-TO-HOME": "Dodaj na pregled",
         "REMOVE-FROM-HOME": "Ukloni s pregleda",
-        "CANCEL-SELECTION": "Odustani"
+        "CANCEL-SELECTION": "Odustani",
+        "EXPORT": "Izvezi"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Dodijeljeno",
@@ -444,6 +445,7 @@
             "CREATE-SCHEDULE": "Kreiraj raspored",
             "EDIT-SCHEDULE": "Uredi raspored",
             "EMPLOYEE": "Zaposlenik",
+            "EXPORT-SCHEDULE": "Izvezi raspored",
             "SHIFT": "Smjena",
             "SELECT-A-SHIFT": "Odaberi smjenu",
             "START-DATE": "Početak",
