@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { DataService, HouseType } from '../service/data.service';
+import { HouseType } from '../service/data.models';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -12,6 +12,7 @@ import { ConfirmationService } from 'primeng/api';
 import { Subject, takeUntil } from 'rxjs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DataService } from '../service/data.service';
 
 @Component({
   selector: 'app-house-types',

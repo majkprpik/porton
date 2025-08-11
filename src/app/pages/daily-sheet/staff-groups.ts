@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { StaffGroup } from './staff-group';
 import { ChipModule } from 'primeng/chip';
-import { DataService, Profile, ProfileRole } from '../service/data.service';
+import { Profile, ProfileRole } from '../service/data.models';
 import { CommonModule } from '@angular/common';
 import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { combineLatest } from 'rxjs';
+import { DataService } from '../service/data.service';
 
 @Component({
   selector: 'app-staff-groups',

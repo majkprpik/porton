@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { DataService, Profile, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.service';
+import { Profile, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.models';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
@@ -13,6 +13,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { combineLatest } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
+import { DataService } from '../../pages/service/data.service';
 
 @Component({
   selector: 'app-work-schedule-form',

@@ -1,5 +1,5 @@
 import { Component, ElementRef, Inject, LOCALE_ID, ViewChild } from '@angular/core';
-import { DataService, Note, Profile } from '../../pages/service/data.service';
+import { Note, Profile } from '../../pages/service/data.models';
 import { NotesService } from '../../pages/service/notes.service';
 import { ProfileService } from '../../pages/service/profile.service';
 import { combineLatest } from 'rxjs';
@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatePicker } from 'primeng/datepicker';
 import { TranslateModule } from '@ngx-translate/core';
+import { DataService } from '../../pages/service/data.service';
 
 @Component({
   selector: 'app-notes-page',

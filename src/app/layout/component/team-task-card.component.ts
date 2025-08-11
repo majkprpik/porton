@@ -1,12 +1,11 @@
-import { DataService, Profile, Task, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
-import { Component, Input, SimpleChanges } from '@angular/core';
+import { Profile, Task, WorkGroup } from './../../pages/service/data.models';
+import { Component, Input } from '@angular/core';
 import { TabViewModule } from 'primeng/tabview';
 import { TaskService } from '../../pages/service/task.service';
 import { HouseService } from '../../pages/service/house.service';
 import { Router } from '@angular/router';
 import { ChipModule } from 'primeng/chip';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { StaffCardComponent } from '../../pages/daily-sheet/staff-card';
 import { TaskCardComponent } from '../../pages/daily-sheet/task-card';

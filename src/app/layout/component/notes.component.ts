@@ -2,12 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, Inject, LOCALE_ID, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotesService } from '../../pages/service/notes.service';
-import { DataService, Note, Profile } from '../../pages/service/data.service';
+import { Note, Profile } from '../../pages/service/data.models';
 import { combineLatest } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ProfileService } from '../../pages/service/profile.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { DatePickerModule } from 'primeng/datepicker';
+import { DataService } from '../../pages/service/data.service';
 
 @Component({
   selector: 'app-notes',

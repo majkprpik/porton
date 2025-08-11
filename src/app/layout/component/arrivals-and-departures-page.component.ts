@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { combineLatest, Subscription } from 'rxjs';
-import { DataService, House, HouseAvailability } from '../../pages/service/data.service';
+import { House, HouseAvailability } from '../../pages/service/data.models';
 import { HouseService } from '../../pages/service/house.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -13,6 +13,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ProfileService } from '../../pages/service/profile.service';
 import { AuthService } from '../../pages/service/auth.service';
+import { DataService } from '../../pages/service/data.service';
 
 @Component({
   selector: 'app-arrivals-and-departures-page',

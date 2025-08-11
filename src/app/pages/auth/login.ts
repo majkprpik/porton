@@ -11,8 +11,9 @@ import { Router } from '@angular/router';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../service/auth.service';
-import { DataService, ProfileRole } from '../service/data.service';
+import { ProfileRole } from '../service/data.models';
 import { take } from 'rxjs';
+import { DataService } from '../service/data.service';
 @Component({
     selector: 'app-login',
     standalone: true,

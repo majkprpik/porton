@@ -3,9 +3,10 @@ import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { ProfileService } from './profile.service';
-import { DataService, ProfileRole } from './data.service';
+import { ProfileRole } from './data.models';
 import { LayoutService } from '../../layout/service/layout.service';
 import { PushNotificationsService } from './push-notifications.service';
+import { DataService } from './data.service';
 
 @Injectable({
   providedIn: 'root'

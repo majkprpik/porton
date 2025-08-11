@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { DataService, Profile, ProfileRole, RepairTaskComment } from './data.service';
+import { Profile, ProfileRole, RepairTaskComment } from './data.models';
+import { DataService } from './data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +34,7 @@ export class ProfileService {
 
   constructor(
     private supabase: SupabaseService,
-    private dataService: DataService
+    private dataService: DataService,
   ) {
     combineLatest([
       this.dataService.profiles$,

@@ -1,15 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { TaskGroupComponent } from './task-group';
-import { DataService, Task, House, WorkGroupTask } from '../service/data.service';
+import { Task, House, WorkGroupTask, TaskProgressTypeName } from '../service/data.models';
 import { combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TaskProgressTypeName, TaskService } from '../service/task.service';
+import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { DataService } from '../service/data.service';
 
 @Component({
   selector: 'app-tasks',

@@ -9,7 +9,7 @@ import { MenuModule } from 'primeng/menu';
 import { Menu } from 'primeng/menu';
 import { AuthService } from '../../pages/service/auth.service';
 import { ButtonModule } from 'primeng/button';
-import { DataService, Language, Profile, ProfileRole } from '../../pages/service/data.service';
+import { Language, Profile, ProfileRole } from '../../pages/service/data.models';
 import { LanguageService } from '../../pages/language/language.service';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
@@ -17,6 +17,7 @@ import { ProfileService } from '../../pages/service/profile.service';
 import { PushNotificationsService } from '../../pages/service/push-notifications.service';
 import { combineLatest } from 'rxjs';
 import { SupabaseService } from '../../pages/service/supabase.service';
+import { DataService } from '../../pages/service/data.service';
 
 @Component({
     selector: 'app-topbar',

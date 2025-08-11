@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
-import { DataService, WorkGroup, Profile, Task, House, HouseAvailability, WorkGroupProfile, WorkGroupTask } from '../service/data.service';
+import { WorkGroup, Profile, Task, House, HouseAvailability, WorkGroupProfile, WorkGroupTask, TaskProgressTypeName } from '../service/data.models';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { HouseService } from '../service/house.service';
-import { TaskProgressTypeName, TaskService } from '../service/task.service';
+import { TaskService } from '../service/task.service';
 import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProfileService } from '../service/profile.service';
 import { StaffCardComponent } from '../daily-sheet/staff-card';
 import { AuthService } from '../service/auth.service';
 import { WorkGroupService } from '../service/work-group.service';
+import { DataService } from '../service/data.service';
 
 @Component({
     selector: 'app-work-group-detail',

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService, House, HouseAvailability, Task, TaskType, HouseType } from '../service/data.service';
+import { House, HouseAvailability, Task, TaskType, HouseType } from '../service/data.models';
 import { combineLatest, Subscription } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +15,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TranslateModule } from '@ngx-translate/core';
 import { LayoutService } from '../../layout/service/layout.service';
 import { ChartComponent } from '../../layout/component/chart.component';
+import { DataService } from '../service/data.service';
 
 // Define the special location option interface
 interface SpecialLocation {

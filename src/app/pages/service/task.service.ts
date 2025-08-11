@@ -1,10 +1,11 @@
 import { PushNotificationsService } from './push-notifications.service';
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, House, Profile, Task, TaskProgressType, TaskType } from './data.service';
+import { House, Profile, Task, TaskProgressType, TaskProgressTypeName, TaskType, TaskTypeName } from './data.models';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 import { AuthService } from './auth.service';
+import { DataService } from './data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -376,19 +377,3 @@ export class TaskService {
   }
 }
 
-export enum TaskProgressTypeName {
-  Paused = 'Pauzirano',
-  Completed = 'Završeno',
-  InProgress = 'U tijeku',
-  NotAssigned = 'Nije dodijeljeno',
-  Assigned = 'Dodijeljeno',
-}
-
-export enum TaskTypeName {
-  HouseCleaning = 'Čišćenje kućice',
-  DeckCleaning = 'Čišćenje terase',
-  Repair = 'Popravak',
-  SheetChange = 'Mijenjanje posteljine',
-  TowelChange = 'Mijenjanje ručnika',
-  Other = 'Ostalo',
-}

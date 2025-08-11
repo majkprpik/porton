@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { Task, Profile, DataService, House, TaskType, WorkGroup as WorkGroupObject, WorkGroupTask, WorkGroupProfile } from '../service/data.service';
+import { Task, Profile, WorkGroup as WorkGroupObject, WorkGroupTask, WorkGroupProfile, TaskProgressTypeName } from '../service/data.models';
 import { TaskCardComponent } from './task-card';
 import { TagModule } from 'primeng/tag';
 import { StaffCardComponent } from './staff-card';
@@ -9,7 +9,7 @@ import { MenuItem } from 'primeng/api';
 import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
 import { combineLatest } from 'rxjs';
 import { DragDropModule } from 'primeng/dragdrop';
-import { TaskProgressTypeName, TaskService } from '../service/task.service';
+import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
 import { ConfirmationService } from 'primeng/api';
 import { ProfileService } from '../service/profile.service';
@@ -19,6 +19,7 @@ import { HouseService } from '../service/house.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
+import { DataService } from '../service/data.service';
 
 @Component({
   selector: 'app-work-group',

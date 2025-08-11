@@ -1,4 +1,4 @@
-import { HouseAvailability, Note, Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.service';
+import { HouseAvailability, Note, Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule, TaskTypeName, WorkGroup, WorkGroupProfile, WorkGroupTask } from './../../pages/service/data.models';
 import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -11,8 +11,8 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
-import { DataService, House, RepairTaskComment, Task, TaskType } from '../../pages/service/data.service';
-import { TaskService, TaskTypeName } from '../../pages/service/task.service';
+import { House, RepairTaskComment, Task, TaskType } from '../../pages/service/data.models';
+import { TaskService } from '../../pages/service/task.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { NotesComponent } from './notes.component';
@@ -32,6 +32,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { HouseService } from '../../pages/service/house.service';
 import { ErrorLoggingService } from '../../pages/service/error-logging.service';
 import { SupabaseService } from '../../pages/service/supabase.service';
+import { DataService } from '../../pages/service/data.service';
 
 @Component({
     selector: 'app-layout',

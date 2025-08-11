@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Profile } from '../service/data.service';
+import { Profile } from '../service/data.models';
 import { ProfileService } from '../service/profile.service';
 
 @Component({

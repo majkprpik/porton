@@ -4,9 +4,10 @@ import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { combineLatest } from 'rxjs';
-import { DataService, ProfileRole } from '../../pages/service/data.service';
+import { ProfileRole } from '../../pages/service/data.models';
 import { ProfileService } from '../../pages/service/profile.service';
 import { TranslateService } from '@ngx-translate/core';
+import { DataService } from '../../pages/service/data.service';
 
 @Component({
     selector: 'app-menu',

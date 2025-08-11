@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, LockedTeam, WorkGroup, WorkGroupProfile, WorkGroupTask } from './data.service';
+import { LockedTeam, WorkGroup, WorkGroupProfile, WorkGroupTask } from './data.models';
 import { BehaviorSubject } from 'rxjs';
+import { DataService } from './data.service';
 
 @Injectable({
   providedIn: 'root'

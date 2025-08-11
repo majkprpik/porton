@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { DataService, WorkGroup, Profile, Task, House, LockedTeam, WorkGroupTask, WorkGroupProfile } from '../service/data.service';
+import { WorkGroup, Profile, Task, House, LockedTeam, WorkGroupTask, WorkGroupProfile } from '../service/data.models';
 import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest } from 'rxjs';
@@ -14,6 +14,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../service/auth.service';
 import { ProfileService } from '../service/profile.service';
 import { Router } from '@angular/router';
+import { DataService } from '../service/data.service';
 
 @Component({
     selector: 'app-teams',

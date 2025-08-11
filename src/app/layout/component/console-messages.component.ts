@@ -2,13 +2,13 @@ import { PushNotificationsService } from './../../pages/service/push-notificatio
 import { Component } from '@angular/core';
 import { ErrorLoggingService } from '../../pages/service/error-logging.service';
 import { ButtonModule } from 'primeng/button';
-import { DataService, Profile, Task } from '../../pages/service/data.service';
+import { Profile } from '../../pages/service/data.models';
 import { AuthService } from '../../pages/service/auth.service';
-import { TranslateService } from '@ngx-translate/core';
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { InputText } from 'primeng/inputtext';
+import { DataService } from '../../pages/service/data.service';
 
 @Component({
   selector: 'app-console-messages',
@@ -164,7 +164,6 @@ export class ConsoleMessagesComponent {
     public pushNotificationsService: PushNotificationsService,
     private dataService: DataService,
     private authService: AuthService,
-    private translateService: TranslateService,
   ) {
     this.dataService.profiles$.subscribe(profiles => {
       this.profiles = profiles;

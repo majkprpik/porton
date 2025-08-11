@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, HostListener, effect } from '@angular/core';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
-import { DataService, House, HouseAvailability, HouseType } from '../service/data.service';
+import { House, HouseAvailability, HouseType } from '../service/data.models';
 import { Subject, takeUntil, forkJoin, combineLatest, firstValueFrom } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ReservationFormComponent } from '../reservations/reservation-form/reservation-form.component';
@@ -8,6 +8,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { LayoutService } from '../../layout/service/layout.service';
+import { DataService } from '../service/data.service';
 
 interface CellData {
     isReserved: boolean;

@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivateChild } from '@angular/router';
-import { DataService, ProfileRole } from '../../pages/service/data.service';
+import { ProfileRole } from '../../pages/service/data.models';
 import { Observable, of } from 'rxjs';
 import { filter, map, take, tap } from 'rxjs/operators';
+import { DataService } from '../../pages/service/data.service';
 
 @Injectable({
     providedIn: 'root'

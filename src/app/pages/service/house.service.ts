@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DataService, House, HouseAvailability, HouseAvailabilityType, Task } from './data.service';
+import { House, HouseAvailability, HouseAvailabilityType, Task, TaskProgressTypeName } from './data.models';
 import { combineLatest } from 'rxjs';
-import { TaskProgressTypeName, TaskService } from './task.service';
+import { TaskService } from './task.service';
+import { DataService } from './data.service';
 
 @Injectable({
   providedIn: 'root'

@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DataService, ProfileRole } from '../service/data.service';
-import { Profile } from '../service/data.service';
+import { ProfileRole, Profile } from '../service/data.models';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +14,7 @@ import { combineLatest } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SelectModule } from 'primeng/select';
 import { LanguageService } from '../language/language.service';
+import { DataService } from '../service/data.service';
 
 // Extended Profile interface to include the isDivider property
 interface ExtendedProfile extends Profile {

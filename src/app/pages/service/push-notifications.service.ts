@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { DataService, Profile } from './data.service';
+import { Profile } from './data.models';
 import { Messaging as AngularMessaging  } from '@angular/fire/messaging';
 import { deleteToken, getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from './supabase.service';
+import { DataService } from './data.service';
 
 @Injectable({
   providedIn: 'root'

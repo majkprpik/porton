@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { Language } from '../service/data.service';
+import { Language } from '../service/data.models';
 import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({

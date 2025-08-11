@@ -1,6 +1,6 @@
 import { TaskService } from './../../pages/service/task.service';
 import { Component } from '@angular/core';
-import { DataService, House, HouseType, Task, TaskType } from '../../pages/service/data.service';
+import { House, Task, TaskType } from '../../pages/service/data.models';
 import { TaskCardComponent } from '../../pages/daily-sheet/task-card';
 import { DatePipe } from '@angular/common';
 import { MultiSelect } from 'primeng/multiselect';
@@ -8,6 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { combineLatest } from 'rxjs';
+import { DataService } from '../../pages/service/data.service';
 
 @Component({
   selector: 'app-task-archive',
