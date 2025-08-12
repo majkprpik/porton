@@ -173,3 +173,20 @@ export enum TaskTypeName {
   TowelChange = 'Mijenjanje ručnika',
   Other = 'Ostalo',
 }
+
+export enum ProfileRoles {
+  Sobarica = 'Sobarica',
+  Terasar = 'Terasar',
+  Odrzavanje = 'Odrzavanje',
+  KucniMajstor = 'Kucni majstor',
+  VoditeljRecepcije = 'Voditelj recepcije',
+  Prodaja = 'Prodaja',
+  Recepcija = 'Recepcija',
+  Uprava = 'Uprava',
+  VoditeljDomacinstva = 'Voditelj domacinstva',
+  VoditeljKampa = 'Voditelj kampa',
+  SavjetnikUprave = 'Savjetnik uprave',
+  NocnaRecepcija = 'Nocna recepcija',
+  KorisnickaSluzba = 'Korisnicka sluzba',
+  Ostalo = 'Ostalo',
+}

@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { combineLatest } from 'rxjs';
-import { ProfileRole } from '../../pages/service/data.models';
+import { ProfileRole, ProfileRoles } from '../../pages/service/data.models';
 import { ProfileService } from '../../pages/service/profile.service';
 import { TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../pages/service/data.service';
@@ -66,17 +66,17 @@ export class AppMenu implements OnInit {
         if (!role) return false;
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == 'Kucni majstor' ||
-            profileRole.name == 'Odrzavanje' ||
-            profileRole.name == 'Voditelj recepcije' ||
-            profileRole.name == 'Prodaja' ||
-            profileRole.name == 'Recepcija' ||
-            profileRole.name == 'Nocna recepcija' ||
-            profileRole.name == 'Korisnicka sluzba' ||
-            profileRole.name == 'Voditelj kampa' ||
-            profileRole.name == 'Uprava' ||
-            profileRole.name == 'Savjetnik uprave' ||
-            profileRole.name == 'Voditelj domacinstva'
+            profileRole.name == ProfileRoles.KucniMajstor ||
+            profileRole.name == ProfileRoles.Odrzavanje ||
+            profileRole.name == ProfileRoles.VoditeljRecepcije ||
+            profileRole.name == ProfileRoles.Prodaja ||
+            profileRole.name == ProfileRoles.Recepcija ||
+            profileRole.name == ProfileRoles.NocnaRecepcija ||
+            profileRole.name == ProfileRoles.KorisnickaSluzba ||
+            profileRole.name == ProfileRoles.VoditeljKampa ||
+            profileRole.name == ProfileRoles.Uprava ||
+            profileRole.name == ProfileRoles.SavjetnikUprave ||
+            profileRole.name == ProfileRoles.VoditeljDomacinstva
         );
         
         return allowedRoles.some(allowedRole => allowedRole.name == role);
@@ -86,35 +86,35 @@ export class AppMenu implements OnInit {
         if (!role) return false;
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == 'Voditelj recepcije' || 
-            profileRole.name == 'Prodaja' || 
-            profileRole.name == 'Recepcija' ||
-            profileRole.name == 'Uprava' ||
-            profileRole.name == 'Voditelj domacinstva' || 
-            profileRole.name == 'Voditelj kampa' || 
-            profileRole.name == 'Savjetnik uprave'
+            profileRole.name == ProfileRoles.VoditeljRecepcije || 
+            profileRole.name == ProfileRoles.Prodaja || 
+            profileRole.name == ProfileRoles.Recepcija ||
+            profileRole.name == ProfileRoles.Uprava ||
+            profileRole.name == ProfileRoles.VoditeljDomacinstva || 
+            profileRole.name == ProfileRoles.VoditeljKampa || 
+            profileRole.name == ProfileRoles.SavjetnikUprave
         );
         
         return allowedRoles.some(allowedRole => allowedRole.name == role);
     }
 
     private isVoditeljKampa(role?: string): boolean {
-        return role === 'Voditelj kampa' || role === 'Uprava';
+        return role === ProfileRoles.VoditeljKampa || role === ProfileRoles.Uprava;
     }
 
     private canViewTimovi(role?: string): boolean {
         if (!role) return false;
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == 'Kucni majstor' || 
-            profileRole.name == 'Odrzavanje' || 
-            profileRole.name == 'Savjetnik uprave' || 
-            profileRole.name == 'Uprava' ||
-            profileRole.name == 'Voditelj kampa' || 
-            profileRole.name == 'Voditelj domacinstva' ||
-            profileRole.name == 'Terasar' ||
-            profileRole.name == 'Korisnicka sluzba' ||
-            profileRole.name == 'Sobarica'
+            profileRole.name == ProfileRoles.KucniMajstor || 
+            profileRole.name == ProfileRoles.Odrzavanje || 
+            profileRole.name == ProfileRoles.SavjetnikUprave || 
+            profileRole.name == ProfileRoles.Uprava ||
+            profileRole.name == ProfileRoles.VoditeljKampa || 
+            profileRole.name == ProfileRoles.VoditeljDomacinstva ||
+            profileRole.name == ProfileRoles.Terasar ||
+            profileRole.name == ProfileRoles.KorisnickaSluzba ||
+            profileRole.name == ProfileRoles.Sobarica
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
@@ -124,11 +124,11 @@ export class AppMenu implements OnInit {
         if (!role) return false;
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == 'Kucni majstor' || 
-            profileRole.name == 'Odrzavanje' || 
-            profileRole.name == 'Voditelj kampa' ||
-            profileRole.name == 'Korisnicka sluzba' ||
-            profileRole.name == 'Uprava'
+            profileRole.name == ProfileRoles.KucniMajstor || 
+            profileRole.name == ProfileRoles.Odrzavanje || 
+            profileRole.name == ProfileRoles.VoditeljKampa ||
+            profileRole.name == ProfileRoles.KorisnickaSluzba ||
+            profileRole.name == ProfileRoles.Uprava
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
@@ -138,10 +138,10 @@ export class AppMenu implements OnInit {
         if (!role) return false;
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == 'Kucni majstor' || 
-            profileRole.name == 'Odrzavanje' || 
-            profileRole.name == 'Voditelj kampa' ||
-            profileRole.name == 'Korisnicka sluzba'
+            profileRole.name == ProfileRoles.KucniMajstor || 
+            profileRole.name == ProfileRoles.Odrzavanje || 
+            profileRole.name == ProfileRoles.VoditeljKampa ||
+            profileRole.name == ProfileRoles.KorisnickaSluzba
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
@@ -151,11 +151,11 @@ export class AppMenu implements OnInit {
         if(!role) return false;
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == 'Voditelj kampa' ||
-            profileRole.name == 'Uprava' || 
-            profileRole.name == 'Voditelj domacinstva' || 
-            profileRole.name == 'Voditelj recepcije' || 
-            profileRole.name == 'Prodaja'
+            profileRole.name == ProfileRoles.VoditeljKampa ||
+            profileRole.name == ProfileRoles.Uprava || 
+            profileRole.name == ProfileRoles.VoditeljDomacinstva || 
+            profileRole.name == ProfileRoles.VoditeljRecepcije || 
+            profileRole.name == ProfileRoles.Prodaja
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
@@ -165,10 +165,10 @@ export class AppMenu implements OnInit {
         if (!role) return false;
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == 'Savjetnik uprave' ||
-            profileRole.name == 'Voditelj kampa' ||
-            profileRole.name == 'Uprava' ||
-            profileRole.name == 'Voditelj domacinstva'
+            profileRole.name == ProfileRoles.SavjetnikUprave ||
+            profileRole.name == ProfileRoles.VoditeljKampa ||
+            profileRole.name == ProfileRoles.Uprava ||
+            profileRole.name == ProfileRoles.VoditeljDomacinstva
         );
         
         return allowedRoles.some(allowedRole => allowedRole.name == role);

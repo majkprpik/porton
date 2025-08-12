@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../service/auth.service';
-import { ProfileRole } from '../service/data.models';
+import { ProfileRole, ProfileRoles } from '../service/data.models';
 import { take } from 'rxjs';
 import { DataService } from '../service/data.service';
 @Component({
@@ -137,21 +137,21 @@ export class Login implements OnInit {
         const roleName = userRole?.name;
 
         switch (roleName) {
-            case 'Sobarica':
-            case 'Terasar':
-            case 'Odrzavanje':
-            case 'Kucni majstor':
+            case ProfileRoles.Sobarica:
+            case ProfileRoles.Terasar:
+            case ProfileRoles.Odrzavanje:
+            case ProfileRoles.KucniMajstor:
                 this.router.navigate(['/teams']);
                 break;
-            case 'Voditelj recepcije':
-            case 'Prodaja':
-            case 'Recepcija':
-            case 'Uprava':
-            case 'Voditelj domacinstva':
-            case 'Voditelj kampa':
-            case 'Savjetnik uprave':
-            case 'Nocna recepcija':
-            case 'Korisnicka sluzba':
+            case ProfileRoles.VoditeljRecepcije:
+            case ProfileRoles.Prodaja:
+            case ProfileRoles.Recepcija:
+            case ProfileRoles.Uprava:
+            case ProfileRoles.VoditeljDomacinstva:
+            case ProfileRoles.VoditeljKampa:
+            case ProfileRoles.SavjetnikUprave:
+            case ProfileRoles.NocnaRecepcija:
+            case ProfileRoles.KorisnickaSluzba:
                 this.router.navigate(['/home']);
                 break;
             default:

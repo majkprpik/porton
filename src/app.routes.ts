@@ -20,6 +20,7 @@ import { StatisticsComponent } from './app/layout/component/statistics.component
 import { TaskArchiveComponent } from './app/layout/component/task-archive.component';
 import { WorkScheduleComponent } from './app/layout/component/work-schedule.component';
 import { ConsoleMessagesComponent } from './app/layout/component/console-messages.component';
+import { ProfileRoles } from './app/pages/service/data.models';
 
 export const appRoutes: Routes = [
     {
@@ -31,79 +32,172 @@ export const appRoutes: Routes = [
             { 
                 path: '', 
                 component: Home,
-                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija', 'Odrzavanje', 'Korisnicka sluzba'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljRecepcije,
+                    ProfileRoles.Prodaja,
+                    ProfileRoles.Recepcija,
+                    ProfileRoles.Uprava,
+                    ProfileRoles.VoditeljDomacinstva,
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.SavjetnikUprave,
+                    ProfileRoles.KucniMajstor,
+                    ProfileRoles.NocnaRecepcija,
+                    ProfileRoles.Odrzavanje,
+                    ProfileRoles.KorisnickaSluzba
+                ] }
             }, // Default route
             {   
                 path: 'home', 
                 component: Home,
-                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave', 'Kucni majstor', 'Nocna recepcija', 'Odrzavanje', 'Korisnicka sluzba'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljRecepcije,
+                    ProfileRoles.Prodaja,
+                    ProfileRoles.Recepcija,
+                    ProfileRoles.Uprava,
+                    ProfileRoles.VoditeljDomacinstva,
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.SavjetnikUprave,
+                    ProfileRoles.KucniMajstor,
+                    ProfileRoles.NocnaRecepcija,
+                    ProfileRoles.Odrzavanje,
+                    ProfileRoles.KorisnickaSluzba
+                ] }
             },
             { 
                 path: 'reservations-2', 
                 component: Reservation2Component,
-                data: { roles: ['Voditelj recepcije', 'Prodaja', 'Recepcija', 'Uprava', 'Voditelj domacinstva', 'Voditelj kampa', 'Savjetnik uprave'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljRecepcije,
+                    ProfileRoles.Prodaja,
+                    ProfileRoles.Recepcija,
+                    ProfileRoles.Uprava,
+                    ProfileRoles.VoditeljDomacinstva,
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.SavjetnikUprave
+                ] }
             },
             { 
                 path: 'profiles', 
                 component: ProfilesComponent,
-                data: { roles: ['Voditelj kampa', 'Uprava'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava
+                ] }
             },
             { 
                 path: 'daily-sheet', 
                 component: DailySheetComponent,
-                data: { roles: ['Savjetnik uprave', 'Voditelj kampa', 'Uprava', 'Voditelj domacinstva'] }
+                data: { roles: [
+                    ProfileRoles.SavjetnikUprave,
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava,
+                    ProfileRoles.VoditeljDomacinstva
+                ] }
             },
             { 
                 path: 'teams', 
                 component: Teams,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar', 'Odrzavanje', 'Korisnicka sluzba'] },
+                data: { roles: [
+                    ProfileRoles.KucniMajstor,
+                    ProfileRoles.SavjetnikUprave,
+                    ProfileRoles.Uprava,
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.VoditeljDomacinstva,
+                    ProfileRoles.Sobarica,
+                    ProfileRoles.Terasar,
+                    ProfileRoles.Odrzavanje,
+                    ProfileRoles.KorisnickaSluzba
+                ] },
                 canActivate: [TeamsGuard]
             },
             { 
                 path: 'teams/:id', 
                 component: WorkGroupDetail,
-                data: { roles: ['Kucni majstor', 'Savjetnik uprave', 'Uprava', 'Voditelj kampa', 'Voditelj domacinstva', 'Sobarica', 'Terasar', 'Odrzavanje', 'Korisnicka sluzba'] },
+                data: { roles: [
+                    ProfileRoles.KucniMajstor,
+                    ProfileRoles.SavjetnikUprave,
+                    ProfileRoles.Uprava,
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.VoditeljDomacinstva,
+                    ProfileRoles.Sobarica,
+                    ProfileRoles.Terasar,
+                    ProfileRoles.Odrzavanje,
+                    ProfileRoles.KorisnickaSluzba
+                ] },
                 canActivate: [TeamDetailGuard]
             },
             { 
                 path: 'task-progress-types', 
                 component: TaskProgressTypesComponent,
-                data: { roles: ['Voditelj kampa', 'Uprava'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava
+                ] }
             },
             { 
                 path: 'house-types', 
                 component: HouseTypesComponent,
-                data: { roles: ['Voditelj kampa', 'Uprava'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava
+                ] }
             },
             {
                 path: 'arrivals-and-departures',
                 component: ArrivalsAndDeparturesPageComponent,
-                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Odrzavanje', 'Korisnicka sluzba'] }
+                data: { roles: [
+                    ProfileRoles.KucniMajstor,
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava,
+                    ProfileRoles.Odrzavanje,
+                    ProfileRoles.KorisnickaSluzba
+                ] }
             },
             {
                 path: 'notes',
                 component: NotesPageComponent,
-                data: { roles: ['Kucni majstor', 'Voditelj kampa', 'Uprava', 'Odrzavanje', 'Korisnicka sluzba'] }
+                data: { roles: [
+                    ProfileRoles.KucniMajstor,
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava,
+                    ProfileRoles.Odrzavanje,
+                    ProfileRoles.KorisnickaSluzba
+                ] }
             },
             {
                 path: 'statistics',
                 component: StatisticsComponent,
-                data: { roles: ['Voditelj kampa', 'Uprava'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava
+                ] }
             },
             {
                 path: 'archive',
                 component: TaskArchiveComponent,
-                data: { roles: ['Voditelj kampa', 'Uprava'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava
+                ] }
             },
             {
                 path: 'work-schedule',
                 component: WorkScheduleComponent,
-                data: { roles: ['Voditelj kampa', 'Uprava', 'Voditelj domacinstva', 'Prodaja', 'Voditelj recepcije'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava,
+                    ProfileRoles.VoditeljDomacinstva,
+                    ProfileRoles.Prodaja,
+                    ProfileRoles.VoditeljRecepcije
+                ] }
             },
             {
                 path: 'console-messages',
                 component: ConsoleMessagesComponent,
-                data: { roles: ['Voditelj kampa', 'Uprava'] }
+                data: { roles: [
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava
+                ] }
             },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },

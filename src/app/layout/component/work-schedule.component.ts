@@ -1,6 +1,6 @@
 import { WorkScheduleExportFormComponent } from './work-schedule-export-form.component';
 import { Component, effect, signal } from '@angular/core';
-import { Profile, ProfileRole, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.models';
+import { Profile, ProfileRole, ProfileRoles, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.models';
 import { combineLatest, firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -650,10 +650,10 @@ export class WorkScheduleComponent {
 
   colors = ['#BAFFC9', '#FFFFBA', '#BAE1FF', '#E8BAFF', '#FFB3BA', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'];
 
-  managementRoles = ['Voditelj kampa', 'Savjetnik uprave', 'Uprava'];
-  receptionRoles = ['Voditelj recepcije', 'Recepcija', 'Korisnicka sluzba', 'Nocna recepcija', 'Prodaja'];
-  housekeepingRoles = ['Voditelj domacinstva', 'Sobarica', 'Terasar'];
-  technicalRoles = ['Kucni majstor', 'Odrzavanje'];
+  managementRoles: string[] = [ProfileRoles.VoditeljKampa, ProfileRoles.SavjetnikUprave, ProfileRoles.Uprava];
+  receptionRoles: string[] = [ProfileRoles.VoditeljRecepcije, ProfileRoles.Recepcija, ProfileRoles.KorisnickaSluzba, ProfileRoles.NocnaRecepcija, ProfileRoles.Prodaja];
+  housekeepingRoles: string[] = [ProfileRoles.VoditeljDomacinstva, ProfileRoles.Sobarica, ProfileRoles.Terasar];
+  technicalRoles: string[] = [ProfileRoles.KucniMajstor, ProfileRoles.Odrzavanje];
   otherRoles: string[] = ['Ostalo'];
   profileRoles: ProfileRole[] = [];
   selectedDepartment = 'all';

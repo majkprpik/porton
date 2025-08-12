@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { StaffGroup } from './staff-group';
 import { ChipModule } from 'primeng/chip';
-import { Profile, ProfileRole } from '../service/data.models';
+import { Profile, ProfileRole, ProfileRoles } from '../service/data.models';
 import { CommonModule } from '@angular/common';
 import { WorkGroupService } from '../service/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
@@ -161,12 +161,11 @@ export class StaffGroups implements OnInit {
   debug = true; // Enable debug mode
   activeWorkGroupId?: number;
 
-  // Role categories, matching the ones in ProfilesComponent
-  managementRoles = ['Voditelj kampa', 'Savjetnik uprave', 'Uprava'];
-  receptionRoles = ['Voditelj recepcije', 'Recepcija', 'Korisnicka sluzba', 'Nocna recepcija', 'Prodaja'];
-  housekeepingRoles = ['Voditelj domacinstva', 'Sobarica', 'Terasar'];
-  technicalRoles = ['Kucni majstor', 'Odrzavanje'];
-  otherRoles: string[] = ['Ostalo'];
+  managementRoles: string[] = [ProfileRoles.VoditeljKampa, ProfileRoles.SavjetnikUprave, ProfileRoles.Uprava];
+  receptionRoles: string[] = [ProfileRoles.VoditeljRecepcije, ProfileRoles.Recepcija, ProfileRoles.KorisnickaSluzba, ProfileRoles.NocnaRecepcija, ProfileRoles.Prodaja];
+  housekeepingRoles: string[] = [ProfileRoles.VoditeljDomacinstva, ProfileRoles.Sobarica, ProfileRoles.Terasar];
+  technicalRoles: string[] = [ProfileRoles.KucniMajstor, ProfileRoles.Odrzavanje];
+  otherRoles: string[] = [ProfileRoles.Ostalo];
   profileRoles: ProfileRole[] = [];
 
   searchTerm: string = '';

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ProfileRole, Profile } from '../service/data.models';
+import { ProfileRole, Profile, ProfileRoles } from '../service/data.models';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -302,10 +302,10 @@ export class ProfilesComponent implements OnInit {
           translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.profileService.translationMap[role.name] : role.name
         }));
 
-        const managementRoles = ['Uprava', 'Voditelj kampa', 'Savjetnik uprave'];
-        const receptionRoles = ['Voditelj recepcije', 'Recepcija', 'Korisnicka sluzba', 'Nocna recepcija', 'Prodaja'];
-        const housekeepingRoles = ['Voditelj domacinstva', 'Sobarica', 'Terasar'];
-        const technicalRoles = ['Kucni majstor', 'Odrzavanje'];
+        const managementRoles: string[] = [ProfileRoles.Uprava, ProfileRoles.VoditeljKampa, ProfileRoles.SavjetnikUprave];
+        const receptionRoles: string[] = [ProfileRoles.VoditeljRecepcije, ProfileRoles.Recepcija, ProfileRoles.KorisnickaSluzba, ProfileRoles.NocnaRecepcija, ProfileRoles.Prodaja];
+        const housekeepingRoles: string[] = [ProfileRoles.VoditeljDomacinstva, ProfileRoles.Sobarica, ProfileRoles.Terasar];
+        const technicalRoles: string[] = [ProfileRoles.KucniMajstor, ProfileRoles.Odrzavanje];
         
         const sortedProfiles: ExtendedProfile[] = [];
         

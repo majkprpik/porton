@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { Profile, ProfileRole, RepairTaskComment } from './data.models';
+import { Profile, ProfileRole, ProfileRoles, RepairTaskComment } from './data.models';
 import { DataService } from './data.service';
 
 @Injectable({
@@ -71,7 +71,7 @@ export class ProfileService {
       const profile = this.profiles.find(profile => profile.id == profileId);
       const profileRole = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id);
   
-      return profileRole?.name == 'Sobarica' || profileRole?.name == 'Terasar';
+      return profileRole?.name == ProfileRoles.Sobarica || profileRole?.name == ProfileRoles.Terasar;
     }
 
     return false;
@@ -82,7 +82,7 @@ export class ProfileService {
       const profile = this.profiles.find(profile => profile.id == profileId);
       const profileRole = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id);
   
-      return profileRole?.name == 'Kucni majstor' || profileRole?.name == 'Odrzavanje';
+      return profileRole?.name == ProfileRoles.KucniMajstor || profileRole?.name == ProfileRoles.Odrzavanje;
     }
 
     return false;
@@ -93,7 +93,7 @@ export class ProfileService {
       const profile = this.profiles.find(profile => profile.id == profileId);
       const profileRole = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id);
   
-      return profileRole?.name == 'Korisnicka sluzba';
+      return profileRole?.name == ProfileRoles.KorisnickaSluzba;
     }
 
     return false;

@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { ProfileService } from './profile.service';
-import { ProfileRole } from './data.models';
+import { ProfileRole, ProfileRoles } from './data.models';
 import { LayoutService } from '../../layout/service/layout.service';
 import { PushNotificationsService } from './push-notifications.service';
 import { DataService } from './data.service';
@@ -264,32 +264,32 @@ export class AuthService {
 
   async createRealUsers() {
     const users = [
-      { name: 'Matej Adrić', role: 'Voditelj kampa', password: 'NzW3dj' }, // pregled, rezervacije(unos), dnevni list, timovi, profili, statusi zadataka, tipovi kucica
-      { name: 'Marko Sovulj', role: 'Savjetnik uprave', password: 'uNgVn1' }, // pregled, rezervacije, dnevni list, timovi 
-      { name: 'Mirela Dronjić', role: 'Voditelj recepcije', password: '2Az84E' }, // pregled, rezervacije(unos)
-      { name: 'Elena Rudan', role: 'Prodaja', password: 't3Wd6N' }, // pregled, rezervacije(unos)
-      { name: 'Simona Gjeorgievska', role: 'Prodaja', password: 'u2Xe7P' }, // pregled, rezervacije(unos)
-      { name: 'Mia Lukić', role: 'Voditelj domacinstva', password: 'v1Yf8Q' }, // pregled, rezervacije, dnevni list, timovi
-      { name: 'Mila Malivuk', role: 'Recepcija', password: 'aYqv9A' }, // pregled, rezervacije
-      { name: 'Ana Perak', role: 'Recepcija', password: 'p9Xm2K' }, // pregled, rezervacije
-      { name: 'Mina Cvejić', role: 'Recepcija', password: 'k8DN4U' }, // pregled, rezervacije
-      { name: 'Mauro Boljunčić', role: 'Kucni majstor', password: 'f2Ip8A' }, // pregled, timovi
-      { name: 'Damir Zaharija', role: 'Korisnicka sluzba', password: 'r7Yb5L' }, //pregled
-      { name: 'Ivica Nagel', role: 'Nocna recepcija', password: 's4Vc8M' }, //pregled
-      { name: 'Liudmyla Babii', role: 'Sobarica', password: 'w5Zg9R' },
-      { name: 'Iryna Kara', role: 'Sobarica', password: 'x4Ah0S' },
-      { name: 'Tetiana Leonenko', role: 'Sobarica', password: 'y3Bi1T' },
-      { name: 'Iuliia Myronova', role: 'Sobarica', password: 'z2Cj2U' },
-      { name: 'Jasenka Savković Cvet', role: 'Sobarica', password: 'a1Dk3V' },
-      { name: 'Nataliia Vladimyrova', role: 'Sobarica', password: 'b6El4W' },
-      { name: 'Slavica Petković', role: 'Sobarica', password: 'c5Fm5X' },
-      { name: 'Jelena Kaluđer', role: 'Sobarica', password: 'd4Gn6Y' },
-      { name: 'Sandi Maružin', role: 'Terasar', password: 'e3Ho7Z' },
-      { name: 'Đani Guštin', role: 'Kucni majstor', password: 'g1Jq9B' }, //d96xkK
-      { name: 'Dražen Pendeš', role: 'Kucni majstor', password: 'h5Kr0C' },
-      { name: 'Ivo Pranjić', role: 'Odrzavanje', password: 'i4Ls1D' },
-      { name: 'Daniel Begzić', role: 'Odrzavanje', password: 'j3Mt2E' },
-      { name: 'Deleted User', role: 'Voditelj recepcije', password: 'test123', id: '11111111-1111-1111-1111-111111111111' },
+      { name: 'Matej Adrić', role: ProfileRoles.VoditeljKampa, password: 'NzW3dj' }, // pregled, rezervacije(unos), dnevni list, timovi, profili, statusi zadataka, tipovi kucica
+      { name: 'Marko Sovulj', role: ProfileRoles.SavjetnikUprave, password: 'uNgVn1' }, // pregled, rezervacije, dnevni list, timovi 
+      { name: 'Mirela Dronjić', role: ProfileRoles.VoditeljRecepcije, password: '2Az84E' }, // pregled, rezervacije(unos)
+      { name: 'Elena Rudan', role: ProfileRoles.Prodaja, password: 't3Wd6N' }, // pregled, rezervacije(unos)
+      { name: 'Simona Gjeorgievska', role: ProfileRoles.Prodaja, password: 'u2Xe7P' }, // pregled, rezervacije(unos)
+      { name: 'Mia Lukić', role: ProfileRoles.VoditeljDomacinstva, password: 'v1Yf8Q' }, // pregled, rezervacije, dnevni list, timovi
+      { name: 'Mila Malivuk', role: ProfileRoles.Recepcija, password: 'aYqv9A' }, // pregled, rezervacije
+      { name: 'Ana Perak', role: ProfileRoles.Recepcija, password: 'p9Xm2K' }, // pregled, rezervacije
+      { name: 'Mina Cvejić', role: ProfileRoles.Recepcija, password: 'k8DN4U' }, // pregled, rezervacije
+      { name: 'Mauro Boljunčić', role: ProfileRoles.KucniMajstor, password: 'f2Ip8A' }, // pregled, timovi
+      { name: 'Damir Zaharija', role: ProfileRoles.KorisnickaSluzba, password: 'r7Yb5L' }, // pregled
+      { name: 'Ivica Nagel', role: ProfileRoles.NocnaRecepcija, password: 's4Vc8M' }, // pregled
+      { name: 'Liudmyla Babii', role: ProfileRoles.Sobarica, password: 'w5Zg9R' },
+      { name: 'Iryna Kara', role: ProfileRoles.Sobarica, password: 'x4Ah0S' },
+      { name: 'Tetiana Leonenko', role: ProfileRoles.Sobarica, password: 'y3Bi1T' },
+      { name: 'Iuliia Myronova', role: ProfileRoles.Sobarica, password: 'z2Cj2U' },
+      { name: 'Jasenka Savković Cvet', role: ProfileRoles.Sobarica, password: 'a1Dk3V' },
+      { name: 'Nataliia Vladimyrova', role: ProfileRoles.Sobarica, password: 'b6El4W' },
+      { name: 'Slavica Petković', role: ProfileRoles.Sobarica, password: 'c5Fm5X' },
+      { name: 'Jelena Kaluđer', role: ProfileRoles.Sobarica, password: 'd4Gn6Y' },
+      { name: 'Sandi Maružin', role: ProfileRoles.Terasar, password: 'e3Ho7Z' },
+      { name: 'Đani Guštin', role: ProfileRoles.KucniMajstor, password: 'g1Jq9B' }, //d96xkK
+      { name: 'Dražen Pendeš', role: ProfileRoles.KucniMajstor, password: 'h5Kr0C' },
+      { name: 'Ivo Pranjić', role: ProfileRoles.Odrzavanje, password: 'i4Ls1D' },
+      { name: 'Daniel Begzić', role: ProfileRoles.Odrzavanje, password: 'j3Mt2E' },
+      { name: 'Deleted User', role: ProfileRoles.VoditeljRecepcije, password: 'test123', id: '11111111-1111-1111-1111-111111111111' },
     ];
   
     for (const user of users) {

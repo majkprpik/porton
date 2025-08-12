@@ -2,7 +2,7 @@ import { Component, Input, ViewChild, OnInit, OnChanges, SimpleChanges } from '@
 import { CommonModule } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { ChipModule } from 'primeng/chip';
-import { Profile, WorkGroup, WorkGroupProfile, ProfileRole } from '../service/data.models';
+import { Profile, WorkGroup, WorkGroupProfile, ProfileRole, ProfileRoles } from '../service/data.models';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { StaffCardComponent } from './staff-card';
 import { WorkGroupService } from '../service/work-group.service';
@@ -149,11 +149,11 @@ export class StaffGroup implements OnInit, OnChanges {
       this.profiles = profiles;
 
       this.repairProfileRoles = profileRoles.filter(pr =>
-        pr.name === 'Kucni majstor' || pr.name === 'Odrzavanje'
+        pr.name === ProfileRoles.KucniMajstor || pr.name === ProfileRoles.Odrzavanje
       );
 
       this.cleaningProfileRoles = profileRoles.filter(pr =>
-        pr.name === 'Voditelj domacinstva' || pr.name === 'Sobarica' || pr.name === 'Terasar'
+        pr.name === ProfileRoles.VoditeljDomacinstva || pr.name === ProfileRoles.Sobarica || pr.name === ProfileRoles.Terasar
       );
     });
   }
