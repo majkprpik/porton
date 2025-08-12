@@ -455,10 +455,20 @@ export class WorkScheduleExportFormComponent {
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
           } else {
             pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+            const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = (canvas.width / canvas.height) * pdfHeight;
-            const x = (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
-            pdf.addImage(imgData, 'PNG', x, 0, imgWidth, pdfHeight);
+            
+            const scaleX = pdfWidth / canvas.width;
+            const scaleY = pdfHeight / canvas.height;
+            const scale = Math.min(scaleX, scaleY);
+            
+            const imgWidth = canvas.width * scale;
+            const imgHeight = canvas.height * scale;
+            
+            const x = (pdfWidth - imgWidth) / 2;
+            const y = 0;
+            
+            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
           }
 
           pdf.save('work-schedule.pdf');
