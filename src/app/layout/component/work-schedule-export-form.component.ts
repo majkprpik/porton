@@ -211,7 +211,7 @@ interface CellData {
 
       .export-loading{
         position: fixed;
-        top: 450px;
+        top: 45%;
         width: 100%;
         display: flex;
         flex-direction: column;
