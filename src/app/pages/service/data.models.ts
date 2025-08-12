@@ -1,4 +1,3 @@
-
 export interface HouseAvailabilityType {
   house_availability_type_id: number;
   house_availability_type_name: string;
