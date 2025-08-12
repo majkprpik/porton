@@ -6,10 +6,11 @@ import { ChartModule } from 'primeng/chart';
 import { MultiSelect } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { CommonModule, isPlatformBrowser, TitleCasePipe } from '@angular/common';
-import { DataService, House, HouseAvailability, Task } from '../../pages/service/data.service';
+import { House, HouseAvailability, Profile, Task } from '../../pages/service/data.models';
 import { TaskService } from '../../pages/service/task.service';
 import { combineLatest } from 'rxjs';
 import { LayoutService } from '../service/layout.service';
+import { DataService } from '../../pages/service/data.service';
 
 type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'polarArea' | 'radar';
 
