@@ -47,6 +47,21 @@ interface CellData {
             <p-button [severity]="selectedDepartment == 'management' ? 'primary': 'secondary'" label="Management" (click)="filterProfilesByDepartment('management')"></p-button>  
           </div>
           <div class="schedule-buttons">
+            <div class="quick-delete"
+              pTooltip="Quick delete"
+              tooltipPosition="top"
+            >
+              <p-button
+                [severity]="'danger'"
+                (click)="onQuickDelete()"
+              >
+                @if(isDeleteMode){
+                  <span>Done</span>
+                } @else {
+                  <i class="pi pi-eraser"></i>
+                }
+              </p-button>
+            </div>
             <div class="export"
               pTooltip="Export schedule" 
               tooltipPosition="top"
@@ -106,7 +121,9 @@ interface CellData {
                       'sunday-column-night': isSunday(day) && isNightMode,
                     }"
                     [title]="day.toLocaleDateString()"
-                    [ngStyle]="{'height': '30px'}"
+                    [ngStyle]="{
+                      'height': '30px',
+                    }"
                   >
                     <div>{{ day | date: 'EEE' }} {{ day | date: 'dd.M.' }}</div>
                   </th>
@@ -149,7 +166,11 @@ interface CellData {
                         'height-30-important': cellHeightInPx == 30,
                         'height-40-important': cellHeightInPx == 40,
                       }"
-                      [style.background-color]="gridMatrix()[i][j].color"
+                      [ngStyle]="{
+                        'cursor': getCursorForCell(i, j),
+                        'background-color': gridMatrix()[i][j].color,
+                        'color': (isDeleteMode && gridMatrix()[i][j].isReserved) ? 'red' : '',
+                      }"
                     >
                       {{gridMatrix()[i][j].displayText}}
                     </td>
@@ -267,11 +288,15 @@ interface CellData {
         .schedule-buttons{
           display: flex;
           flex-direction: row;
-          gap: 20px;
+          gap: 15px;
 
-          .export{
+          .export, .quick-delete{
             p-button{
               height: 33px;
+
+              span{
+                font-size: 13px;
+              }
   
               i{
                 font-size: 16px;
@@ -534,13 +559,11 @@ interface CellData {
           }
 
           .reserved-cell {
-            color: #000;
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             font-weight: bold;
-            cursor: pointer;
             width: 120px;
             max-width: 120px;
             box-sizing: border-box;
@@ -643,6 +666,7 @@ export class WorkScheduleComponent {
   selectedEndColIndex = signal<number>(-1);
 
   isSelecting = false;
+  isDeleteMode = false;
 
   selectedReservationId: number | null = null;
 
@@ -1184,30 +1208,44 @@ export class WorkScheduleComponent {
   // Handle mouse up to end selection
   onDocumentMouseUp(event: any, row: number, col: number): void {
     setTimeout(() => {
-      if (this.isSelecting) {
-        this.isSelecting = false;
+      if(!this.isSelecting) return;
 
-        const dateRange = this.getSelectedDateRange();
-        if (dateRange && this.selectedCellRowIndex() >= 0) {
-          const row = this.selectedCellRowIndex();
+      this.isSelecting = false;
+      const dateRange = this.getSelectedDateRange();
 
-          if (this.filteredProfiles.length > row) {
-            const profile = this.filteredProfiles[row];
+      if(!dateRange || this.selectedCellRowIndex() < 0) return;
 
-            this.selectedProfileId = profile.id;
-            this.selectedProfile = profile;
+      const row = this.selectedCellRowIndex();
 
-            let day = this.days()[col];
-            if(day > dateRange.endDate){
-              day = dateRange.endDate;
-            } else if(day < dateRange.startDate){
-              day = dateRange.startDate;
-            }
+      if(this.filteredProfiles.length < row) return;
 
-            this.openReservationForm(profile, dateRange.startDate, dateRange.endDate, row, day);
-          }
-        }
+      const profile = this.filteredProfiles[row];
+      this.selectedProfileId = profile.id;
+      this.selectedProfile = profile;
+
+      let day = this.days()[col];
+
+      if(day > dateRange.endDate){
+        day = dateRange.endDate;
+      } else if(day < dateRange.startDate){
+        day = dateRange.startDate;
       }
+
+      if(this.isDeleteMode){
+        const key = this.getReservationKey(profile.id, day);
+        const schedule = this.reservationMap.get(key);
+
+        if(!schedule?.id){
+          this.clearSelection();
+          return;
+        } 
+
+        this.handleDeleteReservation({ scheduleId: schedule?.id, profileId: this.selectedProfileId });
+        this.clearSelection();
+        return;
+      }
+
+      this.openReservationForm(profile, dateRange.startDate, dateRange.endDate, row, day);
     });
   }
 
@@ -1330,5 +1368,19 @@ export class WorkScheduleComponent {
 
   handleWeekChange(event: any){
     this.exportMatrix.set(this.getExportMatrix(event.monday, event.sunday));
+  }
+
+  onQuickDelete() {
+    this.isDeleteMode = !this.isDeleteMode;
+  }
+
+  getCursorForCell(i: number, j: number): string {
+    if (this.gridMatrix()[i][j].isReserved && this.isDeleteMode) {
+      return "url('/assets/icons/quick-delete.png') 11 11, auto";
+    }
+    else if (this.gridMatrix()[i][j].isReserved) {
+      return 'pointer';
+    }
+    return 'default';
   }
 }
