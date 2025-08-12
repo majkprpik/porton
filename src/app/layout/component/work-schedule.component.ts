@@ -729,7 +729,11 @@ export class WorkScheduleComponent {
         filteredRoles = [];
     }
 
-    this.filteredProfiles = this.profiles.filter(profile => filteredRoles.some(role => role.id == profile.role_id));
+    this.filteredProfiles = this.profiles.filter(profile => 
+      filteredRoles.some(role => role.id == profile.role_id) &&
+      !profile.is_test_user
+    );
+
     this.updateGridMatrix();
   }
 

@@ -374,12 +374,3 @@ export class AuthService {
     return array;
   }
 }
-
-export interface UserToRegister {
-  id?: string;
-  normalized_email?: string;
-  password: string;
-  email_confirm?: boolean;
-  name: string;
-  role_id: number | null;
-}

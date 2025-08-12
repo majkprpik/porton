@@ -33,6 +33,17 @@ export interface Profile {
   phone_number?: string | null;
   created_at?: string | null;
   password?: string;
+  is_test_user?: boolean
+}
+
+export interface UserToRegister {
+  id?: string;
+  normalized_email?: string;
+  password: string;
+  email_confirm?: boolean;
+  name: string;
+  role_id: number | null;
+  is_test_user: boolean;
 }
 
 export interface WorkGroup {

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ProfileRole, Profile, ProfileRoles } from '../service/data.models';
+import { ProfileRole, Profile, ProfileRoles, UserToRegister } from '../service/data.models';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -7,7 +7,7 @@ import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { AuthService, UserToRegister } from '../service/auth.service';
+import { AuthService } from '../service/auth.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { ProfileService } from '../service/profile.service';
 import { combineLatest } from 'rxjs';
@@ -242,7 +242,7 @@ export class ProfilesComponent implements OnInit {
   selectedProfile: ExtendedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
   userPasswordMap: { [name: string]: string } = {};
   newProfileRole: string = '';
-  newProfile: UserToRegister = { name: '', password: '', role_id: null };
+  newProfile: UserToRegister = { name: '', password: '', role_id: null, is_test_user: false };
   profileRoles: ProfileRole[] = [];
 
   constructor(
@@ -439,17 +439,17 @@ export class ProfilesComponent implements OnInit {
       this.profileService.deleteProfile(profileId);
     }
 
-    this.selectedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
+    this.resetSelectedProfileValues();
     this.showDeleteProfileDialog = false;
   }
 
   hideDialog() {
     this.profileDialog = false;
     this.showDeleteProfileDialog = false;
-    this.selectedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
+    this.resetSelectedProfileValues();
 
     this.showNewProfileDialog = false;
-    this.newProfile = { name: '', password: '', role_id: null };
+    this.resetNewProfileValues();
   }
 
   saveProfile() {
@@ -469,7 +469,7 @@ export class ProfilesComponent implements OnInit {
             this.profileService.$profileForLocalStorage.next(updatedProfile);
           }
           this.profileDialog = false;
-          this.selectedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
+          this.resetSelectedProfileValues();
         },
         error: (error) => {
           this.messageService.add({ 
@@ -496,7 +496,7 @@ export class ProfilesComponent implements OnInit {
               life: 3000 
             });
             this.showNewProfileDialog = false;
-            this.newProfile = { name: '', password: '', role_id: null };
+            this.resetNewProfileValues();
           }
         })
         .catch(error => {
@@ -523,5 +523,13 @@ export class ProfilesComponent implements OnInit {
 
   getProfileRoleNameById(roleId: number){
     return this.profileRoles.find(role => role.id == roleId)?.name;
+  }
+
+  resetNewProfileValues(){
+    this.newProfile = { name: '', password: '', role_id: null, is_test_user: false };
+  }
+
+  resetSelectedProfileValues(){
+    this.selectedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
   }
 }
