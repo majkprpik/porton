@@ -167,7 +167,6 @@ interface CellData {
                         'height-40-important': cellHeightInPx == 40,
                       }"
                       [ngStyle]="{
-                        'cursor': getCursorForCell(i, j),
                         'background-color': gridMatrix()[i][j].color,
                         'color': (isDeleteMode && gridMatrix()[i][j].isReserved) ? 'red' : '',
                       }"
@@ -567,6 +566,10 @@ interface CellData {
             width: 120px;
             max-width: 120px;
             box-sizing: border-box;
+
+            &:hover{
+              cursor: pointer;
+            }
 
             &.saturday-column-day,
             &.saturday-column-night,
@@ -1372,15 +1375,5 @@ export class WorkScheduleComponent {
 
   onQuickDelete() {
     this.isDeleteMode = !this.isDeleteMode;
-  }
-
-  getCursorForCell(i: number, j: number): string {
-    if (this.gridMatrix()[i][j].isReserved && this.isDeleteMode) {
-      return "url('/assets/icons/quick-delete.png') 11 11, auto";
-    }
-    else if (this.gridMatrix()[i][j].isReserved) {
-      return 'pointer';
-    }
-    return 'default';
   }
 }
