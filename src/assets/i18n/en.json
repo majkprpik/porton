@@ -462,7 +462,8 @@
             "START-TIME": "Start time",
             "END-TIME": "End time",
             "PORTRAIT": "Portrait",
-            "LANDSCAPE": "Landscape"
+            "LANDSCAPE": "Landscape",
+            "EXPORTING-SCHEDULE": "Exporting schedule. Please wait..."
         },
         "MESSAGES": {
             "UPDATED": "Update",

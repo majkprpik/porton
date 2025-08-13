@@ -70,7 +70,7 @@ interface CellData {
 
         <div class="export-loading">
           <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-          <b>Exporting schedule. Please wait...</b>
+          <b>{{ 'WORK-SCHEDULE.MODAL.EXPORTING-SCHEDULE' | translate }}</b>
         </div>
       }
       <table #exportTable class="export-table">

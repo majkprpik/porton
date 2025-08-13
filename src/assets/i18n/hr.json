@@ -462,7 +462,8 @@
             "START-TIME": "Početak",
             "END-TIME": "Kraj",
             "PORTRAIT": "Okomito",
-            "LANDSCAPE": "Vodoravno"
+            "LANDSCAPE": "Vodoravno",
+            "EXPORTING-SCHEDULE": "Izvoz rasporeda. Molimo pričekajte..."
         },
         "MESSAGES": {
             "UPDATED": "Promjena",
