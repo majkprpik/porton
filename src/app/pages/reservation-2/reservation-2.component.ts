@@ -176,6 +176,8 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.dataService.loadHouseAvailabilities().pipe(takeUntil(this.destroy$)).subscribe();
             });
             
+        this.loadCellHeight();
+
         // Monitor initial render
         setTimeout(() => {
             // Scroll to today after the initial render if it's the first load
@@ -1552,6 +1554,17 @@ export class Reservation2Component implements OnInit, OnDestroy {
     }
 
     changeCellHeight(cellHeightInPx: number){
-        this.cellHeightInPx = cellHeightInPx
+        this.cellHeightInPx = cellHeightInPx;
+        localStorage.setItem('portonReservationsCellHeight', JSON.stringify(cellHeightInPx));
+    }
+
+    loadCellHeight(){
+        let cellHeight = localStorage.getItem('portonReservationsCellHeight');
+
+        if(!cellHeight) {
+            this.cellHeightInPx = 30;
+        } else {
+            this.cellHeightInPx = parseInt(cellHeight);
+        }
     }
 }
