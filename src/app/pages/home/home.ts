@@ -488,7 +488,6 @@ interface SpecialLocation {
                 width: 100%;
                 box-sizing: border-box;
                 padding: 15px;
-                overflow-y: auto;
             }
 
             .house-card {
