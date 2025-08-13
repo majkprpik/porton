@@ -736,7 +736,7 @@ export class WorkScheduleComponent {
       }
     );
     
-    this.setCellHeight();
+    this.loadCellHeight();
 
     // Monitor initial render
     setTimeout(() => {
@@ -1376,7 +1376,7 @@ export class WorkScheduleComponent {
     localStorage.setItem('portonScheduleCellHeight', JSON.stringify(heightInPx));
   }
 
-  setCellHeight(){
+  loadCellHeight(){
     let cellHeight = localStorage.getItem('portonScheduleCellHeight');
 
     if(!cellHeight) {
