@@ -263,11 +263,13 @@
             "PASSWORD": "Lozinka",
             "MIN-6-CHARS": "min. 6 znakova",
             "POSITION": "Pozicija",
-            "SELECT-POSITION": "Odaberi poziciju"
+            "SELECT-POSITION": "Odaberi poziciju",
+            "IS-TEST-USER": "Testni korisnik"
         },
         "EDIT": {
             "TITLE": "Uredi profil",
-            "STATUS-NAME": "Pozicija"
+            "STATUS-NAME": "Pozicija",
+            "IS-TEST-USER": "Testni korisnik"
         },
         "DELETE": {
            "HEADER" : "Potvrdi brisanje",

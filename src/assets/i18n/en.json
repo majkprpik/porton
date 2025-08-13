@@ -263,11 +263,13 @@
             "PASSWORD": "Password",
             "MIN-6-CHARS": "min. 6 characters",
             "POSITION": "Position",
-            "SELECT-POSITION": "Select a position"
+            "SELECT-POSITION": "Select a position",
+            "IS-TEST-USER": "Test user"
         },
         "EDIT": {
             "TITLE": "Edit profile",
-            "STATUS-NAME": "Position"
+            "STATUS-NAME": "Position",
+            "IS-TEST-USER": "Test user"
         },
         "DELETE": {
            "HEADER" : "Delete profile",

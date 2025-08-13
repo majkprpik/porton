@@ -16,7 +16,6 @@ import { SelectModule } from 'primeng/select';
 import { LanguageService } from '../language/language.service';
 import { DataService } from '../service/data.service';
 
-// Extended Profile interface to include the isDivider property
 interface ExtendedProfile extends Profile {
   isDivider?: boolean;
   password?: string;
@@ -88,22 +87,45 @@ interface ExtendedProfile extends Profile {
       </p-table>
     </div>
 
-    <p-dialog [(visible)]="profileDialog" [style]="{width: '450px'}" header="Edit Profile" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+    <p-dialog 
+      [(visible)]="profileDialog" 
+      [style]="{width: '450px'}" 
+      [header]="'PROFILE-MANAGEMENT.EDIT.TITLE' | translate" 
+      [modal]="true" 
+      [contentStyle]="{overflow: 'visible'}"
+    >
       @if(selectedProfile){
+        <div class="field">
+          <label for="firstName">{{ 'PROFILE-MANAGEMENT.ADD.FULL-NAME' | translate }}</label>
+          <input id="firstName" type="text" pInputText [(ngModel)]="selectedProfile.first_name" />
+       </div>
         <div class="p-field">
           <label for="role">Role</label>
           <p-select 
             [options]="profileRoles" 
             [(ngModel)]="selectedProfile.role_id" 
             placeholder="Select a Role" 
-            [showClear]="true"
             [style]="{'width':'100%'}"
             optionLabel="translatedName"
             optionValue="id"
             appendTo="body"
-            id="role">
+            id="role"
+          >
           </p-select>
         </div>
+        @if(profileService.getProfileById(authService.getStoredUserId())?.is_test_user){
+          <div class="field">
+            <label for="isTestUser">{{ 'PROFILE-MANAGEMENT.ADD.IS-TEST-USER' | translate }}</label>
+            <p-select 
+              [options]="[true, false]" 
+              [(ngModel)]="selectedProfile.is_test_user" 
+              [style]="{'width':'100%'}"
+              appendTo="body"
+              id="isTestUser"
+            >
+            </p-select>
+          </div>
+        }
       }
       <div class="p-dialog-footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
@@ -141,14 +163,25 @@ interface ExtendedProfile extends Profile {
           [options]="profileRoles" 
           [(ngModel)]="newProfile.role_id" 
           [placeholder]="'PROFILE-MANAGEMENT.ADD.SELECT-POSITION' | translate" 
-          [showClear]="true"
           [style]="{'width':'100%'}"
           optionLabel="translatedName"
           optionValue="id"
           appendTo="body"
           id="role">
         </p-select>
-      </div>
+      </div>       
+      @if(profileService.getProfileById(authService.getStoredUserId())?.is_test_user){
+        <div class="field">
+          <label for="isTestUser">{{ 'PROFILE-MANAGEMENT.ADD.IS-TEST-USER' | translate }}</label>
+          <p-select 
+            [options]="[true, false]" 
+            [(ngModel)]="newProfile.is_test_user" 
+            [style]="{'width':'100%'}"
+            appendTo="body"
+            id="isTestUser">
+          </p-select>
+        </div>
+      }
       <div class="p-dialog-footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
         <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="createProfile()" [disabled]="!isNewProfileValid()"></p-button>
@@ -244,6 +277,32 @@ export class ProfilesComponent implements OnInit {
   newProfileRole: string = '';
   newProfile: UserToRegister = { name: '', password: '', role_id: null, is_test_user: false };
   profileRoles: ProfileRole[] = [];
+  sortedProfiles: ExtendedProfile[] = [];
+
+  managementRoles: string[] = [
+    ProfileRoles.Uprava, 
+    ProfileRoles.VoditeljKampa, 
+    ProfileRoles.SavjetnikUprave
+  ];
+  
+  receptionRoles: string[] = [
+    ProfileRoles.VoditeljRecepcije,
+    ProfileRoles.Recepcija, 
+    ProfileRoles.KorisnickaSluzba, 
+    ProfileRoles.NocnaRecepcija, 
+    ProfileRoles.Prodaja
+  ];
+  
+  housekeepingRoles: string[] = [
+    ProfileRoles.VoditeljDomacinstva, 
+    ProfileRoles.Sobarica, 
+    ProfileRoles.Terasar
+  ];
+
+  technicalRoles: string[] = [
+    ProfileRoles.KucniMajstor, 
+    ProfileRoles.Odrzavanje
+  ];
 
   constructor(
     private dataService: DataService,
@@ -297,64 +356,59 @@ export class ProfilesComponent implements OnInit {
       this.dataService.profiles$,
     ]).subscribe({
       next: async ([profileRoles, profiles]) => {
+        this.sortedProfiles = [];
+        
         this.profileRoles = profileRoles.map(role => ({
           ...role,
           translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.profileService.translationMap[role.name] : role.name
         }));
-
-        const managementRoles: string[] = [ProfileRoles.Uprava, ProfileRoles.VoditeljKampa, ProfileRoles.SavjetnikUprave];
-        const receptionRoles: string[] = [ProfileRoles.VoditeljRecepcije, ProfileRoles.Recepcija, ProfileRoles.KorisnickaSluzba, ProfileRoles.NocnaRecepcija, ProfileRoles.Prodaja];
-        const housekeepingRoles: string[] = [ProfileRoles.VoditeljDomacinstva, ProfileRoles.Sobarica, ProfileRoles.Terasar];
-        const technicalRoles: string[] = [ProfileRoles.KucniMajstor, ProfileRoles.Odrzavanje];
-        
-        const sortedProfiles: ExtendedProfile[] = [];
         
         // Add management profiles
         const managementProfiles = profiles 
           .filter(profile => {
             const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
-            return roleName !== undefined && managementRoles.includes(roleName);
+            return roleName !== undefined && this.managementRoles.includes(roleName);
           })
           .sort(this.sortByName);
         if (managementProfiles.length > 0) {
-          sortedProfiles.push(this.createDividerProfile('UPRAVA'));
-          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(managementProfiles));
+          this.sortedProfiles.push(this.createDividerProfile('UPRAVA'));
+          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(managementProfiles));
         }
         
         // Add reception profiles
         const receptionProfiles = profiles
           .filter(profile => {
             const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
-            return roleName !== undefined && receptionRoles.includes(roleName);
+            return roleName !== undefined && this.receptionRoles.includes(roleName);
           })
           .sort(this.sortByName);
         if (receptionProfiles.length > 0) {
-          sortedProfiles.push(this.createDividerProfile('ODJEL RECEPCIJA'));
-          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(receptionProfiles));
+          this.sortedProfiles.push(this.createDividerProfile('ODJEL RECEPCIJA'));
+          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(receptionProfiles));
         }
         
         // Add housekeeping profiles
         const housekeepingProfiles = profiles
           .filter(profile => {
             const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
-            return roleName !== undefined && housekeepingRoles.includes(roleName);
+            return roleName !== undefined && this.housekeepingRoles.includes(roleName);
           })
           .sort(this.sortByName);
         if (housekeepingProfiles.length > 0) {
-          sortedProfiles.push(this.createDividerProfile('ODJEL DOMAĆINSTVA'));
-          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(housekeepingProfiles));
+          this.sortedProfiles.push(this.createDividerProfile('ODJEL DOMAĆINSTVA'));
+          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(housekeepingProfiles));
         }
         
         // Add technical profiles
         const technicalProfiles = profiles
           .filter(profile => {
             const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
-            return roleName !== undefined && technicalRoles.includes(roleName);
+            return roleName !== undefined && this.technicalRoles.includes(roleName);
           })
           .sort(this.sortByName);
         if (technicalProfiles.length > 0) {
-          sortedProfiles.push(this.createDividerProfile('ODJEL TEHNIKA'));
-          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(technicalProfiles));
+          this.sortedProfiles.push(this.createDividerProfile('ODJEL TEHNIKA'));
+          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(technicalProfiles));
         }
         
         // Add any other profiles that don't fit the categories
@@ -365,18 +419,18 @@ export class ProfilesComponent implements OnInit {
             const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
             if (!roleName) return true; // Treat undefined as "other"
 
-            return !managementRoles.includes(roleName) &&
-                  !receptionRoles.includes(roleName) &&
-                  !housekeepingRoles.includes(roleName) &&
-                  !technicalRoles.includes(roleName);
+            return !this.managementRoles.includes(roleName) &&
+                  !this.receptionRoles.includes(roleName) &&
+                  !this.housekeepingRoles.includes(roleName) &&
+                  !this.technicalRoles.includes(roleName);
           })
           .sort(this.sortByName);
         if (otherProfiles.length > 0) {
-          sortedProfiles.push(this.createDividerProfile('OSTALO'));
-          sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(otherProfiles));
+          this.sortedProfiles.push(this.createDividerProfile('OSTALO'));
+          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(otherProfiles));
         }
         
-        this.profiles = sortedProfiles;
+        this.profiles = [...this.sortedProfiles];
       },
       error: (error) => {
         console.error(error);
@@ -455,7 +509,9 @@ export class ProfilesComponent implements OnInit {
   saveProfile() {
     if (this.selectedProfile && this.selectedProfile.id) {
       this.dataService.updateProfile(this.selectedProfile.id, { 
-        role_id: this.selectedProfile.role_id
+        first_name: this.selectedProfile.first_name,
+        role_id: this.selectedProfile.role_id,
+        is_test_user: this.selectedProfile.is_test_user,
       }).subscribe({
         next: (updatedProfile) => {
           this.messageService.add({ 
@@ -513,7 +569,10 @@ export class ProfilesComponent implements OnInit {
   }
 
   isNewProfileValid(){
-    return this.newProfile.name?.trim() && this.newProfile.password?.length >= 6 && this.newProfile.role_id;
+    return this.newProfile.name?.trim() && 
+          this.newProfile.password?.length >= 6 && 
+          this.newProfile.role_id &&
+          this.newProfile.is_test_user != null;
   }
 
   openCreateProfileWindow(){
