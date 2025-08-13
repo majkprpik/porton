@@ -312,7 +312,7 @@ import { DataService } from '../../pages/service/data.service';
         }
 
         #set-all-schedule-label{
-          width: 150px;
+          width: 170px;
           padding-bottom: 10px;
         }
         
