@@ -40,15 +40,35 @@ interface CellData {
       <div class="work-schedule-container">
         <div class="top">
           <div class="profile-buttons">
-            <p-button [severity]="selectedDepartment == 'all' ? 'primary': 'secondary'" label="All" (click)="filterProfilesByDepartment('all')"></p-button>  
-            <p-button [severity]="selectedDepartment == 'housekeeping' ? 'primary': 'secondary'" label="Housekeeping" (click)="filterProfilesByDepartment('housekeeping')"></p-button>  
-            <p-button [severity]="selectedDepartment == 'technical' ? 'primary': 'secondary'" label="Technical" (click)="filterProfilesByDepartment('technical')"></p-button>  
-            <p-button [severity]="selectedDepartment == 'reception' ? 'primary': 'secondary'" label="Reception" (click)="filterProfilesByDepartment('reception')"></p-button>  
-            <p-button [severity]="selectedDepartment == 'management' ? 'primary': 'secondary'" label="Management" (click)="filterProfilesByDepartment('management')"></p-button>  
+            <p-button 
+              [severity]="selectedDepartment == 'all' ? 'primary': 'secondary'" 
+              [label]="'WORK-SCHEDULE.HEADER.TABS.ALL' | translate" 
+              (click)="filterProfilesByDepartment('all')"
+            ></p-button>  
+            <p-button 
+              [severity]="selectedDepartment == 'housekeeping' ? 'primary': 'secondary'" 
+              [label]="'WORK-SCHEDULE.HEADER.TABS.HOUSEKEEPING' | translate" 
+              (click)="filterProfilesByDepartment('housekeeping')"
+            ></p-button>  
+            <p-button 
+              [severity]="selectedDepartment == 'technical' ? 'primary': 'secondary'" 
+              [label]="'WORK-SCHEDULE.HEADER.TABS.TECHNICAL' | translate" 
+              (click)="filterProfilesByDepartment('technical')"
+            ></p-button>  
+            <p-button 
+              [severity]="selectedDepartment == 'reception' ? 'primary': 'secondary'" 
+              [label]="'WORK-SCHEDULE.HEADER.TABS.RECEPTION' | translate" 
+              (click)="filterProfilesByDepartment('reception')"
+            ></p-button>  
+            <p-button 
+              [severity]="selectedDepartment == 'management' ? 'primary': 'secondary'" 
+              [label]="'WORK-SCHEDULE.HEADER.TABS.MANAGEMENT' | translate" 
+              (click)="filterProfilesByDepartment('management')"
+            ></p-button>  
           </div>
           <div class="schedule-buttons">
             <div class="quick-delete"
-              pTooltip="Quick delete"
+              [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.QUICK-DELETE' | translate"
               tooltipPosition="top"
             >
               <p-button
@@ -63,7 +83,7 @@ interface CellData {
               </p-button>
             </div>
             <div class="export"
-              pTooltip="Export schedule" 
+              [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.EXPORT' | translate" 
               tooltipPosition="top"
             >
               <p-button
@@ -73,13 +93,12 @@ interface CellData {
                 <i class="pi pi-file-export"></i>
               </p-button>
             </div>
-            <div class="density"
-            >
+            <div class="density">
               <p-button
                 class="density-button"
                 [severity]="cellHeightInPx == 40 ? 'primary': 'secondary'" 
                 (click)="changeCellHeight(40)"
-                pTooltip="Row height: Spacious" 
+                [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.ROW-HEIGHT-SPACIOUS' | translate" 
                 tooltipPosition="top"
               >
                 <i class="pi pi-equals"></i>
@@ -88,7 +107,7 @@ interface CellData {
                 class="density-button"
                 [severity]="cellHeightInPx == 30 ? 'primary': 'secondary'" 
                 (click)="changeCellHeight(30)"
-                pTooltip="Row height: Comfortable" 
+                [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.ROW-HEIGHT-COMFORTABLE' | translate" 
                 tooltipPosition="top"
               >
                 <i class="pi pi-bars"></i>
@@ -97,7 +116,7 @@ interface CellData {
                 class="density-button"
                 [severity]="cellHeightInPx == 25 ? 'primary': 'secondary'" 
                 (click)="changeCellHeight(25)"
-                pTooltip="Row height: Compact" 
+                [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.ROW-HEIGHT-COMPACT' | translate" 
                 tooltipPosition="left"
               >
                 <i class="pi pi-align-justify"></i>

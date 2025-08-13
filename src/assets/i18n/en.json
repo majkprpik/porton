@@ -434,11 +434,21 @@
     },
     "WORK-SCHEDULE": {
         "TITLE": "Work schedule",
-        "LEGEND": {
-            "TITLE": "Legend",
-            "MORNING-SHIFT": "Morning shift",
-            "AFTERNOON-SHIFT": "Afternoon shift",
-            "EVENING-SHIFT": "Evening shift"
+        "HEADER": {
+            "TABS": {
+                "ALL": "All",
+                "HOUSEKEEPING": "Housekeeping",
+                "TECHNICAL": "Technical",
+                "RECEPTION": "Reception",
+                "MANAGEMENT": "Management"
+            },
+            "TOOLTIPS": {
+                "QUICK-DELETE": "Quick delete",
+                "EXPORT": "Export",
+                "ROW-HEIGHT-SPACIOUS": "Row height: Spacious",
+                "ROW-HEIGHT-COMFORTABLE": "Row height: Comfortable",
+                "ROW-HEIGHT-COMPACT": "Row height: Compact"
+            }
         },
         "EMPLOYEES": "Employees",
         "MODAL": {
@@ -446,18 +456,13 @@
             "EDIT-SCHEDULE": "Edit schedule",
             "EXPORT-SCHEDULE": "Export schedule",
             "EMPLOYEE": "Employee",
-            "SHIFT": "Shift",
-            "SELECT-A-SHIFT": "Select a shift",
-            "START-DATE": "Start date",
-            "END-DATE": "End date",
-            "SELECT-START-DATE": "Select start date",
-            "SELECT-END-DATE": "Select end date",
-            "NOTES": "Notes",
-            "NOTES-ENTER-INFO": "Enter any additional information about this schedule",
+            "COLOR": "Color",
+            "SET-WHOLE-SCHEDULE": "Set whole schedule",
+            "SET-BY-DAY": "Set by day",
             "START-TIME": "Start time",
             "END-TIME": "End time",
-            "SELECT-START-TIME": "Select start time",
-            "SELECT-END-TIME": "Select end time"
+            "PORTRAIT": "Portrait",
+            "LANDSCAPE": "Landscape"
         },
         "MESSAGES": {
             "UPDATED": "Update",

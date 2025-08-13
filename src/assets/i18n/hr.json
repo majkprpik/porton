@@ -434,30 +434,35 @@
     },
     "WORK-SCHEDULE": {
         "TITLE": "Raspored",
-        "LEGEND": {
-            "TITLE": "Legenda",
-            "MORNING-SHIFT": "Prva smjena",
-            "AFTERNOON-SHIFT": "Druga smjena",
-            "EVENING-SHIFT": "Treca smjena"
+        "HEADER": {
+            "TABS": {
+                "ALL": "Sve",
+                "HOUSEKEEPING": "Domaćinstvo",
+                "TECHNICAL": "Tehnika",
+                "RECEPTION": "Recepcija",
+                "MANAGEMENT": "Uprava"
+            },
+            "TOOLTIPS": {
+                "QUICK-DELETE": "Brzo brisanje",
+                "EXPORT": "Izvoz",
+                "ROW-HEIGHT-SPACIOUS": "Visina ćelije: Prostrano",
+                "ROW-HEIGHT-COMFORTABLE": "Visina ćelije: Ugodno",
+                "ROW-HEIGHT-COMPACT": "Visina ćelije: Kompaktno"
+            }
         },
         "EMPLOYEES": "Zaposlenici",
         "MODAL": {
             "CREATE-SCHEDULE": "Kreiraj raspored",
             "EDIT-SCHEDULE": "Uredi raspored",
             "EMPLOYEE": "Zaposlenik",
+            "COLOR": "Boja",
+            "SET-WHOLE-SCHEDULE": "Postavi cijeli raspored",
+            "SET-BY-DAY": "Postavi po danu",
             "EXPORT-SCHEDULE": "Izvezi raspored",
-            "SHIFT": "Smjena",
-            "SELECT-A-SHIFT": "Odaberi smjenu",
-            "START-DATE": "Početak",
-            "END-DATE": "Kraj",
-            "SELECT-START-DATE": "Odaberi početak",
-            "SELECT-END-DATE": "Odaberi kraj",
-            "NOTES": "Bilješke",
-            "NOTES-ENTER-INFO": "Unesi dodatne informacije o rasporedu",
-            "START-TIME": "Početak smjene",
-            "END-TIME": "Kraj smjene",
-            "SELECT-START-TIME": "Odabrei početak smjene",
-            "SELECT-END-TIME": "Odaberi kraj smjene"
+            "START-TIME": "Početak",
+            "END-TIME": "Kraj",
+            "PORTRAIT": "Okomito",
+            "LANDSCAPE": "Vodoravno"
         },
         "MESSAGES": {
             "UPDATED": "Promjena",

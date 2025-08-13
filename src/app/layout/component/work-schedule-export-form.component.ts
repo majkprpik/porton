@@ -150,11 +150,11 @@ interface CellData {
               @if(selectedExportType == 'pdf') {
                 <label id="portrait-select-container">
                   <p-radioButton id="portrait" name="orientation" value="portrait" [(ngModel)]="selectedOrientation" label="Portrait"></p-radioButton>
-                  Portrait
+                  {{ 'WORK-SCHEDULE.MODAL.PORTRAIT' | translate }}
                 </label>
                 <label id="landscape-select-container">  
                   <p-radioButton id="landscape" name="orientation" value="landscape" [(ngModel)]="selectedOrientation" label="Landscape"></p-radioButton>
-                  Landscape
+                  {{ 'WORK-SCHEDULE.MODAL.LANDSCAPE' | translate }}
                 </label>
               }
             </div>

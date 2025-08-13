@@ -98,7 +98,7 @@ import { DataService } from '../../pages/service/data.service';
             value="all"
             (ngModelChange)="onScheduleModeChange($event)"
           ></p-radiobutton>
-          Set whole schedule
+          {{ 'WORK-SCHEDULE.MODAL.SET-WHOLE-SCHEDULE' | translate }}
         </label>
 
         <label id="set-schedule-label">
@@ -108,7 +108,7 @@ import { DataService } from '../../pages/service/data.service';
             value="dayByDay"
             (ngModelChange)="onScheduleModeChange($event)"
           ></p-radiobutton>
-          Set by day
+          {{ 'WORK-SCHEDULE.MODAL.SET-BY-DAY' | translate }}
         </label>
       </div>
       <div 
@@ -121,7 +121,7 @@ import { DataService } from '../../pages/service/data.service';
 
         <div class="whole-schedule-times">
           <div class="start-time">
-            <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
+            <label for="startDate">{{ 'WORK-SCHEDULE.MODAL.START-TIME' | translate }}</label>
             <input 
               pInputText
               type="time"
@@ -131,7 +131,7 @@ import { DataService } from '../../pages/service/data.service';
           </div>
   
           <div class="end-time">
-            <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
+            <label for="endDate">{{ 'WORK-SCHEDULE.MODAL.END-TIME' | translate }}</label>
             <input 
               pInputText
               type="time"
@@ -161,7 +161,7 @@ import { DataService } from '../../pages/service/data.service';
 
             <div class="each-day-times">
               <div class="start-time">
-                <label for="endDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
+                <label for="endDate">{{ 'WORK-SCHEDULE.MODAL.START-TIME' | translate }}</label>
                 <input 
                   pInputText
                   type="time"
@@ -171,7 +171,7 @@ import { DataService } from '../../pages/service/data.service';
               </div>
     
               <div class="end-time">
-                <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
+                <label for="endDate">{{ 'WORK-SCHEDULE.MODAL.END-TIME' | translate }}</label>
                 <input 
                   pInputText
                   type="time"
