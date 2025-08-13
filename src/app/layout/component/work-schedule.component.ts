@@ -735,6 +735,8 @@ export class WorkScheduleComponent {
         this.updateGridMatrix();
       }
     );
+    
+    this.setCellHeight();
 
     // Monitor initial render
     setTimeout(() => {
@@ -1371,6 +1373,17 @@ export class WorkScheduleComponent {
 
   changeCellHeight(heightInPx: number){
     this.cellHeightInPx = heightInPx;
+    localStorage.setItem('portonScheduleCellHeight', JSON.stringify(heightInPx));
+  }
+
+  setCellHeight(){
+    let cellHeight = localStorage.getItem('portonScheduleCellHeight');
+
+    if(!cellHeight) {
+      this.cellHeightInPx = 30;
+    } else {
+      this.cellHeightInPx = parseInt(cellHeight);
+    }
   }
 
   openExportSchedule(){
