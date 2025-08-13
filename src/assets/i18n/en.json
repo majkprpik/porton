@@ -356,6 +356,19 @@
     },
     "RESERVATIONS": {
         "HOUSE": "House",
+        "HEADER": {
+            "TABS": {
+                "FAMILY-1": "Family 1",
+                "FAMILY-2": "Family 2",
+                "COUPLE": "Couple",
+                "MOBILE": "Mobile"
+            },
+            "TOOLTIPS": {
+                "ROW-HEIGHT-SPACIOUS": "Row height: Spacious",
+                "ROW-HEIGHT-COMFORTABLE": "Row height: Comfortable",
+                "ROW-HEIGHT-COMPACT": "Row height: Compact"
+            }
+        },
         "MODAL": {
             "CREATE-RESERVATION": "Create reservation",
             "CREATE-TEMP-RESERVATION": "Create temporary reservation",

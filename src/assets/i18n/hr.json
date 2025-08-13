@@ -356,6 +356,19 @@
     },
     "RESERVATIONS": {
         "HOUSE": "Kućica",
+        "HEADER": {
+            "TABS": {
+                "FAMILY-1": "Family 1",
+                "FAMILY-2": "Family 2",
+                "COUPLE": "Couple",
+                "MOBILE": "Mobilne"
+            },
+            "TOOLTIPS": {
+                "ROW-HEIGHT-SPACIOUS": "Visina ćelije: Prostrano",
+                "ROW-HEIGHT-COMFORTABLE": "Visina ćelije: Ugodno",
+                "ROW-HEIGHT-COMPACT": "Visina ćelije: Kompaktno"
+            }
+        },
         "MODAL": {
             "CREATE-RESERVATION": "Kreiraj rezervaciju",
             "CREATE-TEMP-RESERVATION": "Kreiraj privremenu rezervaciju",

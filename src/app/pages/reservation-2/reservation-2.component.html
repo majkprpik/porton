@@ -15,6 +15,8 @@
                     class="density-button"
                     [severity]="cellHeightInPx == 40 ? 'primary': 'secondary'" 
                     (click)="changeCellHeight(40)"
+                    [pTooltip]="'RESERVATIONS.HEADER.TOOLTIPS.ROW-HEIGHT-SPACIOUS' | translate" 
+                    tooltipPosition="top"
                 >
                     <i class="pi pi-equals"></i>
                 </p-button>  
@@ -22,6 +24,8 @@
                     class="density-button"
                     [severity]="cellHeightInPx == 30 ? 'primary': 'secondary'" 
                     (click)="changeCellHeight(30)"
+                    [pTooltip]="'RESERVATIONS.HEADER.TOOLTIPS.ROW-HEIGHT-COMFORTABLE' | translate" 
+                    tooltipPosition="top"
                 >
                     <i class="pi pi-bars"></i>
                 </p-button>  
@@ -29,6 +33,8 @@
                     class="density-button"
                     [severity]="cellHeightInPx == 25 ? 'primary': 'secondary'" 
                     (click)="changeCellHeight(25)"
+                    [pTooltip]="'RESERVATIONS.HEADER.TOOLTIPS.ROW-HEIGHT-COMPACT' | translate" 
+                    tooltipPosition="top"
                 >
                     <i class="pi pi-align-justify"></i>
                 </p-button>  

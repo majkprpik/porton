@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { LayoutService } from '../../layout/service/layout.service';
 import { DataService } from '../service/data.service';
+import { TooltipModule } from 'primeng/tooltip';
 
 interface CellData {
     isReserved: boolean;
@@ -36,6 +37,7 @@ interface CellData {
         TranslateModule,
         ButtonModule,
         TitleCasePipe,
+        TooltipModule,
     ],
     providers: [DatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush
