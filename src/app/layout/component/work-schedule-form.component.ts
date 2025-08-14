@@ -467,7 +467,7 @@ export class WorkScheduleFormComponent {
 
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter<{ profileWorkDays: ProfileWorkDay[]; profileWorkSchedule: Partial<ProfileWorkSchedule>[] }>();
-  @Output() delete = new EventEmitter<{ scheduleId: number; profileId: string }>();
+  @Output() delete = new EventEmitter<number>();
 
   constructor(
     private confirmationService: ConfirmationService,
@@ -746,10 +746,7 @@ export class WorkScheduleFormComponent {
           severity: 'danger'
         },
         accept: async () => {
-          this.delete.emit({
-            scheduleId: this.profileWorkSchedule!.id!,
-            profileId: this.profileId
-          });
+          this.delete.emit(this.profileWorkSchedule!.id!);
 
           this.visibleChange.emit(false);
           this.messageService.add({

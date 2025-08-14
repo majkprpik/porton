@@ -10,21 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { DocumentOrientations, ExportTypes, Profile } from '../../pages/service/data.models';
-
-interface CellData {
-  isReserved: boolean;
-  color: string;
-  displayText: string;
-  tooltip: string;
-  identifier: string;
-  isToday: boolean;
-  isSaturday: boolean;
-  isSunday: boolean;
-  isReservationStart: boolean;
-  isReservationMiddle: boolean;
-  isReservationEnd: boolean;
-}
+import { DocumentOrientations, ExportTypes, Profile, ScheduleCellData } from '../../pages/service/data.models';
 
 @Component({
   selector: 'app-work-schedule-export-form',
@@ -101,10 +87,10 @@ interface CellData {
               @for (day of days(); track day.getTime(); let j = $index) {
                 <td
                   [ngClass]="{
-                    'reserved-cell': gridMatrix()[i][j].isReserved,
-                    'reservation-start': gridMatrix()[i][j].isReservationStart,
-                    'reservation-middle': gridMatrix()[i][j].isReservationMiddle,
-                    'reservation-end': gridMatrix()[i][j].isReservationEnd,
+                    'schedule-cell': gridMatrix()[i][j].isReserved,
+                    'schedule-start': gridMatrix()[i][j].isScheduleStart,
+                    'schedule-middle': gridMatrix()[i][j].isScheduleMiddle,
+                    'schedule-end': gridMatrix()[i][j].isScheduleEnd,
                     'border-left-important': true,
                     'border-right-important': true,
                     'border-top-important': true,
@@ -298,7 +284,7 @@ interface CellData {
           }
         }
 
-        .reserved-cell {
+        .schedule-cell {
           color: #000;
           text-align: center;
           white-space: nowrap;
@@ -307,17 +293,17 @@ interface CellData {
           font-weight: bold;
           box-sizing: border-box;
 
-          &.reservation-start {
+          &.schedule-start {
             position: relative;
             z-index: 2;
           }
 
-          &.reservation-middle {
+          &.schedule-middle {
             position: relative;
             z-index: 2;
           }
 
-          &.reservation-end {
+          &.schedule-end {
             position: relative;
             z-index: 2;
           }
@@ -395,7 +381,7 @@ export class WorkScheduleExportFormComponent {
 
   @Input() visible: boolean = false;
   @Input() filteredProfiles: Profile[] = [];
-  @Input() gridMatrix = signal<CellData[][]>([]);
+  @Input() gridMatrix = signal<ScheduleCellData[][]>([]);
 
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() weekChange = new EventEmitter<{monday: Date, sunday: Date}>();

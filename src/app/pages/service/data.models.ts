@@ -159,6 +159,21 @@ export interface Language {
   name: string;
 }
 
+export interface ScheduleCellData {
+  isReserved: boolean;
+  color: string;
+  displayText: string;
+  tooltip: string;
+  identifier: string;
+  isToday: boolean;
+  isSaturday: boolean;
+  isSunday: boolean;
+  isScheduleStart: boolean;
+  isScheduleMiddle: boolean;
+  isScheduleEnd: boolean;
+  isForDelete: boolean;
+}
+
 export enum ExportTypes {
   PDF = 'pdf',
 }

@@ -927,6 +927,24 @@ export class DataService {
     );
   }
 
+  async deleteProfileWorkSchedules(scheduleIds: number[]){
+    try{
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('profile_work_schedule')
+        .delete()
+        .in('id', scheduleIds)
+        .select();
+
+      if (error) throw error;
+
+      return data;
+    } catch(error){
+      console.error('Error updating house profile work schedules:', error);
+      return null;
+    }
+  }
+
   async getHouseAvailabilityTypeByName(name: string){
     try {
       const { data, error } = await this.supabaseService.getClient()
@@ -1080,6 +1098,7 @@ export class DataService {
         table: 'profile_work_schedule'
       },
       async (payload: any) => {
+        console.log('Work schedule payload: ', payload);
         this.$profileWorkScheduleUpdate.next(payload);
       }
     ).on(

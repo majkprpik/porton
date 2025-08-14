@@ -449,6 +449,10 @@
     },
     "WORK-SCHEDULE": {
         "TITLE": "Raspored",
+        "OVERLAY": {
+            "DELETING-MESSAGE": "Brisanje odabranih rasporeda. Molimo pričekajte...",
+            "CREATING-MESSAGE": "Kreiranje rasporeda. Molimo pričekajte..."
+        },
         "HEADER": {
             "TABS": {
                 "ALL": "Sve",

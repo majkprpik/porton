@@ -449,6 +449,10 @@
     },
     "WORK-SCHEDULE": {
         "TITLE": "Work schedule",
+        "OVERLAY": {
+            "DELETING-MESSAGE": "Deleting selected schedules. Please wait...",
+            "CREATING-MESSAGE": "Creating schedules. Please wait..."
+        },
         "HEADER": {
             "TABS": {
                 "ALL": "All",

@@ -1,7 +1,7 @@
 import { WorkScheduleExportFormComponent } from './work-schedule-export-form.component';
 import { Component, effect, signal } from '@angular/core';
-import { Profile, ProfileRole, ProfileRoles, ProfileWorkDay, ProfileWorkSchedule } from '../../pages/service/data.models';
-import { combineLatest, firstValueFrom } from 'rxjs';
+import { Profile, ProfileRole, ProfileRoles, ProfileWorkDay, ProfileWorkSchedule, ScheduleCellData } from '../../pages/service/data.models';
+import { combineLatest, finalize, firstValueFrom, forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -10,20 +10,6 @@ import { ButtonModule } from 'primeng/button';
 import { LayoutService } from '../service/layout.service';
 import { DataService } from '../../pages/service/data.service';
 import { TooltipModule } from 'primeng/tooltip';
-
-interface CellData {
-  isReserved: boolean;
-  color: string;
-  displayText: string;
-  tooltip: string;
-  identifier: string;
-  isToday: boolean;
-  isSaturday: boolean;
-  isSunday: boolean;
-  isReservationStart: boolean;
-  isReservationMiddle: boolean;
-  isReservationEnd: boolean;
-}
 
 @Component({
   selector: 'app-work-schedule',
@@ -67,20 +53,37 @@ interface CellData {
             ></p-button>  
           </div>
           <div class="schedule-buttons">
-            <div class="quick-delete"
-              [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.QUICK-DELETE' | translate"
+            <div 
+              class="quick-delete"
               tooltipPosition="top"
             >
-              <p-button
-                [severity]="'danger'"
-                (click)="onQuickDelete()"
-              >
-                @if(isDeleteMode){
-                  <span>Done</span>
-                } @else {
+              @if(isDeleteMode){
+                <span id="selected-schedules">Selected schedules: {{ schedulesToDelete.length }}</span>
+                <p-button
+                  [severity]="'danger'"
+                  (click)="deleteSelectedSchedules()"
+                  [raised]="true"
+                >
+                  <span>Delete</span>
+                </p-button>
+                <p-button
+                  [severity]="'danger'"
+                  (click)="cancelQuickDelete()"
+                  styleClass="p-button-text"
+                  [raised]="true"
+                >
+                  <span>Cancel</span>
+                </p-button>
+              } @else {
+                <p-button
+                  [severity]="'danger'"
+                  (click)="onQuickDelete()"
+                  [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.QUICK-DELETE' | translate"
+                  tooltipPosition="top"
+                >
                   <i class="pi pi-eraser"></i>
-                }
-              </p-button>
+                </p-button>
+              }
             </div>
             <div class="export"
               [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.EXPORT' | translate" 
@@ -124,8 +127,22 @@ interface CellData {
             </div>
           </div>
         </div>
+        @if(isDeletingOverlayVisible || isCreatingOverlayVisible){
+          <div class="loading-overlay">
+            <div class="loading-message">
+              <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+              <b>
+                @if(isDeletingOverlayVisible){
+                  {{ 'WORK-SCHEDULE.OVERLAY.DELETING-MESSAGE' | translate }}
+                } @else if(isCreatingOverlayVisible){
+                  {{ 'WORK-SCHEDULE.OVERLAY.CREATING-MESSAGE' | translate }}
+                }
+              </b>
+            </div>
+          </div>
+        }
         <div class="table-container">
-          <table class="reservation-table">
+          <table class="schedule-table">
             <thead>
               <tr>
                 <th class="house-header corner-header">{{ 'WORK-SCHEDULE.EMPLOYEES' | translate }}</th>
@@ -174,23 +191,25 @@ interface CellData {
                         'saturday-column-night': isSaturday(days()[j]) && isNightMode,
                         'sunday-column-day': isSunday(days()[j]) && !isNightMode,
                         'sunday-column-night': isSunday(days()[j]) && isNightMode,
-                        'reservation-start': gridMatrix()[i][j].isReservationStart,
-                        'reservation-middle': gridMatrix()[i][j].isReservationMiddle,
-                        'reservation-end': gridMatrix()[i][j].isReservationEnd,
-                        'border-left-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationStart,
-                        'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationEnd,
-                        'border-top-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
-                        'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
+                        'schedule-start': gridMatrix()[i][j].isScheduleStart,
+                        'schedule-middle': gridMatrix()[i][j].isScheduleMiddle,
+                        'schedule-end': gridMatrix()[i][j].isScheduleEnd,
+                        'border-left-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isScheduleStart,
+                        'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isScheduleEnd,
+                        'border-top-important': gridMatrix()[i][j].isScheduleStart || gridMatrix()[i][j].isScheduleMiddle || gridMatrix()[i][j].isScheduleEnd,
+                        'border-bottom-important': gridMatrix()[i][j].isScheduleStart || gridMatrix()[i][j].isScheduleMiddle || gridMatrix()[i][j].isScheduleEnd,
                         'height-25-important': cellHeightInPx == 25,
                         'height-30-important': cellHeightInPx == 30,
                         'height-40-important': cellHeightInPx == 40,
                       }"
                       [ngStyle]="{
                         'background-color': gridMatrix()[i][j].color,
-                        'color': (isDeleteMode && gridMatrix()[i][j].isReserved) ? 'red' : '',
+                        'color': (isDeleteMode && gridMatrix()[i][j].isReserved) ? 
+                          gridMatrix()[i][j].color == 'red' ? 'white' : 'red'
+                          : '',
                       }"
                     >
-                      {{gridMatrix()[i][j].displayText}}
+                      {{ gridMatrix()[i][j].displayText }}
                     </td>
                   }
                 </tr>
@@ -199,10 +218,10 @@ interface CellData {
           </table>
         </div>
 
-        @if (showReservationForm) {
+        @if (showScheduleForm) {
           <app-work-schedule-form
-            [visible]="showReservationForm"
-            [profileWorkSchedule]="editingReservation"
+            [visible]="showScheduleForm"
+            [profileWorkSchedule]="editingSchedule"
             [profileId]="selectedProfileId"
             [profile]="selectedProfile"
             [startDate]="selectedStartDate"
@@ -210,7 +229,7 @@ interface CellData {
             [fullWorkSchedule]="fullWorkSchedule"
             [colors]="colors"
             (save)="handleProfileScheduleSave($event)"
-            (delete)="handleDeleteReservation($event)"
+            (delete)="handleDeleteSchedule($event)"
             (visibleChange)="handleVisibilityChange($event)"
           >
           </app-work-schedule-form>
@@ -308,6 +327,17 @@ interface CellData {
           flex-direction: row;
           gap: 15px;
 
+          .quick-delete{
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+
+            #selected-schedules{
+              font-weight: bold;
+              padding-top: 8px;
+            }
+          }
+
           .export, .quick-delete{
             p-button{
               height: 33px;
@@ -340,6 +370,27 @@ interface CellData {
         }
       }
 
+      .loading-overlay{
+        position: absolute;
+        inset: 0;
+        background-color: white;
+        opacity: 0.8;
+        z-index: 20;
+        pointer-events: all;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        .loading-message{
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+      }
+
       .table-container {
         overflow-x: auto;
         overflow-y: auto;
@@ -351,7 +402,7 @@ interface CellData {
         border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-        .reservation-table {
+        .schedule-table {
           border-collapse: separate;
           border-spacing: 0;
           width: auto;
@@ -598,17 +649,17 @@ interface CellData {
               background-color: inherit;
             }
 
-            &.reservation-start {
+            &.schedule-start {
               position: relative;
               z-index: 2;
             }
 
-            &.reservation-middle {
+            &.schedule-middle {
               position: relative;
               z-index: 2;
             }
 
-            &.reservation-end {
+            &.schedule-end {
               position: relative;
               z-index: 2;
             }
@@ -667,18 +718,19 @@ export class WorkScheduleComponent {
   profiles: Profile[] = [];
   profileWorkDays: ProfileWorkDay[] = [];
 
-  gridMatrix = signal<CellData[][]>([]);
-  exportMatrix = signal<CellData[][]>([]);
+  gridMatrix = signal<ScheduleCellData[][]>([]);
+  exportMatrix = signal<ScheduleCellData[][]>([]);
 
-  private reservationMap = new Map<string, ProfileWorkSchedule>();
+  private scheduleMap = new Map<string, ProfileWorkSchedule>();
 
-  showReservationForm = false;
+  showScheduleForm = false;
   showExportScheduleForm = false;
   selectedProfileId = '';
   selectedProfile: Profile | undefined = undefined;
   selectedStartDate: Date = new Date();
   selectedEndDate: Date = new Date();
-  editingReservation: ProfileWorkSchedule | undefined = undefined;
+  editingSchedule: ProfileWorkSchedule | undefined = undefined;
+  schedulesToDelete: ProfileWorkSchedule[] = [];
 
   nextProfileScheduleDate: Date | null = null;
 
@@ -690,7 +742,10 @@ export class WorkScheduleComponent {
   isSelecting = false;
   isDeleteMode = false;
 
-  selectedReservationId: number | null = null;
+  isDeletingOverlayVisible = false;
+  isCreatingOverlayVisible = false;
+
+  selectedScheduleId: number | null = null;
 
   private isFirstLoad = true;
 
@@ -737,6 +792,7 @@ export class WorkScheduleComponent {
     );
     
     this.loadCellHeight();
+    this.cancelQuickDelete();
 
     // Monitor initial render
     setTimeout(() => {
@@ -750,7 +806,7 @@ export class WorkScheduleComponent {
   ngOnDestroy(): void {
     this.days.set([]);
     this.gridMatrix.set([]);
-    this.reservationMap.clear();
+    this.scheduleMap.clear();
   }
 
   filterProfilesByDepartment(department: string){
@@ -786,7 +842,7 @@ export class WorkScheduleComponent {
   }
 
   private updateGridMatrix(): void {
-    this.reservationMap.clear();
+    this.scheduleMap.clear();
     const filteredWorkSchedule = this.fullWorkSchedule.filter(fws => this.filteredProfiles.some(fp => fp.id == fws.profile_id));
 
     filteredWorkSchedule.forEach((schedule) => {
@@ -794,22 +850,22 @@ export class WorkScheduleComponent {
       const endDate = new Date(schedule.end_date);
 
       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const key = this.getReservationKey(schedule.profile_id, d);
-        this.reservationMap.set(key, schedule);
+        const key = this.getScheduleKey(schedule.profile_id, d);
+        this.scheduleMap.set(key, schedule);
       }
     });
 
-    const grid: CellData[][] = [];
+    const grid: ScheduleCellData[][] = [];
     const days = this.days();
 
     for (const profile of this.filteredProfiles) {
-      const row: CellData[] = [];
+      const row: ScheduleCellData[] = [];
 
       for (const day of days) {
-        const key = this.getReservationKey(profile.id, day);
-        const reservation = this.reservationMap.get(key);
+        const key = this.getScheduleKey(profile.id, day);
+        const schedule = this.scheduleMap.get(key);
 
-        row.push(this.createCellData(day, reservation));
+        row.push(this.createScheduleCellData(day, schedule));
       }
 
       grid.push(row);
@@ -825,7 +881,7 @@ export class WorkScheduleComponent {
     });
   }
 
-  private getExportMatrix(startDate: Date, endDate: Date): CellData[][] {
+  private getExportMatrix(startDate: Date, endDate: Date): ScheduleCellData[][] {
     const days = this.days();
     const startIndex = days.findIndex(d => this.isSameDay(d, startDate));
     const endIndex = days.findIndex(d => this.isSameDay(d, endDate));
@@ -845,7 +901,7 @@ export class WorkScheduleComponent {
           a.getDate() === b.getDate();
   }
 
-  private getReservationKey(profileId: string, date: Date): string {
+  private getScheduleKey(profileId: string, date: Date): string {
     return `${profileId}-${date.getTime()}`;
   }
 
@@ -869,7 +925,7 @@ export class WorkScheduleComponent {
     return `\nFrom: ${resStartDate.toLocaleDateString()}` + `\nTo: ${resEndDate.toLocaleDateString()}`;
   }
 
-  private createCellData(day: Date, schedule?: ProfileWorkSchedule): CellData {
+  private createScheduleCellData(day: Date, schedule?: ProfileWorkSchedule): ScheduleCellData {
     let workDay;
     if(schedule){
       workDay = this.profileWorkDays.find(workDay =>
@@ -879,7 +935,7 @@ export class WorkScheduleComponent {
       );
     }
 
-    const cellData: CellData = {
+    const SchedulecellData: ScheduleCellData = {
       isReserved: false,
       color: '',
       displayText: workDay ? (workDay.start_time.slice(0, 5) + ' - ' + workDay.end_time.slice(0, 5)) : '',
@@ -888,13 +944,14 @@ export class WorkScheduleComponent {
       isToday: this.isToday(day),
       isSaturday: this.isSaturday(day),
       isSunday: this.isSunday(day),
-      isReservationStart: false,
-      isReservationMiddle: false,
-      isReservationEnd: false
+      isScheduleStart: false,
+      isScheduleMiddle: false,
+      isScheduleEnd: false,
+      isForDelete: false,
     };
 
     if (schedule) {
-      cellData.color = this.createColor(schedule.color);
+      SchedulecellData.color = this.createColor(schedule.color);
 
       // Calculate display text - ensure single line
       const startDate = new Date(schedule.start_date);
@@ -904,30 +961,30 @@ export class WorkScheduleComponent {
       const checkDate = new Date(day);
       checkDate.setHours(0, 0, 0, 0);
 
-      // Determine if this cell is the start, middle, or end of a reservation
-      cellData.isReservationStart = checkDate.getTime() === startDate.getTime();
-      cellData.isReservationEnd = checkDate.getTime() === endDate.getTime();
-      cellData.isReservationMiddle = checkDate > startDate && checkDate < endDate;
+      // Determine if this cell is the start, middle, or end of a schedule
+      SchedulecellData.isScheduleStart = checkDate.getTime() === startDate.getTime();
+      SchedulecellData.isScheduleEnd = checkDate.getTime() === endDate.getTime();
+      SchedulecellData.isScheduleMiddle = checkDate > startDate && checkDate < endDate;
 
       if (schedule.start_date == schedule.end_date) {
-        // Single day reservation is both start and end
-        cellData.isReservationStart = true;
-        cellData.isReservationEnd = true;
-        cellData.isReservationMiddle = false;
+        // Single day schedule is both start and end
+        SchedulecellData.isScheduleStart = true;
+        SchedulecellData.isScheduleEnd = true;
+        SchedulecellData.isScheduleMiddle = false;
       } else {
         const secondDay = new Date(startDate);
         secondDay.setDate(secondDay.getDate() + 1);
         secondDay.setHours(0, 0, 0, 0);
       }
 
-      cellData.tooltip = this.createTooltip(schedule);
+      SchedulecellData.tooltip = this.createTooltip(schedule);
 
       // Set identifier
-      cellData.identifier = `res-${schedule.id}-${new Date(schedule.start_date).getTime()}`;
-      cellData.isReserved = true;
+      SchedulecellData.identifier = `res-${schedule.id}-${new Date(schedule.start_date).getTime()}`;
+      SchedulecellData.isReserved = true;
     }
 
-    return cellData;
+    return SchedulecellData;
   }
 
   private generateDays(): Date[] {
@@ -962,48 +1019,41 @@ export class WorkScheduleComponent {
   }
 
   handleEditProfileWorkSchedule(row: number, col: number): void {
-    this.showReservationForm = false;
+    this.showScheduleForm = false;
     const days = this.days();
 
     if (this.filteredProfiles.length > row && days.length > col) {
       const profile = this.filteredProfiles[row];
       const day = days[col];
 
-      const key = this.getReservationKey(profile.id, day);
-      const reservation = this.reservationMap.get(key);
-      if (!reservation) return;
+      const key = this.getScheduleKey(profile.id, day);
+      const schedule = this.scheduleMap.get(key);
+      if (!schedule) return;
 
       this.selectedProfileId = profile.id;
       this.selectedProfile = this.filteredProfiles.find((profile) => profile.id == this.selectedProfileId);
 
-      const startDate = new Date(reservation.start_date);
-      const endDate = new Date(reservation.end_date);
+      const startDate = new Date(schedule.start_date);
+      const endDate = new Date(schedule.end_date);
 
       this.selectedStartDate = startDate;
       this.selectedEndDate = endDate;
 
-      this.editingReservation = { ...reservation };
+      this.editingSchedule = { ...schedule };
 
       this.updateNextProfileScheduleDate();
 
       setTimeout(() => {
-        if (this.showReservationForm) {
-          this.showReservationForm = false;
+        if (this.showScheduleForm) {
+          this.showScheduleForm = false;
           setTimeout(() => {
-            this.showReservationForm = true;
+            this.showScheduleForm = true;
           }, 100);
         } else {
-          this.showReservationForm = true;
+          this.showScheduleForm = true;
         }
       }, 0);
     }
-  }
-
-  handleDeleteReservation(data: { scheduleId: number; profileId: string }): void {
-    const schedule = this.fullWorkSchedule.find((schedule) => schedule.id == data.scheduleId);
-    if (!schedule) return;
-
-    this.dataService.deleteProfileWorkSchedule(data.scheduleId).subscribe();
   }
 
   private formatDateToYYYYMMDD(date: Date): string {
@@ -1014,26 +1064,29 @@ export class WorkScheduleComponent {
   }
 
   async handleProfileScheduleSave(data: {profileWorkDays: ProfileWorkDay[], profileWorkSchedule: Partial<ProfileWorkSchedule>[]}) {
-    const isEditing = !!(data.profileWorkSchedule.length == 1 && data.profileWorkSchedule[0].id);
+    this.isCreatingOverlayVisible = true;
+    this.showScheduleForm = false;
 
-    this.showReservationForm = false;
+    try {
+      const isEditing =
+        data.profileWorkSchedule.length === 1 && !!data.profileWorkSchedule[0].id;
 
-    if (isEditing) {
-      for (const pws of data.profileWorkSchedule) {
-        const res = await firstValueFrom(this.dataService.updateProfileWorkSchedule(pws));
-        if(!res) continue;
+      const scheduleResults = await Promise.all(
+        data.profileWorkSchedule.map(pws =>
+          firstValueFrom(
+            isEditing
+              ? this.dataService.updateProfileWorkSchedule(pws)
+              : this.dataService.saveProfileWorkSchedule(pws)
+          )
+        )
+      );
 
-        await firstValueFrom(this.dataService.updateProfileWorkDays(data.profileWorkDays));
-      }
-    } else {
-      for (const pws of data.profileWorkSchedule) {
-        const res = await firstValueFrom(this.dataService.saveProfileWorkSchedule(pws));
-        if(!res) continue;
-
+      const allWorkDays = scheduleResults.flatMap(res => {
+        if (!res) return [];
         const start = this.toLocalMidnight(res.start_date);
         const end = this.toLocalMidnight(res.end_date);
 
-        const pwd = data.profileWorkDays
+        return data.profileWorkDays
           .filter(day => {
             const d = this.toLocalMidnight(day.day);
             return d >= start && d <= end;
@@ -1043,9 +1096,17 @@ export class WorkScheduleComponent {
             profile_id: res.profile_id,
             profile_work_schedule_id: res.id,
           }));
+      });
 
-        await firstValueFrom(this.dataService.saveProfileWorkDays(pwd));
+      if (allWorkDays.length) {
+        await firstValueFrom(this.dataService.saveProfileWorkDays(allWorkDays));
       }
+
+      console.log('Schedules and work days saved successfully.');
+    } catch (err) {
+      console.error('Error saving schedules/work days:', err);
+    } finally {
+      this.isCreatingOverlayVisible = false;
     }
   }
 
@@ -1056,12 +1117,12 @@ export class WorkScheduleComponent {
   }
 
   handleVisibilityChange(isVisible: boolean): void {
-    this.showReservationForm = isVisible;
+    this.showScheduleForm = isVisible;
 
     if (!isVisible) {
       setTimeout(() => {
-        this.editingReservation = undefined;
-        this.selectedReservationId = null;
+        this.editingSchedule = undefined;
+        this.selectedScheduleId = null;
         this.selectedProfile = undefined;
         
         this.clearSelection();
@@ -1092,13 +1153,13 @@ export class WorkScheduleComponent {
     }
   }
 
-  private findNextProfileSchedule(profileId: string, afterDate: Date, excludeReservationId?: number): ProfileWorkSchedule | null {
+  private findNextProfileSchedule(profileId: string, afterDate: Date, excludeScheduleId?: number): ProfileWorkSchedule | null {
     const schedule = this.fullWorkSchedule;
     const afterDateMs = new Date(afterDate).setHours(0, 0, 0, 0);
 
     const futureSchedule = schedule.filter((schedule) => {
       if (schedule.profile_id !== profileId) return false;
-      if (excludeReservationId && schedule.id == excludeReservationId) return false;
+      if (excludeScheduleId && schedule.id == excludeScheduleId) return false;
       const startDateMs = new Date(schedule.start_date).setHours(0, 0, 0, 0);
 
       return startDateMs > afterDateMs;
@@ -1115,7 +1176,7 @@ export class WorkScheduleComponent {
     return null;
   }
 
-  hasCellReservation(row: number, col: number): boolean {
+  hasCellSchedule(row: number, col: number): boolean {
     if (row < 0 || col < 0) return false;
 
     const grid = this.gridMatrix();
@@ -1190,7 +1251,7 @@ export class WorkScheduleComponent {
   // Handle mouse move to update selection range
   onCellMouseMove(event: MouseEvent, row: number, col: number): void {
     if (this.isSelecting && row === this.selectedCellRowIndex()) {
-      if (this.hasCellReservation(row, col)) return;
+      if (this.hasCellSchedule(row, col)) return;
       // if (this.isCellInPast(col)) return;
 
       const startCol = this.selectedStartColIndex();
@@ -1199,22 +1260,22 @@ export class WorkScheduleComponent {
 
       // Check if any cells in the potential range have reservations or are in the past
       for (let checkCol = minCol; checkCol <= maxCol; checkCol++) {
-        if (this.hasCellReservation(row, checkCol)) {
-          // If a reservation or past date is found in the range, limit the selection
+        if (this.hasCellSchedule(row, checkCol)) {
+          // If a schedule or past date is found in the range, limit the selection
           if (col > startCol) {
-            // Moving right - limit to the column before the reservation/past date
+            // Moving right - limit to the column before the schedule/past date
             let lastValidCol = startCol;
             for (let c = startCol + 1; c < checkCol; c++) {
-              if (!this.hasCellReservation(row, c)) {
+              if (!this.hasCellSchedule(row, c)) {
                 lastValidCol = c;
               }
             }
             this.selectedEndColIndex.set(lastValidCol);
           } else {
-            // Moving left - limit to the column after the reservation/past date
+            // Moving left - limit to the column after the schedule/past date
             let lastValidCol = startCol;
             for (let c = startCol - 1; c > checkCol; c--) {
-              if (!this.hasCellReservation(row, c)) {
+              if (!this.hasCellSchedule(row, c)) {
                 lastValidCol = c;
               }
             }
@@ -1256,31 +1317,99 @@ export class WorkScheduleComponent {
       }
 
       if(this.isDeleteMode){
-        const key = this.getReservationKey(profile.id, day);
-        const schedule = this.reservationMap.get(key);
-
-        if(!schedule?.id){
-          this.clearSelection();
-          return;
-        } 
-
-        this.handleDeleteReservation({ scheduleId: schedule?.id, profileId: this.selectedProfileId });
+        this.toggleDeleteSchedule(row, col);
         this.clearSelection();
+
         return;
       }
 
-      this.openReservationForm(profile, dateRange.startDate, dateRange.endDate, row, day);
+      this.openScheduleForm(profile, dateRange.startDate, dateRange.endDate, row, day);
     });
   }
 
-  private openReservationForm(profile: Profile, startDate: Date, endDate: Date, row: number, day: Date): void {
-    this.editingReservation = undefined;
+  private toggleDeleteSchedule(row: number, col: number): void {
+    const grid = this.gridMatrix();
+    const cell = grid[row][col];
 
-    const key = this.getReservationKey(profile.id, day);
-    const schedule = this.reservationMap.get(key);
+    if (!cell.isReserved) return;
+
+    const profile = this.filteredProfiles[row];
+    const day = this.days()[col];
+    const key = this.getScheduleKey(profile.id, day);
+    const schedule = this.scheduleMap.get(key);
+
+    if (!schedule?.id) return;
+
+    const isAlreadyDeleted = this.schedulesToDelete.some(sch => sch.id === schedule.id);
+
+    if (isAlreadyDeleted) {
+      for (let j = 0; j < grid[row].length; j++) {
+        const k = this.getScheduleKey(profile.id, this.days()[j]);
+        if (this.scheduleMap.get(k)?.id === schedule.id) {
+          grid[row][j].color = this.scheduleMap.get(k)?.color ?? 'lightblue';
+        }
+      }
+      this.schedulesToDelete = this.schedulesToDelete.filter(sch => sch.id !== schedule.id);
+    } else {
+      for (let j = 0; j < grid[row].length; j++) {
+        const k = this.getScheduleKey(profile.id, this.days()[j]);
+        if (this.scheduleMap.get(k)?.id === schedule.id) {
+          grid[row][j].color = 'red';
+        }
+      }
+      this.schedulesToDelete.push({ ...schedule });
+    }
+
+    this.gridMatrix.set([...grid]);
+  }
+
+  handleDeleteSchedule(scheduleId: number): void {
+    const schedule = this.fullWorkSchedule.find((schedule) => schedule.id == scheduleId);
+    if (!schedule) return;
+
+    this.dataService.deleteProfileWorkSchedule(scheduleId).subscribe();
+  }
+
+  async deleteSelectedSchedules(){
+    if (!this.schedulesToDelete?.length) {
+      this.cancelQuickDelete();
+      return;
+    }
+
+    this.isDeletingOverlayVisible = true;
+
+    const schedulesToDeleteIds: number[] = this.schedulesToDelete
+      .map(std => std.id)       
+      .filter((id): id is number => id !== undefined);  
+
+    if (!schedulesToDeleteIds.length) {
+      this.cancelQuickDelete();
+      return;
+    };
+
+    try {
+      await this.dataService.deleteProfileWorkSchedules(schedulesToDeleteIds);
+    } catch(err) {
+      console.error('Error deleting schedules:', err);
+    } finally {
+      this.cancelQuickDelete();
+      this.isDeletingOverlayVisible = false;
+    }
+  }
+
+  cancelQuickDelete(){
+    this.isDeleteMode = false;
+    this.schedulesToDelete = [];
+  }
+
+  private openScheduleForm(profile: Profile, startDate: Date, endDate: Date, row: number, day: Date): void {
+    this.editingSchedule = undefined;
+
+    const key = this.getScheduleKey(profile.id, day);
+    const schedule = this.scheduleMap.get(key);
 
     if (schedule) {
-      this.selectedReservationId = schedule.id!;
+      this.selectedScheduleId = schedule.id!;
     }
 
     const formStartDate = new Date(startDate);
@@ -1307,21 +1436,21 @@ export class WorkScheduleComponent {
     }
 
     setTimeout(() => {
-      this.editingReservation = {
-        id: this.selectedReservationId ?? undefined,
+      this.editingSchedule = {
+        id: this.selectedScheduleId ?? undefined,
         profile_id: profile.id,
         start_date: schedule?.start_date.split('T')[0] ?? this.formatDateToYYYYMMDD(formStartDate),
         end_date: schedule?.end_date.split('T')[0] ?? this.formatDateToYYYYMMDD(formEndDate),
         color: schedule?.color ?? 'lightblue',
       };
 
-      if (this.showReservationForm) {
-        this.showReservationForm = false;
+      if (this.showScheduleForm) {
+        this.showScheduleForm = false;
         setTimeout(() => {
-          this.showReservationForm = true;
+          this.showScheduleForm = true;
         }, 100);
       } else {
-        this.showReservationForm = true;
+        this.showScheduleForm = true;
       }
     }, 0);
 
