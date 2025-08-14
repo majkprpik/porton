@@ -1,8 +1,3 @@
-export interface HouseAvailabilityType {
-  house_availability_type_id: number;
-  house_availability_type_name: string;
-}
-
 export interface TaskType {
   task_type_id: number;
   task_type_name: string;
@@ -92,7 +87,6 @@ export interface Task {
 export interface HouseAvailability {
   house_availability_id: number;
   house_id: number;
-  house_availability_type_id: number;
   house_availability_start_date: string;
   house_availability_end_date: string;
   has_arrived: boolean;

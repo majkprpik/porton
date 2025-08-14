@@ -14,7 +14,6 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { 
   House, 
   HouseAvailability, 
-  HouseAvailabilityType, 
   HouseType, 
   Note,
   Profile, 
@@ -40,7 +39,6 @@ export class DataService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
   private errorSubject = new BehaviorSubject<string | null>(null);
 
-  private houseAvailabilityTypesSubject = new BehaviorSubject<HouseAvailabilityType[]>([]);
   private taskTypesSubject = new BehaviorSubject<TaskType[]>([]);
   private taskProgressTypesSubject = new BehaviorSubject<TaskProgressType[]>([]);
   private houseTypesSubject = new BehaviorSubject<HouseType[]>([]);
@@ -62,7 +60,6 @@ export class DataService {
 
   loading$ = this.loadingSubject.asObservable();
   error$ = this.errorSubject.asObservable();
-  houseAvailabilityTypes$ = this.houseAvailabilityTypesSubject.asObservable();
   taskTypes$ = this.taskTypesSubject.asObservable();
   taskProgressTypes$ = this.taskProgressTypesSubject.asObservable();
   houseTypes$ = this.houseTypesSubject.asObservable();
@@ -213,32 +210,9 @@ export class DataService {
     if (this.debug) {
       //console.log('[DataService] Loading enum types...');
     }
-    this.getHouseAvailabilityTypes().subscribe();
     this.getTaskTypes().subscribe();
     this.getTaskProgressTypes().subscribe();
     this.getHouseTypes().subscribe();
-  }
-
-  getHouseAvailabilityTypes(): Observable<HouseAvailabilityType[]> {
-    this.loadingSubject.next(true);
-
-    if (this.houseAvailabilityTypesSubject.value.length > 0) {
-      this.logData('House Availability Types (cached)', this.houseAvailabilityTypesSubject.value);
-      this.loadingSubject.next(false);
-      return this.houseAvailabilityTypes$;
-    }
-
-    return from(this.supabaseService.getData('house_availability_types', this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          this.houseAvailabilityTypesSubject.next(data);
-          this.logData('House Availability Types (loaded)', data);
-        }
-      }),
-      map((data) => data || []),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
   }
 
   getTaskTypes(): Observable<TaskType[]> {

@@ -743,34 +743,96 @@ export class Reservation2Component implements OnInit, OnDestroy {
         const formattedStartDate = this.formatDateToYYYYMMDD(startDate);
         const formattedEndDate = this.formatDateToYYYYMMDD(endDate);
         
-        // First, get the correct house availability type ID for "Occupied"
-        this.dataService.getHouseAvailabilityTypeByName("Occupied").then(occupiedType => {
-            if (!occupiedType || !occupiedType.house_availability_type_id) {
-                return;
-            }
+        if (isEditing) {
+            // We're updating an existing reservation
             
-            const availabilityTypeId = occupiedType.house_availability_type_id;
+            // Create an updated reservation with the new values
+            const updatedReservation: HouseAvailability = {
+                ...reservation,
+                // Use the formatted dates from the form data
+                house_availability_start_date: formattedStartDate,
+                house_availability_end_date: formattedEndDate,
+                reservation_length: this.calculateDaysBetween(startDate, endDate) + 1 // Include both start and end date
+            };
             
-            if (isEditing) {
-                // We're updating an existing reservation
-                
-                // Create an updated reservation with the new values
-                const updatedReservation: HouseAvailability = {
-                    ...reservation,
-                    // Use the formatted dates from the form data
-                    house_availability_start_date: formattedStartDate,
-                    house_availability_end_date: formattedEndDate,
-                    house_availability_type_id: availabilityTypeId, // Use the correct type ID
-                    reservation_length: this.calculateDaysBetween(startDate, endDate) + 1 // Include both start and end date
-                };
-                
-                // Hide the form immediately for better UX
-                this.showReservationForm.set(false);
-                
-                // Then send to backend using the updateHouseAvailability method
-                this.dataService.updateHouseAvailability(updatedReservation).subscribe({
-                    next: (savedReservation: HouseAvailability | null) => {
-                        // Force a complete reload of all availabilities to ensure we have the latest data
+            // Hide the form immediately for better UX
+            this.showReservationForm.set(false);
+            
+            // Then send to backend using the updateHouseAvailability method
+            this.dataService.updateHouseAvailability(updatedReservation).subscribe({
+                next: (savedReservation: HouseAvailability | null) => {
+                    // Force a complete reload of all availabilities to ensure we have the latest data
+                    forkJoin({
+                        temp: this.dataService.loadTempHouseAvailabilities(),
+                        main: this.dataService.loadHouseAvailabilities(),
+                    }).subscribe( ({temp, main}) => {
+                        const combined = [...main, ...temp];
+                        this.houseAvailabilities.set(combined);
+                        this.updateGridMatrix();
+                    });
+                },
+                error: (error: any) => {
+                    console.error("Error updating reservation:", error);
+                    // Force a reload anyway to ensure we have consistent data
+                    forkJoin({
+                        temp: this.dataService.loadTempHouseAvailabilities(),
+                        main: this.dataService.loadHouseAvailabilities(),
+                    }).subscribe( ({temp, main}) => {
+                        const combined = [...main, ...temp];
+                        this.houseAvailabilities.set(combined);
+                        this.updateGridMatrix();
+                    });
+                }
+            });
+        } else {
+            // We're creating a new reservation
+            
+            // Create a new reservation using the dates directly from the form
+            const newReservation: HouseAvailability = {
+                ...reservation,
+                house_availability_id: Math.floor(Math.random() * 100000) + 10000000, // Use a very large temporary ID
+                // Use the formatted dates from the form data
+                house_availability_start_date: formattedStartDate,
+                house_availability_end_date: formattedEndDate,
+                reservation_length: this.calculateDaysBetween(startDate, endDate) + 1 // Include both start and end date
+            };
+            
+            // Ensure all required fields have values (even if they're default/empty values)
+            if (!newReservation.has_arrived) newReservation.has_arrived = false;
+            if (!newReservation.has_departed) newReservation.has_departed = false;
+            if (!newReservation.prev_connected) newReservation.prev_connected = false;
+            if (!newReservation.next_connected) newReservation.next_connected = false;
+            if (!newReservation.color_theme && newReservation.color_theme !== 0) newReservation.color_theme = Math.floor(Math.random() * 10);
+            if (!newReservation.color_tint && newReservation.color_tint !== 0) newReservation.color_tint = 0.5;
+            if (!newReservation.adults) newReservation.adults = 0;
+            if (!newReservation.babies) newReservation.babies = 0;
+            if (!newReservation.cribs) newReservation.cribs = 0;
+            if (!newReservation.dogs_d) newReservation.dogs_d = 0;
+            if (!newReservation.dogs_s) newReservation.dogs_s = 0;
+            if (!newReservation.dogs_b) newReservation.dogs_b = 0;
+            
+            // Hide the form immediately for better UX
+            this.showReservationForm.set(false);
+
+            // Then send to backend using the DataService method
+            this.dataService.saveHouseAvailability(newReservation).subscribe({
+                next: (savedReservation: HouseAvailability | null) => {
+                    forkJoin({
+                        temp: this.dataService.loadTempHouseAvailabilities(),
+                        main: this.dataService.loadHouseAvailabilities(),
+                    }).subscribe( ({temp, main}) => {
+                        const combined = [...main, ...temp];
+                        this.houseAvailabilities.set(combined);
+
+                        setTimeout(() => {
+                            this.updateGridMatrix();
+                        }, 300);
+                    });
+                },
+                error: (error: any) => {
+                    console.error("Error saving reservation:", error);
+                    // Force a reload anyway to ensure we have consistent data
+                    this.dataService.loadHouseAvailabilities().subscribe(freshData => {
                         forkJoin({
                             temp: this.dataService.loadTempHouseAvailabilities(),
                             main: this.dataService.loadHouseAvailabilities(),
@@ -779,85 +841,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
                             this.houseAvailabilities.set(combined);
                             this.updateGridMatrix();
                         });
-                    },
-                    error: (error: any) => {
-                        console.error("Error updating reservation:", error);
-                        // Force a reload anyway to ensure we have consistent data
-                        forkJoin({
-                            temp: this.dataService.loadTempHouseAvailabilities(),
-                            main: this.dataService.loadHouseAvailabilities(),
-                        }).subscribe( ({temp, main}) => {
-                            const combined = [...main, ...temp];
-                            this.houseAvailabilities.set(combined);
-                            this.updateGridMatrix();
-                        });
-                    }
-                });
-            } else {
-                // We're creating a new reservation
-                
-                // Create a new reservation using the dates directly from the form
-                const newReservation: HouseAvailability = {
-                    ...reservation,
-                    house_availability_id: Math.floor(Math.random() * 100000) + 10000000, // Use a very large temporary ID
-                    // Use the formatted dates from the form data
-                    house_availability_start_date: formattedStartDate,
-                    house_availability_end_date: formattedEndDate,
-                    house_availability_type_id: availabilityTypeId, // Use the correct type ID
-                    reservation_length: this.calculateDaysBetween(startDate, endDate) + 1 // Include both start and end date
-                };
-                
-                // Ensure all required fields have values (even if they're default/empty values)
-                if (!newReservation.has_arrived) newReservation.has_arrived = false;
-                if (!newReservation.has_departed) newReservation.has_departed = false;
-                if (!newReservation.prev_connected) newReservation.prev_connected = false;
-                if (!newReservation.next_connected) newReservation.next_connected = false;
-                if (!newReservation.color_theme && newReservation.color_theme !== 0) newReservation.color_theme = Math.floor(Math.random() * 10);
-                if (!newReservation.color_tint && newReservation.color_tint !== 0) newReservation.color_tint = 0.5;
-                if (!newReservation.adults) newReservation.adults = 0;
-                if (!newReservation.babies) newReservation.babies = 0;
-                if (!newReservation.cribs) newReservation.cribs = 0;
-                if (!newReservation.dogs_d) newReservation.dogs_d = 0;
-                if (!newReservation.dogs_s) newReservation.dogs_s = 0;
-                if (!newReservation.dogs_b) newReservation.dogs_b = 0;
-                
-                // Hide the form immediately for better UX
-                this.showReservationForm.set(false);
-
-                // Then send to backend using the DataService method
-                this.dataService.saveHouseAvailability(newReservation).subscribe({
-                    next: (savedReservation: HouseAvailability | null) => {
-                        forkJoin({
-                            temp: this.dataService.loadTempHouseAvailabilities(),
-                            main: this.dataService.loadHouseAvailabilities(),
-                        }).subscribe( ({temp, main}) => {
-                            const combined = [...main, ...temp];
-                            this.houseAvailabilities.set(combined);
-
-                            setTimeout(() => {
-                                this.updateGridMatrix();
-                            }, 300);
-                        });
-                    },
-                    error: (error: any) => {
-                        console.error("Error saving reservation:", error);
-                        // Force a reload anyway to ensure we have consistent data
-                        this.dataService.loadHouseAvailabilities().subscribe(freshData => {
-                            forkJoin({
-                                temp: this.dataService.loadTempHouseAvailabilities(),
-                                main: this.dataService.loadHouseAvailabilities(),
-                            }).subscribe( ({temp, main}) => {
-                                const combined = [...main, ...temp];
-                                this.houseAvailabilities.set(combined);
-                                this.updateGridMatrix();
-                            });
-                        });
-                    }
-                });
-            }
-        }).catch(error => {
-            console.error("Error getting availability type:", error);
-        });
+                    });
+                }
+            });
+        }
     }
     
     handleReservationCancel(): void {
@@ -1352,48 +1339,35 @@ export class Reservation2Component implements OnInit, OnDestroy {
         
         // Use setTimeout to help avoid event listener errors with the calendar component
         setTimeout(() => {
-            // Get the correct house availability type ID for "Occupied"
-            this.dataService.getHouseAvailabilityTypeByName("Occupied").then(occupiedType => {
-                if (!occupiedType || !occupiedType.house_availability_type_id) {
-                    return;
-                }
-                
-                const availabilityTypeId = occupiedType.house_availability_type_id;
-                
-                // Now set the full reservation data with the correct type ID
-                this.editingReservation.set({
-                    house_id: house.house_id,
-                    house_availability_type_id: availabilityTypeId,
-                    house_availability_start_date: startDateString, // Use the string version
-                    house_availability_end_date: endDateString, // Use the string version
-                    color_theme: Math.floor(Math.random() * 10), // Random color theme
-                    color_tint: 0.5, // Default tint
-                    adults: 2, // Default values
-                    babies: 0,
-                    cribs: 0,
-                    has_arrived: false,
-                    has_departed: false,
-                    prev_connected: false,
-                    next_connected: false,
-                    dogs_b: 0,
-                    dogs_d: 0,
-                    dogs_s: 0,
-                });
-                
-                // Show the form
-                if (this.showReservationForm()) {
-                    // If somehow the form is still showing, reset it first
-                    this.showReservationForm.set(false);
-                    setTimeout(() => {
-                        this.showReservationForm.set(true);
-                    }, 100);
-                } else {
-                    // Normal case - just show the form
-                    this.showReservationForm.set(true);
-                }
-            }).catch(error => {
-                console.error("Error getting availability type:", error);
+            this.editingReservation.set({
+                house_id: house.house_id,
+                house_availability_start_date: startDateString, // Use the string version
+                house_availability_end_date: endDateString, // Use the string version
+                color_theme: Math.floor(Math.random() * 10), // Random color theme
+                color_tint: 0.5, // Default tint
+                adults: 2, // Default values
+                babies: 0,
+                cribs: 0,
+                has_arrived: false,
+                has_departed: false,
+                prev_connected: false,
+                next_connected: false,
+                dogs_b: 0,
+                dogs_d: 0,
+                dogs_s: 0,
             });
+            
+            // Show the form
+            if (this.showReservationForm()) {
+                // If somehow the form is still showing, reset it first
+                this.showReservationForm.set(false);
+                setTimeout(() => {
+                    this.showReservationForm.set(true);
+                }, 100);
+            } else {
+                // Normal case - just show the form
+                this.showReservationForm.set(true);
+            }
         }, 0);
         
         // Clear selection after using it

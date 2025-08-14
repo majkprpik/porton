@@ -68,7 +68,7 @@
                             [title]="day.toLocaleDateString()"
                             [ngStyle]="{'height': '30px'}"
                         >
-                            <div>{{ day | date: 'EEE' }} - {{ day | date: 'dd.M.' }}</div>
+                            <div>{{ day | date: 'EEE' }} {{ day | date: 'dd.M.' }}</div>
                         </th>
                     }
                 </tr>

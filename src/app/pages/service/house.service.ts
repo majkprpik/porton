@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { House, HouseAvailability, HouseAvailabilityType, Task, TaskProgressTypeName } from './data.models';
+import { House, HouseAvailability, Task, TaskProgressTypeName } from './data.models';
 import { combineLatest } from 'rxjs';
 import { TaskService } from './task.service';
 import { DataService } from './data.service';
@@ -9,7 +9,6 @@ import { DataService } from './data.service';
   providedIn: 'root'
 })
 export class HouseService {
-  houseAvailabilityTypes: HouseAvailabilityType[] = [];
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
   tasks: Task[] = [];
@@ -20,13 +19,11 @@ export class HouseService {
     private taskService: TaskService,
   ) {
     combineLatest([
-      this.dataService.houseAvailabilityTypes$,
       this.dataService.houseAvailabilities$,
       this.dataService.houses$,
       this.dataService.tasks$,
     ]).subscribe({
-      next: ([houseAvailabilityTypes, houseAvailabilities, houses, tasks]) => {
-        this.houseAvailabilityTypes = houseAvailabilityTypes;
+      next: ([houseAvailabilities, houses, tasks]) => {
         this.houseAvailabilities = houseAvailabilities;
         this.houses = houses;
         this.tasks = tasks;
@@ -274,24 +271,12 @@ export class HouseService {
   }
 
   async setHouseAvailabilityDeparted(houseAvailabilityId: number, state: boolean){
-    let houseAvailability;
-
-    if(state){
-      houseAvailability = this.houseAvailabilityTypes.find(ha => ha.house_availability_type_name == 'Free');
-    } else{
-      houseAvailability = this.houseAvailabilityTypes.find(ha => ha.house_availability_type_name == 'Occupied');
-    }
-
-    if(!houseAvailability)
-      return false;
-
     try {
       const { data, error } = await this.supabase.getClient()
         .schema('porton')
         .from('house_availabilities')
         .update({ 
           has_departed: state,
-          house_availability_type_id: houseAvailability.house_availability_type_id
          })
         .eq('house_availability_id', houseAvailabilityId);
 
@@ -305,24 +290,12 @@ export class HouseService {
   }
 
   async setHouseAvailabilityArrived(houseAvailabilityId: number, state: boolean){
-    let houseAvailability; 
-
-    if(state){
-      houseAvailability = this.houseAvailabilityTypes.find(ha => ha.house_availability_type_name == 'Occupied');
-    } else{
-      houseAvailability = this.houseAvailabilityTypes.find(ha => ha.house_availability_type_name == 'Free');
-    }
-    
-    if(!houseAvailability)
-      return false;
-
     try {
       const { data, error } = await this.supabase.getClient()
         .schema('porton')
         .from('house_availabilities')
         .update({ 
           has_arrived: state,
-          house_availability_type_id: houseAvailability.house_availability_type_id
          })
         .eq('house_availability_id', houseAvailabilityId);
 
