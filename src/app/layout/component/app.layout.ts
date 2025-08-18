@@ -992,7 +992,6 @@ export class AppLayout {
         private pushNotificationsService: PushNotificationsService,
         public houseService: HouseService,
         private errorLogger: ErrorLoggingService,
-        private supabaseService: SupabaseService,
     ) {
         this.captureConsoleMessages();
         this.onAppVisibilityChange();
