@@ -210,3 +210,10 @@ export enum ProfileRoles {
   KorisnickaSluzba = 'Korisnicka sluzba',
   Ostalo = 'Ostalo',
 }
+
+export enum Departments {
+  Housekeeping = 'Housekeeping',
+  Technical = 'Technical',
+  Reception = 'Reception',
+  Management = 'Management',
+}

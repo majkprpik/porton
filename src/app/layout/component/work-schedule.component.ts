@@ -1,6 +1,6 @@
 import { WorkScheduleExportFormComponent } from './work-schedule-export-form.component';
 import { Component, effect, signal } from '@angular/core';
-import { Profile, ProfileRole, ProfileRoles, ProfileWorkDay, ProfileWorkSchedule, ScheduleCellData } from '../../pages/service/data.models';
+import { Departments, Profile, ProfileRole, ProfileRoles, ProfileWorkDay, ProfileWorkSchedule, ScheduleCellData } from '../../pages/service/data.models';
 import { combineLatest, finalize, firstValueFrom, forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,31 +26,13 @@ import { TooltipModule } from 'primeng/tooltip';
       <div class="work-schedule-container">
         <div class="top">
           <div class="profile-buttons">
-            <p-button 
-              [severity]="selectedDepartment == 'all' ? 'primary': 'secondary'" 
-              [label]="'WORK-SCHEDULE.HEADER.TABS.ALL' | translate" 
-              (click)="filterProfilesByDepartment('all')"
-            ></p-button>  
-            <p-button 
-              [severity]="selectedDepartment == 'housekeeping' ? 'primary': 'secondary'" 
-              [label]="'WORK-SCHEDULE.HEADER.TABS.HOUSEKEEPING' | translate" 
-              (click)="filterProfilesByDepartment('housekeeping')"
-            ></p-button>  
-            <p-button 
-              [severity]="selectedDepartment == 'technical' ? 'primary': 'secondary'" 
-              [label]="'WORK-SCHEDULE.HEADER.TABS.TECHNICAL' | translate" 
-              (click)="filterProfilesByDepartment('technical')"
-            ></p-button>  
-            <p-button 
-              [severity]="selectedDepartment == 'reception' ? 'primary': 'secondary'" 
-              [label]="'WORK-SCHEDULE.HEADER.TABS.RECEPTION' | translate" 
-              (click)="filterProfilesByDepartment('reception')"
-            ></p-button>  
-            <p-button 
-              [severity]="selectedDepartment == 'management' ? 'primary': 'secondary'" 
-              [label]="'WORK-SCHEDULE.HEADER.TABS.MANAGEMENT' | translate" 
-              (click)="filterProfilesByDepartment('management')"
-            ></p-button>  
+            @for(department of departments; track $index){
+              <p-button 
+                [severity]="selectedDepartment == department ? 'primary': 'secondary'" 
+                [label]="'WORK-SCHEDULE.HEADER.TABS.' + (department | uppercase) | translate" 
+                (click)="filterProfilesByDepartment(department)"
+              ></p-button>  
+            }
           </div>
           <div class="schedule-buttons">
             <div 
@@ -96,34 +78,18 @@ import { TooltipModule } from 'primeng/tooltip';
                 <i class="pi pi-file-export"></i>
               </p-button>
             </div>
-            <div class="density">
-              <p-button
-                class="density-button"
-                [severity]="cellHeightInPx == 40 ? 'primary': 'secondary'" 
-                (click)="changeCellHeight(40)"
-                [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.ROW-HEIGHT-SPACIOUS' | translate" 
-                tooltipPosition="top"
-              >
-                <i class="pi pi-equals"></i>
-              </p-button>  
-              <p-button
-                class="density-button"
-                [severity]="cellHeightInPx == 30 ? 'primary': 'secondary'" 
-                (click)="changeCellHeight(30)"
-                [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.ROW-HEIGHT-COMFORTABLE' | translate" 
-                tooltipPosition="top"
-              >
-                <i class="pi pi-bars"></i>
-              </p-button>  
-              <p-button
-                class="density-button"
-                [severity]="cellHeightInPx == 25 ? 'primary': 'secondary'" 
-                (click)="changeCellHeight(25)"
-                [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.ROW-HEIGHT-COMPACT' | translate" 
-                tooltipPosition="left"
-              >
-                <i class="pi pi-align-justify"></i>
-              </p-button>  
+            <div class="density-buttons">
+              @for(densityButton of densityButtons; track $index){
+                <p-button
+                  class="density-button"
+                  [severity]="cellHeightInPx == densityButton.cellHeightPx ? 'primary': 'secondary'" 
+                  (click)="changeCellHeight(densityButton.cellHeightPx)"
+                  [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.ROW-HEIGHT-' + (densityButton.name | uppercase) | translate" 
+                  tooltipPosition="top"
+                >
+                  <i [class]="densityButton.icon"></i>
+                </p-button>  
+              }
             </div>
           </div>
         </div>
@@ -248,56 +214,6 @@ import { TooltipModule } from 'primeng/tooltip';
       </div>
     `,
   styles: `
-    .legend-container {
-      margin-bottom: 1.2rem;
-      padding: 0.8rem 1rem;
-      background-color: var(--surface-card);
-      border-radius: 6px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
-      .legend-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-
-        .legend-items {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 1rem;
-
-          .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5em;
-            font-size: 0.9em;
-            white-space: nowrap;
-
-            .legend-color {
-              display: inline-block;
-              width: 16px;
-              height: 16px;
-              border-radius: 4px;
-              margin-right: 0.3em;
-              border: 1px solid #bbb;
-            }
-
-            .legend-lightgreen {
-              background-color: #baffc9;
-            }
-
-            .legend-lightblue {
-              background-color: #bae1ff;
-            }
-
-            .legend-lightyellow {
-              background-color: #ffffba;
-            }
-          }
-        }
-      }
-    }
-
     .work-schedule-container {
       height: 88vh;
       width: 100%;
@@ -352,7 +268,7 @@ import { TooltipModule } from 'primeng/tooltip';
             }
           }
 
-          .density{
+          .density-buttons{
             display: flex;
             flex-direction: row;
             align-items: top;
@@ -757,7 +673,13 @@ export class WorkScheduleComponent {
   technicalRoles: string[] = [ProfileRoles.KucniMajstor, ProfileRoles.Odrzavanje];
   otherRoles: string[] = ['Ostalo'];
   profileRoles: ProfileRole[] = [];
-  selectedDepartment = 'all';
+  selectedDepartment = 'All';
+  departments = ['All', Departments.Housekeeping, Departments.Technical, Departments.Reception, Departments.Management];
+  densityButtons = [
+    { name: 'spacious', cellHeightPx: 40, icon: 'pi pi-equals' },
+    { name: 'comfortable', cellHeightPx: 30, icon: 'pi pi-bars' },
+    { name: 'compact', cellHeightPx: 25, icon: 'pi pi-align-justify' },
+  ];
 
   filteredProfiles: Profile[] = [];
 
@@ -814,19 +736,19 @@ export class WorkScheduleComponent {
     let filteredRoles: ProfileRole[] = [];
 
     switch(department) {
-      case 'all':
+      case 'All':
         filteredRoles = this.profileRoles;
         break;
-      case 'housekeeping':
+      case Departments.Housekeeping:
         filteredRoles = this.profileRoles.filter(role => this.housekeepingRoles.includes(role.name));
         break;
-      case 'technical':
+      case Departments.Technical:
         filteredRoles = this.profileRoles.filter(role => this.technicalRoles.includes(role.name));
         break;
-      case 'reception':
+      case Departments.Reception:
         filteredRoles = this.profileRoles.filter(role => this.receptionRoles.includes(role.name));
         break;
-      case 'management':
+      case Departments.Management:
         filteredRoles = this.profileRoles.filter(role => this.managementRoles.includes(role.name));
         break;
       default:
