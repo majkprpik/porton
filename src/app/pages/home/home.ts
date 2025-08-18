@@ -635,65 +635,70 @@ interface SpecialLocation {
                 &.available {
                     background: var(--p-green-600);
 
+                    .house-number,
+                    .house-icons i {
+                        color: white;
+                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+                    }
+                    
                     @media (prefers-color-scheme: dark) {
                         background: var(--p-green-600);
-                        .house-number,
-                        .house-icons i {
-                            color: white;
-                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
-                        }
                     }
                 }
 
                 &.occupied {
                     background: var(--p-red-600);
 
+                    .house-number,
+                    .house-icons i {
+                        color: white;
+                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+                    }
+
                     @media (prefers-color-scheme: dark) {
                         background: var(--p-red-600);
-                        .house-number,
-                        .house-icons i {
-                            color: white;
-                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
-                        }
                     }
                 }
 
                 &.available-with-arrival{
                     background: var(--p-red-400);
 
+                    .house-number,
+                    .house-icons i {
+                        color: white;
+                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+                    }
+
                     @media (prefers-color-scheme: dark) {
                         background: var(--p-red-400);
-                        .house-number,
-                        .house-icons i {
-                            color: white;
-                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
-                        }
                     }
                 }
 
                 &.occupied-without-arrival{
                     background: var(--p-green-400);
 
+                    .house-number,
+                    .house-icons i {
+                        color: white;
+                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+                    }
+
                     @media (prefers-color-scheme: dark) {
                         background: var(--p-green-400);
-                        .house-number,
-                        .house-icons i {
-                            color: white;
-                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
-                        }
                     }
                 }
 
                 &.available-with-tasks {
                     background: var(--p-yellow-400);
 
+                    .house-number,
+                    .house-icons i {
+                        color: white;
+                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+                    }
+
                     @media (prefers-color-scheme: dark) {
                         background: var(--p-yellow-400);
-                        .house-number,
-                        .house-icons i {
-                            color: white;
-                            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
-                        }
                     }
                 }
 
