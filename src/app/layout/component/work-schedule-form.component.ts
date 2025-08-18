@@ -10,7 +10,7 @@ import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { MultiSelect } from 'primeng/multiselect';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DataService } from '../../pages/service/data.service';
@@ -469,35 +469,54 @@ export class WorkScheduleFormComponent {
   @Output() save = new EventEmitter<{ profileWorkDays: ProfileWorkDay[]; profileWorkSchedule: Partial<ProfileWorkSchedule>[] }>();
   @Output() delete = new EventEmitter<number>();
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private confirmationService: ConfirmationService,
     private translateService: TranslateService,
     private messageService: MessageService,
     private dataService: DataService,
-  ) {
-
-  }
+  ) {}
 
   ngOnInit() {
+    this.subscribeToDataStreams();
+    this.preSelectScheduleMode();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private subscribeToDataStreams() {
     combineLatest([
       this.dataService.profiles$,
-      this.dataService.profileWorkDays$,
-    ]).subscribe(([profiles, pwd]) => {
-      this.profiles = profiles;
-      this.profileWorkDays = pwd;
-      this.availableProfiles = this.getAvailableProfiles();
-      this.profile = profiles.find(profile => profile.id == this.profileId);
+      this.dataService.profileWorkDays$
+    ])
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: ([profiles, profileWorkDays]) => {
+        this.profiles = profiles;
+        this.profileWorkDays = profileWorkDays;
 
-      if(this.profile && !this.selectedProfilesForSchedule.some(sp => sp == this.profile?.id)){
-        this.selectedProfilesForSchedule.push(this.profile.id);
+        this.availableProfiles = this.getAvailableProfiles();
+        this.profile = this.profiles.find(p => p.id === this.profileId);
+
+        this.addProfileToSelectedIfMissing();
+        this.setProfileWorkDays();
+        this.getAvailableProfiles();
+        this.setInitData();
+      },
+      error: (error) => {
+        console.error('Error loading profiles or workdays:', error);
       }
-
-      this.setProfileWorkDays();
-      this.getAvailableProfiles();
-      this.setInitData();
     });
+  }
 
-    this.preSelectScheduleMode();
+  private addProfileToSelectedIfMissing() {
+    if (this.profile && !this.selectedProfilesForSchedule.includes(this.profile.id)) {
+      this.selectedProfilesForSchedule.push(this.profile.id);
+    }
   }
 
   isEditing(){

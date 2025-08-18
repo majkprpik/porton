@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { House, HouseAvailability, Task, TaskType, HouseType } from '../service/data.models';
-import { combineLatest, Subscription } from 'rxjs';
+import { combineLatest, Subject, Subscription, takeUntil } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -903,7 +903,6 @@ export class Home implements OnInit, OnDestroy {
     filteredHouses = signal<House[]>([]);
     houseAvailabilities = signal<HouseAvailability[]>([]);
     houseTypes = signal<HouseType[]>([]);
-    private subscriptions: Subscription[] = [];
     expandedHouseId: number | null = null;
     currentReservationIndex = new Map<number, number>();
     
@@ -944,6 +943,8 @@ export class Home implements OnInit, OnDestroy {
 
     pinnedCharts: string[] = [];
 
+    private destroy$ = new Subject<void>();
+
     constructor(
         private dataService: DataService,
         public taskService: TaskService,
@@ -952,40 +953,56 @@ export class Home implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.layoutService.$chartToRemove.subscribe(chartToRemove => {
-            this.pinnedCharts = this.pinnedCharts.filter(pinnedChart => pinnedChart != chartToRemove);
-        });
-
+        this.monitorChartRemovals();
         this.loadPinnedCharts();
+        this.monitorTasksAndUrgentIcons();
+        this.subscribeToDataStreams();
+    }
 
-        this.subscriptions.push(
-            combineLatest([
-                this.dataService.tasks$,
-                this.taskService.isUrgentIconVisible$
-            ]).subscribe(([tasks, visible]) => {
-                this.tasks = tasks;
-                this.isUrgentIconVisibleMap = {};
-                this.setUrgentIconsMap(visible);
-            })
-        );
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
 
-        this.subscriptions.push(
-            combineLatest([
-                this.dataService.houseAvailabilities$,
-                this.dataService.houseTypes$,
-                this.dataService.houses$
-            ]).subscribe(([availabilities, houseTypes, houses]) => {
-                this.houseAvailabilities.set(availabilities);
-                this.houseTypes.set(houseTypes);
-            
-                const filteredHouses = houses.filter(h => h.house_number > 0);
-                this.houses.set(filteredHouses);
-                this.filteredHouses.set(filteredHouses);
-            
-                this.updateLocationOptions();
-                this.applyFilters();
-            })
-        );
+    private monitorChartRemovals() {
+        this.layoutService.$chartToRemove
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(chartToRemove => {
+            this.pinnedCharts = this.pinnedCharts.filter(pinnedChart => pinnedChart !== chartToRemove);
+        });
+    }
+
+    private monitorTasksAndUrgentIcons() {
+        combineLatest([
+            this.dataService.tasks$,
+            this.taskService.isUrgentIconVisible$
+        ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(([tasks, visible]) => {
+            this.tasks = tasks;
+            this.isUrgentIconVisibleMap = {};
+            this.setUrgentIconsMap(visible);
+        });
+    }
+
+    private subscribeToDataStreams() {
+        combineLatest([
+            this.dataService.houseAvailabilities$,
+            this.dataService.houseTypes$,
+            this.dataService.houses$
+        ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(([availabilities, houseTypes, houses]) => {
+            this.houseAvailabilities.set(availabilities);
+            this.houseTypes.set(houseTypes);
+
+            const filteredHouses = houses.filter(h => h.house_number > 0);
+            this.houses.set(filteredHouses);
+            this.filteredHouses.set(filteredHouses);
+
+            this.updateLocationOptions();
+            this.applyFilters();
+        });
     }
 
     setUrgentIconsMap(visible: boolean){
@@ -1376,10 +1393,6 @@ export class Home implements OnInit, OnDestroy {
     openTaskDetails(event: Event, task: any) {
         event.stopPropagation();
         this.taskService.$taskModalData.next(task);
-    }
-
-    ngOnDestroy(): void {
-        this.subscriptions.forEach((sub) => sub.unsubscribe());
     }
 
     applyFilters() {

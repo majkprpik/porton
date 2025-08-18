@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { TaskGroupComponent } from './task-group';
 import { Task, House, WorkGroupTask, TaskProgressTypeName } from '../service/data.models';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
@@ -110,6 +110,8 @@ export class TasksComponent implements OnInit {
   houses: House[] = [];
   filteredTasks: Task[] = [];
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private dataService: DataService,
     private workGroupService: WorkGroupService,
@@ -117,12 +119,20 @@ export class TasksComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.subscribeToData();
+    this.subscribeToTaskRemoval();
+    this.subscribeToTaskSelection();
+  }
+
+  private subscribeToData() {
     combineLatest([
       this.dataService.tasks$,
       this.dataService.houses$,
       this.dataService.workGroupTasks$,
       this.workGroupService.activeGroupId$
-    ]).subscribe({
+    ])
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: ([tasks, houses, workGroupTasks, activeGroupId]) => {
         this.tasks = tasks;
         this.houses = houses;
@@ -137,55 +147,63 @@ export class TasksComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
 
-    this.taskService.$taskToRemove.subscribe(taskToRemove => {
-      if(!taskToRemove) return;
+  private subscribeToTaskRemoval() {
+    this.taskService.$taskToRemove
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(taskToRemove => {
+        if (!taskToRemove) return;
 
-      const notAssignedTaskProgressType = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.NotAssigned);
-      if(!notAssignedTaskProgressType) return;
-      
-      this.tasks = this.tasks.map(task => {
-        if(task.task_id == taskToRemove.task_id){
-          return {
-            ...task,
-            task_progress_type_id: notAssignedTaskProgressType.task_progress_type_id
-          }
-        } else {
-          return task;
-        }
+        const notAssignedType = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.NotAssigned);
+        if (!notAssignedType) return;
+
+        this.tasks = this.tasks.map(task =>
+          task.task_id === taskToRemove.task_id
+            ? { ...task, task_progress_type_id: notAssignedType.task_progress_type_id }
+            : task
+        );
+        this.dataService.setTasks(this.tasks);
+
+        this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id !== taskToRemove.task_id);
+        this.dataService.setWorkGroupTasks(this.workGroupTasks);
+
+        this.taskService.$taskToRemove.next(null);
       });
+  }
 
-      this.dataService.setTasks(this.tasks);
+  private subscribeToTaskSelection() {
+    this.taskService.$selectedTask
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(taskToAdd => {
+        if (!taskToAdd || !this.activeWorkGroupId) return;
 
-      this.workGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != taskToRemove.task_id);
-      this.dataService.setWorkGroupTasks(this.workGroupTasks);
+        const assignedType = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Assigned);
+        if (!assignedType) return;
 
-      this.taskService.$taskToRemove.next(null);
-    });
+        this.workGroupTasks = [
+          ...this.workGroupTasks,
+          {
+            work_group_id: this.activeWorkGroupId,
+            task_id: taskToAdd.task_id,
+            index: this.workGroupTasks.filter(wgt => wgt.work_group_id === this.activeWorkGroupId).length,
+          }
+        ];
 
-    this.taskService.$selectedTask.subscribe(taskToAdd => {
-      if (!taskToAdd || !this.activeWorkGroupId) return;
+        this.tasks = this.tasks.map(t =>
+          t.task_id === taskToAdd.task_id
+            ? { ...t, task_progress_type_id: assignedType.task_progress_type_id }
+            : t
+        );
+        this.dataService.setTasks(this.tasks);
 
-      const assignedTaskProgressType = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Assigned);
+        this.taskService.$selectedTask.next(null);
+      });
+  }
 
-      if(!assignedTaskProgressType) return;
-  
-      this.workGroupTasks = [...this.workGroupTasks, {
-        work_group_id: this.activeWorkGroupId,
-        task_id: taskToAdd.task_id,
-        index: this.workGroupTasks.filter(wgt => wgt.work_group_id == this.activeWorkGroupId).length,
-      }];
-
-      this.tasks = this.tasks.map(t => 
-        t.task_id === taskToAdd.task_id ? { 
-          ...t, 
-          task_progress_type_id: assignedTaskProgressType.task_progress_type_id 
-        } : t
-      );
-      
-      this.dataService.setTasks(this.tasks);
-      this.taskService.$selectedTask.next(null);
-    });
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get hasActiveWorkGroup(): boolean {

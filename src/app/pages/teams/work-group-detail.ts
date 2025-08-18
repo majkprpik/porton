@@ -5,7 +5,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
 import { WorkGroup, Profile, Task, House, HouseAvailability, WorkGroupProfile, WorkGroupTask, TaskProgressTypeName } from '../service/data.models';
 import { ActivatedRoute, Router } from '@angular/router';
-import { combineLatest, Subscription } from 'rxjs';
+import { combineLatest, Subject, Subscription, takeUntil } from 'rxjs';
 import { HouseService } from '../service/house.service';
 import { TaskService } from '../service/task.service';
 import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
@@ -545,6 +545,8 @@ export class WorkGroupDetail implements OnInit {
     storedUserId: string | null = '';
     workGroups: WorkGroup[] = [];
 
+    private destroy$ = new Subject<void>();
+
     constructor(
         private route: ActivatedRoute,
         private dataService: DataService,
@@ -565,7 +567,9 @@ export class WorkGroupDetail implements OnInit {
             this.dataService.profiles$,
             this.dataService.houses$,
             this.dataService.houseAvailabilities$
-        ]).subscribe({
+        ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
             next: ([workGroups, workGroupTasks, tasks, workGroupProfiles, profiles, houses, houseAvailabilities]) => {
                 const workGroupId = Number(this.route.snapshot.paramMap.get('id'));
                 this.storedUserId = this.authService.getStoredUserId();
@@ -579,7 +583,7 @@ export class WorkGroupDetail implements OnInit {
                 this.workGroupProfiles = workGroupProfiles;
                 this.workGroups = workGroups;
 
-                this.assignedTasks = this.getAssignedTasks(workGroupId)
+                this.assignedTasks = this.getAssignedTasks(workGroupId);
                 this.assignedProfiles = this.getAssignedProfiles(workGroupId);
 
                 if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isCustomerService(this.storedUserId)) {
@@ -594,6 +598,13 @@ export class WorkGroupDetail implements OnInit {
                 this.loading = false;
             }
         });
+    }
+
+    ngOnDestroy() {
+        this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
+
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     getAssignedTasks(workGroupId: number){
@@ -630,10 +641,6 @@ export class WorkGroupDetail implements OnInit {
           this.urgentIconSubscriptions.push(sub);
         }
       });
-    }
-
-    ngOnDestroy() {
-      this.urgentIconSubscriptions.forEach(sub => sub.unsubscribe());
     }
 
     getActionButtonLabel(task: Task): string {

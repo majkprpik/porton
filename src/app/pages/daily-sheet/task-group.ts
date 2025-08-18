@@ -4,7 +4,7 @@ import { TaskCardComponent } from './task-card';
 import { Task, TaskProgressTypeName, TaskType, WorkGroupTask } from '../service/data.models';
 import { PanelModule } from 'primeng/panel';
 import { BadgeModule } from 'primeng/badge';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { TaskService } from '../service/task.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { DataService } from '../service/data.service';
@@ -132,6 +132,8 @@ export class TaskGroupComponent implements OnInit {
   @Input() tasks: Task[] = [];
   @Input() canAssignTasks: boolean = false;
   @Output() taskAssigned = new EventEmitter<Task>();
+
+  private destroy$ = new Subject<void>();
   
   workGroupTasks: WorkGroupTask[] = [];
 
@@ -141,14 +143,28 @@ export class TaskGroupComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.subscribeToDataStreams();
+  }
+
+  private subscribeToDataStreams() {
     combineLatest([
       this.dataService.workGroupTasks$,
-    ]).subscribe({
-      next: ([workGroupTasks]) => {
-        this.workGroupTasks = workGroupTasks;
-      }
-    });
-  } 
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ([workGroupTasks]) => {
+          this.workGroupTasks = workGroupTasks;
+        },
+        error: (error) => {
+          console.error('Error loading work group tasks:', error);
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   get filteredTasks(): Task[] {
     return this.tasks.filter(task => 

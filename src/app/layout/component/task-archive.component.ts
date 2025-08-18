@@ -7,7 +7,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { DataService } from '../../pages/service/data.service';
 
 @Component({
@@ -154,24 +154,47 @@ export class TaskArchiveComponent {
 
   houses: House[] = [];
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private dataService: DataService,
     public taskService: TaskService,
-  ) {
+  ) {}
+
+  ngOnInit() {
+    this.subscribeToDataStreams();
+  }
+
+  private subscribeToDataStreams() {
     combineLatest([
       this.dataService.tasks$,
       this.dataService.houses$
-    ]).subscribe(([tasks, houses]) => {
-      this.tasks = tasks;
-      this.houses = houses;
+    ])
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: ([tasks, houses]) => {
+        this.tasks = tasks;
+        this.houses = houses;
 
-      this.completedTasks = this.tasks
-        .filter(task => this.taskService.isTaskCompleted(task))
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      this.filteredTasks = this.completedTasks;
-      this.filterTasks();
+        this.completedTasks = this.getCompletedTasks(tasks);
+        this.filteredTasks = [...this.completedTasks];
+        this.filterTasks();
+      },
+      error: (error) => {
+        console.error('Error loading tasks or houses:', error);
+      }
     });
+  }
+
+  private getCompletedTasks(tasks: any[]): any[] {
+    return tasks
+      .filter(task => this.taskService.isTaskCompleted(task))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   areDatesEqual(date1: string, date2: string){

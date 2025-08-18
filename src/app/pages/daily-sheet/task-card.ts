@@ -4,7 +4,7 @@ import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { Task } from '../service/data.models';
 import { TaskService } from '../service/task.service';
 import { WorkGroupService } from '../service/work-group.service';
-import { Subscription } from 'rxjs';
+import { Subject, Subscription, takeUntil } from 'rxjs';
 import { HouseService } from '../service/house.service';
 import { DataService } from '../service/data.service';
 
@@ -159,6 +159,8 @@ export class TaskCardComponent {
 
   @Output() removeFromGroup = new EventEmitter<void>();
 
+  private destroy$ = new Subject<void>();
+
   private urgentIconSubscription?: Subscription;
   isUrgentIconVisible = false;
 
@@ -174,18 +176,22 @@ export class TaskCardComponent {
   }
 
   ngOnInit(){
-    if(this.task?.is_unscheduled){
-      this.urgentIconSubscription = this.taskService.isUrgentIconVisible$.subscribe((visible) => {
-        this.isUrgentIconVisible = visible;
-      });
-    }
-
+    this.subscribeToUrgentIcon();
     this.taskIcon = this.taskService.getTaskIcon(this.task.task_type_id);
   }
 
   ngOnDestroy(): void {
-    if (this.urgentIconSubscription) {
-      this.urgentIconSubscription.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  subscribeToUrgentIcon(){
+    if (this.task?.is_unscheduled) {
+      this.taskService.isUrgentIconVisible$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(visible => {
+          this.isUrgentIconVisible = visible;
+        });
     }
   }
 

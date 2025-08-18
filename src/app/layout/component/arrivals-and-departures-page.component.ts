@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { combineLatest, Subscription } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { House, HouseAvailability } from '../../pages/service/data.models';
 import { HouseService } from '../../pages/service/house.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -253,13 +253,14 @@ import { DataService } from '../../pages/service/data.service';
 export class ArrivalsAndDeparturesPageComponent {
   arrivals: any[] = [];
   departures: any[] = [];
-  private subscription: Subscription | undefined;
   checkedDepartureHouseIds: number[] = [];
   checkedArrivalHouseIds: number[] = [];
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
   selectedDate: Date = new Date();
   storedUserId: string | null = '';
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private houseService: HouseService,
@@ -268,64 +269,81 @@ export class ArrivalsAndDeparturesPageComponent {
     private confirmationService: ConfirmationService,
     public profileService: ProfileService,
     private authService: AuthService,
-  ) {    
-    
-  }
+  ) {}
   
-  async ngOnInit(){
+  async ngOnInit() {
+    this.subscribeToDataStreams();
+    this.subscribeToHouseAvailabilitiesUpdate();
+  }
+
+  private subscribeToDataStreams() {
     combineLatest([
       this.dataService.houses$,
       this.dataService.houseAvailabilities$
-    ]).subscribe({
-      next: ([houses, houseAvailabilities]) => {
-        this.storedUserId = this.authService.getStoredUserId();
-        
-        this.houses = houses;
-        this.houseAvailabilities = houseAvailabilities;
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ([houses, houseAvailabilities]) => {
+          this.storedUserId = this.authService.getStoredUserId();
 
-        if(houses && houses.length > 0 && houseAvailabilities && houseAvailabilities.length > 0){
-          this.getTodaysArrivals();
-          this.getTodaysDepartures();
-        }
-      },
-      error: (error) => {
-        console.log(error);
-      }
-    });
+          this.houses = houses;
+          this.houseAvailabilities = houseAvailabilities;
 
-    this.dataService.$houseAvailabilitiesUpdate.subscribe(res => {
-      if(res && res.new.house_availability_id && res.eventType == 'UPDATE'){
-        if(this.arrivals.find(arrival => arrival.house_availability_id == res.new.house_availability_id)) {
-          let arrivalIndex = this.arrivals.findIndex(arrival => arrival.house_availability_id == res.new.house_availability_id);
-          let house = this.houses.find(house => house.house_id == res.new.house_id);
-
-          res.new = {
-            ...res.new,
-            house_number: house?.house_number,
-            arrivalTimeObj: this.getTimeObjFromTimeString(res.new.arrival_time || '16:00'),
+          if (houses?.length > 0 && houseAvailabilities?.length > 0) {
+            this.getTodaysArrivals();
+            this.getTodaysDepartures();
           }
-
-          this.arrivals[arrivalIndex] = res.new;
-          this.arrivals = [...this.arrivals];
-        } else if (this.departures.find(arrival => arrival.house_availability_id == res.new.house_availability_id)){
-          let departureIndex = this.departures.findIndex(arrival => arrival.house_availability_id == res.new.house_availability_id);
-          let house = this.houses.find(house => house.house_id == res.new.house_id);
-          
-          res.new = {
-            ...res.new,
-            house_number: house?.house_number,
-            departureTimeObj: this.getTimeObjFromTimeString(res.new.departure_time || '10:00')
-          }
-
-          this.departures[departureIndex] = res.new;
-          this.departures = [...this.departures];
+        },
+        error: (error) => {
+          console.error('Error loading data:', error);
         }
+      });
+  }
 
-        const haIndex = this.houseAvailabilities.findIndex(ha => ha.house_availability_id == res.new.house_availability_id);
-        this.houseAvailabilities[haIndex] = res.new;
-        this.dataService.setHouseAvailabilites([...this.houseAvailabilities]);
+  private subscribeToHouseAvailabilitiesUpdate() {
+    this.dataService.$houseAvailabilitiesUpdate
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => {
+        if (res && res.new.house_availability_id && res.eventType === 'UPDATE') {
+          this.handleHouseAvailabilityUpdate(res.new);
+        }
+      });
+  }
+
+  private handleHouseAvailabilityUpdate(updatedAvailability: any) {
+    const arrivalIndex = this.arrivals.findIndex(
+      arrival => arrival.house_availability_id === updatedAvailability.house_availability_id
+    );
+    if (arrivalIndex !== -1) {
+      const house = this.houses.find(h => h.house_id === updatedAvailability.house_id);
+      this.arrivals[arrivalIndex] = {
+        ...updatedAvailability,
+        house_number: house?.house_number,
+        arrivalTimeObj: this.getTimeObjFromTimeString(updatedAvailability.arrival_time || '16:00'),
       };
-    });
+      this.arrivals = [...this.arrivals];
+    }
+
+    const departureIndex = this.departures.findIndex(
+      dep => dep.house_availability_id === updatedAvailability.house_availability_id
+    );
+    if (departureIndex !== -1) {
+      const house = this.houses.find(h => h.house_id === updatedAvailability.house_id);
+      this.departures[departureIndex] = {
+        ...updatedAvailability,
+        house_number: house?.house_number,
+        departureTimeObj: this.getTimeObjFromTimeString(updatedAvailability.departure_time || '10:00'),
+      };
+      this.departures = [...this.departures];
+    }
+
+    const haIndex = this.houseAvailabilities.findIndex(
+      ha => ha.house_availability_id === updatedAvailability.house_availability_id
+    );
+    if (haIndex !== -1) {
+      this.houseAvailabilities[haIndex] = updatedAvailability;
+      this.dataService.setHouseAvailabilites([...this.houseAvailabilities]);
+    }
   }
 
   getTodaysArrivals(){
@@ -474,9 +492,8 @@ export class ArrivalsAndDeparturesPageComponent {
   }
 
   ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   async submitDepartures(event: any, departure: any) {

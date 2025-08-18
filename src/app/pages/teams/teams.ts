@@ -5,7 +5,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { WorkGroup, Profile, Task, House, LockedTeam, WorkGroupTask, WorkGroupProfile } from '../service/data.models';
 import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { TabViewModule } from 'primeng/tabview';
 import { TeamTaskCardComponent } from '../../layout/component/team-task-card.component';
 import { PanelModule } from 'primeng/panel';
@@ -322,6 +322,8 @@ export class Teams implements OnInit {
 
     routeId: string | null = null;
 
+    private destroy$ = new Subject<void>();
+
     get cleaningGroups() {
         return this.workGroups
             .filter(g => !g.is_repair)
@@ -340,9 +342,7 @@ export class Teams implements OnInit {
         public authService: AuthService,
         public profileService: ProfileService,
         private router: Router,
-    ) {
-
-    }
+    ) {}
 
     ngOnInit() {
         combineLatest([
@@ -352,7 +352,9 @@ export class Teams implements OnInit {
             this.dataService.profiles$,
             this.dataService.houses$,
             this.dataService.workGroupTasks$
-        ]).subscribe({
+        ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
             next: ([workGroups, tasks, workGroupProfiles, profiles, houses, workGroupTasks]) => {
                 this.storedUserId = this.authService.getStoredUserId();
                 this.workGroups = workGroups;
@@ -373,6 +375,11 @@ export class Teams implements OnInit {
                 this.loading = false;
             }
         });
+    }
+
+    ngOnDestroy() {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     getAssignedTasks(workGroupId: number): Task[] {

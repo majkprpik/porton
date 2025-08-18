@@ -15,7 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { ProfileService } from '../../pages/service/profile.service';
 import { PushNotificationsService } from '../../pages/service/push-notifications.service';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { SupabaseService } from '../../pages/service/supabase.service';
 import { DataService } from '../../pages/service/data.service';
 
@@ -97,6 +97,8 @@ export class AppTopbar {
     storedUserId: string | null = '';
 
     selectedLanguage: Language = { code: '', name: ''};
+    
+    private destroy$ = new Subject<void>();
 
     constructor(
         public layoutService: LayoutService,
@@ -107,15 +109,20 @@ export class AppTopbar {
         public profileService: ProfileService,
         private pushNotificationService: PushNotificationsService,
         private supabaseService: SupabaseService,
-    ) {
+    ) {}
+
+    ngOnInit() {
+        this.subscribeToProfileData();
     }
 
-    ngOnInit(){
+    private subscribeToProfileData() {
         combineLatest([
             this.languageService.$selectedLanguage,
             this.dataService.profiles$,
             this.dataService.profileRoles$
-        ]).subscribe({
+        ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
             next: ([selectedLanguage, profiles, profileRoles]) => {
                 this.storedUserId = this.authService.getStoredUserId();
                 this.selectedLanguage = selectedLanguage;
@@ -126,6 +133,11 @@ export class AppTopbar {
                 console.error('Error in combineLatest:', error);
             }
         });
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     changeLanguage(){

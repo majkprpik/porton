@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { ProfileRole, ProfileRoles } from '../../pages/service/data.models';
 import { ProfileService } from '../../pages/service/profile.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -26,40 +26,60 @@ import { DataService } from '../../pages/service/data.service';
 export class AppMenu implements OnInit {
     model: MenuItem[] = [];
     profileRoles: ProfileRole[] = [];
+    
+    private destroy$ = new Subject<void>();
 
     constructor(
         private dataService: DataService,
         private profileService: ProfileService,
         private translateService: TranslateService,
-    ) {
-        
-    }
+    ) {}
 
     ngOnInit() {
+        this.subscribeToDataStreams();
+        this.subscribeToProfileForLocalStorage();
+        this.subscribeToLangChange();
+    }
+
+    private subscribeToDataStreams() {
         combineLatest([
             this.dataService.profileRoles$,
-        ]).subscribe({
+        ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
             next: ([profileRoles]) => {
                 this.profileRoles = profileRoles;
-
-                if(this.profileRoles.length > 0){
+                if (this.profileRoles.length > 0) {
                     this.buildMenu();
                 }
-            }, 
+            },
             error: (error) => {
                 console.error(error);
             }
         });
+    }
 
-        this.profileService.$profileForLocalStorage.subscribe(profile => {
-            if(profile){
+    private subscribeToProfileForLocalStorage() {
+        this.profileService.$profileForLocalStorage
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(profile => {
+            if (profile) {
                 this.buildMenu();
             }
         });
+    }
 
-        this.translateService.onLangChange.subscribe(() => {
+    private subscribeToLangChange() {
+        this.translateService.onLangChange
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
             this.buildMenu();
         });
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     private isRoleAllowedForPregled(role?: string): boolean {

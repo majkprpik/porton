@@ -3,9 +3,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { WorkGroup } from './work-group';
-import { combineLatest, from, of } from 'rxjs';
+import { combineLatest, from, of, Subject } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError, switchMap, takeUntil } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { WorkGroupService } from '../service/work-group.service';
 import { TaskService } from '../service/task.service';
@@ -370,6 +370,8 @@ export class WorkGroups implements OnInit {
   tasksToRemove: Task[] = [];
   profiles: Profile[] = [];
   tasksToAdd: Task[] = [];
+  
+  private destroy$ = new Subject<void>();
 
   get cleaningGroups() {
     return this.workGroups
@@ -393,6 +395,41 @@ export class WorkGroups implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.subscribeToDataStreams();
+
+    this.dataService.$tasksUpdate
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => this.handleTasksUpdate(res));
+
+    this.dataService.$workGroupsUpdate
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => this.handleWorkGroupsUpdate(res));
+
+    this.taskService.$taskToRemove
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => {
+        if (res) {
+          this.tasksToRemove.push(res);
+          this.tasksToAdd = this.tasksToAdd.filter(task => task.task_id !== res.task_id);
+        }
+      });
+
+    this.taskService.$selectedTask
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => {
+        if (res) {
+          this.tasksToAdd.push(res);
+          this.tasksToRemove = this.tasksToRemove.filter(ttrm => ttrm.task_id !== res.task_id);
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private subscribeToDataStreams() {
     combineLatest([
       this.workGroupService.activeGroupId$,
       this.dataService.workGroups$,
@@ -400,7 +437,9 @@ export class WorkGroups implements OnInit {
       this.dataService.tasks$,
       this.dataService.workGroupProfiles$,
       this.dataService.profiles$,
-    ]).subscribe({
+    ])
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: (data) => {
         this.handleDataAsync(data).catch(error => {
           console.error('Error processing work groups data:', error);
@@ -412,61 +451,50 @@ export class WorkGroups implements OnInit {
         this.loading = false;
       }
     });
+  }
 
-    this.dataService.$tasksUpdate.subscribe(res => {
-      if(res && res.eventType == 'UPDATE'){
-        let lockedTeam = this.lockedTeams.find(lt => lt.tasks?.some(task => task.task_id == res.new.task_id));
-        let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id == res.new.task_id) ?? -1;
-        let updatedLockedTeam: any;
+  private handleTasksUpdate(res: any) {
+    if(res && res.eventType === 'UPDATE'){
+      let lockedTeam = this.lockedTeams.find(lt => lt.tasks?.some(task => task.task_id === res.new.task_id));
+      let taskIndex = lockedTeam?.tasks?.findIndex(task => task.task_id === res.new.task_id) ?? -1;
 
-        if(taskIndex != -1 && lockedTeam?.tasks){
-          const updatedTasks = [...lockedTeam.tasks.slice(0, taskIndex), res.new, ...lockedTeam.tasks.slice(taskIndex + 1)];
-          updatedLockedTeam = { ...lockedTeam, tasks: updatedTasks };
-  
-          this.lockedTeams = this.lockedTeams.map(lt =>
-            lt.id === lockedTeam.id ? updatedLockedTeam : lt
-          );
-        }
+      if(taskIndex !== -1 && lockedTeam?.tasks){
+        const updatedTasks = [
+          ...lockedTeam.tasks.slice(0, taskIndex),
+          res.new,
+          ...lockedTeam.tasks.slice(taskIndex + 1)
+        ];
+        const updatedLockedTeam = { ...lockedTeam, tasks: updatedTasks };
+
+        this.lockedTeams = this.lockedTeams.map(lt =>
+          lt.id === lockedTeam.id ? updatedLockedTeam : lt
+        );
 
         this.workGroupService.setLockedTeams(this.lockedTeams);
       }
-    });
+    }
+  }
 
-    this.dataService.$workGroupsUpdate.subscribe(res => {
-      if(res && res.new.work_group_id && res.eventType == 'INSERT'){
-        if(!this.workGroups.find((wgp: any) => wgp.work_group_id == res.new.work_group_id)){
-          this.lockedTeams = [...this.lockedTeams, {
-            id: res.new.work_group_id,
-            name: "Team " + res.new.work_group_id.toString(),
-            members: [],
-            tasks: [],
-            isLocked: res.new.is_locked,
-          }];
+  private handleWorkGroupsUpdate(res: any) {
+    if(res && res.new.work_group_id && res.eventType === 'INSERT'){
+      if(!this.workGroups.find((wgp: any) => wgp.work_group_id === res.new.work_group_id)){
+        this.lockedTeams = [...this.lockedTeams, {
+          id: res.new.work_group_id,
+          name: "Team " + res.new.work_group_id.toString(),
+          members: [],
+          tasks: [],
+          isLocked: res.new.is_locked,
+        }];
 
-          this.workGroupService.setLockedTeams(this.lockedTeams);
+        this.workGroupService.setLockedTeams(this.lockedTeams);
+      }
+    } else if(res && res.new.work_group_id && res.eventType === 'UPDATE'){
+      if(res.new.is_locked){
+        if(this.activeGroupId === res.new.work_group_id){
+          this.workGroupService.setActiveGroup(undefined);
         }
-      } else if(res && res.new.work_group_id && res.eventType == 'UPDATE'){
-        if(res.new.is_locked){
-          if(this.activeGroupId == res.new.work_group_id){
-            this.workGroupService.setActiveGroup(undefined);
-          }
-        }
       }
-    });
-
-    this.taskService.$taskToRemove.subscribe(res => {
-      if(res){
-        this.tasksToRemove.push(res);
-        this.tasksToAdd = this.tasksToAdd.filter(task => task.task_id != res.task_id);
-      }
-    });
-
-    this.taskService.$selectedTask.subscribe(res => {
-      if(res){
-        this.tasksToAdd.push(res);
-        this.tasksToRemove = this.tasksToRemove.filter(ttrm => ttrm.task_id != res.task_id);
-      }
-    })
+    }
   }
 
   private async handleDataAsync([

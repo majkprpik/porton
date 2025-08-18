@@ -12,7 +12,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../service/auth.service';
 import { ProfileRole, ProfileRoles } from '../service/data.models';
-import { take } from 'rxjs';
+import { combineLatest, Subject, take, takeUntil } from 'rxjs';
 import { DataService } from '../service/data.service';
 @Component({
     selector: 'app-login',
@@ -86,6 +86,8 @@ export class Login implements OnInit {
     loading: boolean = false;
     errorMessage: string = '';
 
+    private destroy$ = new Subject<void>();
+
     constructor(
         private authService: AuthService,
         private router: Router,
@@ -93,8 +95,28 @@ export class Login implements OnInit {
     ) {}
 
     ngOnInit() {
-        this.dataService.loadProfileRoles().subscribe();
-        this.dataService.loadWorkGroupProfiles().subscribe();
+        this.loadProfileAndWorkGroupProfiles();
+    }
+
+    private loadProfileAndWorkGroupProfiles() {
+        combineLatest([
+            this.dataService.loadProfileRoles(),
+            this.dataService.loadWorkGroupProfiles()
+        ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+            next: ([profileRoles, workGroupProfiles]) => {
+                
+            },
+            error: (error) => {
+                console.error('Error loading profiles:', error);
+            }
+        });
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     async onLogin() {

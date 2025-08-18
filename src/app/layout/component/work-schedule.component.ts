@@ -1,7 +1,7 @@
 import { WorkScheduleExportFormComponent } from './work-schedule-export-form.component';
 import { Component, effect, signal } from '@angular/core';
 import { Departments, Profile, ProfileRole, ProfileRoles, ProfileWorkDay, ProfileWorkSchedule, ScheduleCellData } from '../../pages/service/data.models';
-import { combineLatest, finalize, firstValueFrom, forkJoin } from 'rxjs';
+import { combineLatest, firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -686,6 +686,8 @@ export class WorkScheduleComponent {
   isNightMode: boolean | undefined = undefined;
 
   cellHeightInPx: number = 30;
+  
+  private destroy$ = new Subject<void>();
 
   constructor(
     private dataService: DataService,
@@ -697,26 +699,41 @@ export class WorkScheduleComponent {
   }
 
   ngOnInit() {
+    this.subscribeToDataStreams();
+    this.loadCellHeight();
+    this.cancelQuickDelete();
+    this.scrollToTodayIfFirstLoad();
+  }
+
+  private subscribeToDataStreams() {
     combineLatest([
       this.dataService.profiles$, 
       this.dataService.profileWorkSchedule$, 
       this.dataService.profileRoles$,
       this.dataService.profileWorkDays$,
-    ]).subscribe(([profiles, schedule, profileRoles, profileWorkDays]) => {
-        this.profiles = profiles;
-        this.fullWorkSchedule = schedule;
-        this.profileRoles = profileRoles;
-        this.profileWorkDays = profileWorkDays;
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ([profiles, schedule, profileRoles, profileWorkDays]) => {
+          this.profiles = profiles;
+          this.fullWorkSchedule = schedule;
+          this.profileRoles = profileRoles;
+          this.profileWorkDays = profileWorkDays;
 
-        this.filterProfilesByDepartment(this.selectedDepartment);
-        this.updateGridMatrix();
-      }
-    );
-    
-    this.loadCellHeight();
-    this.cancelQuickDelete();
+          this.applyProfileFilters();
+          this.updateGridMatrix();
+        },
+        error: (error) => {
+          console.error('Error loading profile data:', error);
+        }
+      });
+  }
 
-    // Monitor initial render
+  private applyProfileFilters() {
+    this.filterProfilesByDepartment(this.selectedDepartment);
+  }
+
+  private scrollToTodayIfFirstLoad() {
     setTimeout(() => {
       if (this.isFirstLoad) {
         this.scrollToToday();
@@ -729,6 +746,9 @@ export class WorkScheduleComponent {
     this.days.set([]);
     this.gridMatrix.set([]);
     this.scheduleMap.clear();
+
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   filterProfilesByDepartment(department: string){

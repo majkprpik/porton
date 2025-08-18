@@ -7,7 +7,7 @@ import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { StaffCardComponent } from './staff-card';
 import { WorkGroupService } from '../service/work-group.service';
 import { ProfileService } from '../service/profile.service';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { DataService } from '../service/data.service';
 
 @Component({
@@ -118,31 +118,43 @@ export class StaffGroup implements OnInit, OnChanges {
   cleaningProfileRoles: ProfileRole[] = [];
   profiles: Profile[] = [];
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private workGroupService: WorkGroupService,
     private dataService: DataService,
     private profileService: ProfileService
   ) {
-    this.workGroupService.activeGroupId$.subscribe(groupId => {
+    this.monitorActiveWorkGroup(); 
+  }
+
+  ngOnInit() {
+    this.availableProfiles = this.staffMembers;
+    this.subscribeToDataStreams();
+  }
+
+  private monitorActiveWorkGroup() {
+    this.workGroupService.activeGroupId$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(groupId => {
         this.hasActiveWorkGroup = groupId !== undefined;
         if (groupId !== undefined) {
           this.updateAvailableStaff(groupId);
         } else {
           this.availableProfiles = this.staffMembers;
         }
-      }
-    );    
+      });
   }
 
-  ngOnInit() {
-    this.availableProfiles = this.staffMembers;
-
+  private subscribeToDataStreams() {
     combineLatest([
       this.dataService.workGroups$,
       this.dataService.workGroupProfiles$,
       this.dataService.profileRoles$,
       this.dataService.profiles$,
-    ]).subscribe(([workGroups, workGroupProfiles, profileRoles, profiles]) => {
+    ])
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(([workGroups, workGroupProfiles, profileRoles, profiles]) => {
       this.workGroups = workGroups;
       this.workGroupProfiles = workGroupProfiles;
       this.profileRoles = profileRoles;
@@ -153,9 +165,16 @@ export class StaffGroup implements OnInit, OnChanges {
       );
 
       this.cleaningProfileRoles = profileRoles.filter(pr =>
-        pr.name === ProfileRoles.VoditeljDomacinstva || pr.name === ProfileRoles.Sobarica || pr.name === ProfileRoles.Terasar
+        pr.name === ProfileRoles.VoditeljDomacinstva ||
+        pr.name === ProfileRoles.Sobarica ||
+        pr.name === ProfileRoles.Terasar
       );
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngOnChanges(changes: SimpleChanges) {

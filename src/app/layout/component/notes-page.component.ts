@@ -2,7 +2,7 @@ import { Component, ElementRef, Inject, LOCALE_ID, ViewChild } from '@angular/co
 import { Note, Profile } from '../../pages/service/data.models';
 import { NotesService } from '../../pages/service/notes.service';
 import { ProfileService } from '../../pages/service/profile.service';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -225,6 +225,8 @@ export class NotesPageComponent {
   selectedDate: Date = new Date();
   profiles: Profile[] = [];
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     @Inject(LOCALE_ID) private locale: string,
     private notesService: NotesService,
@@ -279,41 +281,54 @@ export class NotesPageComponent {
     return this.getNotesForDay(date.year, date.month, date.day).length > 0;
   }
 
-  ngOnInit(){
+  ngOnInit() {
+    this.subscribeToDataStreams();
+    this.updateSelectedDate();
+  }
+
+  private subscribeToDataStreams() {
     combineLatest([
       this.dataService.notes$,
       this.dataService.$areNotesLoaded,
       this.dataService.profiles$,
-    ]).subscribe({
-      next: ([notes, areNotesLoaded, profiles]) => {
-        this.notes = notes;
-        this.areNotesLoaded = areNotesLoaded;
-        this.profiles = profiles;
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ([notes, areNotesLoaded, profiles]) => {
+          this.notes = this.normalizeAndSortNotes(notes);
+          this.areNotesLoaded = areNotesLoaded;
+          this.profiles = profiles;
 
-        this.notes = this.notes.map(note => {
-          if(!note.for_date){
-            return {
-              ...note, 
-              for_date: note.time_sent,
-            }
+          if (areNotesLoaded) {
+            setTimeout(() => this.scrollToBottom(), 0);
           }
-
-          return note;
-        })
-        .sort((a, b) => new Date(a.time_sent).getTime() - new Date(b.time_sent).getTime());
-
-        if(areNotesLoaded){
-          setTimeout(() => {
-            this.scrollToBottom();
-          }, 0);
+        },
+        error: (error) => {
+          console.error('Error loading notes data:', error);
         }
-      },
-      error: (error) => {
-        console.log(error);
-      }
-    });
+      });
+  }
 
-    this.updateSelectedDate();
+  private normalizeAndSortNotes(notes: any[]) {
+    return notes
+      .map(note => {
+        if (!note.for_date) {
+          return {
+            ...note,
+            for_date: note.time_sent,
+          };
+        }
+        return note;
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.time_sent).getTime() - new Date(b.time_sent).getTime()
+      );
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   updateSelectedDate() {

@@ -10,7 +10,7 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '../service/auth.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { ProfileService } from '../service/profile.service';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SelectModule } from 'primeng/select';
 import { LanguageService } from '../language/language.service';
@@ -304,6 +304,8 @@ export class ProfilesComponent implements OnInit {
     ProfileRoles.Odrzavanje
   ];
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private dataService: DataService,
     private messageService: MessageService,
@@ -353,20 +355,24 @@ export class ProfilesComponent implements OnInit {
   ngOnInit() {
     combineLatest([
       this.dataService.profileRoles$,
-      this.dataService.profiles$,
-    ]).subscribe({
+      this.dataService.profiles$
+    ])
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: async ([profileRoles, profiles]) => {
         this.sortedProfiles = [];
         
         this.profileRoles = profileRoles.map(role => ({
           ...role,
-          translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.profileService.translationMap[role.name] : role.name
+          translatedName: this.languageService.getSelectedLanguageCode() === 'en'
+            ? this.profileService.translationMap[role.name]
+            : role.name
         }));
         
         // Add management profiles
-        const managementProfiles = profiles 
+        const managementProfiles = profiles
           .filter(profile => {
-            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
+            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
             return roleName !== undefined && this.managementRoles.includes(roleName);
           })
           .sort(this.sortByName);
@@ -378,7 +384,7 @@ export class ProfilesComponent implements OnInit {
         // Add reception profiles
         const receptionProfiles = profiles
           .filter(profile => {
-            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
+            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
             return roleName !== undefined && this.receptionRoles.includes(roleName);
           })
           .sort(this.sortByName);
@@ -390,7 +396,7 @@ export class ProfilesComponent implements OnInit {
         // Add housekeeping profiles
         const housekeepingProfiles = profiles
           .filter(profile => {
-            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
+            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
             return roleName !== undefined && this.housekeepingRoles.includes(roleName);
           })
           .sort(this.sortByName);
@@ -402,7 +408,7 @@ export class ProfilesComponent implements OnInit {
         // Add technical profiles
         const technicalProfiles = profiles
           .filter(profile => {
-            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
+            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
             return roleName !== undefined && this.technicalRoles.includes(roleName);
           })
           .sort(this.sortByName);
@@ -416,8 +422,8 @@ export class ProfilesComponent implements OnInit {
           .filter(profile => {
             if (!profile.role_id) return true;
 
-            const roleName = profileRoles.find(role => role.id == profile.role_id)?.name;
-            if (!roleName) return true; // Treat undefined as "other"
+            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
+            if (!roleName) return true;
 
             return !this.managementRoles.includes(roleName) &&
                   !this.receptionRoles.includes(roleName) &&
@@ -436,6 +442,11 @@ export class ProfilesComponent implements OnInit {
         console.error(error);
       }
     });
+  }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   addPasswordsAndEmailsToProfiles(profiles: Profile[]): ExtendedProfile[] {
