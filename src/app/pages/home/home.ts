@@ -868,7 +868,6 @@ interface SpecialLocation {
                 padding: 0 0 0 0.25rem;
                 font-weight: 700;
                 font-size: 0.95rem;
-                background-color: var(--surface-ground, #f8f9fa);
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
 
@@ -883,12 +882,6 @@ interface SpecialLocation {
                     border-radius: 50px;
                     font-size: 12px;
                     font-weight: 700;
-                }
-            }
-            
-            @media (prefers-color-scheme: dark) {
-                .type-divider {
-                    background-color: var(--surface-ground, #1e1e1e);
                 }
             }
             
