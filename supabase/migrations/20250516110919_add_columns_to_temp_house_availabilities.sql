@@ -1,0 +1,20 @@
+-- Add new columns to temp_house_availabilities table
+ALTER TABLE porton.temp_house_availabilities
+ADD COLUMN has_arrived boolean DEFAULT false,
+ADD COLUMN has_departed boolean DEFAULT false,
+ADD COLUMN last_name text,
+ADD COLUMN reservation_number text,
+ADD COLUMN reservation_length integer,
+ADD COLUMN prev_connected boolean DEFAULT false,
+ADD COLUMN next_connected boolean DEFAULT false,
+ADD COLUMN adults integer DEFAULT 0,
+ADD COLUMN babies integer DEFAULT 0,
+ADD COLUMN cribs integer DEFAULT 0,
+ADD COLUMN dogs_d integer DEFAULT 0,
+ADD COLUMN dogs_s integer DEFAULT 0,
+ADD COLUMN dogs_b integer DEFAULT 0,
+ADD COLUMN color_theme integer DEFAULT 0,
+ADD COLUMN color_tint decimal DEFAULT 0.0,
+ADD COLUMN arrival_time time NOT NULL DEFAULT '16:00:00',
+ADD COLUMN departure_time time NOT NULL DEFAULT '10:00:00',
+ADD COLUMN note TEXT NOT NULL DEFAULT 'Nema napomene';

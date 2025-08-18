@@ -1,0 +1,2 @@
+ALTER TABLE porton.work_groups 
+ADD COLUMN is_repair BOOLEAN NOT NULL DEFAULT FALSE;

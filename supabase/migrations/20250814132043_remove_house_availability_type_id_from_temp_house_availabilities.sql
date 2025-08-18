@@ -1,0 +1,5 @@
+ALTER TABLE porton.temp_house_availabilities
+DROP CONSTRAINT IF EXISTS temp_house_availabilities_house_availability_type_id_fkey;
+
+ALTER TABLE porton.temp_house_availabilities
+DROP COLUMN IF EXISTS house_availability_type_id CASCADE;

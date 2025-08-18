@@ -1,0 +1,1 @@
+ALTER TABLE venue_statuses ADD COLUMN venue_id uuid references venues(venue_id);
