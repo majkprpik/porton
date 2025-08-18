@@ -1397,9 +1397,24 @@ export class WorkScheduleComponent {
     }
   }
 
-  cancelQuickDelete(){
+  cancelQuickDelete() {
+    const grid = this.gridMatrix();
+
+    for (const schedule of this.schedulesToDelete) {
+      this.filteredProfiles.forEach((profile, row) => {
+        this.days().forEach((day, col) => {
+          const key = this.getScheduleKey(profile.id, day);
+          if (this.scheduleMap.get(key)?.id === schedule.id) {
+            grid[row][col].color = this.scheduleMap.get(key)?.color ?? 'lightblue';
+          }
+        });
+      });
+    }
+
     this.isDeleteMode = false;
     this.schedulesToDelete = [];
+
+    this.gridMatrix.set([...grid]);
   }
 
   private openScheduleForm(profile: Profile, startDate: Date, endDate: Date, row: number, day: Date): void {
