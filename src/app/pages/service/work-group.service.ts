@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { LockedTeam, WorkGroup, WorkGroupProfile, WorkGroupTask } from './data.models';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, combineLatest } from 'rxjs';
 import { DataService } from './data.service';
 
 @Injectable({
@@ -19,11 +19,12 @@ export class WorkGroupService {
     private supabaseService: SupabaseService,
     private dataService: DataService,
   ) {
-    this.dataService.workGroupProfiles$.subscribe(workGroupProfiles => {
+    combineLatest([
+      this.dataService.workGroupProfiles$,
+      this.dataService.workGroupTasks$
+    ])
+    .subscribe(([workGroupProfiles, workGroupTasks]) => {
       this.workGroupProfiles = workGroupProfiles;
-    });
-
-    this.dataService.workGroupTasks$.subscribe(workGroupTasks => {
       this.workGroupTasks = workGroupTasks;
     });
   }
