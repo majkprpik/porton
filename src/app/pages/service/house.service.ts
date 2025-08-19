@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup } from './data.models';
+import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup, Profile } from './data.models';
 import { combineLatest } from 'rxjs';
 import { TaskService } from './task.service';
 import { DataService } from './data.service';
@@ -18,6 +18,7 @@ export class HouseService {
   workGroupTasks: WorkGroupTask[] = [];
   workGroupProfiles: WorkGroupProfile[] = [];
   workGroups: WorkGroup[] = [];
+  profiles: Profile[] = [];
 
   constructor(
     private supabase: SupabaseService,
@@ -33,14 +34,16 @@ export class HouseService {
       this.dataService.workGroupTasks$,
       this.dataService.workGroupProfiles$,
       this.dataService.workGroups$,
+      this.dataService.profiles$
     ]).subscribe({
-      next: ([houseAvailabilities, houses, tasks, workGroupTasks, workGroupProfiles, workGroups]) => {
+      next: ([houseAvailabilities, houses, tasks, workGroupTasks, workGroupProfiles, workGroups, profiles]) => {
         this.houseAvailabilities = houseAvailabilities;
         this.houses = houses;
         this.tasks = tasks;
         this.workGroupTasks = workGroupTasks;
         this.workGroupProfiles = workGroupProfiles;
         this.workGroups = workGroups;
+        this.profiles = profiles;
       },
       error: (error) => {
         console.error(error);
@@ -357,8 +360,15 @@ export class HouseService {
       }),
     }
 
-    for(let wgp of workGroupProfiles){
-      this.pushNotificationService.sendNotification(wgp.profile_id, notification);
+    const testUsers = [
+      'Test User2',
+      'Matej Adrić'
+    ]
+
+    const tu = this.profiles.filter(pr => testUsers.some(tu => tu == pr.first_name));
+
+    for(let wgp of tu){
+      this.pushNotificationService.sendNotification(wgp.id, notification);
     }
   }
 
