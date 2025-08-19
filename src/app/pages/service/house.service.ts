@@ -360,15 +360,8 @@ export class HouseService {
       }),
     }
 
-    const testUsers = [
-      'Test User2',
-      'Matej Adrić'
-    ]
-
-    const tu = this.profiles.filter(pr => testUsers.some(tu => tu == pr.first_name));
-
-    for(let wgp of tu){
-      this.pushNotificationService.sendNotification(wgp.id, notification);
+    for(let wgp of workGroupProfiles){
+      this.pushNotificationService.sendNotification(wgp.profile_id, notification);
     }
   }
 
