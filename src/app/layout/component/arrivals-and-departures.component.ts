@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { combineLatest, Subscription } from 'rxjs';
+import { combineLatest, Subject, Subscription, takeUntil } from 'rxjs';
 import { HouseService } from '../../pages/service/house.service';
 import { House, HouseAvailability } from '../../pages/service/data.models';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -324,12 +324,13 @@ import { DataService } from '../../pages/service/data.service';
 export class ArrivalsAndDeparturesComponent {
   arrivals: any[] = [];
   departures: any[] = [];
-  private subscription: Subscription | undefined;
   checkedDepartureHouseIds: number[] = [];
   checkedArrivalHouseIds: number[] = [];
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
   selectedDate: Date = new Date();
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private houseService: HouseService,
@@ -344,7 +345,9 @@ export class ArrivalsAndDeparturesComponent {
     combineLatest([
       this.dataService.houses$,
       this.dataService.houseAvailabilities$,
-    ]).subscribe({
+    ])
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: ([houses, houseAvailabilities]) => {
         this.houses = houses;
         this.houseAvailabilities = houseAvailabilities;
@@ -392,6 +395,11 @@ export class ArrivalsAndDeparturesComponent {
         this.dataService.setHouseAvailabilites([...this.houseAvailabilities]);
       };
     });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getTodaysArrivals(){
@@ -537,12 +545,6 @@ export class ArrivalsAndDeparturesComponent {
     const hours = dateObj.getHours().toString().padStart(2, '0');
     const minutes = dateObj.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
-  }
-
-  ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
   }
 
   async submitDepartures(event: any, departure: any) {
