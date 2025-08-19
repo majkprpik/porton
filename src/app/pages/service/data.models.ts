@@ -168,6 +168,12 @@ export interface ScheduleCellData {
   isForDelete: boolean;
 }
 
+export interface PushNotification {
+  title: string,
+  body: string,
+  icon?: string,
+}
+
 export enum ExportTypes {
   PDF = 'pdf',
 }

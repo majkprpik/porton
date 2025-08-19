@@ -1,9 +1,12 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { House, HouseAvailability, Task, TaskProgressTypeName } from './data.models';
+import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup } from './data.models';
 import { combineLatest } from 'rxjs';
 import { TaskService } from './task.service';
 import { DataService } from './data.service';
+import { PushNotificationsService } from './push-notifications.service';
+import { TranslateService } from '@ngx-translate/core';
+
 
 @Injectable({
   providedIn: 'root'
@@ -12,21 +15,32 @@ export class HouseService {
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
   tasks: Task[] = [];
+  workGroupTasks: WorkGroupTask[] = [];
+  workGroupProfiles: WorkGroupProfile[] = [];
+  workGroups: WorkGroup[] = [];
 
   constructor(
     private supabase: SupabaseService,
     private dataService: DataService,
     private taskService: TaskService,
+    private pushNotificationService: PushNotificationsService,
+    private translateService: TranslateService,
   ) {
     combineLatest([
       this.dataService.houseAvailabilities$,
       this.dataService.houses$,
       this.dataService.tasks$,
+      this.dataService.workGroupTasks$,
+      this.dataService.workGroupProfiles$,
+      this.dataService.workGroups$,
     ]).subscribe({
-      next: ([houseAvailabilities, houses, tasks]) => {
+      next: ([houseAvailabilities, houses, tasks, workGroupTasks, workGroupProfiles, workGroups]) => {
         this.houseAvailabilities = houseAvailabilities;
         this.houses = houses;
         this.tasks = tasks;
+        this.workGroupTasks = workGroupTasks;
+        this.workGroupProfiles = workGroupProfiles;
+        this.workGroups = workGroups;
       },
       error: (error) => {
         console.error(error);
@@ -282,6 +296,10 @@ export class HouseService {
 
       if (error) throw error;
 
+      if(state){
+        this.handleHouseDepartureNotificationSend(houseAvailabilityId);
+      }
+
       return true;
     } catch (error) {
       console.error('Error updating house availability:', error);
@@ -306,6 +324,41 @@ export class HouseService {
     catch (error) {
       console.error('Error updating house availability:', error);
       return false;
+    }
+  }
+
+  private handleHouseDepartureNotificationSend(houseAvailabilityId : number){
+    const houseAvailability = this.houseAvailabilities.find(ha => ha.house_availability_id == houseAvailabilityId);
+    if(!houseAvailability) return; 
+
+    const house = this.houses.find(house => house.house_id == houseAvailability.house_id);
+    if(!house) return;
+
+    const tasksForHouse = this.tasks.filter(task => 
+      task.house_id == house.house_id &&
+      this.taskService.isTaskAssigned(task)
+    );
+
+    const today = new Date();
+
+    const workGroupTasksForHouse = this.workGroupTasks.filter(wgt => tasksForHouse.some(t => t.task_id == wgt.task_id));
+    const todaysWorkGroups = this.workGroups.filter(wg => 
+      wg.created_at.startsWith(today.toISOString().split('T')[0]) &&
+      workGroupTasksForHouse.some(wgt => wgt.work_group_id == wg.work_group_id) &&
+      !wg.is_repair
+    );
+
+    const workGroupProfiles = this.workGroupProfiles.filter(wgp => todaysWorkGroups.some(wgt => wgt.work_group_id == wgp.work_group_id));
+
+    const notification: PushNotification = {
+      title: this.translateService.instant('NOTIFICATIONS.HOUSE-DEPARTED.TITLE'),
+      body: this.translateService.instant('NOTIFICATIONS.HOUSE-DEPARTED.BODY', {
+        house_name: house.house_name,
+      }),
+    }
+
+    for(let wgp of workGroupProfiles){
+      this.pushNotificationService.sendNotification(wgp.profile_id, notification);
     }
   }
 

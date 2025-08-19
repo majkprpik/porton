@@ -501,6 +501,10 @@
         "UNSCHEDULED-TASK": {
             "TITLE": "Zadatak dodijeljen",
             "BODY": "Dodijeljen vam je izvanredan zadatak"
+        },
+        "HOUSE-DEPARTED": {
+            "TITLE": "Kućica slobodna",
+            "BODY": "Gosti su otišli iz kućice \"{{house_name}}\""
         }
     }
 }

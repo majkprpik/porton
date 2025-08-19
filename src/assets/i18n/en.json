@@ -501,6 +501,10 @@
         "UNSCHEDULED-TASK": {
             "TITLE": "Task assigned",
             "BODY": "An unscheduled task has been assigned to you"
+        },
+        "HOUSE-DEPARTED": {
+            "TITLE": "House departed",
+            "BODY": "Guests have departed from house \"{{house_name}}\""
         }
     }
 }

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { Profile } from './data.models';
+import { PushNotification, Profile } from './data.models';
 import { Messaging as AngularMessaging  } from '@angular/fire/messaging';
 import { deleteToken, getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
@@ -38,7 +38,7 @@ export class PushNotificationsService {
         const notificationTitle = payload.notification?.title ?? 'Notification';
         const notificationOptions = {
           body: payload.notification?.body,
-          icon: payload.notification?.icon || '/assets/icons/icon-72x72.png',
+          icon: payload.notification?.icon || '/assets/icons/porton-icon-72x72.png',
         };
 
         navigator.serviceWorker.getRegistration().then(registration => {
@@ -108,7 +108,7 @@ export class PushNotificationsService {
     return this.fcmTokenSource.getValue();
   }
 
-  async sendNotification(profileId: string, notification: { title: string; body: string; icon?: string }){
+  async sendNotification(profileId: string, notification: PushNotification){
     const token = await this.supabaseService.getAccessToken();
 
     if (!token) {
@@ -130,7 +130,7 @@ export class PushNotificationsService {
         notification: {
           title: notification.title,
           body: notification.body,
-          icon: '/assets/icons/icon-72x72.png'
+          icon: '/assets/icons/porton-icon-72x72.png'
         },
       }, 
       {
