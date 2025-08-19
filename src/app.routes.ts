@@ -140,10 +140,8 @@ export const appRoutes: Routes = [
                 path: 'notes',
                 component: NotesPageComponent,
                 data: { roles: [
-                    ProfileRoles.KucniMajstor,
                     ProfileRoles.VoditeljKampa,
                     ProfileRoles.Uprava,
-                    ProfileRoles.Odrzavanje,
                     ProfileRoles.KorisnickaSluzba
                 ] }
             },

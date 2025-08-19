@@ -158,10 +158,9 @@ export class AppMenu implements OnInit {
         if (!role) return false;
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == ProfileRoles.KucniMajstor || 
-            profileRole.name == ProfileRoles.Odrzavanje || 
             profileRole.name == ProfileRoles.VoditeljKampa ||
-            profileRole.name == ProfileRoles.KorisnickaSluzba
+            profileRole.name == ProfileRoles.KorisnickaSluzba ||
+            profileRole.name == ProfileRoles.Uprava
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);

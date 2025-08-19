@@ -36,17 +36,14 @@ import { DataService } from '../../core/services/data.service';
                 <p-progressSpinner strokeWidth="4" [style]="{ width: '50px', height: '50px' }" />
                 <span>{{ 'TEAMS.LOADING-TEAMS' | translate }}</span>
             </div>
-        } @else if (
-            !isAssignedToTodaysWorkGroup(storedUserId) && 
-            (profileService.isHousekeeper(storedUserId) ||
-            profileService.isCustomerService(storedUserId))
-        ){
+        } @else if (isNoAssignedGroupsMessageDisplayed()){
             <div class="no-groups-assigned">
                 <span>Nemate dodijeljenih radnih grupa.</span>
             </div>
         } @else if(
             !profileService.isHousekeeper(storedUserId) && 
-            !profileService.isCustomerService(storedUserId)
+            !profileService.isCustomerService(storedUserId) && 
+            !profileService.isHouseTechnician(storedUserId)
         ) {
             <p-panel
                 [toggleable]="true"
@@ -366,6 +363,8 @@ export class Teams implements OnInit {
 
                 if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isCustomerService(this.storedUserId)) {
                     this.navigateToTodaysWorkGroup();
+                } else if(this.profileService.isHouseTechnician(this.storedUserId)){
+                    this.navigateToWorkGroup();
                 }
 
                 this.loading = false;
@@ -454,5 +453,26 @@ export class Teams implements OnInit {
         if (todaysWorkGroup && this.router.url == '/teams') {
             this.router.navigate(['/teams', todaysWorkGroup.work_group_id]);
         }
+    }
+
+    navigateToWorkGroup(){
+        const workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.storedUserId);
+        const workGroup = this.workGroups.find(wg => workGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id));
+
+        if (workGroup && this.router.url == '/teams') {
+            this.router.navigate(['/teams', workGroup.work_group_id]);
+        }
+    }
+
+    isNoAssignedGroupsMessageDisplayed(){
+        const isHouseStaff = 
+            this.profileService.isHousekeeper(this.storedUserId) || 
+            this.profileService.isCustomerService(this.storedUserId);
+
+        const isTechWithoutGroup =
+            this.profileService.isHouseTechnician(this.storedUserId) &&
+            !this.profileService.isProfileAssignedToWorkGroup(this.storedUserId);
+
+        return (!this.isAssignedToTodaysWorkGroup(this.storedUserId) && isHouseStaff) || isTechWithoutGroup;
     }
 } 

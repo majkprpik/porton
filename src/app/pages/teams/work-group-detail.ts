@@ -588,6 +588,8 @@ export class WorkGroupDetail implements OnInit {
 
                 if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isCustomerService(this.storedUserId)) {
                     this.redirectToTeamsIfNoTodaysWorkGroup();
+                } else if(this.profileService.isHouseTechnician(this.storedUserId)) {
+                    this.redirectToTeamsIfNoWorkGroup();
                 }
 
                 this.setupUrgentIcons();
@@ -704,6 +706,14 @@ export class WorkGroupDetail implements OnInit {
         );
 
         if(!todaysWorkGroup && this.router.url.includes('/teams') && this.router.url != '/teams') {
+            this.router.navigate(['/teams']);
+        }
+    }
+
+    redirectToTeamsIfNoWorkGroup(){
+        const isInWorkGroup = this.profileService.isProfileAssignedToWorkGroup(this.storedUserId);
+
+        if(!isInWorkGroup && this.router.url.includes('/teams') && this.router.url != '/teams') {
             this.router.navigate(['/teams']);
         }
     }

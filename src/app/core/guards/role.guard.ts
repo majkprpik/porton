@@ -15,12 +15,9 @@ export class RoleGuard implements CanActivateChild {
     constructor(
         private router: Router,
         private dataService: DataService,
-    ) {
-
-    }
+    ) {}
 
     canActivateChild(childRoute: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
-        // Get user profile from local storage
         const userProfileStr = localStorage.getItem('userProfile');
         this.targetUrl = state.url;
 

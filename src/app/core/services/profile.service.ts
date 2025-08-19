@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { Profile, ProfileRole, ProfileRoles, RepairTaskComment } from '../models/data.models';
+import { Profile, ProfileRole, ProfileRoles, RepairTaskComment, WorkGroupProfile } from '../models/data.models';
 import { DataService } from './data.service';
 
 @Injectable({
@@ -14,6 +14,7 @@ export class ProfileService {
   $profileModalData = new BehaviorSubject<any>(null);
   profiles: Profile[] = [];
   profileRoles: ProfileRole[] = [];
+  workGroupProfiles: WorkGroupProfile[] = [];
 
   translationMap: { [key: string]: string } = {
     "Uprava": "Management",
@@ -38,10 +39,12 @@ export class ProfileService {
   ) {
     combineLatest([
       this.dataService.profiles$,
-      this.dataService.profileRoles$
-    ]).subscribe(([profiles, profileRoles]) => {
+      this.dataService.profileRoles$,
+      this.dataService.workGroupProfiles$,
+    ]).subscribe(([profiles, profileRoles, workGroupProfiles]) => {
       this.profiles = profiles;
       this.profileRoles = profileRoles;
+      this.workGroupProfiles = workGroupProfiles;
     });
   }
 
@@ -94,6 +97,14 @@ export class ProfileService {
       const profileRole = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id);
   
       return profileRole?.name == ProfileRoles.KorisnickaSluzba;
+    }
+
+    return false;
+  }
+
+  isProfileAssignedToWorkGroup(profileId: string | null){
+    if(profileId && this.profiles.length > 0){
+      return this.workGroupProfiles.find(wgp => wgp.profile_id == profileId);
     }
 
     return false;
