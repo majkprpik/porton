@@ -1,12 +1,12 @@
 import { Component, Input, ViewChild, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
-import { Task } from '../service/data.models';
-import { TaskService } from '../service/task.service';
-import { WorkGroupService } from '../service/work-group.service';
+import { Task } from '../../core/models/data.models';
+import { TaskService } from '../../core/services/task.service';
+import { WorkGroupService } from '../../core/services/work-group.service';
 import { Subject, Subscription, takeUntil } from 'rxjs';
-import { HouseService } from '../service/house.service';
-import { DataService } from '../service/data.service';
+import { HouseService } from '../../core/services/house.service';
+import { DataService } from '../../core/services/data.service';
 
 @Component({
   selector: 'app-task-card',

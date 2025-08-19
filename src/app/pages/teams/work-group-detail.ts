@@ -3,18 +3,18 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CardModule } from 'primeng/card';
-import { WorkGroup, Profile, Task, House, HouseAvailability, WorkGroupProfile, WorkGroupTask, TaskProgressTypeName } from '../service/data.models';
+import { WorkGroup, Profile, Task, House, HouseAvailability, WorkGroupProfile, WorkGroupTask, TaskProgressTypeName } from '../../core/models/data.models';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, Subject, Subscription, takeUntil } from 'rxjs';
-import { HouseService } from '../service/house.service';
-import { TaskService } from '../service/task.service';
-import { TasksIndexSortPipe } from '../../pipes/tasks-index-sort.pipe';
+import { HouseService } from '../../core/services/house.service';
+import { TaskService } from '../../core/services/task.service';
+import { TasksIndexSortPipe } from '../../shared/pipes/tasks-index-sort.pipe';
 import { TranslateModule } from '@ngx-translate/core';
-import { ProfileService } from '../service/profile.service';
+import { ProfileService } from '../../core/services/profile.service';
 import { StaffCardComponent } from '../daily-sheet/staff-card';
-import { AuthService } from '../service/auth.service';
-import { WorkGroupService } from '../service/work-group.service';
-import { DataService } from '../service/data.service';
+import { AuthService } from '../../core/services/auth.service';
+import { WorkGroupService } from '../../core/services/work-group.service';
+import { DataService } from '../../core/services/data.service';
 
 @Component({
     selector: 'app-work-group-detail',

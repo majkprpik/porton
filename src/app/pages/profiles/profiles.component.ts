@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ProfileRole, Profile, ProfileRoles, UserToRegister } from '../service/data.models';
+import { ProfileRole, Profile, ProfileRoles, UserToRegister } from '../../core/models/data.models';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -7,14 +7,14 @@ import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { AuthService } from '../service/auth.service';
+import { AuthService } from '../../core/services/auth.service';
 import { InputTextModule } from 'primeng/inputtext';
-import { ProfileService } from '../service/profile.service';
+import { ProfileService } from '../../core/services/profile.service';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SelectModule } from 'primeng/select';
-import { LanguageService } from '../language/language.service';
-import { DataService } from '../service/data.service';
+import { LanguageService } from '../../core/services/language.service';
+import { DataService } from '../../core/services/data.service';
 
 interface ExtendedProfile extends Profile {
   isDivider?: boolean;

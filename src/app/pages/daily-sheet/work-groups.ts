@@ -1,4 +1,4 @@
-import { LockedTeam, Profile, Task, TaskProgressTypeName, WorkGroup as WorkGroupObject, WorkGroupProfile, WorkGroupTask } from './../service/data.models';
+import { LockedTeam, Profile, Task, TaskProgressTypeName, WorkGroup as WorkGroupObject, WorkGroupProfile, WorkGroupTask } from '../../core/models/data.models';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -7,13 +7,13 @@ import { combineLatest, from, of, Subject } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { catchError, switchMap, takeUntil } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
-import { WorkGroupService } from '../service/work-group.service';
-import { TaskService } from '../service/task.service';
+import { WorkGroupService } from '../../core/services/work-group.service';
+import { TaskService } from '../../core/services/task.service';
 import { PanelModule } from 'primeng/panel';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { PushNotificationsService } from '../service/push-notifications.service';
-import { ProfileService } from '../service/profile.service';
-import { DataService } from '../service/data.service';
+import { PushNotificationsService } from '../../core/services/push-notifications.service';
+import { ProfileService } from '../../core/services/profile.service';
+import { DataService } from '../../core/services/data.service';
 
 @Component({
   selector: 'app-work-groups',

@@ -2,13 +2,13 @@ import { Component, Input, ViewChild, OnInit, OnChanges, SimpleChanges } from '@
 import { CommonModule } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { ChipModule } from 'primeng/chip';
-import { Profile, WorkGroup, WorkGroupProfile, ProfileRole, ProfileRoles } from '../service/data.models';
+import { Profile, WorkGroup, WorkGroupProfile, ProfileRole, ProfileRoles } from '../../core/models/data.models';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { StaffCardComponent } from './staff-card';
-import { WorkGroupService } from '../service/work-group.service';
-import { ProfileService } from '../service/profile.service';
+import { WorkGroupService } from '../../core/services/work-group.service';
+import { ProfileService } from '../../core/services/profile.service';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
-import { DataService } from '../service/data.service';
+import { DataService } from '../../core/services/data.service';
 
 @Component({
   selector: 'app-staff-group',

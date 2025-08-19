@@ -6,14 +6,14 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
-import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
+import { AppFloatingConfigurator } from '../../layout/components/app.floatingconfigurator';
 import { Router } from '@angular/router';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../service/auth.service';
-import { ProfileRole, ProfileRoles } from '../service/data.models';
+import { AuthService } from '../../core/services/auth.service';
+import { ProfileRole, ProfileRoles } from '../../core/models/data.models';
 import { combineLatest, Subject, take, takeUntil } from 'rxjs';
-import { DataService } from '../service/data.service';
+import { DataService } from '../../core/services/data.service';
 @Component({
     selector: 'app-login',
     standalone: true,

@@ -1,24 +1,25 @@
 import { Routes } from '@angular/router';
-import { AppLayout } from './app/layout/component/app.layout';
+import { AppLayout } from './app/layout/components/app.layout';
 import { Documentation } from './app/pages/documentation/documentation';
 import { Notfound } from './app/pages/notfound/notfound';
 import { DailySheetComponent } from './app/pages/daily-sheet/daily-sheet';
 import { Home } from './app/pages/home/home';
 import { Teams } from './app/pages/teams/teams';
 import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
-import { Reservation2Component } from './app/pages/reservation-2/reservation-2.component';
-import { AuthGuard } from './app/layout/guard/auth.guard';
-import { RoleGuard } from './app/layout/guard/role.guard';
+import { Reservation2Component } from './app/pages/reservations/reservations.component';
+import { AuthGuard } from './app/core/guards/auth.guard';
+import { RoleGuard } from './app/core/guards/role.guard';
 import { ProfilesComponent } from './app/pages/profiles/profiles.component';
-import { ArrivalsAndDeparturesPageComponent } from './app/layout/component/arrivals-and-departures-page.component';
-import { TeamsGuard } from './app/layout/guard/teams.guard';
-import { TeamDetailGuard } from './app/layout/guard/team-detail.guard';
-import { NotesPageComponent } from './app/layout/component/notes-page.component';
-import { StatisticsComponent } from './app/layout/component/statistics.component';
-import { TaskArchiveComponent } from './app/layout/component/task-archive.component';
-import { WorkScheduleComponent } from './app/layout/component/work-schedule.component';
-import { ConsoleMessagesComponent } from './app/layout/component/console-messages.component';
-import { ProfileRoles } from './app/pages/service/data.models';
+import { ArrivalsAndDeparturesPageComponent } from './app/pages/arrivals-and-departures/arrivals-and-departures-page.component';
+import { TeamsGuard } from './app/core/guards/teams.guard';
+import { TeamDetailGuard } from './app/core/guards/team-detail.guard';
+import { NotesPageComponent } from './app/pages/notes/notes-page.component';
+import { StatisticsComponent } from './app/pages/statistics/statistics.component';
+import { TaskArchiveComponent } from './app/pages/task-archive/task-archive.component';
+import { WorkScheduleComponent } from './app/pages/work-schedule/work-schedule.component';
+import { ConsoleMessagesComponent } from './app/pages/console-messages/console-messages.component';
+import { ProfileRoles } from './app/core/models/data.models';
+import { Login } from './app/pages/auth/login';
 
 export const appRoutes: Routes = [
     {
@@ -62,7 +63,7 @@ export const appRoutes: Routes = [
                 ] }
             },
             { 
-                path: 'reservations-2', 
+                path: 'reservations', 
                 component: Reservation2Component,
                 data: { roles: [
                     ProfileRoles.VoditeljRecepcije,
@@ -182,10 +183,9 @@ export const appRoutes: Routes = [
                 ] }
             },
             { path: 'documentation', component: Documentation },
-            { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') }
         ]
     },
     { path: 'notfound', component: Notfound },
-    { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
+    { path: 'login', component: Login },
     { path: '**', redirectTo: '/notfound' }
 ];

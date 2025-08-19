@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { StaffGroup } from './staff-group';
 import { ChipModule } from 'primeng/chip';
-import { Profile, ProfileRole, ProfileRoles } from '../service/data.models';
+import { Profile, ProfileRole, ProfileRoles } from '../../core/models/data.models';
 import { CommonModule } from '@angular/common';
-import { WorkGroupService } from '../service/work-group.service';
+import { WorkGroupService } from '../../core/services/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { combineLatest } from 'rxjs';
-import { DataService } from '../service/data.service';
+import { DataService } from '../../core/services/data.service';
 
 @Component({
   selector: 'app-staff-groups',

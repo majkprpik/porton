@@ -1,21 +1,20 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { House, HouseAvailability, Task, TaskType, HouseType } from '../service/data.models';
-import { combineLatest, Subject, Subscription, takeUntil } from 'rxjs';
+import { House, HouseAvailability, Task, TaskType, HouseType } from '../../core/models/data.models';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { MenuItem } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
-import { TaskService } from '../service/task.service';
-import { HouseService } from '../service/house.service';
+import { TaskService } from '../../core/services/task.service';
+import { HouseService } from '../../core/services/house.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { TranslateModule } from '@ngx-translate/core';
-import { LayoutService } from '../../layout/service/layout.service';
-import { ChartComponent } from '../../layout/component/chart.component';
-import { DataService } from '../service/data.service';
+import { LayoutService } from '../../layout/services/layout.service';
+import { ChartComponent } from '../statistics/chart.component';
+import { DataService } from '../../core/services/data.service';
 
 // Define the special location option interface
 interface SpecialLocation {

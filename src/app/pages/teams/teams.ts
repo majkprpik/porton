@@ -2,19 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { WorkGroup, Profile, Task, House, LockedTeam, WorkGroupTask, WorkGroupProfile } from '../service/data.models';
+import { WorkGroup, Profile, Task, House, LockedTeam, WorkGroupTask, WorkGroupProfile } from '../../core/models/data.models';
 import { ChipModule } from 'primeng/chip';
 import { CardModule } from 'primeng/card';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { TabViewModule } from 'primeng/tabview';
-import { TeamTaskCardComponent } from '../../layout/component/team-task-card.component';
+import { TeamTaskCardComponent } from './team-task-card.component';
 import { PanelModule } from 'primeng/panel';
-import { WorkGroupService } from '../service/work-group.service';
+import { WorkGroupService } from '../../core/services/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
-import { AuthService } from '../service/auth.service';
-import { ProfileService } from '../service/profile.service';
+import { AuthService } from '../../core/services/auth.service';
+import { ProfileService } from '../../core/services/profile.service';
 import { Router } from '@angular/router';
-import { DataService } from '../service/data.service';
+import { DataService } from '../../core/services/data.service';
 
 @Component({
     selector: 'app-teams',

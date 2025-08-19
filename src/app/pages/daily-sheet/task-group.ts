@@ -1,13 +1,13 @@
 import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskCardComponent } from './task-card';
-import { Task, TaskProgressTypeName, TaskType, WorkGroupTask } from '../service/data.models';
+import { Task, TaskProgressTypeName, TaskType, WorkGroupTask } from '../../core/models/data.models';
 import { PanelModule } from 'primeng/panel';
 import { BadgeModule } from 'primeng/badge';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
-import { TaskService } from '../service/task.service';
+import { TaskService } from '../../core/services/task.service';
 import { TranslateModule } from '@ngx-translate/core';
-import { DataService } from '../service/data.service';
+import { DataService } from '../../core/services/data.service';
 
 @Component({
   selector: 'app-task-group',
