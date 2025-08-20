@@ -61,7 +61,6 @@ export class LayoutService {
     isOverlay = computed(() => this.layoutConfig().menuMode === 'overlay');
     transitionComplete = signal<boolean>(false);
     private initialized = false;
-    private speedDialItems: MenuItem[] = [];
     $chartToRemove: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
     constructor() {
@@ -127,18 +126,6 @@ export class LayoutService {
 
     getPinnedChartsFromLocalStorage(){
         return localStorage.getItem('pinnedCharts');
-    }
-
-    getSpeedDialItems(){
-        return this.speedDialItems;
-    }
-
-    setSpeedDialItems(speedDialItems: MenuItem[]){
-        this.speedDialItems = speedDialItems;
-    }
-
-    addSpeedDialItem(speedDialItems: MenuItem){
-        this.speedDialItems.push(speedDialItems);
     }
 
     private handleDarkModeTransition(config: layoutConfig): void {

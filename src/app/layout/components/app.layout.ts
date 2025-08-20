@@ -10,7 +10,7 @@ import { SpeedDialModule } from 'primeng/speeddial';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MenuItem } from 'primeng/api';
 import { House, RepairTaskComment, Task, TaskType } from '../../core/models/data.models';
 import { TaskService } from '../../core/services/task.service';
 import { MessageService } from 'primeng/api';
@@ -291,10 +291,10 @@ import { DataService } from '../../core/services/data.service';
         @if(!faultReportVisible && !isUnscheduledTaskVisible){
             <p-speedDial
                 [(visible)]="isSpeedDialVisible"
-                [model]="layoutService.getSpeedDialItems()"
+                [model]="speedDialItems"
                 [radius]="120"
-                [type]="layoutService.getSpeedDialItems().length > 2 ? 'quarter-circle' : 'linear'"
-                [direction]="layoutService.getSpeedDialItems().length > 2 ? 'up-left' : 'up'"
+                [type]="speedDialItems.length > 2 ? 'quarter-circle' : 'linear'"
+                [direction]="speedDialItems.length > 2 ? 'up-left' : 'up'"
                 buttonClassName="p-button-primary"
                 [buttonProps]="{ size: 'large', raised: true }"
                 showIcon="pi pi-list"
@@ -967,6 +967,8 @@ export class AppLayout {
     profileWorkDays: ProfileWorkDay[] = [];
 
     notes: Note[] = [];
+    
+    speedDialItems: MenuItem[] = [];
 
     selectedTabIndex: string = "0";
 
@@ -1157,42 +1159,44 @@ export class AppLayout {
         	});
     }
 
-    buildSpeedDialItems(){
-        if(this.layoutService.getSpeedDialItems().length <= 0){
-            this.layoutService.addSpeedDialItem({
+    buildSpeedDialItems() {
+        this.speedDialItems = [
+            {
                 icon: 'pi pi-wrench',
                 command: () => {
-                    this.faultReportVisible = true;
                     this.isTaskDetailsWindowVisible = false;
                     this.resetForm('task-details');
+                    this.faultReportVisible = true;
                 }
+            }
+        ];
+
+        if (!this.profileService.isHousekeeper(this.storedUserId)) {
+            this.speedDialItems.push({
+                icon: 'pi pi-file-edit',
+                command: () => this.isUnscheduledTaskVisible = true
             });
-            if(!this.profileService.isHousekeeper(this.storedUserId)){
-                this.layoutService.addSpeedDialItem({
-                    icon: 'pi pi-file-edit',
-                    command: () => {
-                        this.isUnscheduledTaskVisible = true;
-                    }
-                });
-                if(!this.profileService.isHouseTechnician(this.storedUserId)){
-                    this.layoutService.addSpeedDialItem({
+
+            if (!this.profileService.isHouseTechnician(this.storedUserId)) {
+                this.speedDialItems.push(
+                    {
                         icon: 'pi pi-clipboard',
                         command: () => {
                             this.isNotesWindowVisible = true;
                             this.positions['notes'] = { x: 0, y: 0 };
                             localStorage.setItem('windowPositions', JSON.stringify(this.positions));
                         }
-                    });
-                    this.layoutService.addSpeedDialItem({
+                    },
+                    {
                         icon: 'pi pi-arrow-right-arrow-left',
                         command: () => {
                             this.isArrivalsAndDeparturesWindowVisible = true;
                             this.positions['arrivals'] = { x: 0, y: 0 };
                             localStorage.setItem('windowPositions', JSON.stringify(this.positions));
                         }
-                    });
-                }
-            } 
+                    }
+                );
+            }
         }
     }
 
@@ -1298,6 +1302,8 @@ export class AppLayout {
         if (this.menuOutsideClickListener) {
             this.menuOutsideClickListener();
         }
+
+        this.speedDialItems = [];
     }
 
     isFaultReportFormValid(): boolean {
