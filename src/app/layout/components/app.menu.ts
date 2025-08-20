@@ -234,7 +234,6 @@ export class AppMenu implements OnInit {
             menuItems.push({ label: this.translateService.instant('MENU.WORK-SCHEDULE'), icon: 'pi pi-calendar-clock', routerLink: ['/work-schedule'] });
         }
 
-        // Add Voditelj kampa only menu items
         if (this.isVoditeljKampa(userRole?.name)) {
             menuItems.push(
                 { label: this.translateService.instant('MENU.PROFILES'), icon: 'pi pi-fw pi-user', routerLink: ['/profiles'] },

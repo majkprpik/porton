@@ -1221,7 +1221,6 @@ export class AppLayout {
             const fetchedImages = await this.dataService.getStoredImagesForTask(task.task_id);
 
             if (!fetchedImages || fetchedImages.length === 0) {
-                console.warn('No images found.');
                 this.taskImages = [];
                 return;
             }

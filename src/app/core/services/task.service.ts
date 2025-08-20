@@ -111,23 +111,6 @@ export class TaskService {
     }
   }
 
-  async uploadCommentForTask(taskId: number, comment: string){
-    try{
-      const { error: commentUploadError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('tasks')
-        .update({ description: comment })
-        .eq('task_id', taskId);
-
-      if(commentUploadError) throw commentUploadError
-
-      return true;
-    } catch (error){
-      console.error('Error uploading comment:', error);
-      return [];
-    }
-  }
-
   async storeImagesForTask(images: any[], taskId: number) {
     try {
       const compressedImages = await Promise.all(
