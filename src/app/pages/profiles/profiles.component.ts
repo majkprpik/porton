@@ -532,7 +532,6 @@ export class ProfilesComponent implements OnInit {
             life: 3000 
           });
           if(this.authService.getStoredUserId() == updatedProfile?.id){
-            localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
             this.profileService.$profileForLocalStorage.next(updatedProfile);
           }
           this.profileDialog = false;

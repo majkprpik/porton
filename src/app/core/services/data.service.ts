@@ -877,6 +877,10 @@ export class DataService {
     );
   }
 
+  getRealtimeChannel(){
+    return this.realtimeChannel;
+  }
+
   listenToDatabaseChanges(){
     console.log('Database listening called! Realtime channel: ', this.realtimeChannel);
     if (this.realtimeChannel) return;

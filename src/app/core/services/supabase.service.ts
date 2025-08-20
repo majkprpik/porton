@@ -65,6 +65,10 @@ export class SupabaseService {
     return data;
   }
 
+  setRealtimeAuth(accessToken: string){
+    this.supabase.realtime.setAuth(accessToken);
+  }
+
   // Example: Insert data into a table
   async insertData(table: string, newData: any, schema: string) {
     const { data, error } = await this.supabase

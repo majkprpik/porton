@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivateChild } from '@angular/router';
 import { ProfileRole } from '../models/data.models';
-import { Observable, of } from 'rxjs';
+import { combineLatest, Observable, of } from 'rxjs';
 import { filter, map, take, tap } from 'rxjs/operators';
 import { DataService } from '../services/data.service';
 
@@ -18,36 +18,36 @@ export class RoleGuard implements CanActivateChild {
     ) {}
 
     canActivateChild(childRoute: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
-        const userProfileStr = localStorage.getItem('userProfile');
+        const userId = localStorage.getItem('profileId');
         this.targetUrl = state.url;
 
-        if (!userProfileStr) {
+        if (!userId) {
             return of(true); // If no user profile, let AuthGuard handle the redirect
         } 
 
-        const userProfile = JSON.parse(userProfileStr);
         const allowedRoles = childRoute.data['roles'] as string[];
 
-        return this.dataService.profileRoles$.pipe(
-            filter((roles: any) => roles.length > 0),
+        return combineLatest([
+            this.dataService.profiles$, 
+            this.dataService.profileRoles$,
+        ]).pipe(
+            filter(([profiles, roles]) => profiles.length > 0 && roles.length > 0),
             take(1),
-            map((profileRoles: ProfileRole[]) => {
-                let userRole = profileRoles.find(profileRole => profileRole.id == userProfile.role_id);
+            map(([profiles, profileRoles]) => {
+                const userProfile = profiles.find(profile => profile.id === userId);
+                if (!userProfile) return false;
 
-                if(!userRole){
-                    return false;
-                }
+                const userRole = profileRoles.find(role => role.id === userProfile.role_id);
+                if (!userRole) return false;
 
-                if(!allowedRoles || allowedRoles.length == 0){
-                    return true;
-                }
+                if (!allowedRoles || allowedRoles.length === 0) return true;
 
                 return allowedRoles.includes(userRole.name);
             }),
-            tap((isAllowed: boolean) => {
-                if (!isAllowed && this.targetUrl == '/home') {
+            tap((isAllowed) => {
+                if (!isAllowed && this.targetUrl === '/home') {
                     this.router.navigate(['/teams']); 
-                } else if (!isAllowed){
+                } else if (!isAllowed) {
                     this.router.navigate(['/home']);
                 }
             })

@@ -1059,10 +1059,7 @@ export class AppLayout {
 
     private async onAppVisible() {
         console.log('App is now visible — refresh or reconnect!');
-        
         await this.authService.checkSession();
-        await this.authService.checkRealtime();
-
         this.dataService.loadInitialData();
         this.pushNotificationsService.requestFirebaseMessaging();
     }

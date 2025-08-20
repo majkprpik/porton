@@ -11,8 +11,8 @@ import { Router } from '@angular/router';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
-import { ProfileRole, ProfileRoles } from '../../core/models/data.models';
-import { combineLatest, Subject, take, takeUntil } from 'rxjs';
+import { Profile, ProfileRole, ProfileRoles, WorkGroupProfile } from '../../core/models/data.models';
+import { combineLatest, firstValueFrom, Subject, take, takeUntil } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
 @Component({
     selector: 'app-login',
@@ -53,14 +53,6 @@ import { DataService } from '../../core/services/data.service';
                             <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Lozinka</label>
                             <p-password id="password1" [(ngModel)]="password" placeholder="Password" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false" (keydown.enter)="onLogin()"></p-password>
 
-                            <!-- <div class="flex items-center justify-between mt-2 mb-8 gap-8">
-                                <div class="flex items-center">
-                                    <p-checkbox [(ngModel)]="checked" id="rememberme1" binary class="mr-2"></p-checkbox>
-                                    <label for="rememberme1">Remember me</label>
-                                </div>
-                                <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
-                            </div> -->
-
                             @if(errorMessage){
                                 <div class="text-red-500 mb-4">{{ errorMessage }}</div>
                             }
@@ -85,6 +77,8 @@ export class Login implements OnInit {
     checked: boolean = false;
     loading: boolean = false;
     errorMessage: string = '';
+    profileRoles: ProfileRole[] = [];
+    profiles: Profile[] = [];
 
     private destroy$ = new Subject<void>();
 
@@ -95,18 +89,19 @@ export class Login implements OnInit {
     ) {}
 
     ngOnInit() {
-        this.loadProfileAndWorkGroupProfiles();
+        this.subscribeToDataStreams();
     }
 
-    private loadProfileAndWorkGroupProfiles() {
+    private subscribeToDataStreams() {
         combineLatest([
-            this.dataService.loadProfileRoles(),
-            this.dataService.loadWorkGroupProfiles()
+            this.dataService.profileRoles$,
+            this.dataService.profiles$,
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-            next: ([profileRoles, workGroupProfiles]) => {
-                
+            next: ([profileRoles, profiles]) => {
+                this.profileRoles = profileRoles;
+                this.profiles = profiles;
             },
             error: (error) => {
                 console.error('Error loading profiles:', error);
@@ -130,13 +125,10 @@ export class Login implements OnInit {
                     this.errorMessage = 'Invalid email or password';
                     return;
                 }
-
-                this.dataService.profileRoles$.pipe(take(1)).subscribe((roles) => {
-                    if(roles){
-                        this.redirectUserByRole(roles);
-                    }
-                });
-
+                
+                await firstValueFrom(this.dataService.loadProfiles());
+                
+                this.redirectUserByRole();
             } catch (error) {
                 this.errorMessage = 'An error occurred during login';
                 console.error('Login error:', error);
@@ -146,16 +138,20 @@ export class Login implements OnInit {
         }
     }
 
-    redirectUserByRole(profileRoles: ProfileRole[]) {
-        const userProfileStr = localStorage.getItem('userProfile');
-        if (!userProfileStr) {
-            this.router.navigate(['/notfound']);
+    redirectUserByRole() {
+        const userId = localStorage.getItem('profileId');
+        if (!userId) {
+            this.router.navigate(['/login']);
             return;
         }
 
-        const userProfile = JSON.parse(userProfileStr);
+        const userProfile = this.profiles.find(p => p.id == userId);
+        if(!userProfile) {
+            this.router.navigate(['/login']);
+            return;
+        }
 
-        const userRole = profileRoles.find(r => r.id === userProfile.role_id);
+        const userRole = this.profileRoles.find(r => r.id === userProfile.role_id);
         const roleName = userRole?.name;
 
         switch (roleName) {
@@ -177,7 +173,7 @@ export class Login implements OnInit {
                 this.router.navigate(['/home']);
                 break;
             default:
-                this.router.navigate(['/notfound']);
+                this.router.navigate(['/login']);
         }
     }
 }

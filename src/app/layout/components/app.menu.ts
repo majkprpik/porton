@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
-import { ProfileRole, ProfileRoles } from '../../core/models/data.models';
+import { Profile, ProfileRole, ProfileRoles } from '../../core/models/data.models';
 import { ProfileService } from '../../core/services/profile.service';
 import { TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
@@ -26,6 +26,7 @@ import { DataService } from '../../core/services/data.service';
 export class AppMenu implements OnInit {
     model: MenuItem[] = [];
     profileRoles: ProfileRole[] = [];
+    profiles: Profile[] = [];
     
     private destroy$ = new Subject<void>();
 
@@ -44,11 +45,14 @@ export class AppMenu implements OnInit {
     private subscribeToDataStreams() {
         combineLatest([
             this.dataService.profileRoles$,
+            this.dataService.profiles$,
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-            next: ([profileRoles]) => {
+            next: ([profileRoles, profiles]) => {
                 this.profileRoles = profileRoles;
+                this.profiles = profiles;
+
                 if (this.profileRoles.length > 0) {
                     this.buildMenu();
                 }
@@ -102,7 +106,7 @@ export class AppMenu implements OnInit {
         return allowedRoles.some(allowedRole => allowedRole.name == role);
     }
 
-    private isRoleAllowedForRezervacije2(role?: string): boolean {
+    private isRoleAllowedForRezervacije(role?: string): boolean {
         if (!role) return false;
 
         const allowedRoles = this.profileRoles.filter(profileRole => 
@@ -194,23 +198,25 @@ export class AppMenu implements OnInit {
     }
 
     private buildMenu() {
-        // get from local storage
-        const userProfile = localStorage.getItem('userProfile');
-        if (!userProfile) {
+        const userId = localStorage.getItem('profileId');
+        if (!userId) {
             return;
         }
 
-        const userRole = this.profileRoles.find(profileRole => profileRole.id == JSON.parse(userProfile).role_id);
-        // Base menu items (visible to all)
+        const userProfile = this.profiles.find(p => p.id == userId);
+        if(!userProfile) {
+            return;
+        }
+
+        const userRole = this.profileRoles.find(profileRole => profileRole.id == userProfile.role_id);
+
         const menuItems = [];
         
-        // Items that need role check
         if (this.isRoleAllowedForPregled(userRole?.name)) {
             menuItems.push({ label: this.translateService.instant('MENU.HOME'), icon: 'pi pi-fw pi-home', routerLink: ['/home'] });
         }
         
-        // Conditionally add Rezervacije 2
-        if (this.isRoleAllowedForRezervacije2(userRole?.name)) {
+        if (this.isRoleAllowedForRezervacije(userRole?.name)) {
             menuItems.push({ label: this.translateService.instant('MENU.RESERVATIONS'), icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/reservations'] });
         }
 

@@ -12,8 +12,6 @@ import { DataService } from './data.service';
   providedIn: 'root'
 })
 export class AuthService {  
-  private usernameSubject = new BehaviorSubject<string | null>(this.getStoredUsername());
-  public userProfile = new BehaviorSubject<any>(null);
   profileRoles: ProfileRole[] = [];
   private isLoggingOut = false;
 
@@ -65,25 +63,6 @@ export class AuthService {
     return true;
   }
 
-  async checkRealtime(){
-    if(!await this.isSessionValid()) return;
-
-    const token = await this.supabaseService.getAccessToken();
-
-    if (this.isTokenExpired(token)) {
-      console.log('🔄 Token expired — refreshing session...');
-      const { data: refreshed, error: refreshError } = await this.supabaseService.refreshSession();
-      if (refreshError || !refreshed.session) {
-        console.error('❌ Failed to refresh session:', refreshError);
-        return;
-      }
-      console.log('✅ Session refreshed.');
-    }
-
-    await this.dataService.unsubscribeFromRealtime();
-    this.dataService.listenToDatabaseChanges();
-  }
-
   isTokenExpired(jwt: string | null): boolean {
     if(!jwt) return true;
 
@@ -114,18 +93,12 @@ export class AuthService {
       });
 
       if (error) throw error;
+      if (!data.user) return false;
 
-      if (data.user) {
-        this.setUserName('username', email);
-        this.setProfileId(data.user.id);
-        this.usernameSubject.next(email);
-        this.userProfile.next(await this.profileService.fetchProfileById(data.user.id));
-        this.setUserProfile(JSON.stringify(this.userProfile.value));
-        this.layoutService.setSpeedDialItems([]);
+      this.setUserName('username', email);
+      this.setUserId(data.user.id);
 
-        return true;
-      }
-      return false;
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -154,10 +127,6 @@ export class AuthService {
 
       localStorage.clear();
 
-      this.usernameSubject.next(null);
-      this.userProfile.next(null);
-
-      this.layoutService.setSpeedDialItems([]);
       await this.router.navigate(['/login']);
     } catch (error) {
       console.error('Logout error:', error);
@@ -174,8 +143,11 @@ export class AuthService {
       if (!session && !this.isLoggingOut) {
         this.logout();
       } else if (session) {
-        await this.dataService.unsubscribeFromRealtime();
-        this.dataService.listenToDatabaseChanges();
+        this.supabaseService.setRealtimeAuth(session.access_token);
+
+        if(!this.dataService.getRealtimeChannel()) {
+          this.dataService.listenToDatabaseChanges();
+        }
       }
     });
   }
@@ -197,20 +169,8 @@ export class AuthService {
     return localStorage.getItem('profileId');
   }
 
-  setProfileId(profileId: string){
-    localStorage.setItem('profileId', profileId);
-  }
-
-  getStoredUserProfile(){
-    return localStorage.getItem('userProfile');
-  }
-
-  setUserProfile(userProfile: string){
-    localStorage.setItem('userProfile', userProfile);
-  }
-
-  getUsername() {
-    return this.usernameSubject.asObservable();
+  setUserId(userId: string){
+    localStorage.setItem('profileId', userId);
   }
 
   /**
