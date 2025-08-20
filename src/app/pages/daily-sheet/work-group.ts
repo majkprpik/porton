@@ -200,119 +200,106 @@ import { DataService } from '../../core/services/data.service';
           padding-bottom: 40px;
         }
       }
-    }
 
-    .work-group-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      gap: 1rem;
-    }
-
-    .work-group-title-area {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex: 1;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .work-group-title {
-      font-weight: 600;
-      font-size: 1.1rem;
-      color: var(--text-color);
-    }
-
-    .activate-button-container {
-      display: flex;
-      justify-content: center;
-      margin: -0.5rem 0 1rem 0;
-    }
-
-    :host ::ng-deep {
-      .activate-button {
-        .p-button {
-          min-width: 200px;
-          font-size: 1.1rem;
-          font-weight: 600;
-          padding: 0.75rem 2rem;
-          text-transform: uppercase;
-        }
-      }
-    }
-
-    .work-group-content {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .tasks-area, .staff-area {
-      flex: 1;
-      min-height: 150px;
-      border: 2px dashed var(--surface-border);
-      border-radius: 4px;
-      background: var(--surface-ground);
-      padding: 0.5rem;
-      position: relative;
-
-      .tasks-sort-icon{
-        position: absolute;
-        height: 30px;
-        width: 30px;
-        bottom: 10px;
-        right: 10px;
+      .work-group-header {
         display: flex;
-        flex-direction: row;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
-        border-radius: 5px;
-        transition: transform 0.3s ease;
+        margin-bottom: 1rem;
+        gap: 1rem;
 
-        &:hover{
-          cursor: pointer;
-          background-color: lightgray;
-          transform: scale(1.05);
+        .work-group-title-area {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          flex: 1;
+
+          .work-group-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-color);
+          }
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .activate-button-container {
+          display: flex;
+          justify-content: center;
+          margin: -0.5rem 0 1rem 0;
         }
       }
-    }
 
-    .drop-area {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-color-secondary);
-      font-style: italic;
-    }
+      .work-group-content {
+        display: flex;
+        gap: 1rem;
 
-    .tasks-list, .staff-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
+        .tasks-area,
+        .staff-area {
+          flex: 1;
+          min-height: 150px;
+          border: 2px dashed var(--surface-border);
+          border-radius: 4px;
+          background: var(--surface-ground);
+          padding: 0.5rem;
+          position: relative;
 
-    .tasks-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      min-height: 50px;
-      padding: 0.25rem;
-      transition: all 0.2s ease;
-    }
+          .drop-area {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color-secondary);
+            font-style: italic;
+          }
 
-    .task-card-container {
-      display: flex;
-      align-items: center;
-      transition: transform 0.1s ease;
+          .tasks-list,
+          .staff-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+          }
 
-      &.dragging {
-        opacity: 0.5;
-        transform: scale(0.98);
+          .tasks-list {
+            min-height: 50px;
+            padding: 0.25rem;
+            transition: all 0.2s ease;
+          }
+
+          .task-card-container {
+            display: flex;
+            align-items: center;
+            transition: transform 0.1s ease;
+
+            &.dragging {
+              opacity: 0.5;
+              transform: scale(0.98);
+            }
+          }
+
+          .tasks-sort-icon {
+            position: absolute;
+            height: 30px;
+            width: 30px;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            transition: transform 0.3s ease;
+
+            &:hover {
+              cursor: pointer;
+              background-color: lightgray;
+              transform: scale(1.05);
+            }
+          }
+        }
       }
     }
 
@@ -325,59 +312,69 @@ import { DataService } from '../../core/services/data.service';
       border-radius: 4px;
       overflow: hidden;
 
-      .task-box-container{
+      .task-box-container {
         display: flex;
         flex-direction: row;
         gap: 5px;
         width: 100%;
 
-        .task-index{
+        .task-index {
           display: flex;
           flex-direction: row;
           align-items: center;
           justify-content: center;
         }
       }
-    }
 
-    .task-box {
-      width: 100%;
-      padding: 20px 10px;
-      border-bottom: solid 1px #ccc;
-      color: rgba(0, 0, 0, 0.87);
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      box-sizing: border-box;
-      cursor: move;
-      background: white;
-      font-size: 14px;
-      border-radius: 5px;
-      margin-bottom: 5px;
+      .task-box {
+        width: 100%;
+        padding: 20px 10px;
+        border-bottom: solid 1px #ccc;
+        color: rgba(0, 0, 0, 0.87);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box;
+        cursor: move;
+        background: white;
+        font-size: 14px;
+        border-radius: 5px;
+        margin-bottom: 5px;
 
-      .house-number{
-        font-weight: 600;
+        .house-number {
+          font-weight: 600;
+        }
+
+        &.completed {
+          background: var(--p-red-400);
+          color: var(--p-surface-0);
+        }
+
+        &.in-progress {
+          background: var(--p-yellow-500);
+          color: var(--p-surface-0);
+        }
+
+        &.assigned {
+          background: var(--p-blue-500);
+          color: var(--p-surface-0);
+        }
+
+        &.not-assigned {
+          background: var(--p-green-500);
+          color: var(--p-surface-0);
+        }
       }
 
-      &.completed{
-        background: var(--p-red-400);
-        color: var(--p-surface-0);
+      .task-box:last-child {
+        border: none;
       }
 
-      &.in-progress {
-        background: var(--p-yellow-500);
-        color: var(--p-surface-0);
-      }
-
-      &.assigned {
-        background: var(--p-blue-500);
-        color: var(--p-surface-0);
-      }
-
-      &.not-assigned {
-        background: var(--p-green-500);
-        color: var(--p-surface-0);
+      &.cdk-drop-list-dragging {
+        .task-box:not(.cdk-drag-placeholder) {
+          transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+        }
       }
     }
 
@@ -385,9 +382,10 @@ import { DataService } from '../../core/services/data.service';
       border: none;
       box-sizing: border-box;
       border-radius: 4px;
-      box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
-                  0 8px 10px 1px rgba(0, 0, 0, 0.14),
-                  0 3px 14px 2px rgba(0, 0, 0, 0.12);
+      box-shadow:
+        0 5px 5px -3px rgba(0, 0, 0, 0.2),
+        0 8px 10px 1px rgba(0, 0, 0, 0.14),
+        0 3px 14px 2px rgba(0, 0, 0, 0.12);
     }
 
     .cdk-drag-placeholder {
@@ -398,12 +396,16 @@ import { DataService } from '../../core/services/data.service';
       transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
     }
 
-    .task-box:last-child {
-      border: none;
-    }
-
-    .sorted-tasks-list.cdk-drop-list-dragging .task-box:not(.cdk-drag-placeholder) {
-      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+    :host ::ng-deep {
+      .activate-button {
+        .p-button {
+          min-width: 200px;
+          font-size: 1.1rem;
+          font-weight: 600;
+          padding: 0.75rem 2rem;
+          text-transform: uppercase;
+        }
+      }
     }
   `
 })
@@ -420,83 +422,29 @@ export class WorkGroup implements OnInit {
 
   selectedStaff?: Profile;
   staffMenuItems: MenuItem[] = [];
-
-  isSortDialogVisible = false;
-  
-  // Array of 12 distinct colors for work groups
-  private groupColors = [
-    'rgba(50, 177, 151, 0.1)',   // Teal
-    'rgba(255, 99, 71, 0.1)',    // Tomato
-    'rgba(65, 105, 225, 0.1)',   // Royal Blue
-    'rgba(147, 112, 219, 0.1)',  // Medium Purple
-    'rgba(255, 165, 0, 0.1)',    // Orange
-    'rgba(46, 139, 87, 0.1)',    // Sea Green
-    'rgba(220, 20, 60, 0.1)',    // Crimson
-    'rgba(0, 191, 255, 0.1)',    // Deep Sky Blue
-    'rgba(255, 215, 0, 0.1)',    // Gold
-    'rgba(138, 43, 226, 0.1)',   // Blue Violet
-    'rgba(0, 128, 128, 0.1)',    // Teal
-    'rgba(255, 69, 0, 0.1)'      // Red Orange
-  ];
-  
-  // Array of color names matching the colors above
-  private groupColorNames = [
-    'Tirkizna',    // Teal
-    'Narančasta',  // Tomato
-    'Plava',       // Royal Blue
-    'Ljubičasta',  // Medium Purple
-    'Žuta',        // Orange
-    'Zelena',      // Sea Green
-    'Crvena',      // Crimson
-    'Svijetloplava', // Deep Sky Blue
-    'Zlatna',      // Gold
-    'Indigo',      // Blue Violet
-    'Tirkizna 2',  // Teal
-    'Koraljna'     // Red Orange
-  ];
-  
-  // Array of 12 distinct border colors for work groups
-  private groupBorderColors = [
-    'rgba(50, 177, 151, 0.2)',   // Teal
-    'rgba(255, 99, 71, 0.2)',    // Tomato
-    'rgba(65, 105, 225, 0.2)',   // Royal Blue
-    'rgba(147, 112, 219, 0.2)',  // Medium Purple
-    'rgba(255, 165, 0, 0.2)',    // Orange
-    'rgba(46, 139, 87, 0.2)',    // Sea Green
-    'rgba(220, 20, 60, 0.2)',    // Crimson
-    'rgba(0, 191, 255, 0.2)',    // Deep Sky Blue
-    'rgba(255, 215, 0, 0.2)',    // Gold
-    'rgba(138, 43, 226, 0.2)',   // Blue Violet
-    'rgba(0, 128, 128, 0.2)',    // Teal
-    'rgba(255, 69, 0, 0.2)'      // Red Orange
-  ];
-  
-  // Get the color for this work group based on its ID
-  getGroupColor(): string {
-    if (!this.workGroup) return 'rgba(50, 177, 151, 0.1)'; // Default teal
-    const index = (this.workGroup.work_group_id - 1) % 12;
-    return this.groupColors[index];
-  }
-  
-  // Get the border color for this work group based on its ID
-  getGroupBorderColor(): string {
-    if (!this.workGroup) return 'rgba(50, 177, 151, 0.2)'; // Default teal
-    const index = (this.workGroup.work_group_id - 1) % 12;
-    return this.groupBorderColors[index];
-  }
-
-  // Get the color name for this work group based on its ID
-  getGroupColorName(): string {
-    if (!this.workGroup) return this.groupColorNames[0];
-    const index = (this.workGroup.work_group_id - 1) % 12;
-    return this.groupColorNames[index];
-  }
   
   tasks: Task[] = [];
   profiles: Profile[] = [];
   workGroupTasks: WorkGroupTask[] = [];
   workGroupProfiles: WorkGroupProfile[] = [];
   workGroups: WorkGroupObject[] = [];
+
+  isSortDialogVisible = false;
+
+  workGroupColors = [
+    { name: 'Tirkizna', background: 'rgba(50, 177, 151, 0.1)', border: 'rgba(50, 177, 151, 0.2)' },
+    { name: 'Narančasta', background: 'rgba(255, 99, 71, 0.1)', border: 'rgba(255, 99, 71, 0.2)' },
+    { name: 'Plava', background: 'rgba(65, 105, 225, 0.1)', border: 'rgba(65, 105, 225, 0.2)' },
+    { name: 'Ljubičasta', background: 'rgba(147, 112, 219, 0.1)', border: 'rgba(147, 112, 219, 0.2)' },
+    { name: 'Žuta', background: 'rgba(255, 165, 0, 0.1)', border: 'rgba(255, 165, 0, 0.2)' },
+    { name: 'Zelena', background: 'rgba(46, 139, 87, 0.1)', border: 'rgba(46, 139, 87, 0.2)' },
+    { name: 'Crvena', background: 'rgba(220, 20, 60, 0.1)', border: 'rgba(220, 20, 60, 0.2)' },
+    { name: 'Svijetloplava', background: 'rgba(0, 191, 255, 0.1)', border: 'rgba(0, 191, 255, 0.2)' },
+    { name: 'Zlatna', background: 'rgba(255, 215, 0, 0.1)', border: 'rgba(255, 215, 0, 0.2)' },
+    { name: 'Indigo', background: 'rgba(138, 43, 226, 0.1)', border: 'rgba(138, 43, 226, 0.2)' },
+    { name: 'Tirkizna 2', background: 'rgba(0, 128, 128, 0.1)', border: 'rgba(0, 128, 128, 0.2)' },
+    { name: 'Koraljna', background: 'rgba(255, 69, 0, 0.1)', border: 'rgba(255, 69, 0, 0.2)' },
+  ];
 
   private destroy$ = new Subject<void>();
 
@@ -689,6 +637,24 @@ export class WorkGroup implements OnInit {
       lockedTeam.tasks = lockedTeam.tasks.filter(task => task.task_id !== res.old.task_id);
       this.workGroupService.updateLockedTeam(lockedTeam);
     }
+  }
+
+  getGroupColor(): string {
+    if (!this.workGroup) return this.workGroupColors[0].background; 
+    const index = (this.workGroup.work_group_id - 1) % 12;
+    return this.workGroupColors[index].background;
+  }
+  
+  getGroupBorderColor(): string {
+    if (!this.workGroup) return this.workGroupColors[0].border; 
+    const index = (this.workGroup.work_group_id - 1) % 12;
+    return this.workGroupColors[index].border;
+  }
+
+  getGroupColorName(): string {
+    if (!this.workGroup) return this.workGroupColors[0].name;
+    const index = (this.workGroup.work_group_id - 1) % 12;
+    return this.workGroupColors[index].name;
   }
 
   onGroupClick() {
