@@ -584,14 +584,9 @@ export class WorkGroups implements OnInit {
       this.workGroupService.$newGroupWhileGroupActive.next(true);
     }
 
-    this.dataService.createWorkGroup(isRepairWorkGroup).subscribe({
-      next: (workGroup) => {
-        if (workGroup) {
-          this.setActiveGroup(workGroup.work_group_id);
-        }
-      },
-      error: (error) => {
-        console.error('Error creating work group:', error);
+    this.workGroupService.createWorkGroup(isRepairWorkGroup).then(res => {
+      if(res && res.work_group_id){
+        this.setActiveGroup(res.work_group_id);
       }
     });
   }
@@ -616,7 +611,7 @@ export class WorkGroups implements OnInit {
         );
 
     forkJoin(updateObservables.length > 0 ? updateObservables : [of(null)]).pipe(
-      switchMap(() => this.dataService.deleteWorkGroup(workGroupId)),
+      switchMap(() => this.workGroupService.deleteWorkGroup(workGroupId)),
       catchError((err) => {
         console.error("Error:", err);
         throw new Error("Error deleting work group!");
