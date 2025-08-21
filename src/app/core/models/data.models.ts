@@ -223,3 +223,10 @@ export enum Departments {
   Reception = 'Reception',
   Management = 'Management',
 }
+
+export enum HouseOccupant {
+  Adults = 'adults',
+  Children = 'babies',
+  Cribs = 'cribs',
+  Pets = 'dogs_d',
+}

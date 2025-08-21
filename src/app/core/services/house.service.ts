@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup, Profile } from '../models/data.models';
+import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup, Profile, HouseOccupant } from '../models/data.models';
 import { combineLatest } from 'rxjs';
 import { TaskService } from './task.service';
 import { DataService } from './data.service';
@@ -389,11 +389,4 @@ export class HouseService {
       return false;
     }
   }
-}
-
-export enum HouseOccupant {
-  Adults = 'adults',
-  Children = 'babies',
-  Cribs = 'cribs',
-  Pets = 'dogs_d',
 }
