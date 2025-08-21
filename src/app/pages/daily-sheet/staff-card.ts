@@ -49,7 +49,6 @@ import { ProfileService } from '../../core/services/profile.service';
           content: '';
           position: absolute;
           inset: 0;
-          border: 2px dashed var(--primary-color);
           border-radius: 20px;
           opacity: 0;
           transition: opacity 0.2s;

@@ -241,7 +241,6 @@ import { DataService } from '../../core/services/data.service';
         .staff-area {
           flex: 1;
           min-height: 150px;
-          border: 2px dashed var(--surface-border);
           border-radius: 4px;
           background: var(--surface-ground);
           padding: 0.5rem;

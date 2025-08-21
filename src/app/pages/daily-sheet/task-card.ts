@@ -91,7 +91,6 @@ import { DataService } from '../../core/services/data.service';
           content: '';
           position: absolute;
           inset: 0;
-          border: 2px dashed var(--p-primary-500);
           border-radius: 4px;
           opacity: 0;
           transition: opacity 0.2s;
