@@ -196,7 +196,7 @@ import { DataService } from '../../core/services/data.service';
                                     </div>
     
                                     <div>
-                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.CREATED-AT' | translate }}: </b> {{ task?.created_at | date: 'dd MMM yyyy' }} </span>
+                                        <span><b>{{ 'APP-LAYOUT.TASK-DETAILS.CREATED-AT' | translate }}: </b> {{ task?.created_at | date: 'dd MMM yyyy - HH:mm' : 'UTC' }} </span>
                                     </div>
 
                                     @if(task?.start_time){
