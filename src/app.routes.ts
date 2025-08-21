@@ -20,6 +20,7 @@ import { WorkScheduleComponent } from './app/pages/work-schedule/work-schedule.c
 import { ConsoleMessagesComponent } from './app/pages/console-messages/console-messages.component';
 import { ProfileRoles } from './app/core/models/data.models';
 import { Login } from './app/pages/auth/login';
+import { LoginGuard } from './app/core/guards/login.guard';
 
 export const appRoutes: Routes = [
     {
@@ -184,6 +185,6 @@ export const appRoutes: Routes = [
         ]
     },
     { path: 'notfound', component: Notfound },
-    { path: 'login', component: Login },
+    { path: 'login', component: Login, canActivate: [LoginGuard] },
     { path: '**', redirectTo: '/notfound' }
 ];
