@@ -796,14 +796,18 @@ export class WorkGroup implements OnInit {
   }
 
   deleteCompletedWorkGroupTasks(){
-    const workGroupTasks = this.workGroupTasks.filter(wgt => wgt.work_group_id == this.workGroup?.work_group_id);
-    const tasks = this.tasks.filter(task => workGroupTasks.some(wgt => wgt.task_id == task.task_id));
+    if (!this.workGroup) return;
 
-    tasks.forEach(task => {
-      if(this.taskService.isTaskCompleted(task) && this.isTaskOlderThan2Days(task)){
-        this.workGroupService.deleteWorkGroupTask(task.task_id);
-      }
-    });
+    const workGroupTasks = this.workGroupTasks.filter(wgt => wgt.work_group_id == this.workGroup!.work_group_id);
+    
+    const tasksToDelete = this.tasks
+      .filter(task => workGroupTasks.some(wgt => wgt.task_id === task.task_id))
+      .filter(task => this.taskService.isTaskCompleted(task) && this.isTaskOlderThan2Days(task));
+
+     if (tasksToDelete.length > 0) {
+      const taskIds = tasksToDelete.map(task => task.task_id);
+      this.workGroupService.deleteWorkGroupTasks(taskIds);
+    }
   }
 
   isTaskOlderThan2Days(task: Task){
