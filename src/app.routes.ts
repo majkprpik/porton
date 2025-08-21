@@ -184,7 +184,6 @@ export const appRoutes: Routes = [
             { path: 'documentation', component: Documentation },
         ]
     },
-    { path: 'notfound', component: Notfound },
     { path: 'login', component: Login, canActivate: [LoginGuard] },
-    { path: '**', redirectTo: '/notfound' }
+    { path: '**', redirectTo: '/' }
 ];
