@@ -168,6 +168,12 @@ export class DataService {
     }
   }
 
+  setRepairTaskComments(repairTaskComments: RepairTaskComment[]){
+    if(repairTaskComments){
+      this.repairTaskCommentsSubject.next(repairTaskComments);
+    }
+  }
+
   private logData(source: string, data: any): void {
     if (this.debug) {
       //console.log(`[DataService] ${source}:`, data);

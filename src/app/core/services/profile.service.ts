@@ -110,38 +110,22 @@ export class ProfileService {
     return false;
   }
 
-  /**
-   * Fetch a profile by ID from Supabase
-   * @param id Profile ID
-   * @returns Promise of Profile
-   */
-  public async fetchProfileById(id: string): Promise<Profile> {
+  async deleteProfile(profileId: string){
     try {
       const { data, error } = await this.supabase.getClient()
         .schema('porton')
         .from('profiles')
-        .select('*')
-        .eq('id', id)
+        .delete()
+        .eq('id', profileId)
+        .select()
         .single();
 
       if (error) throw error;
 
-      return data;
-    } catch (error) {
-      console.error(`Error fetching profile with ID ${id} from Supabase:`, error);
-      throw error;
-    }
-  }
-
-  async deleteProfile(profileId: string){
-    try {
-      const { error } = await this.supabase.getClient()
-        .schema('porton')
-        .from('profiles')
-        .delete()
-        .eq('id', profileId);
-
-      if (error) throw error;
+      if(data && data.id){
+        const filteredProfiles = this.profiles.filter(p => p.id != data.id);
+        this.dataService.setProfiles(filteredProfiles);
+      }
 
       return true;
     } catch (error) {
@@ -163,6 +147,11 @@ export class ProfileService {
         .single();
 
       if (error) throw error;
+
+      if(data && data.id){
+        const updatedProfiles = this.profiles.map(p => p.id == data.id ? data : p);
+        this.dataService.setProfiles(updatedProfiles);
+      }
 
       return data;
     } catch (error) {

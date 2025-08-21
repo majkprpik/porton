@@ -1094,6 +1094,12 @@ export class AppLayout {
                 this.storedUserId = this.authService.getStoredUserId();
 
                 this.comments = repairTaskComments;
+                if(this.comments.length && this.task && this.taskService.isRepairTask(this.task)){
+                    this.getStoredImagesForTask(this.task);
+                    this.commentsForTask = this.comments.filter((comments) => comments.task_id == this.task!.task_id);
+                    this.areCommentsLoaded = true;
+                }
+
                 this.taskTypes = taskTypes.map(taskType => ({
                     ...taskType, 
                     translatedName: this.languageService.getSelectedLanguageCode() == 'en' ? this.taskService.taskTypesTranslationMap[taskType.task_type_name] : taskType.task_type_name,
@@ -1639,6 +1645,7 @@ export class AppLayout {
                 if (!existingComment) {
                     this.comments = [...this.comments, res.new];
                     this.commentsForTask = this.comments.filter((comments) => comments.task_id == this.task?.task_id);
+                    this.dataService.setRepairTaskComments([...this.comments]);
                 }
             }
         });

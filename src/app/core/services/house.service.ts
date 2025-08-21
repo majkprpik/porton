@@ -295,9 +295,16 @@ export class HouseService {
         .update({ 
           has_departed: state,
          })
-        .eq('house_availability_id', houseAvailabilityId);
+        .eq('house_availability_id', houseAvailabilityId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      if(data && data.house_availability_id) {
+        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => ha.house_availability_id == data.house_availability_id ? data : ha);
+        this.dataService.setHouseAvailabilites(updatedHouseAvailabilities);
+      }
 
       if(state){
         this.handleHouseDepartureNotificationSend(houseAvailabilityId);
@@ -318,9 +325,16 @@ export class HouseService {
         .update({ 
           has_arrived: state,
          })
-        .eq('house_availability_id', houseAvailabilityId);
+        .eq('house_availability_id', houseAvailabilityId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      if(data && data.house_availability_id) {
+        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => ha.house_availability_id == data.house_availability_id ? data : ha);
+        this.dataService.setHouseAvailabilites(updatedHouseAvailabilities);
+      }
 
       return true;
     }
@@ -379,9 +393,16 @@ export class HouseService {
         .schema('porton')
         .from('house_availabilities')
         .update(updateData)
-        .eq('house_availability_id', houseAvailabilityId);
+        .eq('house_availability_id', houseAvailabilityId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      if(data && data.house_availability_id) {
+        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => ha.house_availability_id == data.house_availability_id ? data : ha);
+        this.dataService.setHouseAvailabilites(updatedHouseAvailabilities);
+      }
 
       return true;
     } catch (error) {

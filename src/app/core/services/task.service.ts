@@ -1,7 +1,7 @@
 import { PushNotificationsService } from './push-notifications.service';
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { House, Profile, Task, TaskProgressType, TaskProgressTypeName, TaskType, TaskTypeName } from '../models/data.models';
+import { House, Profile, RepairTaskComment, Task, TaskProgressType, TaskProgressTypeName, TaskType, TaskTypeName } from '../models/data.models';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 import { AuthService } from './auth.service';
@@ -42,6 +42,7 @@ export class TaskService {
   tasks: Task[] = [];
   profiles: Profile[] = [];
   houses: House[] = [];
+  repairTaskComments: RepairTaskComment[] = []
 
   constructor(
     private supabaseService: SupabaseService,
@@ -57,13 +58,15 @@ export class TaskService {
       this.dataService.taskTypes$,
       this.dataService.tasks$,
       this.dataService.profiles$,
-      this.dataService.houses$
-    ]).subscribe(([taskProgressTypes, taskTypes, tasks, profiles, houses]) => {
+      this.dataService.houses$,
+      this.dataService.repairTaskComments$,
+    ]).subscribe(([taskProgressTypes, taskTypes, tasks, profiles, houses, repairTaskComments]) => {
       this.taskProgressTypes = taskProgressTypes;
       this.taskTypes = taskTypes;
       this.tasks = tasks;
       this.profiles = profiles;
       this.houses = houses;
+      this.repairTaskComments = repairTaskComments;
 
       this.loggedUser = this.profiles.find(profile => profile.id == this.storedUserId);
     });
@@ -103,6 +106,10 @@ export class TaskService {
         .single();
 
       if (error) throw error;
+
+      if (data && !this.tasks.find(t => t.task_id === data.task_id)) {
+        this.dataService.setTasks([...this.tasks, data]);
+      }
 
       return data;
     } catch (error) {
@@ -176,9 +183,14 @@ export class TaskService {
           comment: repairTaskComment,
           created_at: this.supabaseService.formatDateTimeForSupabase(new Date()),
         })
+        .select()
         .single();
 
-      if(commentError) throw commentError
+      if(commentError) throw commentError;
+
+      if(comment && !this.repairTaskComments.find(c => c.id == comment.id)) {
+        this.dataService.setRepairTaskComments([...this.repairTaskComments, comment]);
+      }
 
       return comment;
     } catch (error){
@@ -189,13 +201,20 @@ export class TaskService {
 
   async deleteTask(taskId: number){
     try{
-      const { error: taskDeleteError } = await this.supabaseService.getClient()
+      const { data, error: taskDeleteError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .delete()
-        .eq('task_id', taskId);
+        .eq('task_id', taskId)
+        .select()
+        .single();
 
-      if(taskDeleteError) throw taskDeleteError
+      if(taskDeleteError) throw taskDeleteError;
+
+      if(data && data.task_id) {
+        const filteredTasks = this.tasks.filter(t => t.task_id != data.task_id);
+        this.dataService.setTasks(filteredTasks);
+      }
 
       return true;
     } catch (error){
@@ -219,32 +238,42 @@ export class TaskService {
           start_time: isInProgress ? (task?.start_time ?? this.supabaseService.formatDateTimeForSupabase(new Date())) : task?.start_time,
         })
         .eq('task_id', task.task_id)
-        .select();
+        .select()
+        .single();
 
       if(taskError) throw taskError
 
-      if(this.isTaskCompleted(updatedTask[0]) && updatedTask[0].is_unscheduled && this.isRepairTask(updatedTask[0])){
-        const profilesToReceiveNotification = this.profiles.filter(profile => 
-          this.profilesToReceiveTaskCompletedNotification.some(p => p == profile.first_name));
+      if(updatedTask && updatedTask.task_id) {
+        const updatedTasks = this.tasks.map(t => t.task_id == updatedTask.task_id ? updatedTask : t);
+        this.dataService.setTasks(updatedTasks);
 
-        let completedBy: any = this.profiles.find(profile => profile.id == updatedTask[0].completed_by)?.first_name;
-        if(!completedBy) completedBy = 'User';
-
-        let houseNumber = this.houses.find(house => house.house_id == updatedTask[0].house_id)?.house_name;
-        if(!houseNumber) houseNumber = '0';
-
-        profilesToReceiveNotification.forEach(profile => {
-          this.pushNotificationsService.sendNotification(profile.id, {
-            title: 'Task completed',
-            body: completedBy + ' completed a repair task on house ' + houseNumber,
-          });
-        });
+        this.handleRepairTaskCompleteNotificationSend(updatedTask);
       }
 
       return updatedTask;
     } catch (error) {
       console.error('Error updating task progress type: ', error);
       return null;
+    }
+  }
+
+  handleRepairTaskCompleteNotificationSend(updatedTask: Task){
+    if(this.isTaskCompleted(updatedTask) && updatedTask.is_unscheduled && this.isRepairTask(updatedTask)){
+      const profilesToReceiveNotification = this.profiles.filter(profile => 
+        this.profilesToReceiveTaskCompletedNotification.some(p => p == profile.first_name));
+
+      let completedBy: any = this.profiles.find(profile => profile.id == updatedTask.completed_by)?.first_name;
+      if(!completedBy) completedBy = 'User';
+
+      let houseNumber = this.houses.find(house => house.house_id == updatedTask.house_id)?.house_name;
+      if(!houseNumber) houseNumber = '0';
+
+      profilesToReceiveNotification.forEach(profile => {
+        this.pushNotificationsService.sendNotification(profile.id, {
+          title: 'Task completed',
+          body: completedBy + ' completed a repair task on house ' + houseNumber,
+        });
+      });
     }
   }
 
