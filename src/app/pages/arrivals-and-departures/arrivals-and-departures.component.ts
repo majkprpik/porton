@@ -361,40 +361,6 @@ export class ArrivalsAndDeparturesComponent {
         console.log(error);
       }
     });
-
-    this.dataService.$houseAvailabilitiesUpdate.subscribe(res => {
-      if(res && res.new.house_availability_id && res.eventType == 'UPDATE'){
-        if(this.arrivals.find(arrival => arrival.house_availability_id == res.new.house_availability_id)) {
-          let arrivalIndex = this.arrivals.findIndex(arrival => arrival.house_availability_id == res.new.house_availability_id);
-          let house = this.houses.find(house => house.house_id == res.new.house_id);
-
-          res.new = {
-            ...res.new,
-            house_number: house?.house_number,
-            arrivalTimeObj: this.getTimeObjFromTimeString(res.new.arrival_time || '16:00'),
-          }
-
-          this.arrivals[arrivalIndex] = res.new;
-          this.arrivals = [...this.arrivals];
-        } else if (this.departures.find(arrival => arrival.house_availability_id == res.new.house_availability_id)){
-          let departureIndex = this.departures.findIndex(arrival => arrival.house_availability_id == res.new.house_availability_id);
-          let house = this.houses.find(house => house.house_id == res.new.house_id);
-          
-          res.new = {
-            ...res.new,
-            house_number: house?.house_number,
-            departureTimeObj: this.getTimeObjFromTimeString(res.new.departure_time || '10:00')
-          }
-
-          this.departures[departureIndex] = res.new;
-          this.departures = [...this.departures];
-        }
-
-        const haIndex = this.houseAvailabilities.findIndex(ha => ha.house_availability_id == res.new.house_availability_id);
-        this.houseAvailabilities[haIndex] = res.new;
-        this.dataService.setHouseAvailabilites([...this.houseAvailabilities]);
-      };
-    });
   }
 
   ngOnDestroy() {

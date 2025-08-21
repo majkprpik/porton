@@ -502,23 +502,6 @@ export class DataService {
     );
   }
 
-  createWorkGroup(isRepairWorkGroup: boolean): Observable<WorkGroup | null> {
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.insertData('work_groups', {is_repair: isRepairWorkGroup}, this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentWorkGroups = this.workGroupsSubject.value;
-          this.workGroupsSubject.next([...currentWorkGroups, data]);
-          this.logData('Created Work Group', data);
-        }
-      }),
-      map((data) => (data ? data : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
   updateProfile(id: string, updates: Partial<Omit<Profile, 'id' | 'created_at'>>): Observable<Profile | null> {
     this.loadingSubject.next(true);
 
@@ -541,10 +524,8 @@ export class DataService {
   saveHouseAvailability(reservation: HouseAvailability): Observable<HouseAvailability | null> {
     this.loadingSubject.next(true);
     
-    // Remove house_availability_id if it's a new reservation (backend will generate it)
     const saveData = { ...reservation };
     if (saveData.house_availability_id && saveData.house_availability_id > 1000000) {
-      // If it's a temporary ID (we used a large number), remove it
       delete (saveData as any).house_availability_id;
     }
     
@@ -798,7 +779,6 @@ export class DataService {
     if(houseId > 0){
       return from(this.supabaseService.deleteData('house_availabilities', filterCondition, this.schema)).pipe(
         tap((data) => {
-          // Remove the deleted availability from local state
           const currentAvailabilities = this.houseAvailabilitiesSubject.value;
           const updatedAvailabilities = currentAvailabilities.filter(
             availability => availability.house_availability_id !== availabilityId
@@ -812,7 +792,6 @@ export class DataService {
     } else {
       return from(this.supabaseService.deleteData('temp_house_availabilities', filterCondition, this.schema)).pipe(
         tap((data) => {
-          // Remove the deleted availability from local state
           const currentTempAvailabilities = this.tempHouseAvailabilitiesSubject.value;
           const updatedTempAvailabilities = currentTempAvailabilities.filter(
             availability => availability.house_availability_id !== availabilityId
@@ -859,22 +838,6 @@ export class DataService {
       console.error('Error updating house profile work schedules:', error);
       return null;
     }
-  }
-
-  deleteWorkGroup(workGroupId: number): Observable<any> {
-    const filter = `work_group_id = ${workGroupId}`;
-
-    return from(this.supabaseService.deleteData('work_groups', filter, this.schema)).pipe(
-      tap(() => {
-        const currentGroups = this.workGroupsSubject.value;
-        const updatedGroups = currentGroups.filter(group => group.work_group_id !== workGroupId);
-        this.workGroupsSubject.next(updatedGroups);
-      }),
-      catchError(error => {
-        console.error('Error deleting work group:', error);
-        return throwError(() => error);
-      })
-    );
   }
 
   getRealtimeChannel(){
