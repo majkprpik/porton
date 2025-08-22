@@ -8,7 +8,6 @@ import {
   map,
   catchError,
   tap,
-  combineLatest,
 } from 'rxjs';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { 
@@ -190,10 +189,6 @@ export class DataService {
   }
 
   loadInitialData(): void {
-    if (this.debug) {
-      //console.log('[DataService] Loading initial data...');
-    }
-    
     this.loadHouseAvailabilities().subscribe();
     this.loadTempHouseAvailabilities().subscribe();
     this.loadTasks().subscribe();
@@ -213,9 +208,6 @@ export class DataService {
   }
 
   private loadAllEnumTypes(): void {
-    if (this.debug) {
-      //console.log('[DataService] Loading enum types...');
-    }
     this.getTaskTypes().subscribe();
     this.getTaskProgressTypes().subscribe();
     this.getHouseTypes().subscribe();
@@ -294,6 +286,22 @@ export class DataService {
         console.error('Error fetching house types:', error);
         return this.handleError(error);
       }),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  loadAuthUsers(): Observable<Profile[]> {
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('users', 'auth')).pipe(
+      tap((data) => {
+        if (data) {
+          this.authUsersSubject.next(data);
+          this.logData('Authenticated Users', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
       tap(() => this.loadingSubject.next(false))
     );
   }
@@ -508,99 +516,6 @@ export class DataService {
     );
   }
 
-  updateProfile(id: string, updates: Partial<Omit<Profile, 'id' | 'created_at'>>): Observable<Profile | null> {
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.updateData('profiles', updates, `id = '${id}'`, this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentProfiles = this.profilesSubject.value;
-          const updatedProfiles = currentProfiles.map(profile => 
-            profile.id === id ? { ...profile, ...data[0] } : profile
-          );
-          this.setProfiles(updatedProfiles);
-        }
-      }),
-      map((data) => (data ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  saveHouseAvailability(reservation: HouseAvailability): Observable<HouseAvailability | null> {
-    this.loadingSubject.next(true);
-    
-    const saveData = { ...reservation };
-    if (saveData.house_availability_id && saveData.house_availability_id > 1000000) {
-      delete (saveData as any).house_availability_id;
-    }
-    
-    // Ensure we only include fields that exist in the house_availabilities table
-    // Remove any fields that might be accidentally included but don't exist
-    const validFields = [
-      'house_availability_id',
-      'house_id',
-      'house_availability_type_id',
-      'house_availability_start_date',
-      'house_availability_end_date',
-      'has_arrived',
-      'has_departed',
-      'last_name',
-      'reservation_number',
-      'reservation_length',
-      'prev_connected',
-      'next_connected',
-      'adults',
-      'babies',
-      'cribs',
-      'dogs_d',
-      'dogs_s',
-      'dogs_b',
-      'color_theme',
-      'color_tint',
-      'note',
-      'arrival_time',
-      'departure_time'
-    ];
-    
-    // Create clean object with only valid fields
-    const cleanSaveData: any = {};
-    for (const field of validFields) {
-      if (field in saveData) {
-        cleanSaveData[field] = (saveData as any)[field];
-      }
-    }
-
-    if(reservation.house_id > 0){
-      return from(this.supabaseService.insertData('house_availabilities', cleanSaveData, this.schema)).pipe(
-        catchError((error) => this.handleError(error)),
-        tap(() => this.loadingSubject.next(false))
-      );
-    } else {
-      return from(this.supabaseService.insertData('temp_house_availabilities', cleanSaveData, this.schema)).pipe(
-        catchError((error) => this.handleError(error)),
-        tap(() => this.loadingSubject.next(false))
-      );
-    }
-  }
-
-  saveProfileWorkSchedule(newProfileSchedule: Partial<ProfileWorkSchedule>){
-    this.loadingSubject.next(true);
-    const { id, ...scheduleWithoutId } = newProfileSchedule;
-
-    return from(this.supabaseService.insertData('profile_work_schedule', scheduleWithoutId, this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentFullWorkSchedule = this.profileWorkScheduleSubject.value;
-          this.setFullWorkSchedule([...currentFullWorkSchedule, data]);
-          this.logData('Created Profile Work Schedule', data);
-        }
-      }),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
   loadProfileWorkDays(){
     this.loadingSubject.next(true);
 
@@ -617,231 +532,46 @@ export class DataService {
     );
   }
 
-  saveProfileWorkDay(newProfileDay: ProfileWorkDay){
-    this.loadingSubject.next(true);
-    const { id, is_checked, ...scheduleWithoutId } = newProfileDay;
+  async getStoredImagesForTask(taskId: number){
+    try {
+      const folderPath = 'task-' + taskId;
 
-    return from(this.supabaseService.insertData('profile_work_days', scheduleWithoutId, this.schema)).pipe(
-      tap((data) => {
-        if (data) {
-          const currentWorkDays = this.profileWorkDaysSubject.value;
-          this.setProfileWorkDays([...currentWorkDays, data]);
-          this.logData('Created Profile Work Day', data);
-        }
-      }),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
+      const { data: files, error: listError } = await this.supabaseService.getClient()
+        .storage
+        .from('damage-reports-images')
+        .list(folderPath);
 
-  saveProfileWorkDays(profileWorkDays: ProfileWorkDay[]){
-    this.loadingSubject.next(true);
-    const payload = profileWorkDays.map(({ id, is_checked, ...rest }) => rest);
+      if (listError) throw listError;
 
-    return from(this.supabaseService.insertMultipleData('profile_work_days', payload, this.schema)).pipe(
-      tap((data) => {
-        if (data && data.length > 0) {
-          const currentWorkDays = this.profileWorkDaysSubject.value;
-          const newDays = data as ProfileWorkDay[];
-
-          const combined = [...currentWorkDays, ...newDays];
-          const uniqueById: ProfileWorkDay[] = Array.from(
-            new Map(combined.map(day => [day.id, day])).values()
-          );
-
-          this.setProfileWorkDays(uniqueById);
-          this.logData('Created Profile Work Day', data);
-        }
-      }),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  updateProfileWorkSchedule(updatedSchedule: Partial<ProfileWorkSchedule>){
-    this.loadingSubject.next(true);
-
-    if(!updatedSchedule.id){
-      console.error('Cannot update profile schedule without an ID');
-      return throwError(() => new Error('Missing profile work schedule id'));
+      return files;
+    } catch(error) {
+      console.log('Error fetching images: ' + error)
+      return null;
     }
-
-    return from(this.supabaseService.updateData('profile_work_schedule', updatedSchedule, updatedSchedule.id.toString(), this.schema)).pipe(
-      tap((data) => {
-        if (data && data.length > 0) {
-          const fullProfileSchedule = this.profileWorkScheduleSubject.value;
-          const updatedFullProfileSchedule = fullProfileSchedule.map(schedule => {
-            if(schedule.id == data[0].id){
-              return data[0];
-            } else {
-              return schedule;
-            }
-          });
-
-          this.setFullWorkSchedule(updatedFullProfileSchedule);
-          this.logData('Updated Profile Work Schedule', data[0]);
-        }
-      }),
-      map((data) => (data && data.length > 0 ? data[0] : null)),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
   }
 
-  // Method to update an existing house availability (reservation)
-  updateHouseAvailability(reservation: HouseAvailability): Observable<HouseAvailability | null> {
-    this.loadingSubject.next(true);
-    
-    // Make sure we have a valid ID
-    if (!reservation.house_availability_id) {
-      console.error('Cannot update house availability without an ID');
-      return throwError(() => new Error('Missing house_availability_id'));
-    }
-    
-    // Create a copy of the reservation data for the update
-    const updateData = { ...reservation };
-    const availabilityId = updateData.house_availability_id;
-    
-    // Ensure we only include fields that exist in the house_availabilities table
-    // Remove any fields that might be accidentally included but don't exist
-    const validFields = [
-      'house_availability_id',
-      'house_id',
-      'house_availability_type_id',
-      'house_availability_start_date',
-      'house_availability_end_date',
-      'has_arrived',
-      'has_departed',
-      'last_name',
-      'reservation_number',
-      'reservation_length',
-      'prev_connected',
-      'next_connected',
-      'adults',
-      'babies',
-      'cribs',
-      'dogs_d',
-      'dogs_s',
-      'dogs_b',
-      'color_theme',
-      'color_tint',
-      'note',
-      'arrival_time',
-      'departure_time'
-    ];
-    
-    // Create clean object with only valid fields
-    const cleanUpdateData: any = {};
-    for (const field of validFields) {
-      if (field in updateData) {
-        cleanUpdateData[field] = (updateData as any)[field];
+  async getPublicUrlForImage(filePath: string) {
+    try {
+      const response: any = await this.supabaseService
+        .getClient()
+        .storage
+        .from('damage-reports-images')
+        .getPublicUrl(filePath);
+  
+      if (response && response.data && response.data.publicUrl) {
+        return response.data.publicUrl;
       }
-    }
-
-    if(reservation.house_id > 0){
-      return from(this.supabaseService.updateData('house_availabilities', cleanUpdateData, availabilityId.toString(), this.schema)).pipe(
-        tap((data) => {
-          if (data && data.length > 0) {
-            // Update the local BehaviorSubject with the updated data
-            const currentAvailabilities = this.houseAvailabilitiesSubject.value;
-            const updatedAvailabilities = currentAvailabilities.map(avail => 
-              avail.house_availability_id === availabilityId ? data[0] : avail
-            );
-            this.houseAvailabilitiesSubject.next(updatedAvailabilities);
-            this.logData('Updated House Availability', data[0]);
-          }
-        }),
-        map((data) => (data && data.length > 0 ? data[0] : null)),
-        catchError((error) => this.handleError(error)),
-        tap(() => this.loadingSubject.next(false))
-      );
-    } else {
-      return from(this.supabaseService.updateData('temp_house_availabilities', cleanUpdateData, availabilityId.toString(), this.schema)).pipe(
-        tap((data) => {
-          if (data && data.length > 0) {
-            // Update the local BehaviorSubject with the updated data
-            const currentTempAvailabilities = this.tempHouseAvailabilitiesSubject.value;
-            const updatedTempAvailabilities = currentTempAvailabilities.map(avail => 
-              avail.house_availability_id === availabilityId ? data[0] : avail
-            );
-            this.tempHouseAvailabilitiesSubject.next(updatedTempAvailabilities);
-            this.logData('Updated Temp House Availability', data[0]);
-          }
-        }),
-        map((data) => (data && data.length > 0 ? data[0] : null)),
-        catchError((error) => this.handleError(error)),
-        tap(() => this.loadingSubject.next(false))
-      );
-    }
-  }
-
-  // Method to delete a house availability (reservation) from the backend
-  deleteHouseAvailability(availabilityId: number, houseId: number): Observable<any> {
-    this.loadingSubject.next(true);
-    
-    // Create the filter condition string
-    const filterCondition = `house_availability_id = ${availabilityId}`;
-
-    if(houseId > 0){
-      return from(this.supabaseService.deleteData('house_availabilities', filterCondition, this.schema)).pipe(
-        tap((data) => {
-          const currentAvailabilities = this.houseAvailabilitiesSubject.value;
-          const updatedAvailabilities = currentAvailabilities.filter(
-            availability => availability.house_availability_id !== availabilityId
-          );
-          this.houseAvailabilitiesSubject.next(updatedAvailabilities);
-          this.logData('Deleted House Availability', { house_availability_id: availabilityId });
-        }),
-        catchError((error) => this.handleError(error)),
-        tap(() => this.loadingSubject.next(false))
-      );
-    } else {
-      return from(this.supabaseService.deleteData('temp_house_availabilities', filterCondition, this.schema)).pipe(
-        tap((data) => {
-          const currentTempAvailabilities = this.tempHouseAvailabilitiesSubject.value;
-          const updatedTempAvailabilities = currentTempAvailabilities.filter(
-            availability => availability.house_availability_id !== availabilityId
-          );
-          this.tempHouseAvailabilitiesSubject.next(updatedTempAvailabilities);
-          this.logData('Deleted Temp House Availability', { house_availability_id: availabilityId });
-        }),
-        catchError((error) => this.handleError(error)),
-        tap(() => this.loadingSubject.next(false))
-      );
-    }
-  }
-
-  deleteProfileWorkSchedule(scheduleId: number){
-    const filterCondition = `id = ${scheduleId}`;
-
-    return from(this.supabaseService.deleteData('profile_work_schedule', filterCondition, this.schema)).pipe(
-      tap((data) => {
-        if(data && data.length > 0){
-          const currentFullWorkSchedule = this.profileWorkScheduleSubject.value;
-          const updatedFullWorkSchedule = currentFullWorkSchedule.filter(schedule => schedule.id != data[0].id);
-          this.setFullWorkSchedule(updatedFullWorkSchedule);
-          this.logData('Deleted Profile Work Schedule ', scheduleId);
-        }
-      }),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  async deleteProfileWorkSchedules(scheduleIds: number[]){
-    try{
-      const { data, error } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('profile_work_schedule')
-        .delete()
-        .in('id', scheduleIds)
-        .select();
-
-      if (error) throw error;
-
-      return data;
-    } catch(error){
-      console.error('Error updating house profile work schedules:', error);
+  
+      if (response && response.error) {
+        console.error('Error getting public URL:', response.error);
+        return null;
+      }
+  
+      console.error('Public URL not found or unknown error');
+      return null;
+  
+    } catch (error) {
+      console.error('Error getting public URL:', error);
       return null;
     }
   }
@@ -978,66 +708,6 @@ export class DataService {
       console.log('Unsubscribing from realtime channel...');
       await this.supabaseService.getClient().removeChannel(this.realtimeChannel);
       this.realtimeChannel = null;
-    }
-  }
-
-  loadAuthUsers(): Observable<Profile[]> {
-    this.loadingSubject.next(true);
-
-    return from(this.supabaseService.getData('users', 'auth')).pipe(
-      tap((data) => {
-        if (data) {
-          this.authUsersSubject.next(data);
-          this.logData('Authenticated Users', data);
-        }
-      }),
-      map((data) => data || []),
-      catchError((error) => this.handleError(error)),
-      tap(() => this.loadingSubject.next(false))
-    );
-  }
-
-  async getStoredImagesForTask(taskId: number){
-    try {
-      const folderPath = 'task-' + taskId;
-
-      const { data: files, error: listError } = await this.supabaseService.getClient()
-        .storage
-        .from('damage-reports-images')
-        .list(folderPath);
-
-      if (listError) throw listError;
-
-      return files;
-    } catch(error) {
-      console.log('Error fetching images: ' + error)
-      return null;
-    }
-  }
-
-  async getPublicUrlForImage(filePath: string) {
-    try {
-      const response: any = await this.supabaseService
-        .getClient()
-        .storage
-        .from('damage-reports-images')
-        .getPublicUrl(filePath);
-  
-      if (response && response.data && response.data.publicUrl) {
-        return response.data.publicUrl;
-      }
-  
-      if (response && response.error) {
-        console.error('Error getting public URL:', response.error);
-        return null;
-      }
-  
-      console.error('Public URL not found or unknown error');
-      return null;
-  
-    } catch (error) {
-      console.error('Error getting public URL:', error);
-      return null;
     }
   }
 }

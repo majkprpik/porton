@@ -667,6 +667,7 @@ export class WorkScheduleFormComponent {
 
             if(this.workDays.length - 1 == index) {
               profileSchedules.push({
+                id: this.profileWorkSchedule!.id,
                 profile_id: wd.profile_id,
                 start_date: tempWorkDays[0].day,
                 end_date: tempWorkDays[tempWorkDays.length - 1].day,
@@ -678,6 +679,7 @@ export class WorkScheduleFormComponent {
           } else {
             if(tempWorkDays.length > 0) {
               profileSchedules.push({
+                id: this.profileWorkSchedule!.id,
                 profile_id: wd.profile_id,
                 start_date: tempWorkDays[0].day,
                 end_date: tempWorkDays[tempWorkDays.length - 1].day,

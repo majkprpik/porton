@@ -10,6 +10,7 @@ import { LayoutService } from '../../layout/services/layout.service';
 import { DataService } from '../../core/services/data.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { ReservationFormComponent } from './reservation-form/reservation-form.component';
+import { HouseService } from '../../core/services/house.service';
 
 interface CellData {
     isReserved: boolean;
@@ -861,6 +862,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     constructor(
         private dataService: DataService,
+        private houseService: HouseService,
         private messageService: MessageService,
         private translateService: TranslateService,
         private confirmationService: ConfirmationService,
@@ -1374,41 +1376,15 @@ export class Reservation2Component implements OnInit, OnDestroy {
         }
     }
 
-    // New version of handleDeleteReservation that takes a reservationId directly
     handleDeleteReservation(data: { availabilityId: number; houseId: number }): void {
-        // Find the reservation by ID
         const reservation = this.houseAvailabilities().find(
             avail => avail.house_availability_id === data.availabilityId
         );
         
         if (!reservation) return;
         
-        // First update UI optimistically
-        const currentAvailabilities = this.houseAvailabilities();
-        const filteredAvailabilities = currentAvailabilities.filter(
-            avail => avail.house_availability_id !== data.availabilityId
-        );
-        this.houseAvailabilities.set(filteredAvailabilities);
         this.updateGridMatrix();
-        
-        // Delete from backend
-        this.dataService.deleteHouseAvailability(data.availabilityId, data.houseId).subscribe({
-            next: (result) => {
-                // Update was already done optimistically above
-            },
-            error: (error: any) => {
-                console.error("Error deleting reservation:", error);
-                // Revert the optimistic update
-                forkJoin({
-                    temp: this.dataService.loadTempHouseAvailabilities(),
-                    main: this.dataService.loadHouseAvailabilities(),
-                }).subscribe( ({temp, main}) => {
-                    const combined = [...main, ...temp];
-                    this.houseAvailabilities.set(combined);
-                    this.updateGridMatrix();
-                });
-            }
-        });
+        this.houseService.deleteHouseAvailability(data.availabilityId, data.houseId);
     }
 
     handleAddReservation(row: number, col: number): void {
@@ -1492,46 +1468,19 @@ export class Reservation2Component implements OnInit, OnDestroy {
             }
         }
         
-        // Format dates for backend properly - we need YYYY-MM-DD format
-        // We'll use our own function instead of relying on toISOString which can cause timezone issues
         const formattedStartDate = this.formatDateToYYYYMMDD(startDate);
         const formattedEndDate = this.formatDateToYYYYMMDD(endDate);
         
         if (isEditing) {
             const updatedReservation: HouseAvailability = {
                 ...reservation,
-                // Use the formatted dates from the form data
                 house_availability_start_date: formattedStartDate,
                 house_availability_end_date: formattedEndDate,
-                reservation_length: this.calculateDaysBetween(startDate, endDate) + 1 // Include both start and end date
+                reservation_length: this.calculateDaysBetween(startDate, endDate) + 1,
             };
             
             this.showReservationForm.set(false);
-            
-            this.dataService.updateHouseAvailability(updatedReservation).subscribe({
-                next: (savedReservation: HouseAvailability | null) => {
-                    forkJoin({
-                        temp: this.dataService.loadTempHouseAvailabilities(),
-                        main: this.dataService.loadHouseAvailabilities(),
-                    }).subscribe( ({temp, main}) => {
-                        const combined = [...main, ...temp];
-                        this.houseAvailabilities.set(combined);
-                        this.updateGridMatrix();
-                    });
-                },
-                error: (error: any) => {
-                    console.error("Error updating reservation:", error);
-                    // Force a reload anyway to ensure we have consistent data
-                    forkJoin({
-                        temp: this.dataService.loadTempHouseAvailabilities(),
-                        main: this.dataService.loadHouseAvailabilities(),
-                    }).subscribe( ({temp, main}) => {
-                        const combined = [...main, ...temp];
-                        this.houseAvailabilities.set(combined);
-                        this.updateGridMatrix();
-                    });
-                }
-            });
+            this.houseService.updateHouseAvailability(updatedReservation);
         } else {
             const newReservation: HouseAvailability = {
                 ...reservation,
@@ -1541,7 +1490,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 reservation_length: this.calculateDaysBetween(startDate, endDate) + 1
             };
             
-            // Ensure all required fields have values (even if they're default/empty values)
             if (!newReservation.has_arrived) newReservation.has_arrived = false;
             if (!newReservation.has_departed) newReservation.has_departed = false;
             if (!newReservation.prev_connected) newReservation.prev_connected = false;
@@ -1556,36 +1504,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
             if (!newReservation.dogs_b) newReservation.dogs_b = 0;
             
             this.showReservationForm.set(false);
-
-            this.dataService.saveHouseAvailability(newReservation).subscribe({
-                next: (savedReservation: HouseAvailability | null) => {
-                    forkJoin({
-                        temp: this.dataService.loadTempHouseAvailabilities(),
-                        main: this.dataService.loadHouseAvailabilities(),
-                    }).subscribe( ({temp, main}) => {
-                        const combined = [...main, ...temp];
-                        this.houseAvailabilities.set(combined);
-
-                        setTimeout(() => {
-                            this.updateGridMatrix();
-                        }, 300);
-                    });
-                },
-                error: (error: any) => {
-                    console.error("Error saving reservation:", error);
-                    // Force a reload anyway to ensure we have consistent data
-                    this.dataService.loadHouseAvailabilities().subscribe(freshData => {
-                        forkJoin({
-                            temp: this.dataService.loadTempHouseAvailabilities(),
-                            main: this.dataService.loadHouseAvailabilities(),
-                        }).subscribe( ({temp, main}) => {
-                            const combined = [...main, ...temp];
-                            this.houseAvailabilities.set(combined);
-                            this.updateGridMatrix();
-                        });
-                    });
-                }
-            });
+            this.houseService.createHouseAvailability(newReservation);
         }
     }
     
@@ -1818,19 +1737,15 @@ export class Reservation2Component implements OnInit, OnDestroy {
                     house_availability_end_date: endDate.toLocaleDateString('en-CA').split('T')[0],
                 };
 
-                //ne moze update jer je nekad temp_house_availability, a nekad house_availability, zato ide delete pa create novi
+                //ne moze update jer mogu biti razlicite tablice, nekad temp_house_availability, a nekad house_availability, zato ide delete pa create novi
                 try {
-                    const deleted = await firstValueFrom(
-                        this.dataService.deleteHouseAvailability(
-                            this.reservationToMove.house_availability_id,
-                            this.reservationToMove.house_id
-                        )
+                    const deleted = await this.houseService.deleteHouseAvailability(
+                        this.reservationToMove.house_availability_id,
+                        this.reservationToMove.house_id
                     );
 
                     if (deleted) {
-                        const saved = await firstValueFrom(
-                            this.dataService.saveHouseAvailability(reservationCopy)
-                        );
+                        const saved = await this.houseService.createHouseAvailability(reservationCopy);
 
                         if (saved) {
                             this.clearAvailableSpaces();

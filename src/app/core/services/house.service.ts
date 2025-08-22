@@ -13,6 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class HouseService {
   houseAvailabilities: HouseAvailability[] = [];
+  tempHouseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
   tasks: Task[] = [];
   workGroupTasks: WorkGroupTask[] = [];
@@ -29,6 +30,7 @@ export class HouseService {
   ) {
     combineLatest([
       this.dataService.houseAvailabilities$,
+      this.dataService.tempHouseAvailabilities$,
       this.dataService.houses$,
       this.dataService.tasks$,
       this.dataService.workGroupTasks$,
@@ -36,8 +38,9 @@ export class HouseService {
       this.dataService.workGroups$,
       this.dataService.profiles$
     ]).subscribe({
-      next: ([houseAvailabilities, houses, tasks, workGroupTasks, workGroupProfiles, workGroups, profiles]) => {
+      next: ([houseAvailabilities, tempHouseAvailabilities, houses, tasks, workGroupTasks, workGroupProfiles, workGroups, profiles]) => {
         this.houseAvailabilities = houseAvailabilities;
+        this.tempHouseAvailabilities = tempHouseAvailabilities;
         this.houses = houses;
         this.tasks = tasks;
         this.workGroupTasks = workGroupTasks;
@@ -406,6 +409,104 @@ export class HouseService {
       return updatedHouseAvailability;
     } catch (error) {
       console.error(`Error updating ${timeField} for house availability ${houseAvailabilityId}:`, error);
+      return null;
+    }
+  }
+
+  async createHouseAvailability(houseAvailability: HouseAvailability){
+    try{
+      const table = (houseAvailability.house_id > 0) ? 'house_availabilities' : 'temp_house_availabilities';
+      const { house_availability_id, ...houseAvailabilityToCreate } = houseAvailability;
+
+      const { data: createdHouseAvailability, error: createHouseAvailabilityError } = await this.supabase.getClient()
+        .schema('porton')
+        .from(table)
+        .insert(houseAvailabilityToCreate)
+        .select()
+        .single();
+      
+      if(createHouseAvailabilityError) throw createHouseAvailabilityError;
+
+      if(
+        createdHouseAvailability.house_id > 0 &&
+        createdHouseAvailability && 
+        !this.houseAvailabilities.find(ha => ha.house_availability_id == createdHouseAvailability.house_availability_id)
+      ) {
+        this.dataService.setHouseAvailabilites([...this.houseAvailabilities, createdHouseAvailability]);
+      } else if(
+        createdHouseAvailability.house_id < 0 &&
+        createdHouseAvailability && 
+        !this.tempHouseAvailabilities.find(ha => ha.house_availability_id == createdHouseAvailability.house_availability_id)
+      ) {
+        this.dataService.setTempHouseAvailabilities([...this.tempHouseAvailabilities, createdHouseAvailability]);
+      }
+
+      return createdHouseAvailability;
+    } catch(error) {
+      console.error('Error creating house availability:', error);
+      return null;
+    }
+  }
+
+  async updateHouseAvailability(houseAvailability: HouseAvailability){
+    try {
+      const table = (houseAvailability.house_id > 0) ? 'house_availabilities' : 'temp_house_availabilities';
+      const { house_availability_id, ...houseAvailabilityToUpdate } = houseAvailability;
+
+      const { data: updatedHouseAvailability, error: updateHouseAvailabilityError } = await this.supabase.getClient()
+        .schema('porton')
+        .from(table)
+        .update(houseAvailabilityToUpdate)
+        .eq('house_availability_id', house_availability_id)
+        .select()
+        .single();
+
+      if(updateHouseAvailabilityError) throw updateHouseAvailabilityError;
+
+      if(updatedHouseAvailability && updatedHouseAvailability.house_availability_id && updatedHouseAvailability.house_id > 0){
+        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => 
+          ha.house_availability_id == updatedHouseAvailability.house_availability_id ? updatedHouseAvailability : ha
+        );
+        this.dataService.setHouseAvailabilites(updatedHouseAvailabilities);
+      } else if(updatedHouseAvailability && updatedHouseAvailability.house_availability_id && updatedHouseAvailability.house_id < 0){
+        const updatedTempHouseAvailabilities = this.tempHouseAvailabilities.map(tha => 
+          tha.house_availability_id == updatedHouseAvailability.house_availability_id ? updatedHouseAvailability : tha
+        );
+        this.dataService.setTempHouseAvailabilities(updatedTempHouseAvailabilities);
+      }
+
+      return updatedHouseAvailability;
+    } catch(error) {
+      console.error('Error updating house availability:', error);
+      return null;
+    }
+  }
+
+  async deleteHouseAvailability(houseAvailabilityId: number, houseId: number){
+    try{
+      const table = (houseId > 0) ? 'house_availabilities' : 'temp_house_availabilities';
+
+      const { data: deletedHouseAvailability, error: deleteHouseAvailabilityError } = await this.supabase.getClient()
+        .schema('porton')
+        .from(table)
+        .delete()
+        .eq('house_availability_id', houseAvailabilityId)
+        .select()
+        .single();
+
+      if (deleteHouseAvailabilityError) throw deleteHouseAvailabilityError;
+
+      if(houseId > 0 && deletedHouseAvailability && deletedHouseAvailability.house_availability_id){
+        const filteredHouseAvailabilities = this.houseAvailabilities.filter(ha => ha.house_availability_id != deletedHouseAvailability.house_availability_id);
+        this.dataService.setHouseAvailabilites(filteredHouseAvailabilities);
+      } else if(houseId < 0 && deletedHouseAvailability && deletedHouseAvailability.house_availability_id) {
+        const filteredTempHouseAvailabilities = this.tempHouseAvailabilities.filter(ha => ha.house_availability_id != deletedHouseAvailability.house_availability_id);
+        this.dataService.setTempHouseAvailabilities(filteredTempHouseAvailabilities);
+      }
+
+      return deletedHouseAvailability;
+    } catch(error) {
+      console.error('Error updating house availability:', error);
       return null;
     }
   }

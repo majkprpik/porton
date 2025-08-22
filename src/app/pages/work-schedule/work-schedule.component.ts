@@ -10,6 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { DataService } from '../../core/services/data.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { LayoutService } from '../../layout/services/layout.service';
+import { WorkScheduleService } from '../../core/services/work-schedule.service';
 
 @Component({
   selector: 'app-work-schedule',
@@ -692,6 +693,7 @@ export class WorkScheduleComponent {
   constructor(
     private dataService: DataService,
     private layoutService: LayoutService,
+    private workScheduleService: WorkScheduleService,
   ) {
     effect(() => {
       this.isNightMode = this.layoutService.layoutConfig().darkTheme;
@@ -1005,22 +1007,29 @@ export class WorkScheduleComponent {
     return `${year}-${month}-${day}`;
   }
 
-  async handleProfileScheduleSave(data: {profileWorkDays: ProfileWorkDay[], profileWorkSchedule: Partial<ProfileWorkSchedule>[]}) {
+  async handleProfileScheduleSave(data: { profileWorkDays: ProfileWorkDay[], profileWorkSchedule: Partial<ProfileWorkSchedule>[] }) {
     this.isCreatingOverlayVisible = true;
     this.showScheduleForm = false;
 
     try {
-      const isEditing =
-        data.profileWorkSchedule.length === 1 && !!data.profileWorkSchedule[0].id;
+      const isEditing = data.profileWorkSchedule.length === 1 && !!data.profileWorkSchedule[0].id;
 
       const scheduleResults = await Promise.all(
-        data.profileWorkSchedule.map(pws =>
-          firstValueFrom(
-            isEditing
-              ? this.dataService.updateProfileWorkSchedule(pws)
-              : this.dataService.saveProfileWorkSchedule(pws)
-          )
-        )
+        data.profileWorkSchedule.map(pws => {
+          if(isEditing){
+            const updatedProfileWorkSchedule: ProfileWorkSchedule = {
+              id: pws.id,
+              color: pws.color!,
+              end_date: pws.end_date!,
+              profile_id: pws.profile_id!,
+              start_date: pws.start_date!,
+            }
+
+            return this.workScheduleService.updateProfileWorkSchedule(updatedProfileWorkSchedule);
+          } else {
+            return this.workScheduleService.createProfileWorkSchedule(pws);
+          }
+        })
       );
 
       const allWorkDays = scheduleResults.flatMap(res => {
@@ -1040,11 +1049,18 @@ export class WorkScheduleComponent {
           }));
       });
 
-      if (allWorkDays.length) {
-        await firstValueFrom(this.dataService.saveProfileWorkDays(allWorkDays));
-      }
+      if(isEditing) {
+        const updatePromises = allWorkDays.map(workDay =>
+          this.workScheduleService.updateProfileWorkDay(workDay).catch(err => {
+            console.error('Error updating work day:', err);
+            return null;
+          })
+        );
 
-      console.log('Schedules and work days saved successfully.');
+        await Promise.all(updatePromises);
+      } else {
+        await this.workScheduleService.createProfileWorkDays(allWorkDays);
+      }
     } catch (err) {
       console.error('Error saving schedules/work days:', err);
     } finally {
@@ -1309,7 +1325,7 @@ export class WorkScheduleComponent {
     const schedule = this.fullWorkSchedule.find((schedule) => schedule.id == scheduleId);
     if (!schedule) return;
 
-    this.dataService.deleteProfileWorkSchedule(scheduleId).subscribe();
+    this.workScheduleService.deleteProfileWorkSchedule(scheduleId);
   }
 
   async deleteSelectedSchedules(){
@@ -1330,7 +1346,7 @@ export class WorkScheduleComponent {
     };
 
     try {
-      await this.dataService.deleteProfileWorkSchedules(schedulesToDeleteIds);
+      await this.workScheduleService.deleteProfileWorkSchedules(schedulesToDeleteIds);
     } catch(err) {
       console.error('Error deleting schedules:', err);
     } finally {

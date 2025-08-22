@@ -110,6 +110,37 @@ export class ProfileService {
     return false;
   }
 
+  async updateProfile(profile: Profile){
+    try{
+      const { data: updatedProfile, error: updateProfileError } = await this.supabase.getClient()
+        .schema('porton')
+        .from('profiles')
+        .update({
+          role_id: profile.role_id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          phone_number: profile.phone_number,
+          password: profile.password,
+          is_test_user: profile.is_test_user,
+        })
+        .eq('id', profile.id)
+        .select()
+        .single();
+
+      if(updateProfileError) throw updateProfileError;
+
+      if(updatedProfile && updatedProfile.id){
+        const updatedProfiles = this.profiles.map(p => p.id == updatedProfile.id ? updatedProfile : p);
+        this.dataService.setProfiles(updatedProfiles);
+      }
+
+      return updatedProfile
+    } catch(error) {
+      console.log(error);
+      return null;
+    }
+  }
+
   async deleteProfile(profileId: string){
     try {
       const { data, error } = await this.supabase.getClient()

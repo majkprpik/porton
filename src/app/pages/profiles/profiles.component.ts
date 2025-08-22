@@ -519,25 +519,43 @@ export class ProfilesComponent implements OnInit {
 
   saveProfile() {
     if (this.selectedProfile && this.selectedProfile.id) {
-      this.dataService.updateProfile(this.selectedProfile.id, { 
-        first_name: this.selectedProfile.first_name,
+      let updatedProfile: Profile = {
+        id: this.selectedProfile.id,
         role_id: this.selectedProfile.role_id,
+        first_name: this.selectedProfile.first_name,
+        last_name: this.selectedProfile.last_name,
+        phone_number: this.selectedProfile.phone_number,
+        created_at: this.selectedProfile.created_at,
+        password: this.selectedProfile.password,
         is_test_user: this.selectedProfile.is_test_user,
-      }).subscribe({
-        next: (updatedProfile) => {
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.SUCCESS'), 
-            detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.EDIT-SUCCESS'), 
-            life: 3000 
-          });
-          if(this.authService.getStoredUserId() == updatedProfile?.id){
-            this.profileService.$profileForLocalStorage.next(updatedProfile);
+      }
+
+      this.profileService.updateProfile(updatedProfile)
+        .then((updatedProfile) => {
+          if (updatedProfile) {
+            this.messageService.add({ 
+              severity: 'success', 
+              summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.SUCCESS'), 
+              detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.EDIT-SUCCESS'), 
+              life: 3000 
+            });
+
+            if (this.authService.getStoredUserId() === updatedProfile.id) {
+              this.profileService.$profileForLocalStorage.next(updatedProfile);
+            }
+
+            this.profileDialog = false;
+            this.resetSelectedProfileValues();
+          } else {
+            this.messageService.add({ 
+              severity: 'error', 
+              summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.ERROR'), 
+              detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.EDIT-ERROR'),
+              life: 3000 
+            });
           }
-          this.profileDialog = false;
-          this.resetSelectedProfileValues();
-        },
-        error: (error) => {
+        })
+        .catch((error) => {
           this.messageService.add({ 
             severity: 'error', 
             summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.ERROR'), 
@@ -545,8 +563,7 @@ export class ProfilesComponent implements OnInit {
             life: 3000 
           });
           console.error('Error updating profile:', error);
-        }
-      });
+        });
     }
   }
 
