@@ -628,7 +628,7 @@ interface SpecialLocation {
                 }
 
                 &.available {
-                    background: var(--p-green-800);
+                    background: var(--p-green-600);
 
                     .house-number,
                     .house-icons i {
