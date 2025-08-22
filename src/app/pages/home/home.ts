@@ -492,10 +492,6 @@ interface SpecialLocation {
             .house-card {
                 background: var(--surface-card);
                 border-radius: 6px;
-                box-shadow:
-                    0 2px 1px -1px rgba(0, 0, 0, 0.2),
-                    0 1px 1px 0 rgba(0, 0, 0, 0.14),
-                    0 1px 3px 0 rgba(0, 0, 0, 0.12);
                 transition: all 0.2s ease;
                 cursor: pointer;
                 min-width: unset;
@@ -632,12 +628,11 @@ interface SpecialLocation {
                 }
 
                 &.available {
-                    background: var(--p-green-600);
+                    background: var(--p-green-800);
 
                     .house-number,
                     .house-icons i {
                         color: white;
-                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
                     }
                     
                     @media (prefers-color-scheme: dark) {
@@ -651,7 +646,7 @@ interface SpecialLocation {
                     .house-number,
                     .house-icons i {
                         color: white;
-                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+
                     }
 
                     @media (prefers-color-scheme: dark) {
@@ -665,25 +660,10 @@ interface SpecialLocation {
                     .house-number,
                     .house-icons i {
                         color: white;
-                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
                     }
 
                     @media (prefers-color-scheme: dark) {
                         background: var(--p-red-400);
-                    }
-                }
-
-                &.occupied-without-arrival{
-                    background: var(--p-green-400);
-
-                    .house-number,
-                    .house-icons i {
-                        color: white;
-                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
-                    }
-
-                    @media (prefers-color-scheme: dark) {
-                        background: var(--p-green-400);
                     }
                 }
 
@@ -693,7 +673,6 @@ interface SpecialLocation {
                     .house-number,
                     .house-icons i {
                         color: white;
-                        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
                     }
 
                     @media (prefers-color-scheme: dark) {
