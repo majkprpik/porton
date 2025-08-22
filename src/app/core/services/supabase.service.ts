@@ -50,7 +50,6 @@ export class SupabaseService {
     return this.supabase;
   }
 
-  // Example: Fetch data from a table
   async getData(table: string, schema: string) {
     const { data, error } = await this.supabase
       .schema(schema)
@@ -69,7 +68,6 @@ export class SupabaseService {
     this.supabase.realtime.setAuth(accessToken);
   }
 
-  // Example: Insert data into a table
   async insertData(table: string, newData: any, schema: string) {
     const { data, error } = await this.supabase
       .schema(schema)
@@ -123,17 +121,13 @@ export class SupabaseService {
 
     const results = await Promise.all(updatePromises);
 
-    // Filter out failed updates
     return results.filter(item => item !== null);
   }
 
-  // Update data in a table
   async updateData(table: string, updates: any, condition: string, schema: string) {
     let query;
     
-    // Check if condition looks like a simple ID
     if (/^\d+$/.test(condition)) {
-      // Use the appropriate ID column based on the table
       let idColumn;
       
       switch (table) {
@@ -157,7 +151,6 @@ export class SupabaseService {
           idColumn = 'task_progress_type_id';
           break;
         default:
-          // For other tables, assume the column is named 'id'
           idColumn = 'id';
       }
       
@@ -167,9 +160,7 @@ export class SupabaseService {
         .update(updates)
         .eq(idColumn, condition);
     } else {
-      // Assume the condition is already a fully-formed condition string like "column = value"
       const [column, value] = condition.split(' = ');
-      // Remove any quotes from the value if present
       const cleanValue = value ? value.replace(/['"]/g, '') : value;
 
       query = this.supabase
@@ -189,16 +180,13 @@ export class SupabaseService {
     return data;
   }
 
-  // Delete data from a table based on a filter condition
   async deleteData(table: string, filter: string | number, schema: string) {
     let query = this.supabase
       .schema(schema)
       .from(table)
       .delete();
     
-    // Check if the filter is a number or a string representing a number (ID)
     if (typeof filter === 'number' || !isNaN(Number(filter))) {
-      // Determine the correct ID column for the table
       let idColumn;
       
       switch (table) {
@@ -222,13 +210,11 @@ export class SupabaseService {
           idColumn = 'task_progress_type_id';
           break;
         default:
-          // For tables ending with 's', use the singular form + '_id'
           idColumn = `${table.slice(0, -1)}_id`;
       }
     
       query = query.eq(idColumn, filter);
     } else if (typeof filter === 'string' && filter.includes('=')) {
-      // It's a condition string like "column = value"
       const conditions = filter.split(' AND ').map(condition => {
         const [column, value] = condition.trim().split(' = ');
         return {
