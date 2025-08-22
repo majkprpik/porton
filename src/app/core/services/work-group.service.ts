@@ -91,7 +91,7 @@ export class WorkGroupService {
 
   async createWorkGroup(isRepair: boolean): Promise<any>{
     try{
-      const { data: newWorkGroup, error: createWorkGroupError } = await this.supabaseService.getClient()
+      const { data: createdWorkGroup, error: createWorkGroupError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('work_groups')
         .insert({ 
@@ -104,11 +104,11 @@ export class WorkGroupService {
 
       if(createWorkGroupError) throw createWorkGroupError;
 
-      if(newWorkGroup && !this.workGroups.find(wg => wg.work_group_id == newWorkGroup.work_group_id)) {
-        this.dataService.setWorkGroups([...this.workGroups, newWorkGroup]);
+      if(createdWorkGroup && !this.workGroups.find(wg => wg.work_group_id == createdWorkGroup.work_group_id)) {
+        this.dataService.setWorkGroups([...this.workGroups, createdWorkGroup]);
       }
 
-      return newWorkGroup;
+      return createdWorkGroup;
     } catch (error) {
       console.log(error);
       return null;
@@ -117,7 +117,7 @@ export class WorkGroupService {
 
   async deleteWorkGroup(workGroupId: number){
     try{
-      const { data, error: deleteWorkGroupError } = await this.supabaseService.getClient()
+      const { data: deletedWorkGroup, error: deleteWorkGroupError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('work_groups')
         .delete()
@@ -127,21 +127,21 @@ export class WorkGroupService {
 
       if(deleteWorkGroupError) throw deleteWorkGroupError;
 
-      if(data && data.work_group_id) {
-        const filteredWorkGroups = this.workGroups.filter(wg => wg.work_group_id != data.work_group_id);
+      if(deletedWorkGroup && deletedWorkGroup.work_group_id) {
+        const filteredWorkGroups = this.workGroups.filter(wg => wg.work_group_id != deletedWorkGroup.work_group_id);
         this.dataService.setWorkGroups(filteredWorkGroups);
       }
 
-      return true;
+      return deletedWorkGroup;
     } catch(error) {
       console.log(error);
-      return false;
+      return null;
     }
   }
 
-  async lockWorkGroup(workGroupId: number){
+  async updateWorkGroupToLocked(workGroupId: number){
     try{
-      const { data, error: updateWorkGroupError } = await this.supabaseService.getClient()
+      const { data: updatedWorkGroup, error: updateWorkGroupError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('work_groups')
         .update({
@@ -153,21 +153,23 @@ export class WorkGroupService {
 
       if(updateWorkGroupError) throw updateWorkGroupError;
 
-      if(data && data.work_group_id){
-        const workGroups = this.workGroups.map(wg => wg.work_group_id === data.work_group_id ? data : wg);
+      if(updatedWorkGroup && updatedWorkGroup.work_group_id){
+        const workGroups = this.workGroups.map(wg => 
+          wg.work_group_id === updatedWorkGroup.work_group_id ? updatedWorkGroup : wg
+        );
         this.dataService.setWorkGroups(workGroups);
       }
 
-      return true;
+      return updatedWorkGroup;
     } catch (error) {
       console.log(error);
-      return false;
+      return null;
     }
   }
 
   async createWorkGroupTask(workGroupId: number, taskId: number, index: number){
     try{
-      const { data: newWorkGroupTask, error: createWorkGroupTaskError } = await this.supabaseService.getClient()
+      const { data: createdWorkGroupTask, error: createWorkGroupTaskError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('work_group_tasks')
         .insert({ 
@@ -180,43 +182,43 @@ export class WorkGroupService {
 
       if(createWorkGroupTaskError) throw createWorkGroupTaskError;
 
-      if(newWorkGroupTask && !this.workGroupTasks.find(wgt => wgt.task_id == newWorkGroupTask.task_id)){
-        this.dataService.setWorkGroupTasks([...this.workGroupTasks, newWorkGroupTask]);
+      if(createdWorkGroupTask && !this.workGroupTasks.find(wgt => wgt.task_id == createdWorkGroupTask.task_id)){
+        this.dataService.setWorkGroupTasks([...this.workGroupTasks, createdWorkGroupTask]);
       }
 
-      return newWorkGroupTask;
+      return createdWorkGroupTask;
     } catch (error){
       console.log(error);
-      return {};
+      return null;
     }
   }
 
   async deleteAllWorkGroupTasksByWorkGroupId(workGroupId: number){
     try{
-      const { data, error: deleteWorkGroupTaskError } = await this.supabaseService.getClient()
+      const { data: deletedWorkGroupTasks, error: deleteWorkGroupTasksError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('work_group_tasks')
         .delete()
         .eq('work_group_id', workGroupId)
         .select();
 
-      if(deleteWorkGroupTaskError) throw deleteWorkGroupTaskError;
+      if(deleteWorkGroupTasksError) throw deleteWorkGroupTasksError;
 
-      if(data && data.length) {
-        const filteredWorkGroupTasks = this.workGroupTasks.filter(wgt => !data.some(t => t.task_id == wgt.task_id));
+      if(deletedWorkGroupTasks && deletedWorkGroupTasks.length) {
+        const filteredWorkGroupTasks = this.workGroupTasks.filter(wgt => !deletedWorkGroupTasks.some(t => t.task_id == wgt.task_id));
         this.dataService.setWorkGroupTasks(filteredWorkGroupTasks);
       }
 
-      return true;
+      return deletedWorkGroupTasks;
     } catch(error) {
       console.log(error);
-      return false;
+      return null;
     }
   }
 
   async deleteWorkGroupTask(taskId: number){
     try{
-      const { data, error: deleteWorkGroupTaskError } = await this.supabaseService.getClient()
+      const { data: deletedWorkGroupTask, error: deleteWorkGroupTaskError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('work_group_tasks')
         .delete()
@@ -226,44 +228,44 @@ export class WorkGroupService {
 
       if(deleteWorkGroupTaskError) throw deleteWorkGroupTaskError;
 
-      if(data && data.task_id) {
-        const filteredWorkGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != data.task_id);
+      if(deletedWorkGroupTask && deletedWorkGroupTask.task_id) {
+        const filteredWorkGroupTasks = this.workGroupTasks.filter(wgt => wgt.task_id != deletedWorkGroupTask.task_id);
         this.dataService.setWorkGroupTasks(filteredWorkGroupTasks);
       }
 
-      return true;
+      return deletedWorkGroupTask;
     } catch(error) {
       console.log(error);
-      return false;
+      return null;
     }
   }
 
   async deleteWorkGroupTasks(taskIds: number[]) {
     try {
-      const { data, error } = await this.supabaseService.getClient()
+      const { data: deletedWorkGroupTasks, error: deleteWorkGroupTasks } = await this.supabaseService.getClient()
         .schema('porton')
         .from('work_group_tasks')
         .delete()
         .in('task_id', taskIds)
         .select(); 
 
-      if (error) throw error;
+      if (deleteWorkGroupTasks) throw deleteWorkGroupTasks;
 
-      if (data && data.length) {
+      if (deletedWorkGroupTasks && deletedWorkGroupTasks.length) {
         const filteredWorkGroupTasks = this.workGroupTasks.filter(wgt => !taskIds.includes(wgt.task_id));
         this.dataService.setWorkGroupTasks(filteredWorkGroupTasks);
       }
 
-      return true;
+      return deletedWorkGroupTasks;
     } catch (error) {
       console.log(error);
-      return false;
+      return null;
     }
   }
 
   async deleteAllWorkGroupProfilesByWorkGroupId(workGroupId: number){
     try{
-      const { data, error: deleteWorkGroupProfilesError } = await this.supabaseService.getClient()
+      const { data: deletedWorkGroupProfiles, error: deleteWorkGroupProfilesError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('work_group_profiles')
         .delete()
@@ -272,21 +274,21 @@ export class WorkGroupService {
 
       if(deleteWorkGroupProfilesError) throw deleteWorkGroupProfilesError;
 
-      if(data && data.length){
-        const filteredWorkGroupProfiles = this.workGroupProfiles.filter(wgp => !data.some(p => p.profile_id == wgp.profile_id));
+      if(deletedWorkGroupProfiles && deletedWorkGroupProfiles.length){
+        const filteredWorkGroupProfiles = this.workGroupProfiles.filter(wgp => !deletedWorkGroupProfiles.some(p => p.profile_id == wgp.profile_id));
         this.dataService.setWorkGroupProfiles(filteredWorkGroupProfiles);
       }
 
-      return true;
+      return deletedWorkGroupProfiles;
     } catch(error) {
       console.log(error);
-      return false;
+      return null;
     }
   }
 
   async createWorkGroupProfile(workGroupId: number, profileId: string){
     try{
-      const { data: newWorkGroupProfile, error: newWorkGroupProfileError } = await this.supabaseService.getClient()
+      const { data: createdWorkGroupProfile, error: createWorkGroupProfileError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('work_group_profiles')
         .insert({ 
@@ -296,24 +298,23 @@ export class WorkGroupService {
         .select()
         .single();
 
-      if(newWorkGroupProfileError) throw newWorkGroupProfileError;
+      if(createWorkGroupProfileError) throw createWorkGroupProfileError;
 
-      if(newWorkGroupProfile && !this.workGroupProfiles.find(wgp => wgp.profile_id == newWorkGroupProfile.profile_id)) {
-        this.dataService.setWorkGroupProfiles([...this.workGroupProfiles, newWorkGroupProfile]);
+      if(createdWorkGroupProfile && !this.workGroupProfiles.find(wgp => wgp.profile_id == createdWorkGroupProfile.profile_id)) {
+        this.dataService.setWorkGroupProfiles([...this.workGroupProfiles, createdWorkGroupProfile]);
       }
 
-      return newWorkGroupProfile;
+      return createdWorkGroupProfile;
     } catch (error){
       console.log(error);
-      return {};
+      return null;
     }
   }
 
   private getFormattedDateTimeNowForSupabase(){
     const now = new Date();
-    const isoString = now.toISOString(); // Example: 2025-03-14T11:26:33.350Z
+    const isoString = now.toISOString();
   
-    // Convert to required format: "YYYY-MM-DD HH:MM:SS.ssssss+00"
     return isoString.replace('T', ' ').replace('Z', '+00');
   }
 }

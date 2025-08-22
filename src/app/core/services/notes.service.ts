@@ -22,7 +22,7 @@ export class NotesService {
 
   async createNote(note: string, date: Date){
     try{
-      const { data: newNote, error: createNoteError } = await this.supabaseService.getClient()
+      const { data: createdNote, error: createNoteError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('notes')
         .insert({ 
@@ -36,11 +36,11 @@ export class NotesService {
 
       if(createNoteError) throw createNoteError;
 
-      if(newNote && !this.notes.find(n => n.id == newNote.id)) {
-        this.dataService.setNotes([...this.notes, newNote]);
+      if(createdNote && !this.notes.find(n => n.id == createdNote.id)) {
+        this.dataService.setNotes([...this.notes, createdNote]);
       }
 
-      return newNote;
+      return createdNote;
     } catch (error) {
       console.log(error);
       return null;

@@ -147,18 +147,15 @@ export class PushNotificationsService {
 
   async getUserDeviceData(profileId: string){
     try{
-      const { data, error } = await this.supabaseService.getClient()
+      const { data: userDeviceData, error: userDeviceDataError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('user_devices')
         .select('*')
         .eq('profile_id', profileId);
       
-      if (error) {
-        console.error('Error fetching data:', error.message);
-        return null;
-      }
+      if (userDeviceDataError) throw userDeviceDataError;
   
-      return data;
+      return userDeviceData;
     } catch (error){
       console.error('Error fetching user device data:', error);
       return null;
@@ -185,7 +182,7 @@ export class PushNotificationsService {
     }
 
     try{
-      const { data: userDeviceData, error: storeUserDeviceDataError } = await this.supabaseService.getClient()
+      const { data: createdUserDeviceData, error: createUserDeviceDataError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('user_devices')
         .upsert({
@@ -201,18 +198,18 @@ export class PushNotificationsService {
         .select()
         .single();
 
-      if(storeUserDeviceDataError) throw storeUserDeviceDataError
+      if(createUserDeviceDataError) throw createUserDeviceDataError
 
-      return userDeviceData;
+      return createdUserDeviceData;
     } catch (error){
       console.error('Error storing user device data:', error);
-      return false;
+      return null;
     }
   }
 
   async deleteUserDeviceData(profileId: string, deviceId: string){
     try{
-      const { data: userDeviceData, error: deleteUserDeviceDataError } = await this.supabaseService.getClient()
+      const { data: deletedUserDeviceData, error: deleteUserDeviceDataError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('user_devices')
         .delete()
@@ -220,10 +217,10 @@ export class PushNotificationsService {
   
       if(deleteUserDeviceDataError) throw deleteUserDeviceDataError;
   
-      return true;
+      return deletedUserDeviceData;
     } catch(error){
       console.error('Error deleting user device data:', error);
-      return false;
+      return null;
     }
   }
 

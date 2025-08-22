@@ -1319,7 +1319,7 @@ export class AppLayout {
     submitFaultReport() {
         if (!this.isFaultReportFormValid()) return;
 
-        this.taskService.createTaskForHouse(
+        this.taskService.createTask(
             this.selectedHouseForFaultReport!.house_id.toString(),
             this.faultDescription,
             TaskTypeName.Repair,
@@ -1328,7 +1328,7 @@ export class AppLayout {
             if (result) {
                 try {
                     if(this.imagesToUpload.length){
-                        await this.taskService.storeImagesForTask(this.imagesToUpload, result.task_id);
+                        await this.taskService.createTaskImages(this.imagesToUpload, result.task_id);
                     }
 
                     this.messageService.add({
@@ -1358,7 +1358,7 @@ export class AppLayout {
             const house = this.houseService.getHouseByName(houseName);
             if (!house) return Promise.resolve(null);
 
-            return this.taskService.createTaskForHouse(
+            return this.taskService.createTask(
                 house.house_id.toString(),
                 this.taskDescription,
                 this.selectedTaskType!.task_type_name as TaskTypeName,
@@ -1427,7 +1427,7 @@ export class AppLayout {
         }
 
         if (this.task) {
-            await this.taskService.storeImagesForTask(this.imagesToUpload, this.task.task_id);
+            await this.taskService.createTaskImages(this.imagesToUpload, this.task.task_id);
         }
     }
 
@@ -1504,7 +1504,7 @@ export class AppLayout {
                     severity: 'danger'
                 },
                 accept: async () => {
-                    this.taskService.removeImageForTask(imageToRemove, this.task!.task_id);
+                    this.taskService.deleteTaskImage(imageToRemove, this.task!.task_id);
                     this.messageService.add({ severity: 'info', summary: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.UPDATED'), detail: this.translateService.instant('APP-LAYOUT.TASK-DETAILS.MESSAGES.REMOVE-IMAGE.SUCCESS') });
                     this.taskImages = this.taskImages.filter((ti) => ti.url != imageToRemove.url);
                 },
@@ -1554,7 +1554,7 @@ export class AppLayout {
         this.comment = this.comment.trim();
 
         if (this.comment) {
-            this.taskService.addCommentOnRepairTask(this.comment, this.task!.task_id);
+            this.taskService.createRepairTaskComment(this.comment, this.task!.task_id);
             this.comment = '';
         }
     }

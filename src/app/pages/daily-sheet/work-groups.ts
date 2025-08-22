@@ -627,7 +627,7 @@ export class WorkGroups implements OnInit {
       const workGroupTasksBeforeDelete = [...this.workGroupTasks];
       const workGroupId = lockedWorkGroup.id;
   
-      await this.workGroupService.lockWorkGroup(workGroupId);
+      await this.workGroupService.updateWorkGroupToLocked(workGroupId);
   
       await Promise.all([
         this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(workGroupId),

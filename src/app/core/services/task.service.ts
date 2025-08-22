@@ -88,9 +88,9 @@ export class TaskService {
     }
   }
 
-  async createTaskForHouse(houseId: string, description: string, taskTypeName: TaskTypeName, isUnscheduled: boolean = false){
+  async createTask(houseId: string, description: string, taskTypeName: TaskTypeName, isUnscheduled: boolean = false){
     try {
-      const { data, error } = await this.supabaseService.getClient()
+      const { data: createdTask, error: createTaskError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .insert({
@@ -105,20 +105,20 @@ export class TaskService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (createTaskError) throw createTaskError;
 
-      if (data && !this.tasks.find(t => t.task_id === data.task_id)) {
-        this.dataService.setTasks([...this.tasks, data]);
+      if (createdTask && !this.tasks.find(t => t.task_id === createdTask.task_id)) {
+        this.dataService.setTasks([...this.tasks, createdTask]);
       }
 
-      return data;
+      return createdTask;
     } catch (error) {
       console.error('Error fetching task for house:', error);
       return null;
     }
   }
 
-  async storeImagesForTask(images: any[], taskId: number) {
+  async createTaskImages(images: any[], taskId: number) {
     try {
       const compressedImages = await Promise.all(
         images.map(image => this.compressImage(image, 1))
@@ -147,34 +147,32 @@ export class TaskService {
       return uploadResults;
     } catch (error: any) {
       console.error('Error storing images:', error);
-      return { error: error.message || "Error storing images in Supabase" };
+      return null;
     }
   }
 
-  async removeImageForTask(image: any, taskId: number) {
+  async deleteTaskImage(image: any, taskId: number) {
     try {
       const filePath = image.path || `task-${taskId}/${image.name}`;
   
-      const { error } = await this.supabaseService.getClient()
+      const { error: deleteTaskImageError } = await this.supabaseService.getClient()
         .storage
         .from('damage-reports-images')
         .remove([filePath]);
   
-      if (error) {
-        throw error;
-      }
+      if (deleteTaskImageError) throw deleteTaskImageError;
   
       console.log(`Image ${filePath} deleted successfully.`);
-      return { success: true };
+      return true;
     } catch (error: any) {
       console.error('Error removing image:', error);
-      return { error: error.message || "Error removing image from Supabase" };
+      return null
     }
   }
 
-  async addCommentOnRepairTask(repairTaskComment: string, taskId: number){
+  async createRepairTaskComment(repairTaskComment: string, taskId: number){
     try{
-      const { data: comment, error: commentError } = await this.supabaseService.getClient()
+      const { data: createdComment, error: createCommentError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('repair_task_comments')
         .insert({
@@ -186,13 +184,13 @@ export class TaskService {
         .select()
         .single();
 
-      if(commentError) throw commentError;
+      if(createCommentError) throw createCommentError;
 
-      if(comment && !this.repairTaskComments.find(c => c.id == comment.id)) {
-        this.dataService.setRepairTaskComments([...this.repairTaskComments, comment]);
+      if(createdComment && !this.repairTaskComments.find(c => c.id == createdComment.id)) {
+        this.dataService.setRepairTaskComments([...this.repairTaskComments, createdComment]);
       }
 
-      return comment;
+      return createdComment;
     } catch (error){
       console.error('Error uploading comment:', error);
       return null;
@@ -201,7 +199,7 @@ export class TaskService {
 
   async deleteTask(taskId: number){
     try{
-      const { data, error: taskDeleteError } = await this.supabaseService.getClient()
+      const { data: deletedTask, error: deleteTaskError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .delete()
@@ -209,17 +207,17 @@ export class TaskService {
         .select()
         .single();
 
-      if(taskDeleteError) throw taskDeleteError;
+      if(deleteTaskError) throw deleteTaskError;
 
-      if(data && data.task_id) {
-        const filteredTasks = this.tasks.filter(t => t.task_id != data.task_id);
+      if(deletedTask && deletedTask.task_id) {
+        const filteredTasks = this.tasks.filter(t => t.task_id != deletedTask.task_id);
         this.dataService.setTasks(filteredTasks);
       }
 
-      return true;
+      return deletedTask;
     } catch (error){
       console.error('Error deleting task:', error);
-      return false;
+      return null;
     }
   }
 
@@ -228,7 +226,7 @@ export class TaskService {
     const isInProgress = this.getTaskProgressTypeById(taskProgressTypeId)?.task_progress_type_name == 'U tijeku';
 
     try{
-      const { data: updatedTask, error: taskError } = await this.supabaseService.getClient()
+      const { data: updatedTask, error: updateTaskError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('tasks')
         .update({ 
@@ -241,7 +239,7 @@ export class TaskService {
         .select()
         .single();
 
-      if(taskError) throw taskError
+      if(updateTaskError) throw updateTaskError
 
       if(updatedTask && updatedTask.task_id) {
         const updatedTasks = this.tasks.map(t => t.task_id == updatedTask.task_id ? updatedTask : t);

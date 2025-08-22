@@ -522,9 +522,9 @@ export class ArrivalsAndDeparturesPageComponent {
           severity: 'danger',
         },
         accept: async () => {
-          let hasDeparted = await this.houseService.setHouseAvailabilityDeparted(departure.house_availability_id, false);
-          if (hasDeparted) {
-            departure.has_departed = false;
+          let updatedHouseAvailability = await this.houseService.setHouseAvailabilityDeparted(departure.house_availability_id, false);
+          if (updatedHouseAvailability) {
+            departure.has_departed = updatedHouseAvailability.has_departed;
             this.messageService.add({ severity: 'info', summary: 'Updated', detail: 'Departure unchecked' });
           }
         },
@@ -535,9 +535,9 @@ export class ArrivalsAndDeparturesPageComponent {
       });
     } else {
       if (departure.house_availability_id) {
-        let hasDeparted = await this.houseService.setHouseAvailabilityDeparted(departure.house_availability_id, event.target.checked);
-        if (hasDeparted) {
-          departure.has_departed = true;
+        let updatedHouseAvailability = await this.houseService.setHouseAvailabilityDeparted(departure.house_availability_id, event.target.checked);
+        if (updatedHouseAvailability) {
+          departure.has_departed = updatedHouseAvailability.has_departed;
         }
       }
     }
@@ -569,9 +569,9 @@ export class ArrivalsAndDeparturesPageComponent {
           severity: 'danger',
         },
         accept: async () => {
-          let hasArrived = await this.houseService.setHouseAvailabilityArrived(arrival.house_availability_id, false);
-          if (hasArrived) {
-            arrival.has_arrived = false;
+          let updatedHouseAvailability = await this.houseService.setHouseAvailabilityArrived(arrival.house_availability_id, false);
+          if (updatedHouseAvailability) {
+            arrival.has_arrived = updatedHouseAvailability.has_arrived;
             this.messageService.add({ severity: 'info', summary: 'Updated', detail: 'Arrival unchecked' });
           }
         },
@@ -582,9 +582,9 @@ export class ArrivalsAndDeparturesPageComponent {
       });
     } else {
       if (arrival.house_availability_id) {
-        let hasArrived = await this.houseService.setHouseAvailabilityArrived(arrival.house_availability_id, true);
-        if (hasArrived) {
-          arrival.has_arrived = true;
+        let updatedHouseAvailability = await this.houseService.setHouseAvailabilityArrived(arrival.house_availability_id, true);
+        if (updatedHouseAvailability) {
+          arrival.has_arrived = updatedHouseAvailability.has_arrived;
           this.messageService.add({ severity: 'success', summary: 'Arrival confirmed' });
         }
       }

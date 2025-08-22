@@ -70,10 +70,7 @@ export class HouseService {
                 const end = new Date(availability.house_availability_end_date);
                 end.setHours(23, 59, 59, 999);
 
-                // Main case: today is in range
                 const isTodayInRange = start.getTime() <= todayTime && end.getTime() >= todayTime;
-
-                // Extra case: ended exactly yesterday
                 const endedYesterday = end.getTime() >= yesterdayTime && end.getTime() < todayTime;
 
                 return isTodayInRange || endedYesterday;
@@ -149,9 +146,8 @@ export class HouseService {
     const today = new Date(); 
     today.setHours(0, 0, 0, 0);
     const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1); // Set yesterday's date
+    yesterday.setDate(today.getDate() - 1);
 
-    // Manually format both today's and yesterday's date to YYYY-MM-DD
     const yesterdayString = yesterday.getFullYear() + '-' + 
                             String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + 
                             String(yesterday.getDate()).padStart(2, '0');
@@ -161,12 +157,10 @@ export class HouseService {
         const startDate = new Date(item.house_availability_start_date);
         const endDate = new Date(item.house_availability_end_date);
     
-        // Format endDate to YYYY-MM-DD (local time)
         const endDateString = endDate.getFullYear() + '-' + 
                               String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
                               String(endDate.getDate()).padStart(2, '0');
     
-        // Check if the availability end date is yesterday
         return (today >= startDate && today <= endDate) || yesterdayString === endDateString;
       } 
     
@@ -187,7 +181,6 @@ export class HouseService {
             new Date(item.house_availability_start_date) > today;
     }) || [];
 
-    // Return the earliest upcoming availability, or null if none
     return futureAvailabilities
       .sort((a, b) =>
         new Date(a.house_availability_start_date).getTime() -
@@ -289,7 +282,7 @@ export class HouseService {
 
   async setHouseAvailabilityDeparted(houseAvailabilityId: number, state: boolean){
     try {
-      const { data, error } = await this.supabase.getClient()
+      const { data: updatedHouseAvailability, error: updateHouseAvailabilityError } = await this.supabase.getClient()
         .schema('porton')
         .from('house_availabilities')
         .update({ 
@@ -299,10 +292,12 @@ export class HouseService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (updateHouseAvailabilityError) throw updateHouseAvailabilityError;
 
-      if(data && data.house_availability_id) {
-        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => ha.house_availability_id == data.house_availability_id ? data : ha);
+      if(updatedHouseAvailability && updatedHouseAvailability.house_availability_id) {
+        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => 
+          ha.house_availability_id == updatedHouseAvailability.house_availability_id ? updatedHouseAvailability : ha
+        );
         this.dataService.setHouseAvailabilites(updatedHouseAvailabilities);
       }
 
@@ -310,16 +305,16 @@ export class HouseService {
         this.handleHouseDepartureNotificationSend(houseAvailabilityId);
       }
 
-      return true;
+      return updatedHouseAvailability;
     } catch (error) {
       console.error('Error updating house availability:', error);
-      return false;
+      return null;
     }
   }
 
   async setHouseAvailabilityArrived(houseAvailabilityId: number, state: boolean){
     try {
-      const { data, error } = await this.supabase.getClient()
+      const { data: updatedHouseAvailability, error: updateHouseAvailabilityError } = await this.supabase.getClient()
         .schema('porton')
         .from('house_availabilities')
         .update({ 
@@ -329,18 +324,20 @@ export class HouseService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (updateHouseAvailabilityError) throw updateHouseAvailabilityError;
 
-      if(data && data.house_availability_id) {
-        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => ha.house_availability_id == data.house_availability_id ? data : ha);
+      if(updatedHouseAvailability && updatedHouseAvailability.house_availability_id) {
+        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => 
+          ha.house_availability_id == updatedHouseAvailability.house_availability_id ? updatedHouseAvailability : ha
+        );
         this.dataService.setHouseAvailabilites(updatedHouseAvailabilities);
       }
 
-      return true;
+      return updatedHouseAvailability;
     }
     catch (error) {
       console.error('Error updating house availability:', error);
-      return false;
+      return null;
     }
   }
 
@@ -379,7 +376,7 @@ export class HouseService {
     }
   }
 
-  async updateHouseAvailabilityTime(houseAvailabilityId: number, timeField: 'arrival_time' | 'departure_time', timeValue: string): Promise<boolean> {
+  async updateHouseAvailabilityTime(houseAvailabilityId: number, timeField: 'arrival_time' | 'departure_time', timeValue: string) {
     try {
       if (!houseAvailabilityId || !timeField || !timeValue) {
         console.error('Missing required parameters for updateHouseAvailabilityTime');
@@ -389,7 +386,7 @@ export class HouseService {
       const updateData: any = {};
       updateData[timeField] = timeValue;
 
-      const { data, error } = await this.supabase.getClient()
+      const { data: updatedHouseAvailability, error: updateHouseAvailabilityError } = await this.supabase.getClient()
         .schema('porton')
         .from('house_availabilities')
         .update(updateData)
@@ -397,17 +394,19 @@ export class HouseService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (updateHouseAvailabilityError) throw updateHouseAvailabilityError;
 
-      if(data && data.house_availability_id) {
-        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => ha.house_availability_id == data.house_availability_id ? data : ha);
+      if(updatedHouseAvailability && updatedHouseAvailability.house_availability_id) {
+        const updatedHouseAvailabilities = this.houseAvailabilities.map(ha => 
+          ha.house_availability_id == updatedHouseAvailability.house_availability_id ? updatedHouseAvailability : ha
+        );
         this.dataService.setHouseAvailabilites(updatedHouseAvailabilities);
       }
 
-      return true;
+      return updatedHouseAvailability;
     } catch (error) {
       console.error(`Error updating ${timeField} for house availability ${houseAvailabilityId}:`, error);
-      return false;
+      return null;
     }
   }
 }
