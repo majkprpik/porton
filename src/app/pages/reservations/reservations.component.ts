@@ -81,7 +81,6 @@ interface CellData {
                 </div>
             </div>
 
-            <!-- Reservation Grid -->
             <div class="table-container">
                 <table class="reservation-table">
                     <thead>
@@ -138,7 +137,6 @@ interface CellData {
                                             'height-40-important': cellHeightInPx == 40,
                                         }"
                                         [style.background-color]="gridMatrix()[i][j].color">
-                                        <!-- Simple reservation cell without drag functionality -->
                                         @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j].isReservationStart) {
                                             <div class="reservation-item">
                                                 <i class="pi pi-arrows-alt handle-icon" (click)="getDroppableSpotsForReservation($event, i, j)"></i>
@@ -182,7 +180,6 @@ interface CellData {
                 </table>
             </div>
 
-            <!-- Reservation Form -->
             @if(showReservationForm()){
                 <app-reservation-form 
                     [houseId]="selectedHouseId()"
@@ -255,7 +252,6 @@ interface CellData {
             vertical-align: middle;
         }
 
-        // Improved house type tabs
         .house-type-tabs {
             display: flex;
             flex-wrap: wrap;
@@ -298,7 +294,6 @@ interface CellData {
             }
         }
 
-        // Remove old filter styles
         .house-type-filter {
             display: none;
         }
@@ -369,7 +364,6 @@ interface CellData {
                 height: 40px !important;
             }
             
-            /* Add subtle striping for better readability */
             tbody tr:nth-child(even) {
                 background-color: rgba(0, 0, 0, 0.01);
             }
@@ -448,7 +442,6 @@ interface CellData {
             .today-column {
                 position: relative;
                 
-                /* Add a distinct vertical line indicator */
                 &::before {
                     content: '';
                     position: absolute;
@@ -473,10 +466,7 @@ interface CellData {
                     z-index: 1;
                 }
                 
-                /* Use box-shadow instead of background to preserve colors */
                 box-shadow: inset 0 0 0 1000px rgba(33, 150, 243, 0.07) !important;
-                
-                /* Add subtle top and bottom borders */
                 border-top: 1px solid rgba(33, 150, 243, 0.4) !important;
                 border-bottom: 1px solid rgba(33, 150, 243, 0.4) !important;
             }
@@ -525,7 +515,6 @@ interface CellData {
                     background-color: inherit;
                 }
                 
-                // Identify connected reservations (same reservation spanning multiple cells)
                 &.reservation-start {
                     position: relative;
                     z-index: 2;
@@ -541,11 +530,9 @@ interface CellData {
                     z-index: 2;
                 }
             }
-            // Add a style for the table to disable text selection during drag
             user-select: none;
         }
 
-        // Context menu styling
         .custom-context-menu {
             position: fixed;
             background: var(--surface-card);
@@ -568,29 +555,20 @@ interface CellData {
             }
         }
 
-        // Selected cell styling
         .selected-cell {
             position: relative;
-            z-index: 5; // Ensure selected cell is above others
-            
-            // Remove the outline from all selected cells
+            z-index: 5;
             outline: none !important;
             box-shadow: none !important;
-            
-            // Add top and bottom borders to all cells in selection
             border-top: 2px solid #007bff !important;
             border-bottom: 2px solid #007bff !important;
-            
-            // For middle cells, remove animation
             animation: none;
             
-            // Only add left border to the first cell and right border to the last cell
             &.selection-start:not(.selection-end) {
                 border-left: 2px solid #007bff !important;
                 border-right: none !important;
                 border-top-left-radius: 4px;
                 border-bottom-left-radius: 4px;
-                // Only animate the start of the selection
                 animation: cell-selected-pulse 2s infinite;
             }
             
@@ -599,29 +577,24 @@ interface CellData {
                 border-left: none !important;
                 border-top-right-radius: 4px;
                 border-bottom-right-radius: 4px;
-                // Only animate the end of the selection
                 animation: cell-selected-pulse 2s infinite;
             }
             
-            // For a single selected cell (both start and end)
             &.selection-start.selection-end {
                 border: 2px solid #007bff !important;
                 border-radius: 4px;
                 animation: cell-selected-pulse 2s infinite;
             }
             
-            // Handle special case for middle cells
             &:not(.selection-start):not(.selection-end) {
                 border-left: none !important;
                 border-right: none !important;
             }
             
-            // Override any other border styles when cell is selected
             &.saturday-column, &.sunday-column, &.today-column {
                 border-left: none !important;
                 border-right: none !important;
                 
-                // Restore borders for start/end cells
                 &.selection-start {
                     border-left: 2px solid #007bff !important;
                 }
@@ -630,14 +603,12 @@ interface CellData {
                     border-right: 2px solid #007bff !important;
                 }
                 
-                // For a single selected cell
                 &.selection-start.selection-end {
                     border: 2px solid #007bff !important;
                 }
             }
         }
 
-        // Animation for selected cell
         @keyframes cell-selected-pulse {
             0% {
                 border-color: rgba(0, 123, 255, 1);
@@ -653,9 +624,7 @@ interface CellData {
             }
         }
 
-        /* Extremely simple approach - background color only, no borders */
         td.selected-reservation {
-            /* Only change background color, no outline/border */
             background-color: rgba(0, 0, 0, 0.3) !important;
         }
 
@@ -671,7 +640,6 @@ interface CellData {
             display: inline-block;
         }
 
-        /* More prominent styling for the day header */
         .day-header.today-column {
             background-color: #e3f2fd !important;
             font-weight: 900;
@@ -687,11 +655,10 @@ interface CellData {
             position: sticky !important;
             top: 0;
             left: 0;
-            z-index: 15 !important; /* Must be higher than other sticky elements */
+            z-index: 15 !important; 
             box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1) !important;
         }
 
-        // Remove the old drag-drop style classes
         .potential-drop-target,
         .valid-drop-target,
         .invalid-drop-target,
@@ -703,7 +670,6 @@ interface CellData {
             display: none;
         }
 
-        // Simplified reservation item
         .reservation-item {
             display: flex;
             align-items: center;
@@ -798,60 +764,45 @@ interface CellData {
     changeDetection: ChangeDetectionStrategy.OnPush
 }) 
 export class Reservation2Component implements OnInit, OnDestroy {
-    // Convert to signals for reactive state management
     houses = signal<House[]>([]);
     houseAvailabilities = signal<HouseAvailability[]>([]);
     days = signal<Date[]>(this.generateDays());
     
-    // Add signals for house type filtering
     houseTypes = signal<HouseType[]>([]);
     selectedHouseTypeId = signal<number>(0);
     filteredHouses = computed(() => this.filterHousesByType());
     tempHouses: House[] = [];
     
-    // Signal for the entire grid matrix (from original component)
     gridMatrix = signal<CellData[][]>([]);
-    
-    // Optimized data structures from original component
+
     private reservationMap = new Map<string, HouseAvailability>();
     private houseIndexMap = new Map<number, number>();
     private dayIndexMap = new Map<number, number>();
     
-    // Add destroy subject for takeUntil pattern
     private destroy$ = new Subject<void>();
     
-    // Add observer for calendar
-    private calendarObserver?: MutationObserver;
-    
-    // Track previous house type ID to detect changes
     private _previousHouseTypeId: number = 0;
 
-    // Add signals for reservation form
     showReservationForm = signal<boolean>(false);
     selectedHouseId = signal<number>(0);
     selectedStartDate = signal<Date>(new Date());
     selectedEndDate = signal<Date>(new Date());
     editingReservation = signal<Partial<HouseAvailability>>({});
     
-    // Add a signal for the next reservation date (if any) to pass to the form
     nextReservationDate = signal<Date | null>(null);
 
-    // Add signals for tracking the currently selected cell
     selectedCellRowIndex = signal<number>(-1);
     selectedCellColIndex = signal<number>(-1);
 
-    // Add signals for tracking cell selection range in a single row
     selectedStartColIndex = signal<number>(-1);
     selectedEndColIndex = signal<number>(-1);
     isSelecting = signal<boolean>(false);
 
-    // Add a signal to track the currently selected reservation ID
     selectedReservationId = signal<number | null>(null);
 
     droppableSpots: any = [];
     reservationToMove: any;
 
-    // Add a flag to track whether the page has been loaded for the first time
     private isFirstLoad = true;
 
     colors = ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA', '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'];
@@ -926,71 +877,53 @@ export class Reservation2Component implements OnInit, OnDestroy {
             }
         });
         
-        // Subscribe to house availabilities updates from real-time database changes
         this.dataService.$houseAvailabilitiesUpdate
             .pipe(takeUntil(this.destroy$))
             .subscribe(() => {
-                // When we receive a notification that reservations have changed, reload them
                 this.dataService.loadHouseAvailabilities().pipe(takeUntil(this.destroy$)).subscribe();
             });
             
         this.loadCellHeight();
 
-        // Monitor initial render
         setTimeout(() => {
-            // Scroll to today after the initial render if it's the first load
             if (this.isFirstLoad) {
                 this.scrollToToday();
                 this.isFirstLoad = false;
             }
-        }, 300); // Longer delay for initial render
+        }, 300);
     }
     
     ngOnDestroy(): void {
-        // Cleanup takeUntil subject
         this.destroy$.next();
         this.destroy$.complete();
 
-        // Clear signals
         this.houses.set([]);
         this.houseAvailabilities.set([]);
         this.days.set([]);
         this.gridMatrix.set([]);
 
-        // Clear maps
         this.reservationMap.clear();
         this.houseIndexMap.clear();
         this.dayIndexMap.clear();
-        
-        // Disconnect the calendar observer if it exists
-        if (this.calendarObserver) {
-            this.calendarObserver.disconnect();
-        }
     }
     
-    // Update the grid matrix when data changes - from original component
     private updateGridMatrix(): void {
-        // Use filteredHouses instead of houses directly
         const houses = this.filteredHouses();
         const days = this.days();
         const availabilities = this.houseAvailabilities();
 
-        // Clear and rebuild maps
         this.reservationMap.clear();
         this.houseIndexMap.clear();
         this.dayIndexMap.clear();
 
-        // Build house index map
         houses.forEach((house, index) => {
             this.houseIndexMap.set(house.house_id, index);
         });
 
-        // Build day index map
         days.forEach((day, index) => {
             this.dayIndexMap.set(day.getTime(), index);
         });
 
-        // Build reservation map
         availabilities.forEach(availability => {
             const startDate = new Date(availability.house_availability_start_date);
             const endDate = new Date(availability.house_availability_end_date);
@@ -1001,7 +934,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
             }
         });
 
-        // Generate grid data
         const grid: CellData[][] = [];
         for (const house of houses) {
             const row: CellData[] = [];
@@ -1018,7 +950,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
         this.gridMatrix.set(grid);
 
-        // Count reserved cells to verify data
         let reservedCellCount = 0;
         grid.forEach(row => {
             row.forEach(cell => {
@@ -1047,7 +978,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
         };
 
         if (reservation) {
-            // Calculate color
             const baseColor = this.colors[reservation.color_theme % this.colors.length];
             const opacity = 0.7 + (reservation.color_tint * 0.3);
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor);
@@ -1061,7 +991,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 cellData.color = baseColor;
             }
 
-            // Calculate display text - ensure single line
             const startDate = new Date(reservation.house_availability_start_date);
             startDate.setHours(0, 0, 0, 0);
             const endDate = new Date(reservation.house_availability_end_date);
@@ -1069,15 +998,12 @@ export class Reservation2Component implements OnInit, OnDestroy {
             const checkDate = new Date(day);
             checkDate.setHours(0, 0, 0, 0);
             
-            // Determine if this cell is the start, middle, or end of a reservation
             cellData.isReservationStart = checkDate.getTime() === startDate.getTime();
             cellData.isReservationEnd = checkDate.getTime() === endDate.getTime();
             cellData.isReservationMiddle = checkDate > startDate && checkDate < endDate;
             
             if (reservation.house_availability_start_date === reservation.house_availability_end_date) {
-                // Put everything on one line for single-day reservations
                 cellData.displayText = `${reservation.last_name} ${reservation.reservation_number}`;
-                // Single day reservation is both start and end
                 cellData.isReservationStart = true;
                 cellData.isReservationEnd = true;
                 cellData.isReservationMiddle = false;
@@ -1092,7 +1018,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 }
             }
 
-            // Calculate tooltip - include all details here
             const resStartDate = new Date(reservation.house_availability_start_date);
             const resEndDate = new Date(reservation.house_availability_end_date);
             cellData.tooltip = `Reservation: ${reservation.last_name || 'Unknown'}`;
@@ -1106,7 +1031,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
             if (reservation.dogs_s > 0) cellData.tooltip += `\nSmall pets: ${reservation.dogs_s}`;
             if (reservation.cribs > 0) cellData.tooltip += `\nCribs: ${reservation.cribs}`;
 
-            // Set identifier
             cellData.identifier = `res-${reservation.house_id}-${new Date(reservation.house_availability_start_date).getTime()}`;
             cellData.isReserved = true;
         }
@@ -1220,18 +1144,15 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
     }
 
-    // Generate array of dates for the current view
     private generateDays(): Date[] {
         const days: Date[] = [];
-        const currentYear = new Date().getFullYear(); // Use current year
-        const startDate = new Date(currentYear, 2, 31); // March 31st (month is 0-based)
-        const endDate = new Date(currentYear, 10, 15);  // November 15th (month is 0-based)
+        const currentYear = new Date().getFullYear();
+        const startDate = new Date(currentYear, 2, 31);
+        const endDate = new Date(currentYear, 10, 15);
         
-        // Set hours to 0 to avoid timezone issues
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
         
-        // Generate all dates between start and end date
         let currentDate = new Date(startDate);
         while (currentDate <= endDate) {
             days.push(new Date(currentDate));
@@ -1241,7 +1162,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return days;
     }
 
-    // Helper methods for date checks
     isToday(date: Date): boolean {
         const today = new Date();
         return date.getDate() === today.getDate() &&
@@ -1320,12 +1240,9 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return '';
     }
 
-    // Make these methods public to use in template
     handleEditReservation(row: number, col: number): void {
-        // Hide context menu first
         this.showReservationForm.set(false);
         
-        // Get the actual house based on the filtered list
         const houses = this.filteredHouses();
         const days = this.days();
         
@@ -1333,7 +1250,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
             const house = houses[row];
             const day = days[col];
             
-            // Use actual house ID and date to find the reservation
             const key = this.getReservationKey(house.house_id, day);
             const reservation = this.reservationMap.get(key);
             
@@ -1341,35 +1257,27 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 return;
             }
             
-            // Set the form state to edit this reservation
             this.selectedHouseId.set(reservation.house_id);
             
-            // Create new Date objects from strings to avoid reference issues
             const startDate = new Date(reservation.house_availability_start_date);
             const endDate = new Date(reservation.house_availability_end_date);
             
             this.selectedStartDate.set(startDate);
             this.selectedEndDate.set(endDate);
             
-            // Set the full reservation data for editing
             this.editingReservation.set({
-                ...reservation // Copy all fields from the existing reservation
+                ...reservation
             });
             
-            // Check for next reservation to limit end date
             this.updateNextReservationDate();
             
-            // Use setTimeout to help avoid event listener errors with the calendar component
             setTimeout(() => {
-                // Important: Make sure to reset visibility state first
                 if (this.showReservationForm()) {
-                    // If somehow the form is still showing, reset it first
                     this.showReservationForm.set(false);
                     setTimeout(() => {
                         this.showReservationForm.set(true);
                     }, 100);
                 } else {
-                    // Normal case - just show the form
                     this.showReservationForm.set(true);
                 }
             }, 0);
@@ -1388,17 +1296,14 @@ export class Reservation2Component implements OnInit, OnDestroy {
     }
 
     handleAddReservation(row: number, col: number): void {
-        // Hide context menu first
         this.showReservationForm.set(false);
         
-        // Get the actual house based on the filtered list
         const houses = this.filteredHouses();
         const days = this.days();
         
         if (houses.length > row && days.length > col) {
             const house = houses[row];
             
-            // Check if we have a multi-cell selection in this row
             let startDate: Date;
             let endDate: Date;
             
@@ -1406,24 +1311,20 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.selectedStartColIndex() >= 0 && 
                 this.selectedEndColIndex() >= 0 && 
                 this.selectedStartColIndex() !== this.selectedEndColIndex()) {
-                // We have a range selection - use that for the dates
                 const startCol = Math.min(this.selectedStartColIndex(), this.selectedEndColIndex());
                 const endCol = Math.max(this.selectedStartColIndex(), this.selectedEndColIndex());
                 
                 startDate = new Date(days[startCol]);
                 endDate = new Date(days[endCol]);
             } else {
-                // Single cell selection - use default behavior
                 startDate = new Date(days[col]);
                 endDate = new Date(days[col]);
             }
             
-            // Open the reservation form with the selected dates
             this.openReservationForm(house, startDate, endDate);
         }
     }
 
-    // Format date as YYYY-MM-DD to avoid timezone issues
     private formatDateToYYYYMMDD(date: Date): string {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -1432,37 +1333,27 @@ export class Reservation2Component implements OnInit, OnDestroy {
     }
 
     handleReservationSave(reservation: HouseAvailability): void {
-        // Extract dates directly from the reservation object (these come from the form)
         let startDateStr = reservation.house_availability_start_date;
         let endDateStr = reservation.house_availability_end_date;
         
-        // Convert to Date objects for validation
         const startDate = new Date(startDateStr);
         const endDate = new Date(endDateStr);
         
-        // Ensure dates are valid
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
             return;
         }
         
-        // Validate that end date is not before start date
         if (endDate < startDate) {
             return;
         }
         
-        // Check if we're editing an existing reservation or creating a new one
         const isEditing = reservation.house_availability_id && reservation.house_availability_id < 1000000;
-        
-        // Skip overlap validation for the reservation we're currently editing
         const currentReservationId = isEditing ? reservation.house_availability_id : undefined;
         
-        // Check if the reservation overlaps with another one in the same house
-        // First, check if there's a next reservation
         const nextReservation = this.findNextReservation(reservation.house_id, startDate, currentReservationId);
         if (nextReservation) {
             const nextStartDate = new Date(nextReservation.house_availability_start_date);
             
-            // If our end date is on or after the next reservation's start date, we have an overlap
             if (endDate >= nextStartDate) {
                 return;
             }
@@ -1653,15 +1544,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.isFirstLoad = false;
             }
         }
-    }
-    
-    getHouseTypeName(typeId: number): string {
-        const houseType = this.houseTypes().find((type: HouseType) => type.house_type_id === typeId);
-        return houseType?.house_type_name || 'Unknown';
-    }
-
-    updateTableSettings(): void {
-        this.updateGridMatrix();
     }
 
     onCellDoubleClick(event: MouseEvent, row: number, col: number): void {
@@ -2025,55 +1907,6 @@ export class Reservation2Component implements OnInit, OnDestroy {
                 this.handleEditReservation(row, col);
             }
         }
-    }
-
-    isCellInSelectedReservation(row: number, col: number): boolean {
-        const selectedId = this.selectedReservationId();
-        if (selectedId === null) {
-            return false;
-        }
-        
-        const grid = this.gridMatrix();
-        if (!grid || grid.length <= row || !grid[row] || grid[row].length <= col) {
-            return false;
-        }
-        
-        if (!grid[row][col].isReserved) {
-            return false;
-        }
-        
-        const houses = this.filteredHouses();
-        const days = this.days();
-        
-        if (houses.length > row && days.length > col) {
-            const house = houses[row];
-            const day = days[col];
-            
-            const key = this.getReservationKey(house.house_id, day);
-            const reservation = this.reservationMap.get(key);
-            
-            return reservation?.house_availability_id === selectedId;
-        }
-        
-        return false;
-    }
-
-    manualRefresh(): void {
-        this.dataService.loadHouseAvailabilities().subscribe({
-            next: (freshData) => {
-                forkJoin({
-                    temp: this.dataService.loadTempHouseAvailabilities(),
-                    main: this.dataService.loadHouseAvailabilities(),
-                }).subscribe( ({temp, main}) => {
-                    const combined = [...main, ...temp];
-                    this.houseAvailabilities.set(combined);
-                    this.updateGridMatrix();
-                });
-            },
-            error: (error) => {
-                console.error("Error reloading availabilities:", error);
-            }
-        });
     }
 
     changeCellHeight(cellHeightInPx: number){
