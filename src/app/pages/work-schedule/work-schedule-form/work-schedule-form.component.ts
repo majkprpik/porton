@@ -198,7 +198,12 @@ import { DataService } from '../../../core/services/data.service';
           }
         </div>
         <div class="right-buttons">
-          <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
+          <p-button 
+            [label]="'BUTTONS.CANCEL' | translate" 
+            icon="pi pi-times" 
+            (click)="onCancel()" 
+            styleClass="p-button-text">
+          </p-button>
           <p-button 
             [label]="'BUTTONS.SAVE' | translate" 
             icon="pi pi-check" 
