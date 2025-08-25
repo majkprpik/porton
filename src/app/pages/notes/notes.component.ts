@@ -82,7 +82,10 @@ import { DataService } from '../../core/services/data.service';
               @if(i == 0 || notesForSelectedDate[i].profile_id != notesForSelectedDate[i-1].profile_id || hasMoreThan5MinutesPassedBetweenMessages(notesForSelectedDate[i], notesForSelectedDate[i-1])){
                 <br>
                   @if(profileService.isProfileDeleted(note.profile_id)){
-                    <b><i>{{ findProfileNameForNote(note)}} (deleted user)</i></b><span [ngStyle]="{'color': 'gray'}"> - {{note.time_sent | date:'HH:mm'}}</span>
+                    <b>
+                      <i>{{ findProfileNameForNote(note)}} ({{ 'APP-LAYOUT.NOTES.PROFILE-DELETED' | translate }})</i>
+                    </b>
+                    <span [ngStyle]="{'color': 'gray'}"> - {{note.time_sent | date:'HH:mm'}}</span>
                   } @else {
                     <b>{{ findProfileNameForNote(note)}} </b> <span [ngStyle]="{'color': 'gray'}"> - {{note.time_sent | date:'HH:mm'}}</span>
                   }

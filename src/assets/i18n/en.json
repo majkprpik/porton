@@ -137,7 +137,8 @@
             "TODAY": "Today",
             "LOADING-NOTES": "Loading notes...",
             "NO-NOTES": "No notes for this day",
-            "ADD-NOTE": "Add a note..."
+            "ADD-NOTE": "Add a note...",
+            "PROFILE-DELETED": "profile deleted"
         },
         "UNSCHEDULED-TASK-REPORT": {
             "TITLE": "Report an unscheduled task",

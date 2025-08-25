@@ -137,7 +137,8 @@
             "TODAY": "Danas",
             "LOADING-NOTES": "Učitavanje bilješki...",
             "NO-NOTES": "Nema bilješki za ovaj dan",
-            "ADD-NOTE": "Dodaj bilješku..."
+            "ADD-NOTE": "Dodaj bilješku...",
+            "PROFILE-DELETED": "profil izbrisan"
         },
         "UNSCHEDULED-TASK-REPORT": {
             "TITLE": "Prijavi izvanredan zadatak",
