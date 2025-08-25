@@ -41,34 +41,25 @@ interface CellData {
                             </p-button>  
                         }
                     </div>
-                    <div class="density">
-                        <p-button
-                            class="density-button"
-                            [severity]="cellHeightInPx == 40 ? 'primary': 'secondary'" 
-                            (click)="changeCellHeight(40)"
-                            [pTooltip]="'RESERVATIONS.HEADER.TOOLTIPS.ROW-HEIGHT-SPACIOUS' | translate" 
-                            tooltipPosition="top"
-                        >
-                            <i class="pi pi-equals"></i>
-                        </p-button>  
-                        <p-button
-                            class="density-button"
-                            [severity]="cellHeightInPx == 30 ? 'primary': 'secondary'" 
-                            (click)="changeCellHeight(30)"
-                            [pTooltip]="'RESERVATIONS.HEADER.TOOLTIPS.ROW-HEIGHT-COMFORTABLE' | translate" 
-                            tooltipPosition="top"
-                        >
-                            <i class="pi pi-bars"></i>
-                        </p-button>  
-                        <p-button
-                            class="density-button"
-                            [severity]="cellHeightInPx == 25 ? 'primary': 'secondary'" 
-                            (click)="changeCellHeight(25)"
-                            [pTooltip]="'RESERVATIONS.HEADER.TOOLTIPS.ROW-HEIGHT-COMPACT' | translate" 
-                            tooltipPosition="top"
-                        >
-                            <i class="pi pi-align-justify"></i>
-                        </p-button>  
+
+                    <div class="year-switcher">
+                        <p-button (onClick)="generatePreviousYearsTable()" icon="pi pi-angle-left"></p-button>
+                        <span>{{ selectedYear }}</span>
+                        <p-button (onClick)="generateNextYearsTable()" icon="pi pi-angle-right"></p-button>
+                    </div>
+
+                    <div class="density-buttons">
+                        @for(densityButton of densityButtons; track $index){
+                            <p-button
+                                class="density-button"
+                                [severity]="cellHeightInPx == densityButton.cellHeightPx ? 'primary': 'secondary'" 
+                                (click)="changeCellHeight(densityButton.cellHeightPx)"
+                                [pTooltip]="'RESERVATIONS.HEADER.TOOLTIPS.ROW-HEIGHT-' + (densityButton.name | uppercase) | translate" 
+                                tooltipPosition="top"
+                            >
+                            <i [class]="densityButton.icon"></i>
+                            </p-button>  
+                        }
                         @if(droppableSpots.length){
                             <p-button 
                                 class="cancel-selection-button"
@@ -81,11 +72,22 @@ interface CellData {
                 </div>
             </div>
 
+            @if(displayOverlay){
+                <div class="loading-overlay">
+                    <div class="loading-message">
+                        <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+                        <b>
+                            {{ 'RESERVATIONS.OVERLAY.LOADING-RESERVATIONS' | translate }}
+                        </b>
+                    </div>
+                </div>
+            }
+
             <div class="table-container">
                 <table class="reservation-table">
                     <thead>
                         <tr>
-                            <th class="house-header corner-header">{{ 'RESERVATIONS.HOUSE' | translate }}</th>
+                            <th class="house-header">{{ 'RESERVATIONS.HOUSE' | translate }}</th>
                             @for (day of days(); track day.getTime()) {
                                 <th class="day-header" 
                                     [ngClass]="{
@@ -208,403 +210,395 @@ interface CellData {
             overflow-y: hidden;
             position: relative;
 
-            .profile-buttons{
-                width: 100%;
+            .row{
+                height: 45px;
+
+                .tabs{
+                    display: flex;
+                    flex-direction: row;
+                    align-items: top;
+                    justify-content: space-between;
+
+                    .house-type-tabs {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                        width: 500px;
+                    }
+
+                    .year-switcher {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: space-between;
+                        width: 200px;
+
+                        span{
+                            font-weight: bold;
+                            font-size: 28px;
+                        }
+                    }
+
+                    .density-buttons{
+                        width: 500px;
+                        display: flex;
+                        flex-direction: row;
+                        align-items: top;
+                        justify-content: flex-end;
+                        gap: 10px;
+
+                        .density-button{
+                            max-height: 33px;
+
+                            i{
+                            font-size: 16px;
+                            }
+                        }
+                    }
+
+                    .cancel-selection-button{
+                        margin-bottom: 8px;
+                        padding-bottom: 5px;
+                    }
+                }
+            }
+
+            .loading-overlay{
+                position: absolute;
+                inset: 0;
+                background-color: white;
+                opacity: 0.8;
+                z-index: 20;
+                pointer-events: all;
                 display: flex;
                 flex-direction: row;
-                gap: 10px;
-                padding-bottom: 10px;
-            }
-        }
+                align-items: center;
+                justify-content: center;
 
-        .full-page-calendar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            
-            .handsontable-wrapper {
-                flex: 1;
-                overflow: auto;
-                height: calc(100vh - 120px);
-            }
-            
-            .htCenter {
-                text-align: center;
-            }
-        }
 
-        .reservation-2-container {
-            display: none;
-        }
-
-        .handsontable td {
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .house-type-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .house-type-tab {
-            position: relative;
-            padding: 5px 15px;
-            font-weight: 500;
-            cursor: pointer;
-            border-radius: 6px;
-            background-color: #f5f5f5;
-            transition: all 0.2s ease;
-            user-select: none;
-            
-            &:hover {
-                background-color: #e9e9e9;
-                transform: translateY(-2px);
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-            
-            &.active {
-                background-color: #007ad9;
-                color: var(--surface-card);;
-                font-weight: 600;
-                
-                &:after {
-                    content: '';
-                    position: absolute;
-                    bottom: -6px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 0;
-                    height: 0;
-                    border-left: 8px solid transparent;
-                    border-right: 8px solid transparent;
-                    border-top: 8px solid #007ad9;
+                .loading-message{
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
                 }
             }
-        }
 
-        .house-type-filter {
-            display: none;
-        }
-
-        .reservation-warning {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-            border-radius: 4px;
-            padding: 10px 15px;
-            z-index: 1050;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 400px;
-            
-            p {
-                margin: 5px 0;
-            }
-        }
-
-        .table-container {
-            overflow-x: auto;
-            overflow-y: auto;
-            height: 94%;
-            border: 1px solid #ddd;
-            scroll-behavior: smooth;
-            position: relative;
-            width: 100%;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .reservation-table {
-            border-collapse: separate;
-            border-spacing: 0;
-            width: auto;
-            table-layout: fixed;
-            margin: 0;
-
-            box-shadow: none;
-            
-            & > thead > tr > th:first-child {
-                z-index: 15 !important;
-            }
-            
-            th, td {
+            .table-container {
+                overflow-x: auto;
+                overflow-y: auto;
+                height: 94%;
                 border: 1px solid #ddd;
-                text-align: center;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                width: 120px !important;
-                min-width: 120px;
-                max-width: 120px;
-            }
-
-            .height-25-important{
-                height: 25px !important;
-            }
-
-            .height-30-important{
-                height: 30px !important;    
-            }
-
-            .height-40-important{
-                height: 40px !important;
-            }
-            
-            tbody tr:nth-child(even) {
-                background-color: rgba(0, 0, 0, 0.01);
-            }
-            
-            .house-header, .row-header {
-                width: 80px !important;
-                min-width: 80px;
-                max-width: 80px;
-            }
-            
-            .house-header {
-                background-color: var(--surface-card);
-                font-weight: bold;
-                position: sticky;
-                top: 0;
-                left: 0;
-                z-index: 10 !important;
-                width: 80px !important;
-                min-width: 80px;
-                max-width: 80px;
-                border: 1px solid #ddd;
-                box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
-            }
-            
-            .day-header {
-                background-color: var(--surface-card);
-                font-weight: bold;
-                position: sticky;
-                top: 0;
-                z-index: 5;
-                border: 1px solid #ddd;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-                
-                &.today-column {
-                    background-color: #e3f2fd !important;
-                    font-weight: 900;
-                    color: #0277bd;
-                    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
-                    border-top: 2px solid #2196f3 !important;
-                    border-bottom: 2px solid #2196f3 !important;
-                }
-                
-                &.saturday-column-day, &.saturday-column-night {
-                    background-color: var(--surface-card);
-                    font-style: italic;
-                    color: var(--p-red-400);
-                    font-size: 15px;
-                }
-                
-
-                &.sunday-column-day, &.sunday-column-night {
-                    background-color: var(--surface-card);
-                    font-style: italic;
-                    color: var(--p-red-500);
-                    font-size: 15px;
-                }
-            }
-            
-            .row-header {
-                background-color: var(--surface-card);
-                font-weight: bold;
-                position: sticky;
-                left: 0;
-                z-index: 5;
-                border: 1px solid #ddd;
-                box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
-                
-                &.active-row {
-                    background-color: #e8f5e9;
-                    color: #2e7d32;
-                    border-left: 3px solid #4caf50;
-                    font-weight: 900;
-                }
-            }
-            
-            .today-column {
+                scroll-behavior: smooth;
                 position: relative;
-                
-                &::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    bottom: 0;
-                    width: 3px;
-                    background-color: #2196f3;
-                    left: 0;
-                    opacity: 0.8;
-                    z-index: 1;
-                }
-                
-                &::after {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    bottom: 0;
-                    width: 3px;
-                    background-color: #2196f3;
-                    right: 0;
-                    opacity: 0.8;
-                    z-index: 1;
-                }
-                
-                box-shadow: inset 0 0 0 1000px rgba(33, 150, 243, 0.07) !important;
-                border-top: 1px solid rgba(33, 150, 243, 0.4) !important;
-                border-bottom: 1px solid rgba(33, 150, 243, 0.4) !important;
-            }
-
-            .free-column {
-                background-color: greenyellow !important;
-
-                &:hover{
-                    cursor: pointer;
-                }
-            }
-
-            .saturday-column-day {
-                box-shadow: inset 0 0 0 1000px rgba(255, 240, 240, 0.3) !important;
-            }
-
-            .sunday-column-day {
-                box-shadow: inset 0 0 0 1000px rgba(255, 238, 238, 0.3) !important;
-            }
-
-            .saturday-column-night {
-                box-shadow: inset 0 0 0 1000px rgba(255, 240, 240, 0.09) !important;
-            }
-
-            .sunday-column-night {
-                box-shadow: inset 0 0 0 1000px rgba(255, 238, 238, 0.09) !important;
-            }
-            
-            .reserved-cell {
-                color: #000;
-                text-align: center;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                font-weight: bold;
-                cursor: pointer;
-                width: 120px;
-                max-width: 120px;
-                box-sizing: border-box;
-                
-                &.saturday-column-day,
-                &.saturday-column-night,
-                &.sunday-column-day,
-                &.sunday-column-night,
-                &.today-column {
-                    background-color: inherit;
-                }
-                
-                &.reservation-start {
-                    position: relative;
-                    z-index: 2;
-                }
-                
-                &.reservation-middle {
-                    position: relative;
-                    z-index: 2;
-                }
-                
-                &.reservation-end {
-                    position: relative;
-                    z-index: 2;
-                }
-            }
-            user-select: none;
-        }
-
-        .custom-context-menu {
-            position: fixed;
-            background: var(--surface-card);
-            border: 1px solid #ccc;
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            min-width: 200px;
-            
-            .context-menu-item {
-                padding: 8px 12px;
-                cursor: pointer;
-                
-                &:hover {
-                    background-color: #f5f5f5;
-                }
-                
-                i {
-                    margin-right: 8px;
-                }
-            }
-        }
-
-        .selected-cell {
-            position: relative;
-            z-index: 5;
-            outline: none !important;
-            box-shadow: none !important;
-            border-top: 2px solid #007bff !important;
-            border-bottom: 2px solid #007bff !important;
-            animation: none;
-            
-            &.selection-start:not(.selection-end) {
-                border-left: 2px solid #007bff !important;
-                border-right: none !important;
-                border-top-left-radius: 4px;
-                border-bottom-left-radius: 4px;
-                animation: cell-selected-pulse 2s infinite;
-            }
-            
-            &.selection-end:not(.selection-start) {
-                border-right: 2px solid #007bff !important;
-                border-left: none !important;
-                border-top-right-radius: 4px;
-                border-bottom-right-radius: 4px;
-                animation: cell-selected-pulse 2s infinite;
-            }
-            
-            &.selection-start.selection-end {
-                border: 2px solid #007bff !important;
+                width: 100%;
                 border-radius: 4px;
-                animation: cell-selected-pulse 2s infinite;
-            }
-            
-            &:not(.selection-start):not(.selection-end) {
-                border-left: none !important;
-                border-right: none !important;
-            }
-            
-            &.saturday-column, &.sunday-column, &.today-column {
-                border-left: none !important;
-                border-right: none !important;
-                
-                &.selection-start {
-                    border-left: 2px solid #007bff !important;
-                }
-                
-                &.selection-end {
-                    border-right: 2px solid #007bff !important;
-                }
-                
-                &.selection-start.selection-end {
-                    border: 2px solid #007bff !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+                .reservation-table {
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    width: auto;
+                    table-layout: fixed;
+                    margin: 0;
+                    box-shadow: none;
+                    
+                    & > thead > tr > th:first-child {
+                        z-index: 15 !important;
+                    }
+                    
+                    th, td {
+                        border: 1px solid #ddd;
+                        text-align: center;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        width: 120px !important;
+                        min-width: 120px;
+                        max-width: 120px;
+                    }
+
+                    .height-25-important{
+                        height: 25px !important;
+                    }
+
+                    .height-30-important{
+                        height: 30px !important;    
+                    }
+
+                    .height-40-important{
+                        height: 40px !important;
+                    }
+                    
+                    tbody tr:nth-child(even) {
+                        background-color: rgba(0, 0, 0, 0.01);
+                    }
+                    
+                    .house-header, .row-header {
+                        width: 80px !important;
+                        min-width: 80px;
+                        max-width: 80px;
+                    }
+                    
+                    .house-header {
+                        background-color: var(--surface-card);
+                        font-weight: bold;
+                        position: sticky;
+                        top: 0;
+                        left: 0;
+                        z-index: 10 !important;
+                        width: 80px !important;
+                        min-width: 80px;
+                        max-width: 80px;
+                        border: 1px solid #ddd;
+                        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+                    }
+                    
+                    .day-header {
+                        background-color: var(--surface-card);
+                        font-weight: bold;
+                        position: sticky;
+                        top: 0;
+                        z-index: 5;
+                        border: 1px solid #ddd;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                        
+                        &.today-column {
+                            background-color: #e3f2fd !important;
+                            font-weight: 900;
+                            color: #0277bd;
+                            box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+                            border-top: 2px solid #2196f3 !important;
+                            border-bottom: 2px solid #2196f3 !important;
+                        }
+                        
+                        &.saturday-column-day, &.saturday-column-night {
+                            background-color: var(--surface-card);
+                            font-style: italic;
+                            color: var(--p-red-400);
+                            font-size: 15px;
+                        }
+                        
+
+                        &.sunday-column-day, &.sunday-column-night {
+                            background-color: var(--surface-card);
+                            font-style: italic;
+                            color: var(--p-red-500);
+                            font-size: 15px;
+                        }
+                    }
+                    
+                    .row-header {
+                        background-color: var(--surface-card);
+                        font-weight: bold;
+                        position: sticky;
+                        left: 0;
+                        z-index: 5;
+                        border: 1px solid #ddd;
+                        box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+                        
+                        &.active-row {
+                            background-color: #e8f5e9;
+                            color: #2e7d32;
+                            border-left: 3px solid #4caf50;
+                            font-weight: 900;
+                        }
+                    }
+
+                    .selected-cell {
+                        position: relative;
+                        z-index: 5;
+                        outline: none !important;
+                        box-shadow: none !important;
+                        border-top: 2px solid #007bff !important;
+                        border-bottom: 2px solid #007bff !important;
+                        animation: none;
+                        
+                        &.selection-start:not(.selection-end) {
+                            border-left: 2px solid #007bff !important;
+                            border-right: none !important;
+                            border-top-left-radius: 4px;
+                            border-bottom-left-radius: 4px;
+                            animation: cell-selected-pulse 2s infinite;
+                        }
+                        
+                        &.selection-end:not(.selection-start) {
+                            border-right: 2px solid #007bff !important;
+                            border-left: none !important;
+                            border-top-right-radius: 4px;
+                            border-bottom-right-radius: 4px;
+                            animation: cell-selected-pulse 2s infinite;
+                        }
+                        
+                        &.selection-start.selection-end {
+                            border: 2px solid #007bff !important;
+                            border-radius: 4px;
+                            animation: cell-selected-pulse 2s infinite;
+                        }
+                        
+                        &:not(.selection-start):not(.selection-end) {
+                            border-left: none !important;
+                            border-right: none !important;
+                        }
+                        
+                        &.saturday-column, &.sunday-column, &.today-column {
+                            border-left: none !important;
+                            border-right: none !important;
+                            
+                            &.selection-start {
+                                border-left: 2px solid #007bff !important;
+                            }
+                            
+                            &.selection-end {
+                                border-right: 2px solid #007bff !important;
+                            }
+                            
+                            &.selection-start.selection-end {
+                                border: 2px solid #007bff !important;
+                            }
+                        }
+                    }
+                    
+                    .today-column {
+                        position: relative;
+                        
+                        &::before {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            bottom: 0;
+                            width: 3px;
+                            background-color: #2196f3;
+                            left: 0;
+                            opacity: 0.8;
+                            z-index: 1;
+                        }
+                        
+                        &::after {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            bottom: 0;
+                            width: 3px;
+                            background-color: #2196f3;
+                            right: 0;
+                            opacity: 0.8;
+                            z-index: 1;
+                        }
+                        
+                        box-shadow: inset 0 0 0 1000px rgba(33, 150, 243, 0.07) !important;
+                        border-top: 1px solid rgba(33, 150, 243, 0.4) !important;
+                        border-bottom: 1px solid rgba(33, 150, 243, 0.4) !important;
+                    }
+
+                    .free-column {
+                        background-color: greenyellow !important;
+
+                        &:hover{
+                            cursor: pointer;
+                        }
+                    }
+
+                    .saturday-column-day {
+                        box-shadow: inset 0 0 0 1000px rgba(255, 240, 240, 0.3) !important;
+                    }
+
+                    .sunday-column-day {
+                        box-shadow: inset 0 0 0 1000px rgba(255, 238, 238, 0.3) !important;
+                    }
+
+                    .saturday-column-night {
+                        box-shadow: inset 0 0 0 1000px rgba(255, 240, 240, 0.09) !important;
+                    }
+
+                    .sunday-column-night {
+                        box-shadow: inset 0 0 0 1000px rgba(255, 238, 238, 0.09) !important;
+                    }
+                    
+                    .reserved-cell {
+                        color: #000;
+                        text-align: center;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        font-weight: bold;
+                        cursor: pointer;
+                        width: 120px;
+                        max-width: 120px;
+                        box-sizing: border-box;
+                        
+                        &.saturday-column-day,
+                        &.saturday-column-night,
+                        &.sunday-column-day,
+                        &.sunday-column-night,
+                        &.today-column {
+                            background-color: inherit;
+                        }
+                        
+                        &.reservation-start {
+                            position: relative;
+                            z-index: 2;
+                        }
+                        
+                        &.reservation-middle {
+                            position: relative;
+                            z-index: 2;
+                        }
+                        
+                        &.reservation-end {
+                            position: relative;
+                            z-index: 2;
+                        }
+                    }
+
+                    .reservation-item {
+                        display: flex;
+                        align-items: center;
+                        
+                        .handle-icon {
+                            margin-right: 4px;
+                            opacity: 0.6;
+                            font-size: 12px;
+                            color: #333;
+                            padding: 2px;
+                            border-radius: 2px;
+                            
+                            &:hover {
+                                opacity: 1;
+                                background-color: rgba(0, 0, 0, 0.1);
+                            }
+                        }
+                        
+                        .reservation-text {
+                            flex: 1;
+                        }
+                    }
+
+                    .reservation-numbers{
+                        display: flex;
+                        flex-direction: row;
+                        width: 100%;
+                        justify-content: center;
+                        gap: 5px;
+                        box-sizing: border-box;
+                        padding: 0 10px 0 10px
+                    }
+
+                    .border-left-important {
+                        border-left: 1px solid black !important;
+                    }
+                    .border-right-important {
+                        border-right: 1px solid black !important;
+                    }
+                    .border-top-important {
+                        border-top: 1px solid black !important;
+                    }
+                    .border-bottom-important {
+                        border-bottom: 1px solid black !important;
+                    }
+
+                    user-select: none;
                 }
             }
         }
@@ -623,131 +617,6 @@ interface CellData {
                 background-color: rgba(0, 123, 255, 0.05);
             }
         }
-
-        td.selected-reservation {
-            background-color: rgba(0, 0, 0, 0.3) !important;
-        }
-
-        .today-indicator {
-            font-size: 9px;
-            line-height: 1;
-            font-weight: bold;
-            color: var(--surface-card);
-            background-color: #2196f3;
-            padding: 2px 4px;
-            border-radius: 3px;
-            margin-top: 2px;
-            display: inline-block;
-        }
-
-        .day-header.today-column {
-            background-color: #e3f2fd !important;
-            font-weight: 900;
-            color: #0277bd;
-            box-shadow: none !important;
-            border-top: 2px solid #2196f3 !important;
-            border-bottom: 2px solid #2196f3 !important;
-        }
-
-        .corner-header {
-            background-color: var(--surface-card);
-            border: 1px solid #ccc !important;
-            position: sticky !important;
-            top: 0;
-            left: 0;
-            z-index: 15 !important; 
-            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        .potential-drop-target,
-        .valid-drop-target,
-        .invalid-drop-target,
-        .cdk-drag-preview,
-        .cdk-drag-placeholder,
-        .cdk-drag-animating,
-        .cdk-drop-list-dragging,
-        .reservation-preview {
-            display: none;
-        }
-
-        .reservation-item {
-            display: flex;
-            align-items: center;
-            
-            .handle-icon {
-                margin-right: 4px;
-                opacity: 0.6;
-                font-size: 12px;
-                color: #333;
-                padding: 2px;
-                border-radius: 2px;
-                
-                &:hover {
-                    opacity: 1;
-                    background-color: rgba(0, 0, 0, 0.1);
-                }
-            }
-            
-            .reservation-text {
-                flex: 1;
-            }
-        }
-
-        .row{
-            height: 45px;
-
-            .tabs{
-                display: flex;
-                flex-direction: row;
-                align-items: top;
-                justify-content: space-between;
-
-                .density{
-                width: 500px;
-                display: flex;
-                flex-direction: row;
-                align-items: top;
-                justify-content: flex-end;
-                gap: 10px;
-
-                    .density-button{
-                        max-height: 33px;
-
-                        i{
-                        font-size: 16px;
-                        }
-                    }
-                }
-
-                .cancel-selection-button{
-                    margin-bottom: 8px;
-                    padding-bottom: 5px;
-                }
-            }
-        }
-
-        .reservation-numbers{
-            display: flex;
-            flex-direction: row;
-            width: 100%;
-            justify-content: center;
-            gap: 5px;
-            box-sizing: border-box;
-            padding: 0 10px 0 10px
-        }
-
-        .border-left-important {
-            border-left: 1px solid black !important;
-        }
-        .border-right-important {
-            border-right: 1px solid black !important;
-        }
-        .border-top-important {
-            border-top: 1px solid black !important;
-        }
-        .border-bottom-important {
-            border-bottom: 1px solid black !important;
-        }
     `
     ,
     standalone: true,
@@ -763,10 +632,10 @@ interface CellData {
     providers: [DatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush
 }) 
-export class Reservation2Component implements OnInit, OnDestroy {
+export class ReservationsComponent implements OnInit, OnDestroy {
     houses = signal<House[]>([]);
     houseAvailabilities = signal<HouseAvailability[]>([]);
-    days = signal<Date[]>(this.generateDays());
+    days = signal<Date[]>([]);
     
     houseTypes = signal<HouseType[]>([]);
     selectedHouseTypeId = signal<number>(0);
@@ -811,6 +680,16 @@ export class Reservation2Component implements OnInit, OnDestroy {
 
     cellHeightInPx: number = 30;
 
+    densityButtons = [
+        { name: 'spacious', cellHeightPx: 40, icon: 'pi pi-equals' },
+        { name: 'comfortable', cellHeightPx: 30, icon: 'pi pi-bars' },
+        { name: 'compact', cellHeightPx: 25, icon: 'pi pi-align-justify' },
+    ];
+    
+    selectedYear: number = new Date().getFullYear();;
+
+    displayOverlay: boolean = false;
+
     constructor(
         private dataService: DataService,
         private houseService: HouseService,
@@ -827,6 +706,7 @@ export class Reservation2Component implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.generateInitDays();
         this.dataService.loadHouses().pipe(takeUntil(this.destroy$)).subscribe();
         this.dataService.loadHouseAvailabilities().pipe(takeUntil(this.destroy$)).subscribe();
         this.dataService.getHouseTypes().pipe(takeUntil(this.destroy$)).subscribe(types => {
@@ -1144,11 +1024,10 @@ export class Reservation2Component implements OnInit, OnDestroy {
         return Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
     }
 
-    private generateDays(): Date[] {
+    private generateDaysForYear(year: number): Date[] {
         const days: Date[] = [];
-        const currentYear = new Date().getFullYear();
-        const startDate = new Date(currentYear, 2, 31);
-        const endDate = new Date(currentYear, 10, 15);
+        const startDate = new Date(year, 2, 31);
+        const endDate = new Date(year, 10, 15);
         
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
@@ -1922,5 +1801,32 @@ export class Reservation2Component implements OnInit, OnDestroy {
         } else {
             this.cellHeightInPx = parseInt(cellHeight);
         }
+    }
+
+    generateInitDays(){
+        this.selectedYear = new Date().getFullYear();
+        this.days.set(this.generateDaysForYear(this.selectedYear));
+    }
+
+    generatePreviousYearsTable(){
+        this.displayOverlay = true;
+
+        setTimeout(() => {
+            this.selectedYear--;
+            this.days.set(this.generateDaysForYear(this.selectedYear));
+            this.updateGridMatrix();
+            this.displayOverlay = false;
+        }, 0);
+    }
+
+    generateNextYearsTable(){
+        this.displayOverlay = true;
+
+        setTimeout(() => {
+            this.selectedYear++;
+            this.days.set(this.generateDaysForYear(this.selectedYear));
+            this.updateGridMatrix();
+            this.displayOverlay = false;
+        }, 0);
     }
 }

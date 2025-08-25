@@ -1,12 +1,11 @@
 import { Routes } from '@angular/router';
 import { AppLayout } from './app/layout/components/app.layout';
 import { Documentation } from './app/pages/documentation/documentation';
-import { Notfound } from './app/pages/notfound/notfound';
 import { DailySheetComponent } from './app/pages/daily-sheet/daily-sheet';
 import { Home } from './app/pages/home/home';
 import { Teams } from './app/pages/teams/teams';
 import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
-import { Reservation2Component } from './app/pages/reservations/reservations.component';
+import { ReservationsComponent } from './app/pages/reservations/reservations.component';
 import { AuthGuard } from './app/core/guards/auth.guard';
 import { RoleGuard } from './app/core/guards/role.guard';
 import { ProfilesComponent } from './app/pages/profiles/profiles.component';
@@ -65,7 +64,7 @@ export const appRoutes: Routes = [
             },
             { 
                 path: 'reservations', 
-                component: Reservation2Component,
+                component: ReservationsComponent,
                 data: { roles: [
                     ProfileRoles.VoditeljRecepcije,
                     ProfileRoles.Prodaja,

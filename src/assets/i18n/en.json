@@ -367,7 +367,7 @@
             },
             "TOOLTIPS": {
                 "ROW-HEIGHT-SPACIOUS": "Row height: Spacious",
-                "ROW-HEIGHT-COMFORTABLE": "Row height: Comfortable",
+                "ROW-HEIGHT-COMFORTABLE": "Row height: Default",
                 "ROW-HEIGHT-COMPACT": "Row height: Compact"
             }
         },
@@ -402,6 +402,9 @@
             "CONFIRM-DELETE": "Are you sure you want to delete this reservation?",
             "CANCELLED-DELETE": "Delete cancelled",
             "CONFIRM-MOVE-RESERVATION": "Move reservation \"{{name}}\" from house \"{{old_house_number}}\" ({{old_start_date}}) to house \"{{new_house_number}}\" ({{new_start_date}})?"
+        },
+        "OVERLAY": {
+            "LOADING-RESERVATIONS": "Loading reservations..."
         }
     },
     "HOME": {

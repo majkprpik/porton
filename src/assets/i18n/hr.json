@@ -367,7 +367,7 @@
             },
             "TOOLTIPS": {
                 "ROW-HEIGHT-SPACIOUS": "Visina ćelije: Prostrano",
-                "ROW-HEIGHT-COMFORTABLE": "Visina ćelije: Ugodno",
+                "ROW-HEIGHT-COMFORTABLE": "Visina ćelije: Zadano",
                 "ROW-HEIGHT-COMPACT": "Visina ćelije: Kompaktno"
             }
         },
@@ -402,6 +402,9 @@
             "CONFIRM-DELETE": "Jeste li sigurni da želite obrisati rezervaciju?",
             "CANCELLED-DELETE": "Promjena otkazana",
             "CONFIRM-MOVE-RESERVATION": "Premjesti rezervaciju \"{{name}}\" iz kućice \"{{old_house_number}}\" ({{old_start_date}}) u kućicu \"{{new_house_number}}\" ({{new_start_date}})?"
+        },
+        "OVERLAY": {
+            "LOADING-RESERVATIONS": "Učitavanje rezervacija..."
         }
     },
     "HOME": {
