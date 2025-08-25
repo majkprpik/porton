@@ -405,7 +405,7 @@ export class DataService {
   loadProfiles(): Observable<Profile[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabaseService.getData('profiles', this.schema)).pipe(
+    return from(this.supabaseService.getData('profiles', this.schema, { column: 'is_deleted', value: false })).pipe(
       tap((data) => {
         if (data) {
           this.setProfiles(data);

@@ -501,7 +501,7 @@ export class ProfilesComponent implements OnInit {
 
   deleteProfile(profileId: string | undefined){
     if(profileId){
-      this.profileService.deleteProfile(profileId);
+      this.profileService.softDeleteProfile(profileId);
     }
 
     this.resetSelectedProfileValues();

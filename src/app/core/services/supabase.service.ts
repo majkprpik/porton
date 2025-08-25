@@ -50,11 +50,17 @@ export class SupabaseService {
     return this.supabase;
   }
 
-  async getData(table: string, schema: string) {
-    const { data, error } = await this.supabase
+  async getData(table: string, schema: string, filter?: { column: string, value: any }) {
+    let query = this.supabase
       .schema(schema)
       .from(table)
       .select('*');
+
+    if (filter) {
+      query = query.eq(filter.column, filter.value);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching data:', error.message);

@@ -160,7 +160,31 @@ export class ProfileService {
 
       return true;
     } catch (error) {
-      console.error(`Error deleting profile with ID ${profileId} to Supabase:`, error);
+      console.error(`Error deleting profile with ID ${profileId}:`, error);
+      return false;
+    }
+  }
+
+  async softDeleteProfile(profileId: string) {
+    try {
+      const { data: softDeletedProfile, error: softDeleteProfileError } = await this.supabase.getClient()
+        .schema('porton')
+        .from('profiles')
+        .update({ is_deleted: true })
+        .eq('id', profileId)
+        .select()
+        .single();
+
+      if (softDeleteProfileError) throw softDeleteProfileError;
+
+      if (softDeletedProfile?.id) {
+        const filteredProfiles = this.profiles.filter(p => p.id !== softDeletedProfile.id);
+        this.dataService.setProfiles(filteredProfiles);
+      }
+
+      return true;
+    } catch (error) {
+      console.error(`Error soft-deleting profile with ID ${profileId}:`, error);
       return false;
     }
   }
