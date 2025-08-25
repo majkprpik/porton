@@ -469,7 +469,7 @@
                 "QUICK-DELETE": "Quick delete",
                 "EXPORT": "Export",
                 "ROW-HEIGHT-SPACIOUS": "Row height: Spacious",
-                "ROW-HEIGHT-COMFORTABLE": "Row height: Comfortable",
+                "ROW-HEIGHT-COMFORTABLE": "Row height: Default",
                 "ROW-HEIGHT-COMPACT": "Row height: Compact"
             }
         },
