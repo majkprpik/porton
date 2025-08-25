@@ -579,7 +579,7 @@ export class WorkGroupDetail implements OnInit {
                 this.workGroupTasks = workGroupTasks;
                 this.houseAvailabilities = houseAvailabilities;
                 this.tasks = tasks;
-                this.profiles = profiles;
+                this.profiles = profiles.filter(p => !p.is_deleted);
                 this.workGroupProfiles = workGroupProfiles;
                 this.workGroups = workGroups;
 

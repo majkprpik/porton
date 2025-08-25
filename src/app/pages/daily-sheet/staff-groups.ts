@@ -187,7 +187,7 @@ export class StaffGroups implements OnInit {
     ]).subscribe({
       next: ([profileRoles, profiles]) => {
         this.profileRoles = profileRoles;
-        this.profiles = profiles;
+        this.profiles = profiles.filter(p => !p.is_deleted);
         
         this.loading = false;
       },

@@ -166,7 +166,7 @@ export class ConsoleMessagesComponent {
     private authService: AuthService,
   ) {
     this.dataService.profiles$.subscribe(profiles => {
-      this.profiles = profiles;
+      this.profiles = profiles.filter(p => !p.is_deleted);
       this.loggedUser = profiles.find(profile => profile.id == this.authService.getStoredUserId());
     });
   }

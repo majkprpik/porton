@@ -85,7 +85,7 @@ export class AuthService {
     }
   }
 
-  async login(email: string, password: string): Promise<boolean> {
+  async login(email: string, password: string) {
     try {
       const { data, error } = await this.supabaseService.getClient().auth.signInWithPassword({
         email: email,
@@ -98,10 +98,10 @@ export class AuthService {
       this.setUserName('username', email);
       this.setUserId(data.user.id);
 
-      return true;
+      return data;
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      return null;
     }
   }
 

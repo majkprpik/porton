@@ -501,7 +501,7 @@ export class WorkScheduleFormComponent {
     .pipe(takeUntil(this.destroy$))
     .subscribe({
       next: ([profiles, profileWorkDays]) => {
-        this.profiles = profiles;
+        this.profiles = profiles.filter(p => !p.is_deleted || p.is_test_user);
         this.profileWorkDays = profileWorkDays;
 
         this.availableProfiles = this.getAvailableProfiles();
@@ -590,14 +590,7 @@ export class WorkScheduleFormComponent {
       }
     });
   }
-
-  stringToTimeDate(timeStr: string): Date {
-    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, seconds || 0, 0);
-    return date;
-  }
-
+  
   onScheduleModeChange(newMode: 'all' | 'dayByDay'){
     this.scheduleMode = newMode;
   }

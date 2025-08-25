@@ -36,9 +36,8 @@ export class HouseService {
       this.dataService.workGroupTasks$,
       this.dataService.workGroupProfiles$,
       this.dataService.workGroups$,
-      this.dataService.profiles$
     ]).subscribe({
-      next: ([houseAvailabilities, tempHouseAvailabilities, houses, tasks, workGroupTasks, workGroupProfiles, workGroups, profiles]) => {
+      next: ([houseAvailabilities, tempHouseAvailabilities, houses, tasks, workGroupTasks, workGroupProfiles, workGroups]) => {
         this.houseAvailabilities = houseAvailabilities;
         this.tempHouseAvailabilities = tempHouseAvailabilities;
         this.houses = houses;
@@ -46,7 +45,6 @@ export class HouseService {
         this.workGroupTasks = workGroupTasks;
         this.workGroupProfiles = workGroupProfiles;
         this.workGroups = workGroups;
-        this.profiles = profiles;
       },
       error: (error) => {
         console.error(error);

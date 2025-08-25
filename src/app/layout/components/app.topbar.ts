@@ -126,7 +126,7 @@ export class AppTopbar {
             next: ([selectedLanguage, profiles, profileRoles]) => {
                 this.storedUserId = this.authService.getStoredUserId();
                 this.selectedLanguage = selectedLanguage;
-                this.profiles = profiles;
+                this.profiles = profiles.filter(p => !p.is_deleted);
                 this.profileRoles = profileRoles;
             },
             error: (error) => {

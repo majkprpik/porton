@@ -101,7 +101,7 @@ export class Login implements OnInit {
         .subscribe({
             next: ([profileRoles, profiles]) => {
                 this.profileRoles = profileRoles;
-                this.profiles = profiles;
+                this.profiles = profiles.filter(p => !p.is_deleted);
             },
             error: (error) => {
                 console.error('Error loading profiles:', error);
@@ -120,13 +120,18 @@ export class Login implements OnInit {
             this.errorMessage = '';
 
             try {
-                const success = await this.authService.login(this.email.trim() + '@porton.com', this.password.trim());
-                if (!success) {
+                const data = await this.authService.login(this.email.trim() + '@porton.com', this.password.trim());
+                if (!data) {
                     this.errorMessage = 'Invalid email or password';
                     return;
                 }
                 
                 await firstValueFrom(this.dataService.loadProfiles());
+
+                const user = this.profiles.find(p => p.id == data.user.id)
+                if(!user || user?.is_deleted) {
+                    this.authService.logout();
+                }
                 
                 this.redirectUserByRole();
             } catch (error) {

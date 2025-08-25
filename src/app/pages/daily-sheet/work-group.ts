@@ -485,7 +485,7 @@ export class WorkGroup implements OnInit {
         this.workGroupTasks = workGroupTasks;
         this.workGroupProfiles = workGroupProfiles;
         this.workGroups = workGroups;
-        this.profiles = profiles;
+        this.profiles = profiles.filter(p => !p.is_deleted);
 
         this.deleteCompletedWorkGroupTasks();
       },

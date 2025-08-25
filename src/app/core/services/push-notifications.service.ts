@@ -24,7 +24,7 @@ export class PushNotificationsService {
     private dataService: DataService,
   ) { 
     this.dataService.profiles$.subscribe(profiles => {
-      this.profiles = profiles;
+      this.profiles = profiles.filter(p => !p.is_deleted);
     })
 
     onMessage(this.messaging, (payload) => {

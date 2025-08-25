@@ -16,10 +16,18 @@ import { SelectModule } from 'primeng/select';
 import { LanguageService } from '../../core/services/language.service';
 import { DataService } from '../../core/services/data.service';
 
-interface ExtendedProfile extends Profile {
+interface ExtendedProfile {
+  id: string;
+  role_id: number | null;
+  first_name: string | null;
+  last_name: string | null;
   isDivider?: boolean;
   password?: string;
   email?: string;
+  is_test_user?: boolean;
+  phone_number?: string | null;
+  created_at?: string | null;
+  is_deleted?: boolean;
 }
 
 @Component({
@@ -272,7 +280,7 @@ export class ProfilesComponent implements OnInit {
   profileDialog: boolean = false;
   showNewProfileDialog: boolean = false;
   showDeleteProfileDialog: boolean = false;
-  selectedProfile: ExtendedProfile = { id: '', role_id: -1, first_name: '', last_name: '' };
+  selectedProfile: ExtendedProfile = { id: '', role_id: -1, first_name: '', last_name: '', is_test_user: false, is_deleted: false };
   userPasswordMap: { [name: string]: string } = {};
   newProfileRole: string = '';
   newProfile: UserToRegister = { name: '', password: '', role_id: null, is_test_user: false };
@@ -305,6 +313,7 @@ export class ProfilesComponent implements OnInit {
   ];
 
   private destroy$ = new Subject<void>();
+  activeProfiles: Profile[] = [];
 
   constructor(
     private dataService: DataService,
@@ -361,6 +370,7 @@ export class ProfilesComponent implements OnInit {
     .subscribe({
       next: async ([profileRoles, profiles]) => {
         this.sortedProfiles = [];
+        this.activeProfiles = profiles.filter(p => !p.is_deleted);
         
         this.profileRoles = profileRoles.map(role => ({
           ...role,
@@ -369,8 +379,7 @@ export class ProfilesComponent implements OnInit {
             : role.name
         }));
         
-        // Add management profiles
-        const managementProfiles = profiles
+        const managementProfiles = this.activeProfiles
           .filter(profile => {
             const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
             return roleName !== undefined && this.managementRoles.includes(roleName);
@@ -381,8 +390,7 @@ export class ProfilesComponent implements OnInit {
           this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(managementProfiles));
         }
         
-        // Add reception profiles
-        const receptionProfiles = profiles
+        const receptionProfiles = this.activeProfiles
           .filter(profile => {
             const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
             return roleName !== undefined && this.receptionRoles.includes(roleName);
@@ -393,8 +401,7 @@ export class ProfilesComponent implements OnInit {
           this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(receptionProfiles));
         }
         
-        // Add housekeeping profiles
-        const housekeepingProfiles = profiles
+        const housekeepingProfiles = this.activeProfiles
           .filter(profile => {
             const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
             return roleName !== undefined && this.housekeepingRoles.includes(roleName);
@@ -405,8 +412,7 @@ export class ProfilesComponent implements OnInit {
           this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(housekeepingProfiles));
         }
         
-        // Add technical profiles
-        const technicalProfiles = profiles
+        const technicalProfiles = this.activeProfiles
           .filter(profile => {
             const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
             return roleName !== undefined && this.technicalRoles.includes(roleName);
@@ -417,8 +423,7 @@ export class ProfilesComponent implements OnInit {
           this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(technicalProfiles));
         }
         
-        // Add any other profiles that don't fit the categories
-        const otherProfiles = profiles
+        const otherProfiles = this.activeProfiles
           .filter(profile => {
             if (!profile.role_id) return true;
 
@@ -485,7 +490,7 @@ export class ProfilesComponent implements OnInit {
       first_name: title,
       last_name: '',
       role_id: -1,
-      isDivider: true
+      isDivider: true,
     };
   }
 
@@ -528,6 +533,7 @@ export class ProfilesComponent implements OnInit {
         created_at: this.selectedProfile.created_at,
         password: this.selectedProfile.password,
         is_test_user: this.selectedProfile.is_test_user,
+        is_deleted: this.selectedProfile.is_deleted
       }
 
       this.profileService.updateProfile(updatedProfile)

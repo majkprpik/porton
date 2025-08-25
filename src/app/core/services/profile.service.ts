@@ -110,6 +110,10 @@ export class ProfileService {
     return false;
   }
 
+  isProfileDeleted(profileId: string){
+    return this.profiles.find(p => p.id == profileId)?.is_deleted;
+  }
+
   async updateProfile(profile: Profile){
     try{
       const { data: updatedProfile, error: updateProfileError } = await this.supabase.getClient()
@@ -176,6 +180,9 @@ export class ProfileService {
         .single();
 
       if (softDeleteProfileError) throw softDeleteProfileError;
+
+      const { error: disableAuthError } = await this.supabase.getAdminClient().auth.admin.updateUserById(profileId, { disabled: true } as any);
+      if (disableAuthError) throw disableAuthError;
 
       if (softDeletedProfile?.id) {
         const filteredProfiles = this.profiles.filter(p => p.id !== softDeletedProfile.id);

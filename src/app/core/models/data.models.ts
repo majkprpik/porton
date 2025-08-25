@@ -29,6 +29,7 @@ export interface Profile {
   created_at?: string | null;
   password?: string;
   is_test_user?: boolean
+  is_deleted?: boolean;
 }
 
 export interface UserToRegister {

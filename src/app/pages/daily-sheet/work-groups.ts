@@ -517,7 +517,7 @@ export class WorkGroups implements OnInit {
     this.tasks = tasks;
     this.workGroupTasks = workGroupTasks;
     this.workGroupProfiles = workGroupProfiles; 
-    this.profiles = profiles;
+    this.profiles = profiles.filter(p => !p.is_deleted);
 
     this.lockedTeams = [];
 

@@ -1121,6 +1121,9 @@ export class AppLayout {
                 this.profileWorkDays = profileWorkDays;
                 
                 this.loggedUser = this.profiles.find(profile => profile.id == this.storedUserId);
+                if(this.loggedUser?.is_deleted) {
+                    this.authService.logout();
+                }
 
                 this.houses = houses.sort((a, b) => {
                     const nameA = a.house_name.toLowerCase();

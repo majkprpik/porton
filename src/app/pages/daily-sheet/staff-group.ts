@@ -158,7 +158,7 @@ export class StaffGroup implements OnInit, OnChanges {
       this.workGroups = workGroups;
       this.workGroupProfiles = workGroupProfiles;
       this.profileRoles = profileRoles;
-      this.profiles = profiles;
+      this.profiles = profiles.filter(p => !p.is_deleted);
 
       this.repairProfileRoles = profileRoles.filter(pr =>
         pr.name === ProfileRoles.KucniMajstor || pr.name === ProfileRoles.Odrzavanje

@@ -717,7 +717,7 @@ export class WorkScheduleComponent {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ([profiles, schedule, profileRoles, profileWorkDays]) => {
-          this.profiles = profiles;
+          this.profiles = profiles.filter(p => !p.is_deleted || p.is_test_user);
           this.fullWorkSchedule = schedule;
           this.profileRoles = profileRoles;
           this.profileWorkDays = profileWorkDays;

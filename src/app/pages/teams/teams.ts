@@ -356,7 +356,7 @@ export class Teams implements OnInit {
                 this.storedUserId = this.authService.getStoredUserId();
                 this.workGroups = workGroups;
                 this.tasks = tasks;
-                this.profiles = profiles;
+                this.profiles = profiles.filter(p => !p.is_deleted);
                 this.houses = houses;
                 this.workGroupTasks = workGroupTasks;
                 this.workGroupProfiles = workGroupProfiles;
