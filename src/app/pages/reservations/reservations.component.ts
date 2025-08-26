@@ -738,6 +738,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
                 this.houses.set(houses);
                 this.tempHouses = tempHouses;
                 this.houseTypes.set(houseTypes.filter(t => t.house_type_name != 'dodatno'));
+
+                if(houses.length && tempHouses.length){
+                    this.updateGridMatrix();
+                }
             
                 if (houseTypes && houseTypes.length) {
                     this.setSelectedHouseType(houseTypes[0].house_type_id);
