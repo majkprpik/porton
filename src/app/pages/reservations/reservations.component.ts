@@ -1802,8 +1802,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     generateInitDays(){
-        const season = this.seasons.find(s => s.year == new Date().getFullYear());
+        if(this.selectedSeason.id != -1) return;
 
+        const season = this.seasons.find(s => s.year == new Date().getFullYear());
         if(season) {
             this.selectedSeason = season;
         } 
