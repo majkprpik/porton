@@ -110,7 +110,7 @@ interface CellData {
                             <tr>
                                 <th class="row-header" [ngClass]="{'active-row': selectedCellRowIndex() === i}">{{ house.house_name || house.house_number }}</th>
                                 @for (day of days(); track day.getTime(); let j = $index) {
-                                    @if (gridMatrix()[i][j]){
+                                    @if (gridMatrix()[i] && gridMatrix()[i][j]){
                                         <td 
                                             (dblclick)="onCellDoubleClick($event, i, j)"
                                             (mousedown)="onCellMouseDown($event, i, j)"
@@ -193,6 +193,7 @@ interface CellData {
                     [reservation]="editingReservation()"
                     [visible]="showReservationForm()"
                     [colors]="colors"
+                    [existingReservations]="houseAvailabilities()"
                     (save)="handleReservationSave($event)"
                     (delete)="handleDeleteReservation($event)"
                     (cancel)="handleReservationCancel()"
