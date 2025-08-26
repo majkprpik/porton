@@ -20,6 +20,7 @@ import {
   ProfileWorkDay, 
   ProfileWorkSchedule, 
   RepairTaskComment, 
+  Season, 
   Task, 
   TaskProgressType, 
   TaskType, 
@@ -56,6 +57,7 @@ export class DataService {
   private profileRolesSubject = new BehaviorSubject<ProfileRole[]>([]);
   private profileWorkScheduleSubject = new BehaviorSubject<ProfileWorkSchedule[]>([]);
   private profileWorkDaysSubject = new BehaviorSubject<ProfileWorkDay[]>([]);
+  private seasonsSubject = new BehaviorSubject<Season[]>([]);
 
   loading$ = this.loadingSubject.asObservable();
   error$ = this.errorSubject.asObservable();
@@ -77,6 +79,7 @@ export class DataService {
   profileRoles$ = this.profileRolesSubject.asObservable();
   profileWorkSchedule$ = this.profileWorkScheduleSubject.asObservable();
   profileWorkDays$ = this.profileWorkDaysSubject.asObservable();
+  seasons$ = this.seasonsSubject.asObservable();
   
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tempHouseAvailabilitiesUpdate = new BehaviorSubject<any>('');
@@ -173,6 +176,12 @@ export class DataService {
     }
   }
 
+  setSeasons(seasons: Season[]){
+    if(seasons){
+      this.seasonsSubject.next(seasons);
+    }
+  }
+
   private logData(source: string, data: any): void {
     if (this.debug) {
       //console.log(`[DataService] ${source}:`, data);
@@ -204,6 +213,7 @@ export class DataService {
     this.loadRepairTaskComments().subscribe();
     this.loadProfileWorkSchedule().subscribe();
     this.loadProfileWorkDays().subscribe();
+    this.loadSeasons().subscribe();
     // this.loadAuthUsers().subscribe();
   }
 
@@ -524,6 +534,22 @@ export class DataService {
         if (data) {
           this.profileWorkDaysSubject.next(data);
           this.logData('Profile work days', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  loadSeasons(){
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('seasons', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.seasonsSubject.next(data);
+          this.logData('Seasons', data);
         }
       }),
       map((data) => data || []),

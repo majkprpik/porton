@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, HostListener, effect } from '@angular/core';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
-import { House, HouseAvailability, HouseType } from '../../core/models/data.models';
-import { Subject, takeUntil, forkJoin, combineLatest, firstValueFrom } from 'rxjs';
+import { House, HouseAvailability, HouseType, Season } from '../../core/models/data.models';
+import { Subject, takeUntil, combineLatest } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
@@ -43,9 +43,9 @@ interface CellData {
                     </div>
 
                     <div class="year-switcher">
-                        <p-button (onClick)="generatePreviousYearsTable()" icon="pi pi-angle-left"></p-button>
-                        <span>{{ selectedYear }}</span>
-                        <p-button (onClick)="generateNextYearsTable()" icon="pi pi-angle-right"></p-button>
+                        <p-button [disabled]="isFirstSeason(selectedSeason)" (onClick)="generatePreviousSeasonsTable()" icon="pi pi-angle-left"></p-button>
+                        <span>{{ selectedSeason.year }}</span>
+                        <p-button [disabled]="isLastSeason(selectedSeason)" (onClick)="generateNextSeasonsTable()" icon="pi pi-angle-right"></p-button>
                     </div>
 
                     <div class="density-buttons">
@@ -110,71 +110,74 @@ interface CellData {
                             <tr>
                                 <th class="row-header" [ngClass]="{'active-row': selectedCellRowIndex() === i}">{{ house.house_name || house.house_number }}</th>
                                 @for (day of days(); track day.getTime(); let j = $index) {
-                                    <td 
-                                        (dblclick)="onCellDoubleClick($event, i, j)"
-                                        (mousedown)="onCellMouseDown($event, i, j)"
-                                        (mousemove)="onCellMouseMove($event, i, j)"
-                                        (click)="gridMatrix()[i][j].isReserved ? onReservationCellClick($event, i, j) : onCellClick($event, i, j)"
-                                        [ngClass]="{
-                                            'reserved-cell': gridMatrix()[i][j].isReserved,
-                                            'selected-cell': isCellSelected(i, j),
-                                            'selection-start': i === selectedCellRowIndex() && j === getStartColIndex(),
-                                            'selection-end': i === selectedCellRowIndex() && j === getEndColIndex(),
-                                            'past-date': isCellInPast(j),
-                                            'today-column': isToday(days()[j]),
-                                            'saturday-column-day': isSaturday(days()[j]) && !isNightMode,
-                                            'saturday-column-night': isSaturday(days()[j]) && isNightMode,
-                                            'sunday-column-day': isSunday(days()[j]) && !isNightMode,
-                                            'sunday-column-night': isSunday(days()[j]) && isNightMode,
-                                            'reservation-start': gridMatrix()[i][j].isReservationStart,
-                                            'reservation-middle': gridMatrix()[i][j].isReservationMiddle,
-                                            'reservation-end': gridMatrix()[i][j].isReservationEnd,
-                                            'border-left-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationStart,
-                                            'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationEnd,
-                                            'border-top-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
-                                            'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
-                                            'free-column': isSpotAvailable(i, j),
-                                            'height-25-important': cellHeightInPx == 25,
-                                            'height-30-important': cellHeightInPx == 30,
-                                            'height-40-important': cellHeightInPx == 40,
-                                        }"
-                                        [style.background-color]="gridMatrix()[i][j].color">
-                                        @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j].isReservationStart) {
-                                            <div class="reservation-item">
-                                                <i class="pi pi-arrows-alt handle-icon" (click)="getDroppableSpotsForReservation($event, i, j)"></i>
-                                                {{ gridMatrix()[i][j].displayText }}
-                                            </div>
-                                        } @else {
-                                            @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j - 1].isReservationStart) {
-                                                <div class="reservation-numbers">
-                                                    @if (getNumberOfAdults(gridMatrix()[i][j])){
-                                                        <div class="adults-count">
-                                                            {{ getNumberOfAdults(gridMatrix()[i][j]) }} 
-                                                            <i class="fa-solid fa-person"></i>
-                                                        </div>
-                                                    }
-                                                    @if (getNumberOfPets(gridMatrix()[i][j])) {
-                                                        <div class="pets-count">
-                                                            {{ getNumberOfPets(gridMatrix()[i][j]) }} 
-                                                            <i class="fa-solid fa-paw"></i>
-                                                        </div>
-                                                    } 
-                                                    @if (getNumberOfBabies(gridMatrix()[i][j])) {
-                                                        <div class="babies-count">
-                                                            {{ getNumberOfBabies(gridMatrix()[i][j]) }}
-                                                            <i class="fa-solid fa-baby"></i>
-                                                        </div>
-                                                    }
-                                                    @if (getNumberOfCribs(gridMatrix()[i][j])) {
-                                                        <div class="cribs-count">
-                                                            {{ getNumberOfCribs(gridMatrix()[i][j]) }}
-                                                            <i class="fa-solid fa-baby-carriage"></i>
-                                                        </div>
-                                                    }
+                                    @if (gridMatrix()[i][j]){
+                                        <td 
+                                            (dblclick)="onCellDoubleClick($event, i, j)"
+                                            (mousedown)="onCellMouseDown($event, i, j)"
+                                            (mousemove)="onCellMouseMove($event, i, j)"
+                                            (click)="gridMatrix()[i][j].isReserved ? onReservationCellClick($event, i, j) : onCellClick($event, i, j)"
+                                            [ngClass]="{
+                                                'reserved-cell': gridMatrix()[i][j].isReserved,
+                                                'selected-cell': isCellSelected(i, j),
+                                                'selection-start': i === selectedCellRowIndex() && j === getStartColIndex(),
+                                                'selection-end': i === selectedCellRowIndex() && j === getEndColIndex(),
+                                                'past-date': isCellInPast(j),
+                                                'today-column': isToday(days()[j]),
+                                                'saturday-column-day': isSaturday(days()[j]) && !isNightMode,
+                                                'saturday-column-night': isSaturday(days()[j]) && isNightMode,
+                                                'sunday-column-day': isSunday(days()[j]) && !isNightMode,
+                                                'sunday-column-night': isSunday(days()[j]) && isNightMode,
+                                                'reservation-start': gridMatrix()[i][j].isReservationStart,
+                                                'reservation-middle': gridMatrix()[i][j].isReservationMiddle,
+                                                'reservation-end': gridMatrix()[i][j].isReservationEnd,
+                                                'border-left-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationStart,
+                                                'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationEnd,
+                                                'border-top-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
+                                                'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
+                                                'free-column': isSpotAvailable(i, j),
+                                                'height-25-important': cellHeightInPx == 25,
+                                                'height-30-important': cellHeightInPx == 30,
+                                                'height-40-important': cellHeightInPx == 40,
+                                            }"
+                                            [style.background-color]="gridMatrix()[i][j].color"
+                                        >
+                                            @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j].isReservationStart) {
+                                                <div class="reservation-item">
+                                                    <i class="pi pi-arrows-alt handle-icon" (click)="getDroppableSpotsForReservation($event, i, j)"></i>
+                                                    {{ gridMatrix()[i][j].displayText }}
                                                 </div>
+                                            } @else {
+                                                @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j - 1].isReservationStart) {
+                                                    <div class="reservation-numbers">
+                                                        @if (getNumberOfAdults(gridMatrix()[i][j])){
+                                                            <div class="adults-count">
+                                                                {{ getNumberOfAdults(gridMatrix()[i][j]) }} 
+                                                                <i class="fa-solid fa-person"></i>
+                                                            </div>
+                                                        }
+                                                        @if (getNumberOfPets(gridMatrix()[i][j])) {
+                                                            <div class="pets-count">
+                                                                {{ getNumberOfPets(gridMatrix()[i][j]) }} 
+                                                                <i class="fa-solid fa-paw"></i>
+                                                            </div>
+                                                        } 
+                                                        @if (getNumberOfBabies(gridMatrix()[i][j])) {
+                                                            <div class="babies-count">
+                                                                {{ getNumberOfBabies(gridMatrix()[i][j]) }}
+                                                                <i class="fa-solid fa-baby"></i>
+                                                            </div>
+                                                        }
+                                                        @if (getNumberOfCribs(gridMatrix()[i][j])) {
+                                                            <div class="cribs-count">
+                                                                {{ getNumberOfCribs(gridMatrix()[i][j]) }}
+                                                                <i class="fa-solid fa-baby-carriage"></i>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
                                             }
-                                        }
-                                    </td>
+                                        </td>
+                                    }
                                 }
                             </tr>
                         }
@@ -685,8 +688,16 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         { name: 'comfortable', cellHeightPx: 30, icon: 'pi pi-bars' },
         { name: 'compact', cellHeightPx: 25, icon: 'pi pi-align-justify' },
     ];
-    
-    selectedYear: number = new Date().getFullYear();;
+
+    seasons: Season[] = [];
+    selectedSeason: Season = {
+        id: -1,
+        year: new Date().getFullYear(),
+        season_start_date: new Date().getFullYear() + "03-15",
+        season_end_date: new Date().getFullYear() + "11-15",
+        created_at: new Date().toString(),
+        updated_at: new Date().toString(),
+    };
 
     displayOverlay: boolean = false;
 
@@ -706,45 +717,42 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.generateInitDays();
-        this.dataService.loadHouses().pipe(takeUntil(this.destroy$)).subscribe();
-        this.dataService.loadHouseAvailabilities().pipe(takeUntil(this.destroy$)).subscribe();
-        this.dataService.getHouseTypes().pipe(takeUntil(this.destroy$)).subscribe(types => {
-            this.houseTypes.set(types.filter(t => t.house_type_name != 'dodatno'));
-            
-            if (types && types.length > 0) {
-                this.setSelectedHouseType(types[0].house_type_id);
+        this.dataService.seasons$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(seasons => {
+            if(seasons.length){
+                this.seasons = seasons.sort((a, b) => a.year - b.year);
+                this.generateInitDays();
             }
         });
 
-        this.dataService.tempHouses$.subscribe(tempHouses => {
-            this.tempHouses = tempHouses;
-        });
-        
-        this.dataService.houses$
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(houses => {
+        combineLatest([
+            this.dataService.houses$,
+            this.dataService.tempHouses$,
+            this.dataService.houseTypes$,
+        ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+            next: ([houses, tempHouses, houseTypes]) => {
                 this.houses.set(houses);
-                this.updateGridMatrix();
-                
-                if (this.isFirstLoad && houses.length > 0) {
-                    this.scrollToToday();
+                this.tempHouses = tempHouses;
+                this.houseTypes.set(houseTypes.filter(t => t.house_type_name != 'dodatno'));
+            
+                if (houseTypes && houseTypes.length) {
+                    this.setSelectedHouseType(houseTypes[0].house_type_id);
                 }
-            });
-
-        forkJoin({
-            temp: this.dataService.loadTempHouseAvailabilities(),
-            main: this.dataService.loadHouseAvailabilities(),
-        }).subscribe( ({temp, main}) => {
-            const combined = [...main, ...temp];
-            this.houseAvailabilities.set(combined);
-            this.updateGridMatrix();
+            },
+            error: (error) => {
+                console.error(error);
+            }
         });
 
         combineLatest([
             this.dataService.houseAvailabilities$,
-            this.dataService.tempHouseAvailabilities$
-        ]).subscribe({
+            this.dataService.tempHouseAvailabilities$,
+        ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
             next: ([houseAvailabilities, tempHouseAvailabilities]) => {
                 if(houseAvailabilities && tempHouseAvailabilities){
                     const combined = [...houseAvailabilities, ...tempHouseAvailabilities];
@@ -756,12 +764,6 @@ export class ReservationsComponent implements OnInit, OnDestroy {
                 console.error(error);
             }
         });
-        
-        this.dataService.$houseAvailabilitiesUpdate
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(() => {
-                this.dataService.loadHouseAvailabilities().pipe(takeUntil(this.destroy$)).subscribe();
-            });
             
         this.loadCellHeight();
 
@@ -1024,10 +1026,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         return Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
     }
 
-    private generateDaysForYear(year: number): Date[] {
+    private generateDaysForSeason(season: Season): Date[] {
         const days: Date[] = [];
-        const startDate = new Date(year, 2, 31);
-        const endDate = new Date(year, 10, 15);
+        const startDate = new Date(season.season_start_date);
+        const endDate = new Date(season.season_end_date);
         
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
@@ -1037,7 +1039,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             days.push(new Date(currentDate));
             currentDate.setDate(currentDate.getDate() + 1);
         }
-        
+
         return days;
     }
 
@@ -1417,11 +1419,6 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             this.selectedHouseTypeId.set(typeId);
             
             this.updateGridMatrix();
-            
-            if (this.isFirstLoad) {
-                this.scrollToToday();
-                this.isFirstLoad = false;
-            }
         }
     }
 
@@ -1804,29 +1801,51 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     generateInitDays(){
-        this.selectedYear = new Date().getFullYear();
-        this.days.set(this.generateDaysForYear(this.selectedYear));
+        const season = this.seasons.find(s => s.year == new Date().getFullYear());
+
+        if(season) {
+            this.selectedSeason = season;
+        } 
+
+        this.days.set(this.generateDaysForSeason(this.selectedSeason));
     }
 
-    generatePreviousYearsTable(){
+    generateNextSeasonsTable(){
         this.displayOverlay = true;
 
         setTimeout(() => {
-            this.selectedYear--;
-            this.days.set(this.generateDaysForYear(this.selectedYear));
-            this.updateGridMatrix();
+            const index = this.seasons.findIndex(s => s.id == this.selectedSeason?.id);
+
+            if(index != -1 || index >= this.seasons.length - 1){
+                this.selectedSeason = this.seasons[index + 1];
+                this.days.set(this.generateDaysForSeason(this.selectedSeason));
+                this.updateGridMatrix();
+            }
             this.displayOverlay = false;
         }, 0);
     }
 
-    generateNextYearsTable(){
+    generatePreviousSeasonsTable(){
         this.displayOverlay = true;
 
         setTimeout(() => {
-            this.selectedYear++;
-            this.days.set(this.generateDaysForYear(this.selectedYear));
-            this.updateGridMatrix();
+            const index = this.seasons.findIndex(s => s.id == this.selectedSeason?.id);
+            if(index != -1 || index >= 0){
+                this.selectedSeason = this.seasons[index - 1];
+                this.days.set(this.generateDaysForSeason(this.selectedSeason));
+                this.updateGridMatrix();
+            }
             this.displayOverlay = false;
         }, 0);
+    }
+
+    isFirstSeason(season: Season){
+        const index = this.seasons.findIndex(s => s.id == season.id);
+        return index == 0;
+    }
+
+    isLastSeason(season: Season){
+        const index = this.seasons.findIndex(s => s.id == season.id);
+        return index == this.seasons.length - 1;
     }
 }

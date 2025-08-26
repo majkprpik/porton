@@ -175,6 +175,15 @@ export interface PushNotification {
   icon?: string,
 }
 
+export interface Season {
+  id: number;
+  year: number; 
+  season_start_date: string;
+  season_end_date: string;
+  created_at: string;
+  updated_at: string; 
+}
+
 export enum ExportTypes {
   PDF = 'pdf',
 }
