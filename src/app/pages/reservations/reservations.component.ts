@@ -1429,6 +1429,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     onCellDoubleClick(event: MouseEvent, row: number, col: number): void {
+        if(this.isCellInPast(col)) return;
+
         const houses = this.filteredHouses();
         const days = this.days();
         
