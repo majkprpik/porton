@@ -143,7 +143,9 @@ import { HouseAvailability } from '../../../core/models/data.models';
                         class="p-inputtext"
                         pTextarea  
                         [(ngModel)]="notes" 
-                        [placeholder]="'RESERVATIONS.MODAL.NOTES-ENTER-INFO' | translate">
+                        [placeholder]="'RESERVATIONS.MODAL.NOTES-ENTER-INFO' | translate"
+                        style="resize: none"
+                    >
                     </textarea>
                 </div>
                 
