@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { LockedTeam, WorkGroup, WorkGroupProfile, WorkGroupTask } from '../models/data.models';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { DataService } from './data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -21,9 +22,9 @@ export class WorkGroupService {
     private dataService: DataService,
   ) {
     combineLatest([
-      this.dataService.workGroupProfiles$,
-      this.dataService.workGroupTasks$,
-      this.dataService.workGroups$,
+      this.dataService.workGroupProfiles$.pipe(nonNull()),
+      this.dataService.workGroupTasks$.pipe(nonNull()),
+      this.dataService.workGroups$.pipe(nonNull()),
     ])
     .subscribe(([workGroupProfiles, workGroupTasks, workGroups]) => {
       this.workGroupProfiles = workGroupProfiles;

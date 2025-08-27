@@ -15,6 +15,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TranslateModule } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-arrivals-and-departures',
@@ -343,8 +344,8 @@ export class ArrivalsAndDeparturesComponent {
   
   async ngOnInit(){
     combineLatest([
-      this.dataService.houses$,
-      this.dataService.houseAvailabilities$,
+      this.dataService.houses$.pipe(nonNull()),
+      this.dataService.houseAvailabilities$.pipe(nonNull()),
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe({

@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-tasks',
@@ -126,10 +127,10 @@ export class TasksComponent implements OnInit {
 
   private subscribeToData() {
     combineLatest([
-      this.dataService.tasks$,
-      this.dataService.houses$,
-      this.dataService.workGroupTasks$,
-      this.workGroupService.activeGroupId$
+      this.dataService.tasks$.pipe(nonNull()),
+      this.dataService.houses$.pipe(nonNull()),
+      this.dataService.workGroupTasks$.pipe(nonNull()),
+      this.workGroupService.activeGroupId$,
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe({

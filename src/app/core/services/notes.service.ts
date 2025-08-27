@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { Note } from '../models/data.models';
 import { DataService } from './data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -15,9 +16,11 @@ export class NotesService {
     private authService: AuthService,
     private dataService: DataService,
   ) {
-    this.dataService.notes$.subscribe(notes => {
-      this.notes = notes;
-    });
+    this.dataService.notes$
+      .pipe(nonNull())
+      .subscribe(notes => {
+        this.notes = notes;
+      });
   }
 
   async createNote(note: string, date: Date){

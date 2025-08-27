@@ -32,6 +32,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { HouseService } from '../../core/services/house.service';
 import { ErrorLoggingService } from '../../core/services/error-logging.service';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
     selector: 'app-layout',
@@ -1060,12 +1061,12 @@ export class AppLayout {
     private async onAppVisible() {
         console.log('App is now visible — refresh or reconnect!');
         await this.authService.checkSession();
-        this.dataService.loadInitialData();
+        this.dataService.loadInitialData().subscribe();
         this.pushNotificationsService.requestFirebaseMessaging();
     }
 
     ngOnInit() {
-        this.dataService.loadInitialData();
+        this.dataService.loadInitialData().subscribe();
         this.pushNotificationsService.requestFirebaseMessaging();
         this.dataService.listenToDatabaseChanges(); 
 
@@ -1075,20 +1076,20 @@ export class AppLayout {
         this.subscribeToDataUpdates();
 
         combineLatest([
-            this.dataService.repairTaskComments$,
-            this.dataService.houses$,
-            this.dataService.taskTypes$,
-            this.dataService.tasks$,
-            this.dataService.workGroups$,
-            this.dataService.workGroupTasks$,
-            this.dataService.workGroupProfiles$,
-            this.dataService.houseAvailabilities$,
-            this.dataService.profiles$,
-            this.dataService.tempHouseAvailabilities$,
-            this.dataService.notes$,
-            this.dataService.profileRoles$,
-            this.dataService.profileWorkSchedule$,
-            this.dataService.profileWorkDays$,
+            this.dataService.repairTaskComments$.pipe(nonNull()),
+            this.dataService.houses$.pipe(nonNull()),
+            this.dataService.taskTypes$.pipe(nonNull()),
+            this.dataService.tasks$.pipe(nonNull()),
+            this.dataService.workGroups$.pipe(nonNull()),
+            this.dataService.workGroupTasks$.pipe(nonNull()),
+            this.dataService.workGroupProfiles$.pipe(nonNull()),
+            this.dataService.houseAvailabilities$.pipe(nonNull()),
+            this.dataService.profiles$.pipe(nonNull()),
+            this.dataService.tempHouseAvailabilities$.pipe(nonNull()),
+            this.dataService.notes$.pipe(nonNull()),
+            this.dataService.profileRoles$.pipe(nonNull()),
+            this.dataService.profileWorkSchedule$.pipe(nonNull()),
+            this.dataService.profileWorkDays$.pipe(nonNull()),
         ]).subscribe({
             next: ([repairTaskComments, houses, taskTypes, tasks, workGroups, workGroupTasks, workGroupProfiles, houseAvailabilities, profiles, tempHouseAvailabilities, notes, profileRoles, fullWorkSchedule, profileWorkDays]) => {
                 this.storedUserId = this.authService.getStoredUserId();
@@ -1140,7 +1141,7 @@ export class AppLayout {
                     }
                 });
 
-                if(profiles.length > 0 && profileRoles.length > 0){
+                if(profiles.length && profileRoles.length){
                     this.buildSpeedDialItems();
                 }
             },

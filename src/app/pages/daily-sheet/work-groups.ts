@@ -14,6 +14,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PushNotificationsService } from '../../core/services/push-notifications.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-work-groups',
@@ -432,11 +433,11 @@ export class WorkGroups implements OnInit {
   private subscribeToDataStreams() {
     combineLatest([
       this.workGroupService.activeGroupId$,
-      this.dataService.workGroups$,
-      this.dataService.workGroupTasks$,
-      this.dataService.tasks$,
-      this.dataService.workGroupProfiles$,
-      this.dataService.profiles$,
+      this.dataService.workGroups$.pipe(nonNull()),
+      this.dataService.workGroupTasks$.pipe(nonNull()),
+      this.dataService.tasks$.pipe(nonNull()),
+      this.dataService.workGroupProfiles$.pipe(nonNull()),
+      this.dataService.profiles$.pipe(nonNull()),
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe({

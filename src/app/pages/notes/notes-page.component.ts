@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePicker } from 'primeng/datepicker';
 import { TranslateModule } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-notes-page',
@@ -295,9 +296,9 @@ export class NotesPageComponent {
 
   private subscribeToDataStreams() {
     combineLatest([
-      this.dataService.notes$,
+      this.dataService.notes$.pipe(nonNull()),
       this.dataService.$areNotesLoaded,
-      this.dataService.profiles$,
+      this.dataService.profiles$.pipe(nonNull()),
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe({

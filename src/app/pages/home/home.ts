@@ -15,6 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { LayoutService } from '../../layout/services/layout.service';
 import { ChartComponent } from '../statistics/chart.component';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 // Define the special location option interface
 interface SpecialLocation {
@@ -952,7 +953,7 @@ export class Home implements OnInit, OnDestroy {
 
     private monitorTasksAndUrgentIcons() {
         combineLatest([
-            this.dataService.tasks$,
+            this.dataService.tasks$.pipe(nonNull()),
             this.taskService.isUrgentIconVisible$
         ])
         .pipe(takeUntil(this.destroy$))
@@ -965,9 +966,9 @@ export class Home implements OnInit, OnDestroy {
 
     private subscribeToDataStreams() {
         combineLatest([
-            this.dataService.houseAvailabilities$,
-            this.dataService.houseTypes$,
-            this.dataService.houses$
+            this.dataService.houseAvailabilities$.pipe(nonNull()),
+            this.dataService.houseTypes$.pipe(nonNull()),
+            this.dataService.houses$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe(([availabilities, houseTypes, houses]) => {

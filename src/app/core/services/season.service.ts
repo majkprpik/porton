@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { DataService } from './data.service';
 import { Season } from '../models/data.models';
 import { SupabaseService } from './supabase.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -13,9 +14,11 @@ export class SeasonService {
     private dataService: DataService,
     private supabaseService: SupabaseService,
   ) {
-    this.dataService.seasons$.subscribe(seasons => {
-      this.seasons = seasons;
-    })
+    this.dataService.seasons$
+      .pipe(nonNull())
+      .subscribe(seasons => {
+        this.seasons = seasons;
+      });
   }
 
   async createSeason(season: Season){

@@ -9,6 +9,7 @@ import { ProfileService } from '../../core/services/profile.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-notes',
@@ -291,9 +292,9 @@ export class NotesComponent {
 
   private subscribeToNotes() {
     combineLatest([
-      this.dataService.notes$,
+      this.dataService.notes$.pipe(nonNull()),
       this.dataService.$areNotesLoaded,
-      this.dataService.profiles$,
+      this.dataService.profiles$.pipe(nonNull()),
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe({

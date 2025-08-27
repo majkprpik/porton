@@ -9,6 +9,7 @@ import { WorkGroupService } from '../../core/services/work-group.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-staff-group',
@@ -148,10 +149,10 @@ export class StaffGroup implements OnInit, OnChanges {
 
   private subscribeToDataStreams() {
     combineLatest([
-      this.dataService.workGroups$,
-      this.dataService.workGroupProfiles$,
-      this.dataService.profileRoles$,
-      this.dataService.profiles$,
+      this.dataService.workGroups$.pipe(nonNull()),
+      this.dataService.workGroupProfiles$.pipe(nonNull()),
+      this.dataService.profileRoles$.pipe(nonNull()),
+      this.dataService.profiles$.pipe(nonNull()),
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe(([workGroups, workGroupProfiles, profileRoles, profiles]) => {

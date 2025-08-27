@@ -6,6 +6,7 @@ import { BehaviorSubject, combineLatest } from 'rxjs';
 import imageCompression from 'browser-image-compression';
 import { AuthService } from './auth.service';
 import { DataService } from './data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -54,12 +55,12 @@ export class TaskService {
     this.storedUserId = this.authService.getStoredUserId();
 
     combineLatest([
-      this.dataService.taskProgressTypes$,
-      this.dataService.taskTypes$,
-      this.dataService.tasks$,
-      this.dataService.profiles$,
-      this.dataService.houses$,
-      this.dataService.repairTaskComments$,
+      this.dataService.taskProgressTypes$.pipe(nonNull()),
+      this.dataService.taskTypes$.pipe(nonNull()),
+      this.dataService.tasks$.pipe(nonNull()),
+      this.dataService.profiles$.pipe(nonNull()),
+      this.dataService.houses$.pipe(nonNull()),
+      this.dataService.repairTaskComments$.pipe(nonNull()),
     ]).subscribe(([taskProgressTypes, taskTypes, tasks, profiles, houses, repairTaskComments]) => {
       this.taskProgressTypes = taskProgressTypes;
       this.taskTypes = taskTypes;

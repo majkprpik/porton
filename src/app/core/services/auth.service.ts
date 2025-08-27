@@ -7,6 +7,7 @@ import { ProfileRole, ProfileRoles } from '../models/data.models';
 import { LayoutService } from '../../layout/services/layout.service';
 import { PushNotificationsService } from './push-notifications.service';
 import { DataService } from './data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -23,13 +24,15 @@ export class AuthService {
     private layoutService: LayoutService,
     private pushNotificationsService: PushNotificationsService,
   ) {
-    this.dataService.profileRoles$.subscribe(profileRoles => {
-      this.profileRoles = profileRoles;
+    this.dataService.profileRoles$
+      .pipe(nonNull())
+      .subscribe(profileRoles => {
+        this.profileRoles = profileRoles;
 
-      if(this.profileRoles.length > 0){
-        // this.initializeTestUsers();
-        // this.createRealUsers();
-      }
+        if(this.profileRoles.length){
+          // this.initializeTestUsers();
+          // this.createRealUsers();
+        }
     });
   }
 

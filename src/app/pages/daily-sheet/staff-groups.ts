@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { combineLatest } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-staff-groups',
@@ -182,8 +183,8 @@ export class StaffGroups implements OnInit {
     );
 
     combineLatest([
-      this.dataService.profileRoles$,
-      this.dataService.profiles$
+      this.dataService.profileRoles$.pipe(nonNull()),
+      this.dataService.profiles$.pipe(nonNull()),
     ]).subscribe({
       next: ([profileRoles, profiles]) => {
         this.profileRoles = profileRoles;

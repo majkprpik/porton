@@ -14,6 +14,7 @@ import { ButtonModule } from 'primeng/button';
 import { ProfileService } from '../../core/services/profile.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-arrivals-and-departures-page',
@@ -278,8 +279,8 @@ export class ArrivalsAndDeparturesPageComponent {
 
   private subscribeToDataStreams() {
     combineLatest([
-      this.dataService.houses$,
-      this.dataService.houseAvailabilities$
+      this.dataService.houses$.pipe(nonNull()),
+      this.dataService.houseAvailabilities$.pipe(nonNull()),
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe({

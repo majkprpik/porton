@@ -11,6 +11,7 @@ import { TaskService } from '../../core/services/task.service';
 import { combineLatest } from 'rxjs';
 import { LayoutService } from '../../layout/services/layout.service';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'polarArea' | 'radar';
 
@@ -324,10 +325,10 @@ export class ChartComponent {
     }
 
     combineLatest([
-      this.dataService.houseAvailabilities$,
-      this.dataService.houses$,
-      this.dataService.tasks$,
-      this.dataService.profiles$,
+      this.dataService.houseAvailabilities$.pipe(nonNull()),
+      this.dataService.houses$.pipe(nonNull()),
+      this.dataService.tasks$.pipe(nonNull()),
+      this.dataService.profiles$.pipe(nonNull()),
     ]).subscribe(([houseAvailabilities, houses, tasks, profiles]) => {
       this.houseAvailabilities = houseAvailabilities;
       this.houses = houses;

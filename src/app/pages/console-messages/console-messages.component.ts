@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { InputText } from 'primeng/inputtext';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-console-messages',
@@ -165,10 +166,12 @@ export class ConsoleMessagesComponent {
     private dataService: DataService,
     private authService: AuthService,
   ) {
-    this.dataService.profiles$.subscribe(profiles => {
-      this.profiles = profiles.filter(p => !p.is_deleted);
-      this.loggedUser = profiles.find(profile => profile.id == this.authService.getStoredUserId());
-    });
+    this.dataService.profiles$
+      .pipe(nonNull())
+      .subscribe(profiles => {
+        this.profiles = profiles.filter(p => !p.is_deleted);
+        this.loggedUser = profiles.find(profile => profile.id == this.authService.getStoredUserId());
+      });
   }
 
   ngOnInit() {

@@ -6,6 +6,7 @@ import { TaskService } from './task.service';
 import { DataService } from './data.service';
 import { PushNotificationsService } from './push-notifications.service';
 import { TranslateService } from '@ngx-translate/core';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 
 @Injectable({
@@ -29,13 +30,13 @@ export class HouseService {
     private translateService: TranslateService,
   ) {
     combineLatest([
-      this.dataService.houseAvailabilities$,
-      this.dataService.tempHouseAvailabilities$,
-      this.dataService.houses$,
-      this.dataService.tasks$,
-      this.dataService.workGroupTasks$,
-      this.dataService.workGroupProfiles$,
-      this.dataService.workGroups$,
+      this.dataService.houseAvailabilities$.pipe(nonNull()),
+      this.dataService.tempHouseAvailabilities$.pipe(nonNull()),
+      this.dataService.houses$.pipe(nonNull()),
+      this.dataService.tasks$.pipe(nonNull()),
+      this.dataService.workGroupTasks$.pipe(nonNull()),
+      this.dataService.workGroupProfiles$.pipe(nonNull()),
+      this.dataService.workGroups$.pipe(nonNull()),
     ]).subscribe({
       next: ([houseAvailabilities, tempHouseAvailabilities, houses, tasks, workGroupTasks, workGroupProfiles, workGroups]) => {
         this.houseAvailabilities = houseAvailabilities;

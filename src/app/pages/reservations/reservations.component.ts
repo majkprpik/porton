@@ -11,6 +11,7 @@ import { DataService } from '../../core/services/data.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { ReservationFormComponent } from './reservation-form/reservation-form.component';
 import { HouseService } from '../../core/services/house.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 interface CellData {
     isReserved: boolean;
@@ -718,7 +719,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.dataService.seasons$
+        this.dataService.seasons$.pipe(nonNull())
         .pipe(takeUntil(this.destroy$))
         .subscribe(seasons => {
             if(seasons.length){
@@ -728,9 +729,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         });
 
         combineLatest([
-            this.dataService.houses$,
-            this.dataService.tempHouses$,
-            this.dataService.houseTypes$,
+            this.dataService.houses$.pipe(nonNull()),
+            this.dataService.tempHouses$.pipe(nonNull()),
+            this.dataService.houseTypes$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({
@@ -753,8 +754,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         });
 
         combineLatest([
-            this.dataService.houseAvailabilities$,
-            this.dataService.tempHouseAvailabilities$,
+            this.dataService.houseAvailabilities$.pipe(nonNull()),
+            this.dataService.tempHouseAvailabilities$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({

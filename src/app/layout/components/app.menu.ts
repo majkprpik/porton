@@ -8,6 +8,7 @@ import { Profile, ProfileRole, ProfileRoles } from '../../core/models/data.model
 import { ProfileService } from '../../core/services/profile.service';
 import { TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
     selector: 'app-menu',
@@ -44,8 +45,8 @@ export class AppMenu implements OnInit {
 
     private subscribeToDataStreams() {
         combineLatest([
-            this.dataService.profileRoles$,
-            this.dataService.profiles$,
+            this.dataService.profileRoles$.pipe(nonNull()),
+            this.dataService.profiles$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({

@@ -15,6 +15,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SelectModule } from 'primeng/select';
 import { LanguageService } from '../../core/services/language.service';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 interface ExtendedProfile {
   id: string;
@@ -363,8 +364,8 @@ export class ProfilesComponent implements OnInit {
 
   ngOnInit() {
     combineLatest([
-      this.dataService.profileRoles$,
-      this.dataService.profiles$
+      this.dataService.profileRoles$.pipe(nonNull()),
+      this.dataService.profiles$.pipe(nonNull()),
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe({

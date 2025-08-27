@@ -11,6 +11,7 @@ import { DataService } from '../../core/services/data.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { LayoutService } from '../../layout/services/layout.service';
 import { WorkScheduleService } from '../../core/services/work-schedule.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-work-schedule',
@@ -709,10 +710,10 @@ export class WorkScheduleComponent {
 
   private subscribeToDataStreams() {
     combineLatest([
-      this.dataService.profiles$, 
-      this.dataService.profileWorkSchedule$, 
-      this.dataService.profileRoles$,
-      this.dataService.profileWorkDays$,
+      this.dataService.profiles$.pipe(nonNull()), 
+      this.dataService.profileWorkSchedule$.pipe(nonNull()), 
+      this.dataService.profileRoles$.pipe(nonNull()),
+      this.dataService.profileWorkDays$.pipe(nonNull()),
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe({

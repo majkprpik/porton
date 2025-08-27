@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-task-archive',
@@ -167,8 +168,8 @@ export class TaskArchiveComponent {
 
   private subscribeToDataStreams() {
     combineLatest([
-      this.dataService.tasks$,
-      this.dataService.houses$
+      this.dataService.tasks$.pipe(nonNull()),
+      this.dataService.houses$.pipe(nonNull()),
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe({

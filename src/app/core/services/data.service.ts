@@ -8,6 +8,7 @@ import {
   map,
   catchError,
   tap,
+  forkJoin,
 } from 'rxjs';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { 
@@ -39,25 +40,25 @@ export class DataService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
   private errorSubject = new BehaviorSubject<string | null>(null);
 
-  private taskTypesSubject = new BehaviorSubject<TaskType[]>([]);
-  private taskProgressTypesSubject = new BehaviorSubject<TaskProgressType[]>([]);
-  private houseTypesSubject = new BehaviorSubject<HouseType[]>([]);
-  private houseAvailabilitiesSubject = new BehaviorSubject<HouseAvailability[]>([]);
-  private tempHouseAvailabilitiesSubject = new BehaviorSubject<HouseAvailability[]>([]);
-  private tasksSubject = new BehaviorSubject<Task[]>([]);
-  private workGroupsSubject = new BehaviorSubject<WorkGroup[]>([]);
-  private workGroupProfilesSubject = new BehaviorSubject<WorkGroupProfile[]>([]);
-  private workGroupTasksSubject = new BehaviorSubject<WorkGroupTask[]>([]);
-  private profilesSubject = new BehaviorSubject<Profile[]>([]);
-  private housesSubject = new BehaviorSubject<House[]>([]);
-  private tempHousesSubject = new BehaviorSubject<House[]>([]);
-  private authUsersSubject = new BehaviorSubject<Profile[]>([]);
-  private notesSubject = new BehaviorSubject<Note[]>([]);
-  private repairTaskCommentsSubject = new BehaviorSubject<RepairTaskComment[]>([]);
-  private profileRolesSubject = new BehaviorSubject<ProfileRole[]>([]);
-  private profileWorkScheduleSubject = new BehaviorSubject<ProfileWorkSchedule[]>([]);
-  private profileWorkDaysSubject = new BehaviorSubject<ProfileWorkDay[]>([]);
-  private seasonsSubject = new BehaviorSubject<Season[]>([]);
+  private taskTypesSubject = new BehaviorSubject<TaskType[] | null>(null);
+  private taskProgressTypesSubject = new BehaviorSubject<TaskProgressType[] | null>(null);
+  private houseTypesSubject = new BehaviorSubject<HouseType[] | null>(null);
+  private houseAvailabilitiesSubject = new BehaviorSubject<HouseAvailability[] | null>(null);
+  private tempHouseAvailabilitiesSubject = new BehaviorSubject<HouseAvailability[] | null>(null);
+  private tasksSubject = new BehaviorSubject<Task[] | null>(null);
+  private workGroupsSubject = new BehaviorSubject<WorkGroup[] | null>(null);
+  private workGroupProfilesSubject = new BehaviorSubject<WorkGroupProfile[] | null>(null);
+  private workGroupTasksSubject = new BehaviorSubject<WorkGroupTask[] | null>(null);
+  private profilesSubject = new BehaviorSubject<Profile[] | null>(null);
+  private housesSubject = new BehaviorSubject<House[] | null>(null);
+  private tempHousesSubject = new BehaviorSubject<House[] | null>(null);
+  private authUsersSubject = new BehaviorSubject<Profile[] | null>(null);
+  private notesSubject = new BehaviorSubject<Note[] | null>(null);
+  private repairTaskCommentsSubject = new BehaviorSubject<RepairTaskComment[] | null>(null);
+  private profileRolesSubject = new BehaviorSubject<ProfileRole[] | null>(null);
+  private profileWorkScheduleSubject = new BehaviorSubject<ProfileWorkSchedule[] | null>(null);
+  private profileWorkDaysSubject = new BehaviorSubject<ProfileWorkDay[] | null>(null);
+  private seasonsSubject = new BehaviorSubject<Season[] | null>(null);
 
   loading$ = this.loadingSubject.asObservable();
   error$ = this.errorSubject.asObservable();
@@ -100,7 +101,7 @@ export class DataService {
 
   constructor(private supabaseService: SupabaseService) {
     this.loadAllEnumTypes();
-    this.loadInitialData();
+    this.loadInitialData().subscribe();
   }
 
   setTasks(tasks: Task[]){
@@ -197,24 +198,26 @@ export class DataService {
     return throwError(() => error);
   }
 
-  loadInitialData(): void {
-    this.loadHouseAvailabilities().subscribe();
-    this.loadTempHouseAvailabilities().subscribe();
-    this.loadTasks().subscribe();
-    this.loadWorkGroups().subscribe();
-    this.loadWorkGroupProfiles().subscribe();
-    this.loadWorkGroupTasks().subscribe();
-    this.loadProfiles().subscribe();
-    this.loadProfileRoles().subscribe();
-    this.loadHouses().subscribe();
-    this.loadTempHouses().subscribe();
-    this.getHouseTypes().subscribe();
-    this.loadNotes().subscribe();
-    this.loadRepairTaskComments().subscribe();
-    this.loadProfileWorkSchedule().subscribe();
-    this.loadProfileWorkDays().subscribe();
-    this.loadSeasons().subscribe();
-    // this.loadAuthUsers().subscribe();
+  loadInitialData() {
+    return forkJoin([
+      this.loadHouseAvailabilities(),
+      this.loadTempHouseAvailabilities(),
+      this.loadTasks(),
+      this.loadWorkGroups(),
+      this.loadWorkGroupProfiles(),
+      this.loadWorkGroupTasks(),
+      this.loadProfiles(),
+      this.loadProfileRoles(),
+      this.loadHouses(),
+      this.loadTempHouses(),
+      this.getHouseTypes(),
+      this.loadNotes(),
+      this.loadRepairTaskComments(),
+      this.loadProfileWorkSchedule(),
+      this.loadProfileWorkDays(),
+      this.loadSeasons(),
+      // this.loadAuthUsers()
+    ]);
   }
 
   private loadAllEnumTypes(): void {
@@ -225,13 +228,7 @@ export class DataService {
 
   getTaskTypes(): Observable<TaskType[]> {
     this.loadingSubject.next(true);
-
-    if (this.taskTypesSubject.value.length > 0) {
-      this.logData('Task Types (cached)', this.taskTypesSubject.value);
-      this.loadingSubject.next(false);
-      return this.taskTypes$;
-    }
-
+    
     return from(this.supabaseService.getData('task_types', this.schema)).pipe(
       tap((data) => {
         if (data) {
@@ -247,12 +244,6 @@ export class DataService {
 
   getTaskProgressTypes(): Observable<TaskProgressType[]> {
     this.loadingSubject.next(true);
-
-    if (this.taskProgressTypesSubject.value.length > 0) {
-      this.logData('Task Progress Types (cached)', this.taskProgressTypesSubject.value);
-      this.loadingSubject.next(false);
-      return this.taskProgressTypes$;
-    }
 
     return from(this.supabaseService.getData('task_progress_types', this.schema)).pipe(
       tap((data) => {
@@ -274,13 +265,6 @@ export class DataService {
 
   getHouseTypes(): Observable<HouseType[]> {
     this.loadingSubject.next(true);
-
-    if (this.houseTypesSubject.value.length > 0) {
-      console.log('Using cached house types data');
-      this.logData('House Types (cached)', this.houseTypesSubject.value);
-      this.loadingSubject.next(false);
-      return this.houseTypes$;
-    }
 
     return from(this.supabaseService.getData('house_types', this.schema)).pipe(
       tap((data) => {

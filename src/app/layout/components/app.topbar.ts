@@ -18,6 +18,7 @@ import { PushNotificationsService } from '../../core/services/push-notifications
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
     selector: 'app-topbar',
@@ -118,8 +119,8 @@ export class AppTopbar {
     private subscribeToProfileData() {
         combineLatest([
             this.languageService.$selectedLanguage,
-            this.dataService.profiles$,
-            this.dataService.profileRoles$
+            this.dataService.profiles$.pipe(nonNull()),
+            this.dataService.profileRoles$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({

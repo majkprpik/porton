@@ -8,6 +8,7 @@ import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { TaskService } from '../../core/services/task.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-task-group',
@@ -148,7 +149,7 @@ export class TaskGroupComponent implements OnInit {
 
   private subscribeToDataStreams() {
     combineLatest([
-      this.dataService.workGroupTasks$,
+      this.dataService.workGroupTasks$.pipe(nonNull()),
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe({

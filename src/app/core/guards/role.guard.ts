@@ -4,6 +4,7 @@ import { ProfileRole } from '../models/data.models';
 import { combineLatest, Observable, of } from 'rxjs';
 import { filter, map, take, tap } from 'rxjs/operators';
 import { DataService } from '../services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
     providedIn: 'root'
@@ -28,10 +29,9 @@ export class RoleGuard implements CanActivateChild {
         const allowedRoles = childRoute.data['roles'] as string[];
 
         return combineLatest([
-            this.dataService.profiles$, 
-            this.dataService.profileRoles$,
+            this.dataService.profiles$.pipe(nonNull()), 
+            this.dataService.profileRoles$.pipe(nonNull()),
         ]).pipe(
-            filter(([profiles, roles]) => profiles.length > 0 && roles.length > 0),
             take(1),
             map(([profiles, profileRoles]) => {
                 const userProfile = profiles.find(profile => profile.id === userId);

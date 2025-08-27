@@ -1,9 +1,10 @@
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot } from "@angular/router";
 import { DataService } from "../services/data.service";
-import { combineLatest, filter, map, Observable, of, take } from "rxjs";
+import { combineLatest, map, Observable, of, take } from "rxjs";
 import { ProfileService } from "../services/profile.service";
 import { AuthService } from "../services/auth.service";
 import { Injectable } from "@angular/core";
+import { nonNull } from "../../shared/rxjs-operators/non-null";
 
 @Injectable({
   providedIn: 'root'
@@ -26,11 +27,10 @@ export class TeamsGuard implements CanActivate {
         }
         
         return combineLatest([
-            this.dataService.profileRoles$,
-            this.dataService.workGroupProfiles$,
-            this.dataService.workGroups$
+            this.dataService.profileRoles$.pipe(nonNull()),
+            this.dataService.workGroupProfiles$.pipe(nonNull()),
+            this.dataService.workGroups$.pipe(nonNull()),
         ]).pipe(
-            filter(([profileRoles, workGroupProfiles, workGroups]) => profileRoles.length > 0),
             take(1),
             map(([profileRoles, workGroupProfiles, workGroups]) => {
                 if(this.profileService.isHousekeeper(storedUserId) ||  this.profileService.isCustomerService(storedUserId)) { 

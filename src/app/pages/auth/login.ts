@@ -14,6 +14,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { Profile, ProfileRole, ProfileRoles, WorkGroupProfile } from '../../core/models/data.models';
 import { combineLatest, firstValueFrom, Subject, take, takeUntil } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 @Component({
     selector: 'app-login',
     standalone: true,
@@ -94,8 +95,8 @@ export class Login implements OnInit {
 
     private subscribeToDataStreams() {
         combineLatest([
-            this.dataService.profileRoles$,
-            this.dataService.profiles$,
+            this.dataService.profileRoles$.pipe(nonNull()),
+            this.dataService.profiles$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({
@@ -126,7 +127,7 @@ export class Login implements OnInit {
                     return;
                 }
                 
-                await firstValueFrom(this.dataService.loadProfiles());
+                await firstValueFrom(this.dataService.loadInitialData());
 
                 const user = this.profiles.find(p => p.id == data.user.id)
                 if(!user || user?.is_deleted) {

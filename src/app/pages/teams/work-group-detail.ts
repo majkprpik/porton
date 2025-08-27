@@ -15,6 +15,7 @@ import { StaffCardComponent } from '../daily-sheet/staff-card';
 import { AuthService } from '../../core/services/auth.service';
 import { WorkGroupService } from '../../core/services/work-group.service';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
     selector: 'app-work-group-detail',
@@ -560,13 +561,13 @@ export class WorkGroupDetail implements OnInit {
 
     ngOnInit() {
         combineLatest([
-            this.dataService.workGroups$,
-            this.dataService.workGroupTasks$,
-            this.dataService.tasks$,
-            this.dataService.workGroupProfiles$,
-            this.dataService.profiles$,
-            this.dataService.houses$,
-            this.dataService.houseAvailabilities$
+            this.dataService.workGroups$.pipe(nonNull()),
+            this.dataService.workGroupTasks$.pipe(nonNull()),
+            this.dataService.tasks$.pipe(nonNull()),
+            this.dataService.workGroupProfiles$.pipe(nonNull()),
+            this.dataService.profiles$.pipe(nonNull()),
+            this.dataService.houses$.pipe(nonNull()),
+            this.dataService.houseAvailabilities$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({

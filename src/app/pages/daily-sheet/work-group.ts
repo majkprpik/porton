@@ -20,6 +20,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TasksIndexSortPipe } from '../../shared/pipes/tasks-index-sort.pipe';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-work-group',
@@ -472,11 +473,11 @@ export class WorkGroup implements OnInit {
 
   private subscribeToDataStreams() {
     combineLatest([
-      this.dataService.tasks$,
-      this.dataService.workGroupTasks$,
-      this.dataService.workGroupProfiles$,
-      this.dataService.workGroups$,
-      this.dataService.profiles$,
+      this.dataService.tasks$.pipe(nonNull()),
+      this.dataService.workGroupTasks$.pipe(nonNull()),
+      this.dataService.workGroupProfiles$.pipe(nonNull()),
+      this.dataService.workGroups$.pipe(nonNull()),
+      this.dataService.profiles$.pipe(nonNull()),
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe({

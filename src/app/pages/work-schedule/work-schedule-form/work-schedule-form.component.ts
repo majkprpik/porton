@@ -14,6 +14,7 @@ import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DataService } from '../../../core/services/data.service';
+import { nonNull } from '../../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-work-schedule-form',
@@ -495,8 +496,8 @@ export class WorkScheduleFormComponent {
 
   private subscribeToDataStreams() {
     combineLatest([
-      this.dataService.profiles$,
-      this.dataService.profileWorkDays$
+      this.dataService.profiles$.pipe(nonNull()),
+      this.dataService.profileWorkDays$.pipe(nonNull()),
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe({

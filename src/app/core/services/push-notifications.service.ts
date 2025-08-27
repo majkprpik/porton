@@ -7,6 +7,7 @@ import { deleteToken, getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from './supabase.service';
 import { DataService } from './data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -23,9 +24,11 @@ export class PushNotificationsService {
     private supabaseService: SupabaseService,
     private dataService: DataService,
   ) { 
-    this.dataService.profiles$.subscribe(profiles => {
-      this.profiles = profiles.filter(p => !p.is_deleted);
-    })
+    this.dataService.profiles$
+      .pipe(nonNull())
+      .subscribe(profiles => {
+        this.profiles = profiles.filter(p => !p.is_deleted);
+      });
 
     onMessage(this.messaging, (payload) => {
       console.log('💬 FCM message received in foreground:', payload);

@@ -15,6 +15,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { Router } from '@angular/router';
 import { DataService } from '../../core/services/data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
     selector: 'app-teams',
@@ -343,12 +344,12 @@ export class Teams implements OnInit {
 
     ngOnInit() {
         combineLatest([
-            this.dataService.workGroups$,
-            this.dataService.tasks$,
-            this.dataService.workGroupProfiles$,
-            this.dataService.profiles$,
-            this.dataService.houses$,
-            this.dataService.workGroupTasks$
+            this.dataService.workGroups$.pipe(nonNull()),
+            this.dataService.tasks$.pipe(nonNull()),
+            this.dataService.workGroupProfiles$.pipe(nonNull()),
+            this.dataService.profiles$.pipe(nonNull()),
+            this.dataService.houses$.pipe(nonNull()),
+            this.dataService.workGroupTasks$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({

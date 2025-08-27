@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { Profile, ProfileRole, ProfileRoles, RepairTaskComment, WorkGroupProfile } from '../models/data.models';
 import { DataService } from './data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -38,9 +39,9 @@ export class ProfileService {
     private dataService: DataService,
   ) {
     combineLatest([
-      this.dataService.profiles$,
-      this.dataService.profileRoles$,
-      this.dataService.workGroupProfiles$,
+      this.dataService.profiles$.pipe(nonNull()),
+      this.dataService.profileRoles$.pipe(nonNull()),
+      this.dataService.workGroupProfiles$.pipe(nonNull()),
     ]).subscribe(([profiles, profileRoles, workGroupProfiles]) => {
       this.profiles = profiles;
       this.profileRoles = profileRoles;

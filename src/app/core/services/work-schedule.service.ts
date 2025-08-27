@@ -3,6 +3,7 @@ import { DataService } from './data.service';
 import { ProfileWorkDay, ProfileWorkSchedule } from '../models/data.models';
 import { SupabaseService } from './supabase.service';
 import { combineLatest } from 'rxjs';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -16,8 +17,8 @@ export class WorkScheduleService {
     private supabaseService: SupabaseService,
   ) {
     combineLatest([
-      this.dataService.profileWorkSchedule$,
-      this.dataService.profileWorkDays$,
+      this.dataService.profileWorkSchedule$.pipe(nonNull()),
+      this.dataService.profileWorkDays$.pipe(nonNull()),
     ])
     .subscribe(([profileWorkSchedule, profileWorkDays]) => {
       this.profileWorkSchedule = profileWorkSchedule;
