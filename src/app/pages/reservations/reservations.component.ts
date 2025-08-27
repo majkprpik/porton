@@ -188,13 +188,11 @@ interface CellData {
 
             @if(showReservationForm()){
                 <app-reservation-form 
-                    [houseId]="selectedHouseId()"
-                    [startDate]="selectedStartDate()"
-                    [endDate]="selectedEndDate()"
                     [reservation]="editingReservation()"
                     [visible]="showReservationForm()"
                     [colors]="colors"
                     [existingReservations]="houseAvailabilities()"
+                    [season]="selectedSeason"
                     (save)="handleReservationSave($event)"
                     (delete)="handleDeleteReservation($event)"
                     (cancel)="handleReservationCancel()"

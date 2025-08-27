@@ -9,7 +9,9 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
-import { HouseAvailability } from '../../../core/models/data.models';
+import { HouseAvailability, Season } from '../../../core/models/data.models';
+import { HouseService } from '../../../core/services/house.service';
+import { DragDropModule } from "primeng/dragdrop";
 
 @Component({
     selector: 'app-reservation-form',
@@ -65,19 +67,33 @@ import { HouseAvailability } from '../../../core/models/data.models';
                         </div>
                         <div class="field">
                             <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
-                            <p-datePicker  
-                                id="startDate" 
-                                [(ngModel)]="startDate" 
-                                [readonlyInput]="true" 
-                                dateFormat="dd.mm.yy"
-                                [minDate]="minStartDate" 
-                                [maxDate]="maxDate" 
-                                [showIcon]="true"
-                                [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
-                                (onSelect)="onStartDateChange()"
-                                appendTo="body"
-                            >
-                            </p-datePicker>
+                            @if(isReservationStartDateBeforeToday(reservation)){
+                                <p-datePicker  
+                                    id="startDate" 
+                                    [(ngModel)]="startDate" 
+                                    [readonlyInput]="true" 
+                                    dateFormat="dd.mm.yy"
+                                    [showIcon]="true"
+                                    [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
+                                    [disabled]="isReservationStartDateBeforeToday(reservation)"
+                                    appendTo="body"
+                                >
+                                </p-datePicker>
+                            } @else {
+                                <p-datePicker  
+                                    id="startDate" 
+                                    [(ngModel)]="startDate" 
+                                    [readonlyInput]="true" 
+                                    dateFormat="dd.mm.yy"
+                                    [minDate]="minStartDate" 
+                                    [maxDate]="maxStartDate" 
+                                    [showIcon]="true"
+                                    [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
+                                    (onSelect)="onStartDateChange()"
+                                    appendTo="body"
+                                >
+                                </p-datePicker>
+                            }
                         </div>
                     </div>
                     
@@ -118,19 +134,33 @@ import { HouseAvailability } from '../../../core/models/data.models';
                         </div>
                         <div class="field">
                             <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
-                            <p-datePicker  
-                                id="endDate" 
-                                [(ngModel)]="endDate" 
-                                [readonlyInput]="true" 
-                                dateFormat="dd.mm.yy"
-                                [minDate]="minEndDate" 
-                                [maxDate]="maxDate" 
-                                [showIcon]="true"
-                                [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
-                                (onSelect)="checkForDateConflicts()"
-                                appendTo="body"
-                            >
-                            </p-datePicker>
+                            @if(isReservationEndDateBeforeToday(reservation)){
+                                <p-datePicker  
+                                    id="endDate" 
+                                    [(ngModel)]="endDate" 
+                                    [readonlyInput]="true" 
+                                    dateFormat="dd.mm.yy"
+                                    [showIcon]="true"
+                                    [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
+                                    [disabled]="isReservationEndDateBeforeToday(reservation)"
+                                    appendTo="body"
+                                >
+                                </p-datePicker>
+                            } @else {
+                                <p-datePicker  
+                                    id="endDate" 
+                                    [(ngModel)]="endDate" 
+                                    [readonlyInput]="true" 
+                                    dateFormat="dd.mm.yy"
+                                    [minDate]="minEndDate" 
+                                    [maxDate]="maxEndDate" 
+                                    [showIcon]="true"
+                                    [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
+                                    (onSelect)="onEndDateChange()"
+                                    appendTo="body"
+                                >
+                                </p-datePicker>
+                            }
                         </div>
                     </div>
                 </div>
@@ -337,52 +367,41 @@ import { HouseAvailability } from '../../../core/models/data.models';
     `,
     standalone: true,
     imports: [
-        CommonModule,
-        FormsModule,
-        ButtonModule,
-        DialogModule,
-        InputTextModule,
-        InputNumberModule,
-        TranslateModule,
-        SelectModule,
-        DatePickerModule,
-    ]
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    DialogModule,
+    InputTextModule,
+    InputNumberModule,
+    TranslateModule,
+    SelectModule,
+    DatePickerModule,
+    DragDropModule
+]
 })
-export class ReservationFormComponent implements OnInit, OnChanges {
+export class ReservationFormComponent implements OnInit {
     @Input() visible = false;
-    @Input() reservation: Partial<HouseAvailability> = {};
-    @Input() houseId!: number;
-    @Input() startDate!: Date;
-    @Input() endDate!: Date;
+    @Input() reservation!: Partial<HouseAvailability>;
     @Input() existingReservations: HouseAvailability[] = [];  
     @Input() colors: any[] = [];
+    @Input() season!: Season;
     
     notes: string = '';
+
+    startDate: Date = new Date();
+    endDate: Date = new Date();
+
+    minStartDate!: Date;
+    maxStartDate!: Date;
     minEndDate!: Date;
+    maxEndDate!: Date;
+
     selectedColor: any;
-    private _minStartDate: Date | null = null;
 
     get isEditMode(): boolean {
         return !!(this.reservation && this.reservation.house_availability_id && this.reservation.house_availability_id < 1000000);
     }
     
-    get minStartDate(): Date {
-        if (this.isEditMode) {
-            if (!this._minStartDate) {
-                this._minStartDate = new Date(1900, 0, 1);
-            }
-            return this._minStartDate;
-        }
-        
-        if (!this._minStartDate || this._minStartDate.getFullYear() != new Date().getFullYear()) {
-            this._minStartDate = new Date();
-            this._minStartDate.setHours(0, 0, 0, 0);
-        }
-    
-        return this._minStartDate;
-    }
-    
-    maxDate: Date = new Date(new Date().setFullYear(new Date().getFullYear() + 2));
     dateConflictError: string | null = null;
     
     @Output() visibleChange = new EventEmitter<boolean>();
@@ -394,28 +413,27 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         private confirmationService: ConfirmationService,
         private translateService: TranslateService,
         private messageService: MessageService,
+        private houseService: HouseService,
     ) {}
 
     ngOnInit() {
-        if(this.reservation){
-            this.reservation.arrival_time = this.reservation.arrival_time ? this.timeStringToDate(this.reservation.arrival_time) : this.timeStringToDate("16:00:00");
-            this.reservation.departure_time = this.reservation.departure_time ? this.timeStringToDate(this.reservation.departure_time) : this.timeStringToDate('10:00:00');
-        }
+        this.reservation.arrival_time = this.reservation.arrival_time ? this.timeStringToDate(this.reservation.arrival_time) : this.timeStringToDate("16:00:00");
+        this.reservation.departure_time = this.reservation.departure_time ? this.timeStringToDate(this.reservation.departure_time) : this.timeStringToDate('10:00:00');
 
-        if(this.reservation && this.reservation.color_theme != undefined){
+        if(this.reservation.color_theme != undefined){
             this.selectedColor = this.colors[this.reservation.color_theme];
         }
         
-        if (this.reservation && this.reservation.note) {
-            this.notes = this.reservation.note;
-        } else {
-            this.notes = '';
-        }
+        this.notes = this.reservation.note ?? '';
         
-        this.updateMinEndDate();
+        this.setStartAndEndDate();
+        this.setMinStartDate();
+        this.setMinEndDate();
+        this.setMaxEndDate();
+        this.setMaxStartDate();
         this.ensureDatesAreValid();
     }
-    
+
     private ensureDatesAreValid() {
         if (typeof this.startDate === 'string') {
             this.startDate = new Date(this.startDate);
@@ -437,92 +455,85 @@ export class ReservationFormComponent implements OnInit, OnChanges {
         this.endDate.setHours(0, 0, 0, 0);
     }
 
-    ngOnChanges(changes: SimpleChanges) {
-        if (changes['startDate'] || changes['isEditMode']) {
-            this.updateMinEndDate();
-        }
+    isReservationStartDateBeforeToday(reservation: Partial<HouseAvailability>){
+        const haStartDate = new Date(reservation.house_availability_start_date!);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        return haStartDate < now;
+    }
+
+    isReservationEndDateBeforeToday(reservation: Partial<HouseAvailability>){
+        const haStartDate = new Date(reservation.house_availability_end_date!);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        return haStartDate < now;
+    }
+
+    setStartAndEndDate(){ 
+        this.startDate = new Date(this.reservation.house_availability_start_date!);
         
-        if (changes['reservation']) {
-            const currentReservation = changes['reservation'].currentValue;
-            if (currentReservation) {
-                if (currentReservation.house_availability_start_date) {
-                    this.startDate = new Date(currentReservation.house_availability_start_date);
-                }
-                
-                if (currentReservation.house_availability_end_date) {
-                    this.endDate = new Date(currentReservation.house_availability_end_date);
-                    this.endDate.setDate(this.endDate.getDate() + 1);
-                }
+        this.endDate = new Date(this.reservation.house_availability_end_date!);
+        this.endDate.setDate(this.endDate.getDate() + 1);
+        
+        this.startDate.setHours(0, 0, 0, 0);
+        this.endDate.setHours(0, 0, 0, 0);
+    }
+
+    setMinStartDate(){
+        const prevHouseAvailability = this.houseService.getPreviousHouseAvailabilityFromHouseAvailability(this.reservation);
+        
+        if(prevHouseAvailability){
+            const haEndDate = new Date(prevHouseAvailability.house_availability_end_date)
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            if(haEndDate < now) {
+                this.minStartDate = now;
+            } else {
+                this.minStartDate = new Date(prevHouseAvailability.house_availability_end_date);
+                this.minStartDate.setDate(this.minStartDate.getDate() + 1);
             }
+        } else {
+            this.minStartDate = new Date();
         }
-        
-        if (changes['visible']) {
-            if (!changes['visible'].currentValue) {
-                this.notes = '';
-            } else if (changes['visible'].currentValue) {
-                if (this.reservation && this.reservation.note) {
-                    this.notes = this.reservation.note;
-                } else {
-                    this.notes = '';
-                }
-                
-                this.ensureDatesAreValid();
-            }
-        }
-        
-        if (changes['startDate'] || changes['endDate']) {
-            this.ensureDatesAreValid();
-        }
+
+        this.minStartDate.setHours(0, 0, 0, 0);
+    }
+
+    setMaxStartDate(){
+        this.maxStartDate = new Date(this.endDate);
+        this.maxStartDate.setDate(this.maxStartDate.getDate() - 1);
+        this.maxStartDate.setHours(0, 0, 0, 0);
     }
     
-    updateMinEndDate() {
-        if (this.isEditMode) {
-            this.minEndDate = new Date(this.startDate);
-            return;
-        }
+    setMinEndDate() {
+        this.minEndDate = new Date(this.startDate);
+        this.minEndDate.setDate(this.startDate.getDate() + 1);
+        this.minEndDate.setHours(0, 0, 0, 0);
+    }
 
-        if (!this.startDate) {
-            this.minEndDate = this.minStartDate;
-            return;
-        }
+    setMaxEndDate(){
+        const nextHouseAvailability = this.houseService.getNextHouseAvailabilityFromHouseAvailability(this.reservation);
 
-        const startDate = new Date(this.startDate);
-        startDate.setHours(0, 0, 0, 0);
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (startDate.getTime() >= today.getTime()) {
-            startDate.setDate(startDate.getDate() + 1);
-            this.minEndDate = startDate;
+        if(!nextHouseAvailability) {
+            this.maxEndDate = new Date(this.season.season_end_date);
+            this.maxEndDate.setDate(this.maxEndDate.getDate() + 1);
         } else {
-            this.minEndDate = today;
+            this.maxEndDate = new Date(nextHouseAvailability.house_availability_start_date);
         }
 
-        this.endDate;
+        this.maxEndDate.setHours(0, 0, 0, 0);
     }
 
     onStartDateChange(): void {
-        if (!this.startDate || !(this.startDate instanceof Date) || isNaN(this.startDate.getTime())) {
-            if (this.isEditMode && this.reservation.house_availability_start_date) {
-                this.startDate = new Date(this.reservation.house_availability_start_date);
-            } else {
-                this.startDate = new Date();
-            }
-            
-            this.startDate.setHours(0, 0, 0, 0);
-        } else {
-            this.startDate.setHours(0, 0, 0, 0);
-        }
-        
-        if (!this.endDate || !(this.endDate instanceof Date) || 
-            isNaN(this.endDate.getTime()) || 
-            new Date(this.endDate).getTime() < new Date(this.startDate).getTime()) {
-            this.endDate = new Date(this.startDate);
-            this.endDate.setHours(0, 0, 0, 0);
-        }
-        
-        this.updateMinEndDate();
+        this.setMinEndDate();
+        this.checkForDateConflicts();
+    }
+    
+    onEndDateChange(){
+        this.setMaxStartDate();
         this.checkForDateConflicts();
     }
 
@@ -542,32 +553,37 @@ export class ReservationFormComponent implements OnInit, OnChanges {
             this.dateConflictError = null;
             return;
         }
-        
-        const startMs = new Date(this.startDate).setHours(0, 0, 0, 0);
-        const endMs = new Date(this.endDate).setHours(0, 0, 0, 0);
-        
-        const conflictingReservation = this.existingReservations.find(reservation => {
-            if (this.reservation.house_availability_id === reservation.house_availability_id) {
-                return false;
-            }
-            
-            if (reservation.house_id !== this.houseId) {
-                return false;
-            }
-            
-            const reservationStartMs = new Date(reservation.house_availability_start_date).setHours(0, 0, 0, 0);
-            const reservationEndMs = new Date(reservation.house_availability_end_date).setHours(0, 0, 0, 0);
-            
-            return (startMs >= reservationStartMs && startMs <= reservationEndMs) || 
-                   (endMs >= reservationStartMs && endMs <= reservationEndMs) ||
-                   (startMs <= reservationStartMs && endMs >= reservationEndMs);
-        });
-        
+
+        const conflictingReservation = this.getConflictingReservation();
         if (conflictingReservation) {
             this.dateConflictError = `This date range conflicts with a reservation for ${conflictingReservation.last_name || 'Unknown'}`;
         } else {
             this.dateConflictError = null;
         }
+    }
+
+    getConflictingReservation(){
+        const startDate = new Date(this.startDate);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(this.endDate);
+        endDate.setDate(endDate.getDate() - 1);
+        endDate.setHours(0, 0, 0, 0);
+
+        return this.existingReservations.find(reservation => {
+            if (this.reservation.house_availability_id === reservation.house_availability_id) return false;
+            if (reservation.house_id !== this.reservation.house_id) return false;
+
+            const resStart = new Date(reservation.house_availability_start_date);
+            resStart.setHours(0, 0, 0, 0);
+
+            const resEnd = new Date(reservation.house_availability_end_date);
+            resEnd.setHours(0, 0, 0, 0);
+
+            return (startDate >= resStart && startDate <= resEnd) ||
+                    (endDate >= resStart && endDate <= resEnd) ||
+                    (startDate <= resStart && endDate >= resEnd);
+            });
     }
 
     onSave(): void {
@@ -588,7 +604,7 @@ export class ReservationFormComponent implements OnInit, OnChanges {
 
         const reservation: HouseAvailability = {
             ...this.reservation,
-            house_id: this.houseId,
+            house_id: this.reservation.house_id,
             house_availability_start_date: formatDate(this.startDate),
             house_availability_end_date: formatDate(adjustedEndDate),
             note: this.notes,
@@ -626,7 +642,7 @@ export class ReservationFormComponent implements OnInit, OnChanges {
                 accept: async () => {
                     this.delete.emit({ 
                         availabilityId: this.reservation.house_availability_id!, 
-                        houseId: this.houseId 
+                        houseId: this.reservation.house_id! 
                     });
                     
                     this.visibleChange.emit(false);

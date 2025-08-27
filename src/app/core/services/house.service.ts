@@ -190,6 +190,46 @@ export class HouseService {
       )[0] || null;
   }
 
+  getPreviousHouseAvailabilityFromHouseAvailability(currentAvailability: Partial<HouseAvailability>) {
+    if (!currentAvailability.house_availability_start_date) return null;
+
+    const currentDate = new Date(currentAvailability.house_availability_start_date);
+
+    const availabilities = currentAvailability.house_id! > 0
+        ? this.houseAvailabilities
+        : this.tempHouseAvailabilities;
+
+    const pastAvailabilities = availabilities?.filter(item =>
+        item.house_id === currentAvailability.house_id &&
+        new Date(item.house_availability_start_date) < currentDate
+    ) || [];
+
+    return pastAvailabilities
+      .sort((a, b) =>
+        new Date(b.house_availability_start_date).getTime() -
+        new Date(a.house_availability_start_date).getTime()
+      )[0] || null;
+  }
+
+  getNextHouseAvailabilityFromHouseAvailability(currentAvailability: Partial<HouseAvailability>) {
+    const currentDate = new Date(currentAvailability.house_availability_start_date!);
+
+    const availabilities = currentAvailability.house_id! > 0
+        ? this.houseAvailabilities
+        : this.tempHouseAvailabilities;
+
+    const futureAvailabilities = availabilities?.filter(item =>
+        item.house_id === currentAvailability.house_id &&
+        new Date(item.house_availability_start_date) > currentDate
+    ) || [];
+
+    return futureAvailabilities
+      .sort((a, b) =>
+        new Date(a.house_availability_start_date).getTime() -
+        new Date(b.house_availability_start_date).getTime()
+      )[0] || null;
+  }
+
   isHouseReservedToday(houseId: number){
     const today = new Date();
     today.setHours(0, 0, 0, 0);
