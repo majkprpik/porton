@@ -67,33 +67,19 @@ import { DragDropModule } from "primeng/dragdrop";
                         </div>
                         <div class="field">
                             <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
-                            @if(isReservationStartDateBeforeToday(reservation)){
-                                <p-datePicker  
-                                    id="startDate" 
-                                    [(ngModel)]="startDate" 
-                                    [readonlyInput]="true" 
-                                    dateFormat="dd.mm.yy"
-                                    [showIcon]="true"
-                                    [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
-                                    [disabled]="isReservationStartDateBeforeToday(reservation)"
-                                    appendTo="body"
-                                >
-                                </p-datePicker>
-                            } @else {
-                                <p-datePicker  
-                                    id="startDate" 
-                                    [(ngModel)]="startDate" 
-                                    [readonlyInput]="true" 
-                                    dateFormat="dd.mm.yy"
-                                    [minDate]="minStartDate" 
-                                    [maxDate]="maxStartDate" 
-                                    [showIcon]="true"
-                                    [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
-                                    (onSelect)="onStartDateChange()"
-                                    appendTo="body"
-                                >
-                                </p-datePicker>
-                            }
+                            <p-datePicker  
+                                id="startDate" 
+                                [(ngModel)]="startDate" 
+                                [readonlyInput]="true" 
+                                dateFormat="dd.mm.yy"
+                                [minDate]="minStartDate" 
+                                [maxDate]="maxStartDate" 
+                                [showIcon]="true"
+                                [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
+                                (onSelect)="onStartDateChange()"
+                                appendTo="body"
+                            >
+                            </p-datePicker>
                         </div>
                     </div>
                     
@@ -134,33 +120,19 @@ import { DragDropModule } from "primeng/dragdrop";
                         </div>
                         <div class="field">
                             <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
-                            @if(isReservationEndDateBeforeToday(reservation)){
-                                <p-datePicker  
-                                    id="endDate" 
-                                    [(ngModel)]="endDate" 
-                                    [readonlyInput]="true" 
-                                    dateFormat="dd.mm.yy"
-                                    [showIcon]="true"
-                                    [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
-                                    [disabled]="isReservationEndDateBeforeToday(reservation)"
-                                    appendTo="body"
-                                >
-                                </p-datePicker>
-                            } @else {
-                                <p-datePicker  
-                                    id="endDate" 
-                                    [(ngModel)]="endDate" 
-                                    [readonlyInput]="true" 
-                                    dateFormat="dd.mm.yy"
-                                    [minDate]="minEndDate" 
-                                    [maxDate]="maxEndDate" 
-                                    [showIcon]="true"
-                                    [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
-                                    (onSelect)="onEndDateChange()"
-                                    appendTo="body"
-                                >
-                                </p-datePicker>
-                            }
+                            <p-datePicker  
+                                id="endDate" 
+                                [(ngModel)]="endDate" 
+                                [readonlyInput]="true" 
+                                dateFormat="dd.mm.yy"
+                                [minDate]="minEndDate" 
+                                [maxDate]="maxEndDate" 
+                                [showIcon]="true"
+                                [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
+                                (onSelect)="onEndDateChange()"
+                                appendTo="body"
+                            >
+                            </p-datePicker>
                         </div>
                     </div>
                 </div>
@@ -485,16 +457,8 @@ export class ReservationFormComponent implements OnInit {
         const prevHouseAvailability = this.houseService.getPreviousHouseAvailabilityFromHouseAvailability(this.reservation);
         
         if(prevHouseAvailability){
-            const haEndDate = new Date(prevHouseAvailability.house_availability_end_date)
-            const now = new Date();
-            now.setHours(0, 0, 0, 0);
-
-            if(haEndDate < now) {
-                this.minStartDate = now;
-            } else {
-                this.minStartDate = new Date(prevHouseAvailability.house_availability_end_date);
-                this.minStartDate.setDate(this.minStartDate.getDate() + 1);
-            }
+            this.minStartDate = new Date(prevHouseAvailability.house_availability_end_date);
+            this.minStartDate.setDate(this.minStartDate.getDate() + 1);
         } else {
             this.minStartDate = new Date();
         }
