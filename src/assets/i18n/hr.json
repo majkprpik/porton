@@ -129,8 +129,10 @@
             "ARRIVALS": "Dolasci",
             "DEPARTURES": "Odlasci",
             "HOUSE": "Kućica",
-            "NO-ARRIVALS": "Nema dolazaka za danas",
-            "NO-DEPARTURES": "Nema odlazaka za danas"
+            "NO-ARRIVALS-FOR-TODAY": "Nema dolazaka za danas",
+            "NO-DEPARTURES-FOR-TODAY": "Nema odlazaka za danas",
+            "NO-ARRIVALS-FOR-THIS-DAY": "Nema dolazaka za ovaj dan",
+            "NO-DEPARTURES-FOR-THIS-DAY": "Nema odlazaka za ovaj dan"
         },
         "NOTES": {
             "TITLE": "Bilješke",

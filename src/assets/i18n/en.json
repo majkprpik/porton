@@ -129,8 +129,10 @@
             "ARRIVALS": "Arrivals",
             "DEPARTURES": "Departures",
             "HOUSE": "House",
-            "NO-ARRIVALS": "No arrivals for today",
-            "NO-DEPARTURES": "No departures for today"
+            "NO-ARRIVALS-FOR-TODAY": "No arrivals for today",
+            "NO-DEPARTURES-FOR-TODAY": "No departures for today",
+            "NO-ARRIVALS-FOR-THIS-DAY": "No arrivals for this day",
+            "NO-DEPARTURES-FOR-THIS-DAY": "No departures for this day"
         },
         "NOTES": {
             "TITLE": "Notes",

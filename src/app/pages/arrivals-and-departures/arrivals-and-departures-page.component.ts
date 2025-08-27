@@ -60,7 +60,11 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         @if(!departures.length){
           <div class="empty-message">
             <i class="pi pi-info-circle"></i>
-            <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.NO-DEPARTURES' | translate }}</span>
+            @if(isToday(selectedDate)){
+              <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.NO-DEPARTURES-FOR-TODAY' | translate }}</span>
+            } @else {
+              <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.NO-DEPARTURES-FOR-THIS-DAY' | translate }}</span>
+            }
           </div>
         } @else{
           @for(departure of departures; track departure.house_availability_id){
@@ -117,7 +121,11 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         @if(!arrivals.length){
           <div class="empty-message">
             <i class="pi pi-info-circle"></i>
-            <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.NO-ARRIVALS' | translate }}</span>
+            @if(isToday(selectedDate)){
+              <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.NO-ARRIVALS-FOR-TODAY' | translate }}</span>
+            } @else {
+              <span>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.NO-ARRIVALS-FOR-THIS-DAY' | translate }}</span>
+            }
           </div>
         } @else{
           @for(arrival of arrivals; track arrival.house_availability_id){
