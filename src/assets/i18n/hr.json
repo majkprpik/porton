@@ -393,7 +393,8 @@
             "SELECT-START-DATE": "Odaberi početak",
             "SELECT-END-DATE": "Odaberi kraj",
             "NOTES": "Dodatne informacije",
-            "NOTES-ENTER-INFO": "Unesi dodatne informacije o rezervaciji"
+            "NOTES-ENTER-INFO": "Unesi dodatne informacije o rezervaciji",
+            "REQUIRED-FIELDS": "Polja označena sa * su obavezna"
         },
         "MESSAGES": {
             "UPDATED": "Promjena",

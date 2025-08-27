@@ -393,7 +393,8 @@
             "SELECT-START-DATE": "Select start date",
             "SELECT-END-DATE": "Select end date",
             "NOTES": "Notes",
-            "NOTES-ENTER-INFO": "Enter any additional information about this reservation"
+            "NOTES-ENTER-INFO": "Enter any additional information about this reservation",
+            "REQUIRED-FIELDS": "Fields marked with * are required"
         },
         "MESSAGES": {
             "UPDATED": "Update",

@@ -31,11 +31,11 @@ import { HouseAvailability } from '../../../core/models/data.models';
                 <div class="form-grid">
                     <div class="form-col">
                         <div class="field">
-                            <label for="lastName">{{ 'RESERVATIONS.MODAL.LAST-NAME' | translate }}</label>
+                            <label for="lastName">{{ 'RESERVATIONS.MODAL.LAST-NAME' | translate }}*</label>
                             <input id="lastName" type="text" pInputText [(ngModel)]="reservation.last_name" />
                         </div>
                         <div class="field">
-                            <label for="reservationNumber">{{ 'RESERVATIONS.MODAL.RESERVATION-NUMBER' | translate }}</label>
+                            <label for="reservationNumber">{{ 'RESERVATIONS.MODAL.RESERVATION-NUMBER' | translate }}*</label>
                             <input id="reservationNumber" type="text" pInputText [(ngModel)]="reservation.reservation_number" />
                         </div>
                         <div class="field">
@@ -152,6 +152,10 @@ import { HouseAvailability } from '../../../core/models/data.models';
                         <div class="p-error">{{dateConflictError}}</div>
                     </div>
                 }
+
+                <div class="info-field">
+                    <div class="p-info">{{ 'RESERVATIONS.MODAL.REQUIRED-FIELDS' | translate }}</div>
+                </div>
             </div>
             <ng-template pTemplate="footer">
                 <div class="form-footer">
@@ -166,8 +170,19 @@ import { HouseAvailability } from '../../../core/models/data.models';
                         }
                     </div>
                     <div class="right-buttons">
-                        <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="onCancel()" styleClass="p-button-text"></p-button>
-                        <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="onSave()" [disabled]="!!dateConflictError" styleClass="p-button-text"></p-button>
+                        <p-button 
+                            [label]="'BUTTONS.CANCEL' | translate" 
+                            icon="pi pi-times" 
+                            (click)="onCancel()" 
+                            styleClass="p-button-text"
+                        ></p-button>
+                        <p-button 
+                            [label]="'BUTTONS.SAVE' | translate" 
+                            icon="pi pi-check" 
+                            (click)="onSave()" 
+                            [disabled]="!isFormValid()" 
+                            styleClass="p-button-text"
+                        ></p-button>
                     </div>
                 </div>
             </ng-template>
@@ -218,6 +233,10 @@ import { HouseAvailability } from '../../../core/models/data.models';
                     display: block;
                 }
             }
+
+            .info-field{
+                margin-top: 30px;
+            }
             
             .p-calendar, 
             .p-inputnumber,
@@ -238,6 +257,11 @@ import { HouseAvailability } from '../../../core/models/data.models';
                 padding: 0.5rem;
                 background-color: rgba(220, 53, 69, 0.1);
                 border-radius: 4px;
+            }
+
+            .p-info{
+                color: var(--text-color-secondary);
+                font-size: 0.875rem;
             }
 
             .mt-3 {
@@ -619,5 +643,9 @@ export class ReservationFormComponent implements OnInit, OnChanges {
                 }
             })
         }
+    }
+ 
+    isFormValid(){
+        return !this.dateConflictError && this.reservation.last_name?.trim() && this.reservation.reservation_number?.trim();
     }
 }

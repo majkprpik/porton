@@ -891,7 +891,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             cellData.isReservationMiddle = checkDate > startDate && checkDate < endDate;
             
             if (reservation.house_availability_start_date === reservation.house_availability_end_date) {
-                cellData.displayText = `${reservation.last_name} ${reservation.reservation_number}`;
+                cellData.displayText = `${reservation.last_name}`;
                 cellData.isReservationStart = true;
                 cellData.isReservationEnd = true;
                 cellData.isReservationMiddle = false;
