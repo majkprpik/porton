@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ProfileRole, Profile, ProfileRoles, UserToRegister } from '../../core/models/data.models';
+import { ProfileRole, Profile, ProfileRoles, UserToRegister, Departments } from '../../core/models/data.models';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -49,28 +49,27 @@ interface ExtendedProfile {
   template: `
     <div class="card">
       <div class="title">
-        <h1>{{ 'PROFILE-MANAGEMENT.TITLE' | translate }}</h1>
-        <button 
-          class="add-button p-button-success"
+        <p-button 
+          severity="primary"
           (click)="openCreateProfileWindow()"
         >
-          <i class="pi pi-plus mr-2"></i> {{ 'PROFILE-MANAGEMENT.ADD-NEW-PROFILE' | translate }}
-        </button>
+          <i class="pi pi-plus mr-2"></i> {{ 'CONTENT-MANAGEMENT.PROFILES.ADD-NEW-PROFILE' | translate }}
+        </p-button>
       </div>
       <p-table [value]="profiles" [tableStyle]="{'min-width': '50rem'}">
         <ng-template pTemplate="header">
           <tr>
-            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.NAME' | translate }}</th>
-            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.POSITION' | translate }}</th>
-            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.EMAIL' | translate }}</th>
-            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.PASSWORD' | translate }}</th>
-            <th>{{ 'PROFILE-MANAGEMENT.TABLE-COLUMNS.ACTIONS' | translate }}</th>
+            <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.NAME' | translate }}</th>
+            <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.POSITION' | translate }}</th>
+            <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.EMAIL' | translate }}</th>
+            <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.PASSWORD' | translate }}</th>
+            <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-profile>
           <tr [ngClass]="{'divider-row': profile.isDivider}">
             @if(profile.isDivider){
-              <td colspan="5" class="divider-cell">{{ 'PROFILE-DEPARTMENTS.' + profile.first_name | translate }}</td>
+              <td colspan="5" class="divider-cell">{{ 'PROFILE-DEPARTMENTS.' + profile.first_name | uppercase | translate | uppercase}}</td>
             }
             @if(!profile.isDivider){
               <td>{{ profile.first_name }} {{ profile.last_name }}</td>
@@ -99,15 +98,15 @@ interface ExtendedProfile {
     <p-dialog 
       [(visible)]="profileDialog" 
       [style]="{width: '450px'}" 
-      [header]="'PROFILE-MANAGEMENT.EDIT.TITLE' | translate" 
+      [header]="'CONTENT-MANAGEMENT.PROFILES.EDIT.TITLE' | translate" 
       [modal]="true" 
       [contentStyle]="{overflow: 'visible'}"
     >
       @if(selectedProfile){
         <div class="field">
-          <label for="firstName">{{ 'PROFILE-MANAGEMENT.ADD.FULL-NAME' | translate }}</label>
+          <label for="firstName">{{ 'CONTENT-MANAGEMENT.PROFILES.EDIT.FULL-NAME' | translate }}</label>
           <input id="firstName" type="text" pInputText [(ngModel)]="selectedProfile.first_name" />
-       </div>
+        </div>
         <div class="p-field">
           <label for="role">Role</label>
           <p-select 
@@ -124,7 +123,7 @@ interface ExtendedProfile {
         </div>
         @if(profileService.getProfileById(authService.getStoredUserId())?.is_test_user){
           <div class="field">
-            <label for="isTestUser">{{ 'PROFILE-MANAGEMENT.ADD.IS-TEST-USER' | translate }}</label>
+            <label for="isTestUser">{{ 'CONTENT-MANAGEMENT.PROFILES.EDIT.IS-TEST-USER' | translate }}</label>
             <p-select 
               [options]="[true, false]" 
               [(ngModel)]="selectedProfile.is_test_user" 
@@ -142,9 +141,9 @@ interface ExtendedProfile {
       </div>
     </p-dialog>
 
-    <p-dialog [(visible)]="showDeleteProfileDialog" [style]="{width: '450px'}" [header]="'PROFILE-MANAGEMENT.DELETE.HEADER' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+    <p-dialog [(visible)]="showDeleteProfileDialog" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.PROFILES.DELETE.HEADER' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
       <label>
-        {{ 'PROFILE-MANAGEMENT.DELETE.MESSAGE' | translate }} {{ selectedProfile.first_name }}?
+        {{ 'CONTENT-MANAGEMENT.PROFILES.DELETE.MESSAGE' | translate }} <b>{{ selectedProfile.first_name }}</b>?
       </label>
       <div class="p-dialog-footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
@@ -152,26 +151,26 @@ interface ExtendedProfile {
       </div>
     </p-dialog>
 
-    <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" [header]="'PROFILE-MANAGEMENT.ADD.ADD-NEW-PROFILE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
-       <div class="field">
-          <label for="firstName">{{ 'PROFILE-MANAGEMENT.ADD.FULL-NAME' | translate }}</label>
-          <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.name" />
-       </div>
-       <div class="field">
-          <label for="firstName">
-            {{ 'PROFILE-MANAGEMENT.ADD.PASSWORD' | translate }} 
-            <span [ngStyle]="{'font-weight': 'normal'}">
-              ({{ 'PROFILE-MANAGEMENT.ADD.MIN-6-CHARS' | translate }})
-            </span>
-          </label>
-          <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.password" />
-       </div>
+    <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.PROFILES.ADD.ADD-NEW-PROFILE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+      <div class="field">
+         <label for="firstName">{{ 'CONTENT-MANAGEMENT.PROFILES.ADD.FULL-NAME' | translate }}</label>
+         <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.name" />
+      </div>
+      <div class="field">
+         <label for="firstName">
+           {{ 'CONTENT-MANAGEMENT.PROFILES.ADD.PASSWORD' | translate }} 
+           <span [ngStyle]="{'font-weight': 'normal'}">
+             ({{ 'CONTENT-MANAGEMENT.PROFILES.ADD.MIN-6-CHARS' | translate }})
+           </span>
+         </label>
+         <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.password" />
+      </div>
       <div class="p-field">
-        <label for="role">{{ 'PROFILE-MANAGEMENT.ADD.POSITION' | translate }}</label>
+        <label for="role">{{ 'CONTENT-MANAGEMENT.PROFILES.ADD.POSITION' | translate }}</label>
         <p-select 
           [options]="profileRoles" 
           [(ngModel)]="newProfile.role_id" 
-          [placeholder]="'PROFILE-MANAGEMENT.ADD.SELECT-POSITION' | translate" 
+          [placeholder]="'CONTENT-MANAGEMENT.PROFILES.ADD.SELECT-POSITION' | translate" 
           [style]="{'width':'100%'}"
           optionLabel="translatedName"
           optionValue="id"
@@ -181,7 +180,7 @@ interface ExtendedProfile {
       </div>       
       @if(profileService.getProfileById(authService.getStoredUserId())?.is_test_user){
         <div class="field">
-          <label for="isTestUser">{{ 'PROFILE-MANAGEMENT.ADD.IS-TEST-USER' | translate }}</label>
+          <label for="isTestUser">{{ 'CONTENT-MANAGEMENT.PROFILES.ADD.IS-TEST-USER' | translate }}</label>
           <p-select 
             [options]="[true, false]" 
             [(ngModel)]="newProfile.is_test_user" 
@@ -211,24 +210,7 @@ interface ExtendedProfile {
         flex-direction: row;
         justify-content: space-between;
         width: 100%;
-
-        .add-button {
-          display: flex;
-          align-items: center;
-          padding: 0.5rem 1rem;
-          border-radius: 4px;
-          border: none;
-          background-color: #4CAF50;
-          color: white;
-          font-size: 0.875rem;
-          cursor: pointer;
-          transition: background-color 0.2s;
-          height: 40px;
-        }
-
-        .add-button:hover {
-          background-color: #45a049;
-        }
+        padding-bottom: 10px;
       }
     }
     
@@ -253,7 +235,6 @@ interface ExtendedProfile {
     label {
       display: block;
       margin-bottom: 0.5rem;
-      font-weight: 600;
     }
     
     .p-dialog-footer {
@@ -387,7 +368,7 @@ export class ProfilesComponent implements OnInit {
           })
           .sort(this.sortByName);
         if (managementProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile('UPRAVA'));
+          this.sortedProfiles.push(this.createDividerProfile(Departments.Management));
           this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(managementProfiles));
         }
         
@@ -398,7 +379,7 @@ export class ProfilesComponent implements OnInit {
           })
           .sort(this.sortByName);
         if (receptionProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile('ODJEL RECEPCIJA'));
+          this.sortedProfiles.push(this.createDividerProfile(Departments.Reception));
           this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(receptionProfiles));
         }
         
@@ -409,7 +390,7 @@ export class ProfilesComponent implements OnInit {
           })
           .sort(this.sortByName);
         if (housekeepingProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile('ODJEL DOMAĆINSTVA'));
+          this.sortedProfiles.push(this.createDividerProfile(Departments.Housekeeping));
           this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(housekeepingProfiles));
         }
         
@@ -420,7 +401,7 @@ export class ProfilesComponent implements OnInit {
           })
           .sort(this.sortByName);
         if (technicalProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile('ODJEL TEHNIKA'));
+          this.sortedProfiles.push(this.createDividerProfile(Departments.Technical));
           this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(technicalProfiles));
         }
         
@@ -438,7 +419,7 @@ export class ProfilesComponent implements OnInit {
           })
           .sort(this.sortByName);
         if (otherProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile('OSTALO'));
+          this.sortedProfiles.push(this.createDividerProfile(Departments.Ostalo));
           this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(otherProfiles));
         }
         
@@ -507,7 +488,25 @@ export class ProfilesComponent implements OnInit {
 
   deleteProfile(profileId: string | undefined){
     if(profileId){
-      this.profileService.softDeleteProfile(profileId);
+      this.profileService.softDeleteProfile(profileId).then(res => {
+        if(res) {
+          this.messageService.add({ 
+            severity: 'success', 
+            summary: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.SUCCESS'), 
+            detail: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.DELETE-SUCCESS'), 
+            life: 3000 
+          });
+          this.showNewProfileDialog = false;
+          this.resetNewProfileValues();
+        } else {
+          this.messageService.add({ 
+            severity: 'error', 
+            summary: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.ERROR'),  
+            detail: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.DELETE-ERROR'), 
+            life: 3000 
+          });
+        }
+      });
     }
 
     this.resetSelectedProfileValues();
@@ -542,8 +541,8 @@ export class ProfilesComponent implements OnInit {
           if (updatedProfile) {
             this.messageService.add({ 
               severity: 'success', 
-              summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.SUCCESS'), 
-              detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.EDIT-SUCCESS'), 
+              summary: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.SUCCESS'), 
+              detail: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.EDIT-SUCCESS'), 
               life: 3000 
             });
 
@@ -556,8 +555,8 @@ export class ProfilesComponent implements OnInit {
           } else {
             this.messageService.add({ 
               severity: 'error', 
-              summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.ERROR'), 
-              detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.EDIT-ERROR'),
+              summary: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.ERROR'), 
+              detail: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.EDIT-ERROR'),
               life: 3000 
             });
           }
@@ -565,8 +564,8 @@ export class ProfilesComponent implements OnInit {
         .catch((error) => {
           this.messageService.add({ 
             severity: 'error', 
-            summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.ERROR'), 
-            detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.EDIT-ERROR'),
+            summary: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.ERROR'), 
+            detail: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.EDIT-ERROR'),
             life: 3000 
           });
           console.error('Error updating profile:', error);
@@ -581,20 +580,27 @@ export class ProfilesComponent implements OnInit {
           if(res) {
             this.messageService.add({ 
               severity: 'success', 
-              summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.SUCCESS'), 
-              detail: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.CREATE-SUCCESS'), 
+              summary: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.SUCCESS'), 
+              detail: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.CREATE-SUCCESS'), 
               life: 3000 
             });
             this.showNewProfileDialog = false;
             this.resetNewProfileValues();
+          } else {
+            this.messageService.add({ 
+              severity: 'error', 
+              summary: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.ERROR'),  
+              detail: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.DELETE-ERROR'), 
+              life: 3000 
+            });
           }
         })
         .catch(error => {
           this.messageService.add({ 
             severity: 'error', 
-            summary: this.translateService.instant('PROFILE-MANAGEMENT.MESSAGES.ERROR'),  
+            summary: this.translateService.instant('CONTENT-MANAGEMENT.PROFILES.MESSAGES.ERROR'),  
             detail: error instanceof Error ? error.message : String(error), 
-            life: 5000 
+            life: 3000 
           });
           console.error('Error creating profile:', error);
         }

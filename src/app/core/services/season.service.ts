@@ -21,8 +21,8 @@ export class SeasonService {
       });
   }
 
-  async createSeason(season: Season){
-    if(this.seasonExist(season.year)) return;
+  async createSeason(season: Partial<Season>){
+    if(season.year && this.seasonExist(season.year)) return;
 
     try {
       const { data: createdSeason, error: createSeasonError } = await this.supabaseService.getClient()
@@ -49,12 +49,13 @@ export class SeasonService {
     }
   }
 
-  async updateSeason(season: Season){
+  async updateSeason(season: Partial<Season>){
     try {
       const { data: updatedSeason, error: updateSeasonError } = await this.supabaseService.getClient()
         .schema('porton')
         .from('seasons')
         .update({ 
+          year: season.year,
           season_start_date: season.season_start_date,
           season_end_date: season.season_end_date,
           updated_at: this.supabaseService.formatDateTimeForSupabase(new Date()),
@@ -66,7 +67,7 @@ export class SeasonService {
       if(updateSeasonError) throw updateSeasonError;
 
       if(updatedSeason && updatedSeason.id) {
-        const updatedSeasons = this.seasons.map(s => s.id == updatedSeason ? updatedSeason : s);
+        const updatedSeasons = this.seasons.map(s => s.id == updatedSeason.id ? updatedSeason : s);
         this.dataService.setSeasons(updatedSeasons);
       }
 
@@ -81,7 +82,7 @@ export class SeasonService {
     try{
       const { data: deletedSeason, error: deleteSeasonError } = await this.supabaseService.getClient()
         .schema('porton')
-        .from('season')
+        .from('seasons')
         .delete()
         .eq('id', seasonId)
         .select()

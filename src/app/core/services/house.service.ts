@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup, Profile, HouseOccupant } from '../models/data.models';
+import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup, Profile, HouseOccupant, HouseType } from '../models/data.models';
 import { combineLatest } from 'rxjs';
 import { TaskService } from './task.service';
 import { DataService } from './data.service';
@@ -21,6 +21,7 @@ export class HouseService {
   workGroupProfiles: WorkGroupProfile[] = [];
   workGroups: WorkGroup[] = [];
   profiles: Profile[] = [];
+  houseTypes: HouseType[] = [];
 
   constructor(
     private supabase: SupabaseService,
@@ -33,15 +34,17 @@ export class HouseService {
       this.dataService.houseAvailabilities$.pipe(nonNull()),
       this.dataService.tempHouseAvailabilities$.pipe(nonNull()),
       this.dataService.houses$.pipe(nonNull()),
+      this.dataService.houseTypes$.pipe(nonNull()),
       this.dataService.tasks$.pipe(nonNull()),
       this.dataService.workGroupTasks$.pipe(nonNull()),
       this.dataService.workGroupProfiles$.pipe(nonNull()),
       this.dataService.workGroups$.pipe(nonNull()),
     ]).subscribe({
-      next: ([houseAvailabilities, tempHouseAvailabilities, houses, tasks, workGroupTasks, workGroupProfiles, workGroups]) => {
+      next: ([houseAvailabilities, tempHouseAvailabilities, houses, houseTypes, tasks, workGroupTasks, workGroupProfiles, workGroups]) => {
         this.houseAvailabilities = houseAvailabilities;
         this.tempHouseAvailabilities = tempHouseAvailabilities;
         this.houses = houses;
+        this.houseTypes = houseTypes;
         this.tasks = tasks;
         this.workGroupTasks = workGroupTasks;
         this.workGroupProfiles = workGroupProfiles;
@@ -142,6 +145,10 @@ export class HouseService {
 
   getHouseName(houseId: number | undefined){
     return this.houses.find(h => h.house_id === houseId)?.house_name;
+  }
+
+  getHouseType(houseTypeId: number){
+    return this.houseTypes.find(ht => ht.house_type_id == houseTypeId);
   }
 
   getTodaysHouseAvailabilityForHouse(houseId: number){
@@ -546,6 +553,82 @@ export class HouseService {
       return deletedHouseAvailability;
     } catch(error) {
       console.error('Error updating house availability:', error);
+      return null;
+    }
+  }
+
+  async createHouse(house: Partial<House>){
+    try{      
+      const { house_id, ...houseToCreate } = house;
+
+      const { data: createdHouse, error: createdHouseError } = await this.supabase.getClient()
+        .schema('porton')
+        .from('houses')
+        .insert(houseToCreate)
+        .select()
+        .single();
+      
+      if(createdHouseError) throw createdHouseError;
+
+      if(createdHouse && !this.houses.find(h => h.house_id == createdHouse.house_id)){
+        this.dataService.setHouses([...this.houses, createdHouse]);
+      }
+
+      return createdHouse;
+    } catch(error){
+      console.error("Error creating house ", error);
+      return null;
+    }
+  }
+
+  async updateHouse(house: House){
+    try{
+      const { house_id, ...houseToUpdate } = house;
+
+      const { data: updatedHouse, error: updateHouseError } = await this.supabase.getClient()
+        .schema('porton')
+        .from('houses')
+        .update(houseToUpdate)
+        .eq('house_id', house_id)
+        .select()
+        .single();
+
+      if(updateHouseError) throw updateHouseError;
+
+      if(updatedHouse && updatedHouse.house_id){
+        const updatedHouses = this.houses.map(h => h.house_id == updatedHouse.house_id ? updatedHouse : h);
+        this.dataService.setHouses(updatedHouses);
+      }
+
+      return updatedHouse
+    } catch(error) {
+      console.error("Error updating house ", error)
+      return null;
+    }
+  }
+
+  async softDeleteHouse(houseId: number){
+    try{
+      const { data: deletedHouse, error: deleteHouseError } = await this.supabase.getClient()
+        .schema('porton')
+        .from('houses')
+        .update({
+          is_deleted: true,
+        })
+        .eq('house_id', houseId)
+        .select()
+        .single();
+
+      if(deleteHouseError) throw deleteHouseError;
+
+      if(deletedHouse && deletedHouse.house_id){
+        const filteredHouses = this.houses.filter(h => h.house_id != deletedHouse.house_id);
+        this.dataService.setHouses(filteredHouses);
+      }
+      
+      return deletedHouse;
+    } catch(error) {
+      console.error("Error deleting house ", error);
       return null;
     }
   }

@@ -18,6 +18,7 @@ export interface House {
   house_number: number;
   house_name: string;
   house_type_id: number;
+  is_deleted?: boolean;
 }
 
 export interface Profile {
@@ -232,6 +233,7 @@ export enum Departments {
   Technical = 'Technical',
   Reception = 'Reception',
   Management = 'Management',
+  Ostalo = 'Other'
 }
 
 export enum HouseOccupant {
@@ -239,4 +241,12 @@ export enum HouseOccupant {
   Children = 'babies',
   Cribs = 'cribs',
   Pets = 'dogs_d',
+}
+
+export enum HouseTypes {
+  Family1 = 'family 1',
+  Family2 = 'family 2',
+  Couple = 'couple',
+  Mobile = 'mobilne',
+  Other = 'dodatno',
 }

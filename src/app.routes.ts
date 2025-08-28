@@ -8,7 +8,6 @@ import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
 import { ReservationsComponent } from './app/pages/reservations/reservations.component';
 import { AuthGuard } from './app/core/guards/auth.guard';
 import { RoleGuard } from './app/core/guards/role.guard';
-import { ProfilesComponent } from './app/pages/profiles/profiles.component';
 import { ArrivalsAndDeparturesPageComponent } from './app/pages/arrivals-and-departures/arrivals-and-departures-page.component';
 import { TeamsGuard } from './app/core/guards/teams.guard';
 import { TeamDetailGuard } from './app/core/guards/team-detail.guard';
@@ -20,6 +19,7 @@ import { ConsoleMessagesComponent } from './app/pages/console-messages/console-m
 import { ProfileRoles } from './app/core/models/data.models';
 import { Login } from './app/pages/auth/login';
 import { LoginGuard } from './app/core/guards/login.guard';
+import { ContentManagementComponent } from './app/pages/content-management/content-management.component';
 
 export const appRoutes: Routes = [
     {
@@ -73,14 +73,6 @@ export const appRoutes: Routes = [
                     ProfileRoles.VoditeljDomacinstva,
                     ProfileRoles.VoditeljKampa,
                     ProfileRoles.SavjetnikUprave
-                ] }
-            },
-            { 
-                path: 'profiles', 
-                component: ProfilesComponent,
-                data: { roles: [
-                    ProfileRoles.VoditeljKampa,
-                    ProfileRoles.Uprava
                 ] }
             },
             { 
@@ -175,6 +167,14 @@ export const appRoutes: Routes = [
             {
                 path: 'console-messages',
                 component: ConsoleMessagesComponent,
+                data: { roles: [
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava
+                ] }
+            },
+            {
+                path: 'content-management',
+                component: ContentManagementComponent,
                 data: { roles: [
                     ProfileRoles.VoditeljKampa,
                     ProfileRoles.Uprava

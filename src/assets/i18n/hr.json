@@ -5,14 +5,13 @@
         "TEAMS": "Timovi",
         "DAILY-SHEET": "Dnevni list",
         "PROFILES": "Profili",
-        "TASK-STATUSES": "Statusi zadataka",
-        "HOUSE-TYPES": "Tipovi kućica",
         "ARRIVALS-AND-DEPARTURES": "Dolasci i odlasci",
         "NOTES": "Bilješke",
         "STATISTICS": "Statistika",
         "ARCHIVE": "Arhiva zadataka",
         "WORK-SCHEDULE": "Raspored",
-        "CONSOLE-MESSAGES": "Console messages"
+        "CONSOLE-MESSAGES": "Console messages",
+        "CONTENT-MANAGEMENT": "Upravljanje sadržajem"
     },
     "BUTTONS": {
         "REPORT": "Prijavi",
@@ -52,10 +51,18 @@
         "Ostalo": "Ostalo"
     },
     "PROFILE-DEPARTMENTS": {
-        "UPRAVA": "UPRAVA",
-        "ODJEL RECEPCIJA": "ODJEL RECEPCIJA",
-        "ODJEL DOMAĆINSTVA": "ODJEL DOMAĆINSTVA",
-        "ODJEL TEHNIKA": "ODJEL TEHNIKA"
+        "MANAGEMENT": "Uprava",
+        "RECEPTION": "Odjel Recepcija",
+        "HOUSEKEEPING": "Odjel domaćinstva",
+        "TECHNICAL": "Odjel Tehnika",
+        "OTHER": "Other"
+    },
+    "HOUSE-TYPES": {
+        "FAMILY-1": "Family 1",
+        "FAMILY-2": "Family 2",
+        "COUPLE": "Couple",
+        "MOBILE": "Mobilne",
+        "OTHER": "Other"
     },
     "PROFILE-ROLES": {
         "Uprava": "Uprava",
@@ -72,9 +79,6 @@
         "Nocna recepcija": "Nocna recepcija",
         "Korisnicka sluzba": "Korisnicka sluzba",
         "Ostalo": "Ostalo"
-    },
-    "TASK-STATUSES": {
-
     },
     "DAILY-SHEET": {
         "TITLE": "Dnevni list",
@@ -250,115 +254,6 @@
             "HOUSE-OCCUPIED": "Kućica zauzeta"
         }
     },
-    "PROFILE-MANAGEMENT": {
-        "TITLE": "Upravljanje profilima",
-        "ADD-NEW-PROFILE": "Dodaj novi profil",
-        "TABLE-COLUMNS": {
-            "NAME": "Ime",
-            "POSITION": "Pozicija",
-            "EMAIL": "Email",
-            "PASSWORD": "Lozinka",
-            "ACTIONS": "Akcije"
-        },
-        "ADD": {
-            "ADD-NEW-PROFILE": "Dodaj novi profil",
-            "FULL-NAME": "Ime i prezime",
-            "PASSWORD": "Lozinka",
-            "MIN-6-CHARS": "min. 6 znakova",
-            "POSITION": "Pozicija",
-            "SELECT-POSITION": "Odaberi poziciju",
-            "IS-TEST-USER": "Testni korisnik"
-        },
-        "EDIT": {
-            "TITLE": "Uredi profil",
-            "STATUS-NAME": "Pozicija",
-            "IS-TEST-USER": "Testni korisnik"
-        },
-        "DELETE": {
-           "HEADER" : "Potvrdi brisanje",
-           "MESSAGE": "Jeste li sigurni da želite obrisati profil "
-        },
-        "MESSAGES": {
-            "SUCCESS": "Uspjeh",
-            "ERROR": "Greška",
-            "DELETE-SUCCESS": "Profil obrisan",
-            "DELETE-ERROR": "Greška tijekom brisanja profila",
-            "EDIT-SUCCESS": "Profil uređen",
-            "EDIT-ERROR": "Greška tijekom uređivanja profila",
-            "CREATE-SUCCESS": "Profil kreiran",
-            "CREATE-ERROR": "Greška tijekom kreiranja profila"
-        }
-    },
-    "TASK-STATUSES-MANAGEMENT": {
-        "TITLE": "Upravljanje statusima zadataka",
-        "ADD-NEW-STATUS": "Dodaj novi status zadatka",
-        "NO-TASK-STATUSES": "Nema dostupnih statusa zadataka",
-        "TABLE-COLUMNS": {
-            "ID": "ID",
-            "STATUS-NAME": "Ime statusa",
-            "ACTIONS": "Akcije"
-        },
-        "ADD": {
-            "TITLE": "Dodaj status zadatka",
-            "STATUS-NAME": "Ime statusa",
-            "ENTER-STATUS-NAME": "Unesi ime statusa",
-            "STATUS-ERROR": "Ime statusa je obavezno"
-        },
-        "EDIT": {
-            "TITLE": "Uredi status zadatka",
-            "STATUS-NAME": "Ime statusa",
-            "ENTER-STATUS-NAME": "Unesi ime statusa"
-        },
-        "DELETE": {
-           "HEADER" : "Potvrdi brisanje",
-           "MESSAGE": "Jeste li sigurni da želite obrisati status \"{{name}}\"?"
-        },
-        "MESSAGES": {
-            "SUCCESS": "Uspjeh",
-            "ERROR": "Greška",
-            "DELETE-SUCCESS": "Status zadatka obrisan",
-            "DELETE-ERROR": "Greška tijekom brisanja statusa zadatka",
-            "EDIT-SUCCESS": "Status zadatka uređen",
-            "EDIT-ERROR": "Greška tijekom uređivanja statusa zadatka",
-            "CREATE-SUCCESS": "Status zadatka kreiran",
-            "CREATE-ERROR": "Greška tijekom kreiranja statusa zadatka"
-        }
-    }, 
-    "HOUSE-TYPES": {
-        "TITLE": "Upravljanje tipovima kućica",
-        "ADD-HOUSE-TYPE": "Dodaj novi tip kućice",
-        "NO-HOUSE-TYPES": "Nema dostupnih tipova kuićica",
-        "TABLE-COLUMNS": {
-            "ID": "ID",
-            "TYPE-NAME": "Naziv tipa",
-            "ACTIONS": "Akcije"
-        },  
-        "ADD": {
-            "TITLE": "Dodaj tip kućice",
-            "TYPE-NAME": "Naziv tipa",
-            "ENTER-TYPE-NAME": "Unesite naziv tipa",
-            "TYPE-ERROR": "Naziv tipa je obavezan"
-        },
-        "EDIT": {
-            "TITLE": "Uredi tip kućice",
-            "TYPE-NAME": "Naziv tipa",
-            "ENTER-TYPE-NAME": "Unesi naziv tipa"
-        },
-        "DELETE": {
-           "HEADER" : "Potvrdi brisanje",
-           "MESSAGE": "Jeste li sigurni da želite obrisati tip kućice \"{{name}}\"?"
-        },
-        "MESSAGES": {
-            "SUCCESS": "Uspjeh",
-            "ERROR": "Greška",
-            "DELETE-SUCCESS": "Tip kućice obrisan",
-            "DELETE-ERROR": "Greška tijekom brisanja tipa kućice",
-            "EDIT-SUCCESS": "Tip kućice uređen",
-            "EDIT-ERROR": "Greška tijekom uređivanja tipa kućice",
-            "CREATE-SUCCESS": "Tip kućice kreiran",
-            "CREATE-ERROR": "Greška tijekom tipa kućice"
-        }
-    },
     "RESERVATIONS": {
         "HOUSE": "Kućica",
         "HEADER": {
@@ -512,6 +407,128 @@
         "HOUSE-DEPARTED": {
             "TITLE": "Kućica slobodna",
             "BODY": "Gosti su otišli iz kućice \"{{house_name}}\""
+        }
+    },
+    "CONTENT-MANAGEMENT": {
+        "TITLE": "Upravljanje sadržajem",
+        "TABS": {
+            "PROFILES": "Profili",
+            "SEASONS": "Sezone",
+            "HOUSES": "Kućice"
+        },
+        "PROFILES": {
+            "TITLE": "Upravljanje profilima",
+            "ADD-NEW-PROFILE": "Dodaj novi profil",
+            "TABLE-COLUMNS": {
+                "NAME": "Ime",
+                "POSITION": "Pozicija",
+                "EMAIL": "Email",
+                "PASSWORD": "Lozinka",
+                "ACTIONS": "Akcije"
+            },
+            "ADD": {
+                "ADD-NEW-PROFILE": "Dodaj novi profil",
+                "FULL-NAME": "Ime i prezime",
+                "PASSWORD": "Lozinka",
+                "MIN-6-CHARS": "min. 6 znakova",
+                "POSITION": "Pozicija",
+                "SELECT-POSITION": "Odaberi poziciju",
+                "IS-TEST-USER": "Testni korisnik"
+            },
+            "EDIT": {
+                "TITLE": "Uredi profil",
+                "FULL-NAME": "Ime i prezime",
+                "STATUS-NAME": "Pozicija",
+                "IS-TEST-USER": "Testni korisnik"
+            },
+            "DELETE": {
+                "HEADER" : "Potvrdi brisanje",
+                "MESSAGE": "Jeste li sigurni da želite obrisati profil "
+            },
+            "MESSAGES": {
+                "SUCCESS": "Uspjeh",
+                "ERROR": "Greška",
+                "DELETE-SUCCESS": "Profil obrisan",
+                "DELETE-ERROR": "Greška tijekom brisanja profila",
+                "EDIT-SUCCESS": "Profil uređen",
+                "EDIT-ERROR": "Greška tijekom uređivanja profila",
+                "CREATE-SUCCESS": "Profil kreiran",
+                "CREATE-ERROR": "Greška tijekom kreiranja profila"
+            }
+        },
+        "SEASONS": {
+            "TITLE": "Upravljanje sezonama",
+            "ADD-NEW-SEASON": "Dodaj novu sezonu",
+            "TABLE-COLUMNS": {
+                "YEAR": "Godina",
+                "START-DATE": "Početak sezone",
+                "END-DATE": "Kraj sezone",
+                "ACTIONS": "Akcije"
+            },
+            "ADD": {
+                "TITLE": "Dodaj novu sezonu",
+                "YEAR": "Godina",
+                "SEASON-START-DATE": "Početak sezone",
+                "SEASON-END-DATE": "Kraj sezone"
+            },
+            "EDIT": {
+                "TITLE": "Uredi sezonu",
+                "YEAR": "Godina",
+                "SEASON-START-DATE": "Početak sezone",
+                "SEASON-END-DATE": "Kraj sezone"
+            },
+            "DELETE": {
+                "TITLE": "Obriši sezonu",
+                "TEXT": "Jeste li sigurni da želite obrisati sezonu "
+            },
+            "MESSAGES": {
+                "SUCCESS": "Uspjeh",
+                "ERROR": "Greška",
+                "DELETE-SUCCESS": "Sezona obrisana",
+                "DELETE-ERROR": "Greška tijekom brisanja sezone",
+                "EDIT-SUCCESS": "Sezona uređena",
+                "EDIT-ERROR": "Greška tijekom uređivanja sezone",
+                "CREATE-SUCCESS": "Sezona kreirana",
+                "CREATE-ERROR": "Greška tijekom kreiranja sezone"
+            }
+        },
+        "HOUSES": {
+            "TITLE": "Upravljanje kućicama",
+            "ADD-NEW-HOUSE": "Dodaj novu kućicu",
+            "TABLE-COLUMNS": {
+                "HOUSE-NUMBER": "Broj kućice",
+                "HOUSE-NAME": "Ime kućice",
+                "HOUSE-TYPE": "Tip kućice",
+                "ACTIONS": "Akcije"
+            },
+            "ADD": {
+                "TITLE": "Dodaj novu kućicu",
+                "HOUSE-NUMBER": "Broj kućice",
+                "HOUSE-NAME": "Ime kućice",
+                "HOUSE-TYPE": "Tip kućice"
+            },
+            "EDIT": {
+                "TITLE": "Uredi kućicu",
+                "HOUSE-NUMBER": "Broj kućice",
+                "HOUSE-NAME": "Ime kućice",
+                "HOUSE-TYPE": "Tip kućice"
+            },
+            "DELETE": {
+                "TITLE": "Obriši kućicu",
+                "TEXT": "Jeste li sigurni da želite obrisati kućicu "
+            },
+            "MESSAGES": {
+                "SUCCESS": "Uspjeh",
+                "ERROR": "Greška",
+                "DELETE-SUCCESS": "Kućica obrisana",
+                "DELETE-ERROR": "Greška tijekom brisanja kućice",
+                "EDIT-SUCCESS": "Kućica uređena",
+                "EDIT-ERROR": "Greška tijekom uređivanja kućice",
+                "CREATE-SUCCESS": "Kućica kreirana",
+                "CREATE-ERROR": "Greška tijekom kreiranja kućice"
+            },
+            "HOUSE-NUMBER-EXISTS-ERROR": "Kućica s istim brojem već postoji",
+            "HOUSE-NAME-EXISTS-ERROR": "Kućica s istim imenom već postoji"
         }
     }
 }

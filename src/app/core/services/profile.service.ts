@@ -42,7 +42,7 @@ export class ProfileService {
       this.dataService.profiles$.pipe(nonNull()),
       this.dataService.profileRoles$.pipe(nonNull()),
       this.dataService.workGroupProfiles$.pipe(nonNull()),
-    ]).subscribe(([profiles, profileRoles, workGroupProfiles]) => {
+  ]).subscribe(([profiles, profileRoles, workGroupProfiles]) => {
       this.profiles = profiles;
       this.profileRoles = profileRoles;
       this.workGroupProfiles = workGroupProfiles;

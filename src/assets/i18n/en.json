@@ -5,14 +5,13 @@
         "TEAMS": "Teams",
         "DAILY-SHEET": "Daily Sheet",
         "PROFILES": "Profiles",
-        "TASK-STATUSES": "Task Statuses",
-        "HOUSE-TYPES": "House Types",
         "ARRIVALS-AND-DEPARTURES": "Arrivals and departures",
         "NOTES": "Notes",
         "STATISTICS": "Statistics",
         "ARCHIVE": "Task archive",
         "WORK-SCHEDULE": "Work schedule",
-        "CONSOLE-MESSAGES": "Console messages"
+        "CONSOLE-MESSAGES": "Console messages",
+        "CONTENT-MANAGEMENT": "Content management"
     },
     "BUTTONS": {
         "REPORT": "Report",
@@ -52,10 +51,18 @@
         "Ostalo": "Other"
     },
     "PROFILE-DEPARTMENTS": {
-        "UPRAVA": "MANAGEMENT",
-        "ODJEL RECEPCIJA": "RECEPTION DEPARTMENT",
-        "ODJEL DOMAĆINSTVA": "HOUSEKEEPING DEPARTMENT",
-        "ODJEL TEHNIKA": "TECHNICAL DEPARTMENT"
+        "MANAGEMENT": "Management Department",
+        "RECEPTION": "Reception Department",
+        "HOUSEKEEPING": "Housekeeping Department",
+        "TECHNICAL": "Technical Department",
+        "OTHER": "Other"
+    },
+    "HOUSE-TYPES": {
+        "FAMILY-1": "Family 1",
+        "FAMILY-2": "Family 2",
+        "COUPLE": "Couple",
+        "MOBILE": "Mobile",
+        "OTHER": "Other"
     },
     "PROFILE-ROLES": {
         "Uprava": "Management",
@@ -72,9 +79,6 @@
         "Nocna recepcija": "Night reception",
         "Korisnicka sluzba": "Customer service",
         "Ostalo": "Other"
-    },
-    "TASK-STATUSES": {
-
     },
     "DAILY-SHEET": {
         "TITLE": "Daily sheet",
@@ -250,115 +254,6 @@
             "HOUSE-OCCUPIED": "House occupied"
         }
     },
-    "PROFILE-MANAGEMENT": {
-        "TITLE": "Profile management",
-        "ADD-NEW-PROFILE": "Add new profile",
-        "TABLE-COLUMNS": {
-            "NAME": "Name",
-            "POSITION": "Position",
-            "EMAIL": "Email",
-            "PASSWORD": "Password",
-            "ACTIONS": "Actions"
-        },
-        "ADD": {
-            "ADD-NEW-PROFILE": "Add new profile",
-            "FULL-NAME": "Full name",
-            "PASSWORD": "Password",
-            "MIN-6-CHARS": "min. 6 characters",
-            "POSITION": "Position",
-            "SELECT-POSITION": "Select a position",
-            "IS-TEST-USER": "Test user"
-        },
-        "EDIT": {
-            "TITLE": "Edit profile",
-            "STATUS-NAME": "Position",
-            "IS-TEST-USER": "Test user"
-        },
-        "DELETE": {
-           "HEADER" : "Delete profile",
-           "MESSAGE": "Are you sure you want to delete profile "
-        },
-        "MESSAGES": {
-            "SUCCESS": "Success",
-            "ERROR": "Error",
-            "DELETE-SUCCESS": "Profile deleted",
-            "DELETE-ERROR": "Error deleting profile",
-            "EDIT-SUCCESS": "Profile updated",
-            "EDIT-ERROR": "Error updating profile",
-            "CREATE-SUCCESS": "Profile created",
-            "CREATE-ERROR": "Error creating profile"
-        }
-    },
-    "TASK-STATUSES-MANAGEMENT": {
-        "TITLE": "Task statuses management",
-        "ADD-NEW-STATUS": "Add new task status",
-        "NO-TASK-STATUSES": "No available task statuses",
-        "TABLE-COLUMNS": {
-            "ID": "ID",
-            "STATUS-NAME": "Status name",
-            "ACTIONS": "Actions"
-        },
-        "ADD": {
-            "TITLE": "Add task status",
-            "STATUS-NAME": "Status name",
-            "ENTER-STATUS-NAME": "Enter status name",
-            "STATUS-ERROR": "Status name is required"
-        },
-        "EDIT": {
-            "TITLE": "Edit task status",
-            "STATUS-NAME": "Status name",
-            "ENTER-STATUS-NAME": "Enter status name"
-        },
-        "DELETE": {
-           "HEADER" : "Confirm delete",
-           "MESSAGE": "Are you sure you want to delete status \"{{name}}\"?"
-        },
-        "MESSAGES": {
-            "SUCCESS": "Success",
-            "ERROR": "Error",
-            "DELETE-SUCCESS": "Task status deleted",
-            "DELETE-ERROR": "Error deleting task status",
-            "EDIT-SUCCESS": "Task status updated",
-            "EDIT-ERROR": "Error updating task status",
-            "CREATE-SUCCESS": "Task status created",
-            "CREATE-ERROR": "Error creating task status"
-        }
-    }, 
-    "HOUSE-TYPES": {
-        "TITLE": "House types management",
-        "ADD-HOUSE-TYPE": "Add new house type",
-        "NO-HOUSE-TYPES": "No available house types",
-        "TABLE-COLUMNS": {
-            "ID": "ID",
-            "TYPE-NAME": "Type name",
-            "ACTIONS": "Actions"
-        },  
-        "ADD": {
-            "TITLE": "Add house type",
-            "TYPE-NAME": "Type name",
-            "ENTER-TYPE-NAME": "Enter type name",
-            "TYPE-ERROR": "Type name is required"
-        },
-        "EDIT": {
-            "TITLE": "Edit house type",
-            "TYPE-NAME": "Type name",
-            "ENTER-TYPE-NAME": "Enter type name"
-        },
-        "DELETE": {
-           "HEADER" : "Confirm delete",
-           "MESSAGE": "Are you sure you want to delete house type \"{{name}}\"?"
-        },
-        "MESSAGES": {
-            "SUCCESS": "Success",
-            "ERROR": "Error",
-            "DELETE-SUCCESS": "House type deleted",
-            "DELETE-ERROR": "Error deleting house type",
-            "EDIT-SUCCESS": "House type deleted",
-            "EDIT-ERROR": "Error updating house type",
-            "CREATE-SUCCESS": "House type created",
-            "CREATE-ERROR": "Error creating house type"
-        }
-    },
     "RESERVATIONS": {
         "HOUSE": "House",
         "HEADER": {
@@ -512,6 +407,128 @@
         "HOUSE-DEPARTED": {
             "TITLE": "House departed",
             "BODY": "Guests have departed from house \"{{house_name}}\""
+        }
+    },
+    "CONTENT-MANAGEMENT": {
+        "TITLE": "Content management",
+        "TABS": {
+            "PROFILES": "Profiles",
+            "SEASONS": "Seasons",
+            "HOUSES": "Houses"
+        },
+        "PROFILES": {
+            "TITLE": "Profile management",
+            "ADD-NEW-PROFILE": "Add new profile",
+            "TABLE-COLUMNS": {
+                "NAME": "Name",
+                "POSITION": "Position",
+                "EMAIL": "Email",
+                "PASSWORD": "Password",
+                "ACTIONS": "Actions"
+            },
+            "ADD": {
+                "ADD-NEW-PROFILE": "Add new profile",
+                "FULL-NAME": "Full name",
+                "PASSWORD": "Password",
+                "MIN-6-CHARS": "min. 6 characters",
+                "POSITION": "Position",
+                "SELECT-POSITION": "Select a position",
+                "IS-TEST-USER": "Test user"
+            },
+            "EDIT": {
+                "TITLE": "Edit profile",
+                "FULL-NAME": "Full name",
+                "STATUS-NAME": "Position",
+                "IS-TEST-USER": "Test user"
+            },
+            "DELETE": {
+            "HEADER" : "Delete profile",
+            "MESSAGE": "Are you sure you want to delete profile "
+            },
+            "MESSAGES": {
+                "SUCCESS": "Success",
+                "ERROR": "Error",
+                "DELETE-SUCCESS": "Profile deleted",
+                "DELETE-ERROR": "Error deleting profile",
+                "EDIT-SUCCESS": "Profile updated",
+                "EDIT-ERROR": "Error updating profile",
+                "CREATE-SUCCESS": "Profile created",
+                "CREATE-ERROR": "Error creating profile"
+            }
+        },
+        "SEASONS": {
+            "TITLE": "Seasons management",
+            "ADD-NEW-SEASON": "Add new season",
+            "TABLE-COLUMNS": {
+                "YEAR": "Year",
+                "START-DATE": "Season start",
+                "END-DATE": "Season end",
+                "ACTIONS": "Actions"
+            },
+            "ADD": {
+                "TITLE": "Add new season",
+                "YEAR": "Year",
+                "SEASON-START-DATE": "Season start date",
+                "SEASON-END-DATE": "Season end date"
+            },
+            "EDIT": {
+                "TITLE": "Edit season",
+                "YEAR": "Year",
+                "SEASON-START-DATE": "Season start date",
+                "SEASON-END-DATE": "Season end date"
+            },
+            "DELETE": {
+                "TITLE": "Delete season",
+                "TEXT": "Are you sure you want to delete season "
+            },
+            "MESSAGES": {
+                "SUCCESS": "Success",
+                "ERROR": "Error",
+                "DELETE-SUCCESS": "Season deleted",
+                "DELETE-ERROR": "Error deleting season",
+                "EDIT-SUCCESS": "Season updated",
+                "EDIT-ERROR": "Error updating season",
+                "CREATE-SUCCESS": "Season created",
+                "CREATE-ERROR": "Error creating season"
+            }
+        },
+        "HOUSES": {
+            "TITLE": "Houses management",
+            "ADD-NEW-HOUSE": "Add new house",
+            "TABLE-COLUMNS": {
+                "HOUSE-NUMBER": "House number",
+                "HOUSE-NAME": "House name",
+                "HOUSE-TYPE": "House type",
+                "ACTIONS": "Actions"
+            },
+            "ADD": {
+                "TITLE": "Add new house",
+                "HOUSE-NUMBER": "House number",
+                "HOUSE-NAME": "House name",
+                "HOUSE-TYPE": "House type"
+            },
+            "EDIT": {
+                "TITLE": "Edit house",
+                "HOUSE-NUMBER": "House number",
+                "HOUSE-NAME": "House name",
+                "HOUSE-TYPE": "House type"
+            },
+            "DELETE": {
+                "TITLE": "Delete house",
+                "TEXT": "Are you sure you want to delete house"
+            },
+            "MESSAGES": {
+                "SUCCESS": "Success",
+                "ERROR": "Error",
+                "DELETE-SUCCESS": "House deleted",
+                "DELETE-ERROR": "Error deleting house",
+                "EDIT-SUCCESS": "House updated",
+                "EDIT-ERROR": "Error updating house",
+                "CREATE-SUCCESS": "House created",
+                "CREATE-ERROR": "Error creating house"
+            },
+            "HOUSE-NUMBER-EXISTS-ERROR": "A house with the same number already exists",
+            "HOUSE-NAME-EXISTS-ERROR": "A house with the same name already exists"
         }
     }
 }

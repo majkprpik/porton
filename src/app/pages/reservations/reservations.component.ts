@@ -734,7 +734,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
             next: ([houses, tempHouses, houseTypes]) => {
-                this.houses.set(houses);
+                this.houses.set(houses.sort((a, b) => a.house_number - b.house_number));
                 this.tempHouses = tempHouses;
                 this.houseTypes.set(houseTypes.filter(t => t.house_type_name != 'dodatno'));
 

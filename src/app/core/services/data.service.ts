@@ -183,6 +183,12 @@ export class DataService {
     }
   }
 
+  setHouses(house: House[]){
+    if(house){
+      this.housesSubject.next(house);
+    }
+  }
+
   private logData(source: string, data: any): void {
     if (this.debug) {
       //console.log(`[DataService] ${source}:`, data);
@@ -431,7 +437,7 @@ export class DataService {
   loadHouses(): Observable<House[]> {
     this.loadingSubject.next(true);
 
-    return from(this.supabaseService.getData('houses', this.schema)).pipe(
+    return from(this.supabaseService.getData('houses', this.schema, { column: 'is_deleted', value: false })).pipe(
       tap((data) => {
         if (data) {
           this.housesSubject.next(data);
