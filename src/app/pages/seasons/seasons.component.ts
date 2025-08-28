@@ -112,7 +112,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
         <p-button 
           [label]="'BUTTONS.CANCEL' | translate" 
           icon="pi pi-times" 
-          (click)="hideDialog()" 
+          (click)="hideDialogs()" 
           styleClass="p-button-text"
         ></p-button>
         <p-button 
@@ -130,7 +130,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
         <p-button 
           [label]="'BUTTONS.CANCEL' | translate" 
           icon="pi pi-times" 
-          (click)="hideDialog()" 
+          (click)="hideDialogs()" 
           styleClass="p-button-text"
         ></p-button>
         <p-button 
@@ -175,7 +175,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
         <p-button 
           [label]="'BUTTONS.CANCEL' | translate" 
           icon="pi pi-times" 
-          (click)="hideDialog()" 
+          (click)="hideDialogs()" 
           styleClass="p-button-text"
         ></p-button>
         <p-button 
@@ -270,7 +270,11 @@ export class SeasonsComponent {
     this.isDeleteSeasonModuleVisible = true;
   }
 
-  hideDialog(){
+  hideDialogs(){
+    this.isCreateSeasonModuleVisible = false;
+    this.isEditSeasonModuleVisible = false;
+    this.isDeleteSeasonModuleVisible = false;
+
     this.selectedSeason = undefined;
   }
 
