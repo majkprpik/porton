@@ -1,6 +1,6 @@
 import { WorkScheduleExportFormComponent } from './work-schedule-form/work-schedule-export-form.component';
 import { Component, effect, signal } from '@angular/core';
-import { Departments, Profile, ProfileRole, ProfileRoles, ProfileWorkDay, ProfileWorkSchedule, ScheduleCellData } from '../../core/models/data.models';
+import { Departments, Profile, ProfileRole, ProfileRoles, ProfileWorkDay, ProfileWorkSchedule, ScheduleCellData, Season } from '../../core/models/data.models';
 import { combineLatest, firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -36,6 +36,13 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
               ></p-button>  
             }
           </div>
+
+          <div class="year-switcher">
+              <p-button [disabled]="isFirstSeason(selectedSeason)" (onClick)="generatePreviousSeasonsTable()" icon="pi pi-angle-left"></p-button>
+              <span>{{ selectedSeason.year }}</span>
+              <p-button [disabled]="isLastSeason(selectedSeason)" (onClick)="generateNextSeasonsTable()" icon="pi pi-angle-right"></p-button>
+          </div>
+
           <div class="schedule-buttons">
             <div 
               class="quick-delete"
@@ -95,7 +102,8 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
             </div>
           </div>
         </div>
-        @if(isDeletingOverlayVisible || isCreatingOverlayVisible){
+
+        @if(isDeletingOverlayVisible || isCreatingOverlayVisible || isLoadingOverlayVisible){
           <div class="loading-overlay">
             <div class="loading-message">
               <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
@@ -104,6 +112,8 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                   {{ 'WORK-SCHEDULE.OVERLAY.DELETING-MESSAGE' | translate }}
                 } @else if(isCreatingOverlayVisible){
                   {{ 'WORK-SCHEDULE.OVERLAY.CREATING-MESSAGE' | translate }}
+                } @else if(isLoadingOverlayVisible) {
+                  {{ 'WORK-SCHEDULE.OVERLAY.LOADING-MESSAGE' | translate }}
                 }
               </b>
             </div>
@@ -208,6 +218,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
             [visible]="showExportScheduleForm"
             [filteredProfiles]="filteredProfiles"
             [gridMatrix]="exportMatrix"
+            [season]="selectedSeason"
             (visibleChange)="handleScheduleExportFormVisibilityChange($event)"
             (weekChange)="handleWeekChange($event)"
           >
@@ -230,6 +241,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         width: 100%;
         display: flex;
         flex-direction: row;
+        align-items: start;
         justify-content: space-between;
 
         .profile-buttons{
@@ -240,9 +252,24 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
           padding-bottom: 10px;
         }
 
-        .schedule-buttons{
+        .year-switcher {
           display: flex;
           flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          width: 200px;
+
+          span{
+            font-weight: bold;
+            font-size: 28px;
+          }
+        }
+
+        .schedule-buttons{
+          width: 500px;
+          display: flex;
+          flex-direction: row;
+          justify-content: flex-end;
           gap: 15px;
 
           .quick-delete{
@@ -630,7 +657,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
     `
 })
 export class WorkScheduleComponent {
-  days = signal<Date[]>(this.generateDays());
+  days = signal<Date[]>([]);
 
   fullWorkSchedule: ProfileWorkSchedule[] = [];
   profiles: Profile[] = [];
@@ -649,6 +676,15 @@ export class WorkScheduleComponent {
   selectedEndDate: Date = new Date();
   editingSchedule: ProfileWorkSchedule | undefined = undefined;
   schedulesToDelete: ProfileWorkSchedule[] = [];
+  seasons: Season[] = [];
+  selectedSeason: Season = {
+      id: -1,
+      year: new Date().getFullYear(),
+      season_start_date: new Date().getFullYear() + "03-15",
+      season_end_date: new Date().getFullYear() + "11-15",
+      created_at: new Date().toString(),
+      updated_at: new Date().toString(),
+  };
 
   nextProfileScheduleDate: Date | null = null;
 
@@ -662,6 +698,7 @@ export class WorkScheduleComponent {
 
   isDeletingOverlayVisible = false;
   isCreatingOverlayVisible = false;
+  isLoadingOverlayVisible = false;
 
   selectedScheduleId: number | null = null;
 
@@ -714,15 +751,18 @@ export class WorkScheduleComponent {
       this.dataService.profileWorkSchedule$.pipe(nonNull()), 
       this.dataService.profileRoles$.pipe(nonNull()),
       this.dataService.profileWorkDays$.pipe(nonNull()),
+      this.dataService.seasons$.pipe(nonNull()),
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ([profiles, schedule, profileRoles, profileWorkDays]) => {
+        next: ([profiles, schedule, profileRoles, profileWorkDays, seasons]) => {
           this.profiles = profiles.filter(p => !p.is_deleted || p.is_test_user);
           this.fullWorkSchedule = schedule;
           this.profileRoles = profileRoles;
           this.profileWorkDays = profileWorkDays;
+          this.seasons = seasons;
 
+          this.generateInitDays();
           this.applyProfileFilters();
           this.updateGridMatrix();
         },
@@ -930,24 +970,6 @@ export class WorkScheduleComponent {
     }
 
     return SchedulecellData;
-  }
-
-  private generateDays(): Date[] {
-    const days: Date[] = [];
-    const currentYear = new Date().getFullYear(); 
-    const startDate = new Date(currentYear, 2, 31); 
-    const endDate = new Date(currentYear, 10, 15); 
-
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(0, 0, 0, 0);
-
-    let currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
-      days.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    return days;
   }
 
   isToday(date: Date): boolean {
@@ -1491,9 +1513,10 @@ export class WorkScheduleComponent {
 
   openExportSchedule(){
     const today = new Date();
+    const year = new Date(this.selectedSeason.year, today.getMonth(), today.getDate());
 
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - today.getDay() + 1); // Monday
+    const monday = new Date(year);
+    monday.setDate(year.getDate() - year.getDay() + 1); // Monday
     monday.setHours(0, 0, 0, 0);
 
     const sunday = new Date(monday);
@@ -1510,5 +1533,72 @@ export class WorkScheduleComponent {
 
   onQuickDelete() {
     this.isDeleteMode = !this.isDeleteMode;
+  }
+
+  private generateDaysForSeason(season: Season): Date[] {
+    const days: Date[] = [];
+    const startDate = new Date(season.season_start_date);
+    const endDate = new Date(season.season_end_date);
+    
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      days.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return days;
+  }
+
+  generateInitDays(){
+    if(this.selectedSeason.id != -1) return;
+
+    const season = this.seasons.find(s => s.year == new Date().getFullYear());
+    if(season) {
+      this.selectedSeason = season;
+    } 
+
+    this.days.set(this.generateDaysForSeason(this.selectedSeason));
+  }
+
+  generateNextSeasonsTable(){
+    this.isLoadingOverlayVisible = true;
+
+    setTimeout(() => {
+      const index = this.seasons.findIndex(s => s.id == this.selectedSeason?.id);
+
+      if(index != -1 || index >= this.seasons.length - 1){
+        this.selectedSeason = this.seasons[index + 1];
+        this.days.set(this.generateDaysForSeason(this.selectedSeason));
+        this.updateGridMatrix();
+      }
+      this.isLoadingOverlayVisible = false;
+    }, 0);
+  }
+
+  generatePreviousSeasonsTable(){
+    this.isLoadingOverlayVisible = true;
+
+    setTimeout(() => {
+      const index = this.seasons.findIndex(s => s.id == this.selectedSeason?.id);
+      if(index != -1 || index >= 0){
+        this.selectedSeason = this.seasons[index - 1];
+        this.days.set(this.generateDaysForSeason(this.selectedSeason));
+        this.updateGridMatrix();
+      }
+      this.isLoadingOverlayVisible = false;
+    }, 0);
+  }
+
+  isFirstSeason(season: Season){
+    const index = this.seasons.findIndex(s => s.id == season.id);
+    return index == 0;
+  }
+
+  isLastSeason(season: Season){
+    const index = this.seasons.findIndex(s => s.id == season.id);
+    return index == this.seasons.length - 1;
   }
 }

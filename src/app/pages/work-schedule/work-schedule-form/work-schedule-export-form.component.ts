@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { DocumentOrientations, ExportTypes, Profile, ScheduleCellData } from '../../../core/models/data.models';
+import { DocumentOrientations, ExportTypes, Profile, ScheduleCellData, Season } from '../../../core/models/data.models';
 import { LayoutService } from '../../../layout/services/layout.service';
 
 @Component({
@@ -38,13 +38,13 @@ import { LayoutService } from '../../../layout/services/layout.service';
       </ng-template>
 
       <div class="export-schedule-date">
-        <p-button [disabled]="isExporting" (onClick)="getPreviousWeek()" icon="pi pi-angle-left"></p-button>
+        <p-button [disabled]="isExporting || isSeasonStartWeek" (onClick)="getPreviousWeek()" icon="pi pi-angle-left"></p-button>
         <div class="schedule-week">
             <b>
-              {{ days()[0] | date: 'EEE' }} {{ days()[0] | date: 'dd.M.' }} - {{ days()[6] | date: 'EEE' }} {{ days()[6] | date: 'dd.M.' }}
+              {{ days()[0] | date: 'EEE' }} {{ days()[0] | date: 'dd.M.' }} - {{ days()[days().length - 1] | date: 'EEE' }} {{ days()[days().length - 1] | date: 'dd.M.' }}
             </b>
           </div>
-        <p-button [disabled]="isExporting" (onClick)="getNextWeek()" icon="pi pi-angle-right"></p-button>
+        <p-button [disabled]="isExporting || isSeasonEndWeek" (onClick)="getNextWeek()" icon="pi pi-angle-right"></p-button>
       </div>
       
       <div  class="export-table-container">
@@ -381,11 +381,12 @@ export class WorkScheduleExportFormComponent {
   @Input() visible: boolean = false;
   @Input() filteredProfiles: Profile[] = [];
   @Input() gridMatrix = signal<ScheduleCellData[][]>([]);
+  @Input() season?: Season; 
 
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() weekChange = new EventEmitter<{monday: Date, sunday: Date}>();
 
-  days = signal<Date[]>(this.generateDays());
+  days = signal<Date[]>([]);
   isNightMode: boolean | undefined = undefined;
   
   weekOffset = 0;
@@ -404,6 +405,9 @@ export class WorkScheduleExportFormComponent {
 
   selectedOrientation = DocumentOrientations.Portrait;
 
+  isSeasonStartWeek = false;
+  isSeasonEndWeek = false;
+
   constructor(
     private layoutService: LayoutService,
   ) {
@@ -413,7 +417,7 @@ export class WorkScheduleExportFormComponent {
   }
 
   ngOnInit(){
-    console.log(this.gridMatrix);
+    this.days.set(this.generateDays());
   }
 
   onCancel() {
@@ -466,24 +470,47 @@ export class WorkScheduleExportFormComponent {
   }
 
   private generateDays(offsetWeeks: number = 0): Date[] {
+    if(!this.season) return [];
+
     const days: Date[] = [];
     const today = new Date();
 
-    // Apply offset
-    today.setDate(today.getDate() + offsetWeeks * 7);
+    const year = new Date(this.season.year, today.getMonth(), today.getDate());
+    year.setDate(year.getDate() + offsetWeeks * 7);
 
-    // Find Monday of this week
-    const dayOfWeek = today.getDay();
-    const monday = new Date(today);
+    const dayOfWeek = year.getDay();
+    const monday = new Date(year);
     const diffToMonday = (dayOfWeek + 6) % 7;
-    monday.setDate(today.getDate() - diffToMonday);
+    monday.setDate(year.getDate() - diffToMonday);
     monday.setHours(0, 0, 0, 0);
 
-    // Build the week
+    const seasonStart = new Date(this.season.season_start_date);
+    const seasonEnd = new Date(this.season.season_end_date);
+    seasonStart.setHours(0, 0, 0, 0);
+    seasonEnd.setHours(23, 59, 59, 999);
+
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
-      days.push(d);
+
+      if (d >= seasonStart && d <= seasonEnd) {
+        days.push(d);
+      }
+    }
+
+    if(days[0] <= seasonStart) {
+      this.isSeasonStartWeek = true;
+    } else {
+      this.isSeasonStartWeek = false;
+    }
+
+    const adjustedEndDay = days[days.length - 1];
+    adjustedEndDay.setHours(23, 59, 59, 999);
+
+    if(adjustedEndDay >= seasonEnd) {
+      this.isSeasonEndWeek = true;
+    } else {
+      this.isSeasonEndWeek = false;
     }
 
     return days;
