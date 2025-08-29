@@ -242,8 +242,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                                                 }
 
                                                 <div class="camera-icon-container" (click)="openCamera()">
-                                                    <span class="camera-icon">📷</span>
-                                                    <span class="camera-icon-label">{{ 'APP-LAYOUT.TASK-DETAILS.CAPTURE-IMAGE' | translate }}</span>
+                                                    <span class="camera-icon"><i class="pi pi-camera" style="font-size: 2rem"></i></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -366,8 +365,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                             }
 
                             <div class="camera-icon-container" (click)="openCamera()">
-                                <span class="camera-icon">📷</span>
-                                <span class="camera-icon-label">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.CAPTURE-IMAGE' | translate }}</span>
+                                <span class="camera-icon"><i class="pi pi-camera" style="font-size: 2rem"></i></span>
                             </div>
                         </div>
                     </div>
@@ -649,17 +647,17 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     }
 
                     .camera-icon-container {
-                        margin: 10px 10px 10px 10px;
+                        margin: 20px;
                         flex: 0 0 auto;
-                        width: 150px;
-                        height: 50px;
+                        width: 70px;
+                        height: 70px;
                         display: flex;
                         flex-direction: column;
                         align-items: center;
                         justify-content: center;
                         color: gray;
-                        background-color: var(--surface-border);
-                        border-radius: 5px;
+                        border-radius: 50%;
+                        border: 3px solid var(--surface-border);
 
                         &:hover {
                             cursor: pointer;
@@ -1487,6 +1485,7 @@ export class AppLayout {
             this.taskService.$taskModalData.next(null);
         }
 
+        this.taskImages = [];
         this.task = undefined;
     }
 
