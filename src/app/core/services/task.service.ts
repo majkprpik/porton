@@ -163,10 +163,38 @@ export class TaskService {
   
       if (deleteTaskImageError) throw deleteTaskImageError;
   
-      console.log(`Image ${filePath} deleted successfully.`);
       return true;
     } catch (error: any) {
       console.error('Error removing image:', error);
+      return null
+    }
+  }
+
+  async deleteAllImagesForTask(taskId: number){
+    try {
+      const folder = `task-${taskId}`;
+
+      const { data: files, error: listError } = await this.supabaseService.getClient()
+        .storage
+        .from('damage-reports-images')
+        .list(folder, { limit: 100, offset: 0 });
+
+      if (listError) throw listError;
+
+      if (!files || files.length === 0) return true;
+
+      const paths = files.map(f => `${folder}/${f.name}`);
+
+      const { error: deleteError } = await this.supabaseService.getClient()
+        .storage
+        .from('damage-reports-images')
+        .remove(paths);
+
+      if (deleteError) throw deleteError;
+
+      return true;
+    } catch (error: any) {
+      console.error('Error removing images for task: ' + taskId, error);
       return null
     }
   }
@@ -214,6 +242,8 @@ export class TaskService {
         const filteredTasks = this.tasks.filter(t => t.task_id != deletedTask.task_id);
         this.dataService.setTasks(filteredTasks);
       }
+
+      this.deleteAllImagesForTask(deletedTask.task_id);
 
       return deletedTask;
     } catch (error){
