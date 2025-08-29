@@ -427,6 +427,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
             &.today-column {
               background-color: #e3f2fd !important;
               font-weight: 900;
+              position: sticky;
               color: #0277bd;
               box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
               border-top: 2px solid #2196f3 !important;
