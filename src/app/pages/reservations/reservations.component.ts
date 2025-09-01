@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, HostListener, effect } from '@angular/core';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { House, HouseAvailability, HouseType, Season } from '../../core/models/data.models';
-import { Subject, takeUntil, combineLatest } from 'rxjs';
+import { Subject, takeUntil, combineLatest, pipe, take, Subscription } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
@@ -730,27 +730,29 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         combineLatest([
             this.dataService.houses$.pipe(nonNull()),
             this.dataService.tempHouses$.pipe(nonNull()),
-            this.dataService.houseTypes$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-            next: ([houses, tempHouses, houseTypes]) => {
+            next: ([houses, tempHouses]) => {
                 this.houses.set(houses.sort((a, b) => a.house_number - b.house_number));
                 this.tempHouses = tempHouses;
-                this.houseTypes.set(houseTypes.filter(t => t.house_type_name != 'dodatno'));
 
                 if(houses.length && tempHouses.length){
                     this.updateGridMatrix();
-                }
-            
-                if (houseTypes && houseTypes.length) {
-                    this.setSelectedHouseType(houseTypes[0].house_type_id);
                 }
             },
             error: (error) => {
                 console.error(error);
             }
         });
+
+        this.dataService.houseTypes$
+            .pipe(nonNull())
+            .pipe(take(1))
+            .subscribe(ht => {
+                this.houseTypes.set(ht.filter(t => t.house_type_name != 'dodatno'));
+                this.setSelectedHouseType(ht[0].house_type_id);
+            });
 
         combineLatest([
             this.dataService.houseAvailabilities$.pipe(nonNull()),
