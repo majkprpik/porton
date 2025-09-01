@@ -122,7 +122,5 @@ export class StatisticsComponent {
   occupancyMetricsChartTypes: ChartType[] = ['line'];
   staffMetricsChartTypes: ChartType[] = ['bar'];
 
-  constructor(
-
-  ) {}
+  constructor() {}
 }

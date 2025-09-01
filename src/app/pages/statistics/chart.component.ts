@@ -323,6 +323,8 @@ export class ChartComponent {
       this.selectedMetrics.push('adults');
     } else if(this.dataType == 'staff'){
       this.chartType = 'bar';
+      this.selectedMetrics = [];
+      this.selectedMetrics.push('totalCompletedTasks');
     }
 
     combineLatest([
@@ -651,7 +653,6 @@ export class ChartComponent {
         }
 
         for(let profileIndex = 0; profileIndex < this.profiles.length; profileIndex++){
-
           const completedTasksForProfile = completedTasksInSeason.filter(t => t.completed_by == this.profiles[profileIndex].id);
           monthlyData[profileIndex] += completedTasksForProfile.length;
         }
@@ -997,6 +998,18 @@ export class ChartComponent {
   }
 
   createChartData(chartData: ChartData, isHorizontalBar: boolean = false) {
+    if(this.dataType == 'staff') {
+      const combined = this.xLabels.map((label: string, i: number) => ({
+        label,
+        value: chartData.datasets[0].data[i]
+      }));
+
+      combined.sort((a, b) => b.value - a.value);
+      const sortedValues = combined.map(item => item.value);
+
+      chartData.datasets[0].data = sortedValues;
+    }
+
     this.data = {
       labels: this.xLabels,
       datasets: chartData.datasets
@@ -1016,10 +1029,8 @@ export class ChartComponent {
       scales: {
         x: {
           ticks: {
-            color: chartData.textColorSecondary,
-        autoSkip: false,       // ✅ show all labels
-        maxRotation: 90,       // ✅ rotate if too long
-        minRotation: 45
+            color: chartData.textColor,
+            autoSkip: false,  
           },
           grid: {
             color: chartData.surfaceBorder
@@ -1029,7 +1040,7 @@ export class ChartComponent {
           min: 0,
           max: chartData.hasOccupancy ? Math.max(100, chartData.maxDataValue) : undefined,
           ticks: {
-            color: chartData.textColorSecondary,
+            color: chartData.textColor,
             autoSkip: false,  
             callback: isHorizontalBar
             ? (value: any, index: number) => this.xLabels[index]
