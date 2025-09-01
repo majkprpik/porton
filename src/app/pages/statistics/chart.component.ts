@@ -1042,8 +1042,10 @@ export class ChartComponent {
         x: {
           ticks: {
             color: chartData.textColor,
-            autoSkip: false,  
-            stepSize: 1,
+            autoSkip: false,
+            callback: (value: any) => {
+              return Number.isInteger(value) ? value : null;
+            }
           },
           grid: {
             color: chartData.surfaceBorder
