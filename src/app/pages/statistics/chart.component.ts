@@ -677,7 +677,7 @@ export class ChartComponent {
   
       if(this.selectedHouseNumber == 'All'){
         this.houseAvailabilities.forEach((availability: any) => {
-          if(availability.house_availability_start_date.startsWith(wantedDate)){
+          if(availability.house_availability_start_date.startsWith(wantedDate) || availability.house_availability_end_date.startsWith(wantedDate)){
             monthlyData[month] += availability[metric] ? availability[metric] : 0;
           }
         });
@@ -793,29 +793,6 @@ export class ChartComponent {
     });
 
     (this.chartType == 'pie' || this.chartType == 'doughnut') ? this.initPieChart() : this.initChart();
-  }
-
-  generateStaffDataset(){
-    this.resetTotalMonthlyData();
-
-    this.selectedMetrics.forEach(metric => {
-      this.initEmptyMetrics(metric);
-
-      const currentDate = this.selectedMonth;
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
-
-      let data = Array(daysInMonth).fill(0);
-
-
-
-    });
-  }
-
-  getCompletedTasksForMonth(){
-    
   }
 
   generateYearlyDataset() {
