@@ -322,6 +322,11 @@
         }
     },
     "STATISTICS": {
+        "TITLES": {
+            "GENERAL": "Opća statistika",
+            "OCCUPANCY": "Statistika popunjenosti",
+            "STAFF": "Statistika osoblja"
+        },
         "SELECT": {
             "TITLE": {
                 "MONTH": "Mjesec",

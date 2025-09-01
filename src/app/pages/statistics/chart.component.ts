@@ -30,7 +30,9 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
   template: `
     <div class="chart-container">
       <div class="header">
-        <h1>{{title}}</h1>
+        <div class="left-side">
+          <h1>{{ 'STATISTICS.TITLES.' + dataType | uppercase | translate }}</h1>
+        </div>
 
         @if(canSelectDiagramType){
           <div class="field">

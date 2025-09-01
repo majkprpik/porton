@@ -322,6 +322,11 @@
         }
     },
     "STATISTICS": {
+        "TITLES": {
+            "GENERAL": "General statistics",
+            "OCCUPANCY": "Occupancy statistics",
+            "STAFF": "Staff statistics"
+        },
         "SELECT": {
             "TITLE": {
                 "MONTH": "Month",
