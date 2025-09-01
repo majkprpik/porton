@@ -40,7 +40,7 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
           ></app-chart>
         </div>
       </div>
-      <!-- <div class="middle-statistics">
+      <div class="middle-statistics">
         <div class="profile-statistics">
           <app-chart
             [title]="'Staff statistics'"
@@ -53,10 +53,10 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
             [chartTypes]="staffMetricsChartTypes"
           ></app-chart>
         </div>
-        <div class="profile-statistics">
+        <!-- <div class="profile-statistics">
 
-        </div>
-      </div> -->
+        </div> -->
+      </div>
     </div>
   `,
   styles: `
@@ -84,7 +84,6 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
           padding: 20px;
         }
       }
-
     }
   `
 })

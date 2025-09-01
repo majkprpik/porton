@@ -81,7 +81,7 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
 
       <div class="fields">
         @for(metricField of metricFields; track $index){
-          @if(metricField == 'month'){
+          @if(metricField == 'month' && timePeriod == 'month'){
             <div class="field">
               <label for="month" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.MONTH' | translate }}*</label>
               <p-select 
@@ -268,6 +268,7 @@ export class ChartComponent {
   houses: House[] = [];
   houseNumbers: string[] = ['All'];
   tasks: Task[] = [];
+  profiles: Profile[] = [];
 
   data: any;
   options: any;
@@ -333,7 +334,11 @@ export class ChartComponent {
       this.houseAvailabilities = houseAvailabilities;
       this.houses = houses;
       this.tasks = tasks;
-      this.staff = profiles.map(profile => profile.first_name ?? 'Staff');
+      this.profiles = profiles
+        .filter(p => !p.is_deleted && !p.is_test_user);
+      this.staff = profiles
+        .filter(p => !p.is_deleted && !p.is_test_user)
+        .map(profile => profile.first_name ?? 'Staff');
 
       this.houses.forEach(house => {
         if(!this.houseNumbers.includes(house.house_number.toString()) && house.house_name != 'Zgrada' && house.house_name != 'Parcele'){
@@ -449,7 +454,11 @@ export class ChartComponent {
     if(this.timePeriod == 'year'){
       return Array(this.months.length).fill(0); 
     } else if (this.timePeriod == 'season'){
-      return Array(this.season.length).fill(0);
+      if(this.dataType == 'staff'){
+        return Array(this.profiles.length).fill(0);
+      } else {
+        return Array(this.season.length).fill(0);
+      }
     }
 
     return [];
@@ -505,15 +514,46 @@ export class ChartComponent {
   getTaskDataForMonth(metric: string, year: number, month: number){
     const tasks = this.filterTasksForMetric(metric, year, month);
     const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    let data = Array(daysInMonth).fill(0); 
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dayString = `${wantedDate}-${day.toString().padStart(2, '0')}`;
-      const countForDay = tasks.filter(task => task.created_at.startsWith(dayString)).length;
 
-      data[day - 1] = countForDay;
-    }
+    let data; 
+
+    if(this.dataType == 'staff') {
+      const numberOfProfiles = this.staff.length;
+      data = Array(numberOfProfiles).fill(0)
+
+      for (let profileIndex = 0; profileIndex <= numberOfProfiles - 1; profileIndex++) {
+        const profile = this.profiles[profileIndex];
+
+        if(this.selectedHouseNumber == 'All'){
+          const completedTasksByProfileCount = this.tasks.filter(t =>
+            t.completed_by == profile.id && 
+            t.end_time?.split('T')[0].substring(0, 7) == wantedDate
+          ).length;
+
+          data[profileIndex] = completedTasksByProfileCount;
+        } else {
+          const house = this.houses.find(h => h.house_name == this.selectedHouseNumber)
+
+          const completedHouseTasksByProfileCount = this.tasks.filter(t => 
+            t.completed_by == profile.id && 
+            t.house_id == house?.house_id && 
+            t.end_time?.split('T')[0].substring(0, 7) == wantedDate
+          ).length;
+
+          data[profileIndex] = completedHouseTasksByProfileCount;
+        }
+      }
+    } else {
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      data = Array(daysInMonth).fill(0)
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayString = `${wantedDate}-${day.toString().padStart(2, '0')}`;
+        const countForDay = tasks.filter(task => task.created_at.startsWith(dayString)).length;
+  
+        data[day - 1] = countForDay;
+      }
+    }  
 
     return data;
   }
@@ -551,44 +591,79 @@ export class ChartComponent {
 
   filterTasksForMetric(metric: string, year: number, month: number){
     let tasks;
-  
     const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
-  
-    if(this.selectedHouseNumber == 'All'){
-      tasks = this.tasks.filter(task => 
-        task.created_at.startsWith(wantedDate)
-      );
-    } else {
-      tasks = this.tasks.filter(task => 
-        task.house_id == this.selectedHouseId &&
-        task.created_at.startsWith(wantedDate)
-      );
-    }
-  
-    if(metric.includes('Total')) return tasks;
 
-    if(metric.includes('Repair')){
-      tasks = tasks.filter(task => this.taskService.isRepairTask(task));
-    } else if(metric.includes('House')){
-      tasks = tasks.filter(task => this.taskService.isHouseCleaningTask(task));
-    } else if(metric.includes('Deck')){
-      tasks = tasks.filter(task => this.taskService.isDeckCleaningTask(task));
-    } else if(metric.includes('Unscheduled')){
-      tasks = tasks.filter(task => task.is_unscheduled);
-    } else if(metric.includes('Towel')){
-      tasks = tasks.filter(task => this.taskService.isTowelChangeTask(task));
-    } else if(metric.includes('Sheet')){
-      tasks = tasks.filter(task => this.taskService.isSheetChangeTask(task));
+    if(metric == 'totalCompletedTasks'){
+      if(this.selectedHouseNumber == 'All'){
+        tasks = this.tasks.filter(task => 
+          task.completed_by && 
+          task.end_time?.split('T')[0].substring(0, 7) == wantedDate
+        );
+      } else {
+        tasks = this.tasks.filter(task => 
+          task.completed_by && 
+          task.house_id == this.selectedHouseId &&
+          task.end_time?.split('T')[0].substring(0, 7) == wantedDate
+        );
+      }
+    } else {
+      if(this.selectedHouseNumber == 'All'){
+        tasks = this.tasks.filter(task => 
+          task.created_at.startsWith(wantedDate)
+        );
+      } else {
+        tasks = this.tasks.filter(task => 
+          task.house_id == this.selectedHouseId &&
+          task.created_at.startsWith(wantedDate)
+        );
+      }
+    
+      if(metric.includes('Total') || metric.includes('total')) return tasks;
+  
+      if(metric.includes('Repair')){
+        tasks = tasks.filter(task => this.taskService.isRepairTask(task));
+      } else if(metric.includes('House')){
+        tasks = tasks.filter(task => this.taskService.isHouseCleaningTask(task));
+      } else if(metric.includes('Deck')){
+        tasks = tasks.filter(task => this.taskService.isDeckCleaningTask(task));
+      } else if(metric.includes('Unscheduled')){
+        tasks = tasks.filter(task => task.is_unscheduled);
+      } else if(metric.includes('Towel')){
+        tasks = tasks.filter(task => this.taskService.isTowelChangeTask(task));
+      } else if(metric.includes('Sheet')){
+        tasks = tasks.filter(task => this.taskService.isSheetChangeTask(task));
+      }
     }
 
     return tasks;
   }
 
   calculateTaskMetric(metric: string, year: number, monthlyData: any){
-    for (let month = 0; month < this.months.length - 1; month++) {
-      const tasks = this.filterTasksForMetric(metric, year, month);
-  
-      monthlyData[month] += tasks.length;
+    if(this.timePeriod == 'season'){
+      if(metric == 'totalCompletedTasks') {
+        let completedTasksInSeason = [];
+
+        for (let month = 0; month < this.season.length - 1; month++) {
+          const tasks = this.filterTasksForMetric(metric, year, this.getMonthIndex(month));
+          completedTasksInSeason.push(...tasks);
+        }
+
+        for(let profileIndex = 0; profileIndex < this.profiles.length; profileIndex++){
+
+          const completedTasksForProfile = completedTasksInSeason.filter(t => t.completed_by == this.profiles[profileIndex].id);
+          monthlyData[profileIndex] += completedTasksForProfile.length;
+        }
+      } else {
+        for (let month = 0; month < this.season.length - 1; month++) {
+          const tasks = this.filterTasksForMetric(metric, year, this.getMonthIndex(month));
+          monthlyData[month] += tasks.length;
+        }
+      }
+    } else {
+      for (let month = 0; month < this.months.length - 1; month++) {
+        const tasks = this.filterTasksForMetric(metric, year, month);
+        monthlyData[month] += tasks.length;
+      }
     }
 
     return monthlyData;
@@ -664,7 +739,7 @@ export class ChartComponent {
       const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
 
       let data = Array(daysInMonth).fill(0);
-      const isTaskMetric = metric.includes('tasks');
+      const isTaskMetric = metric.includes('tasks') || metric.includes('Tasks');
       const isOccupancyMetric = metric.includes('occupancy');
 
       if(isOccupancyMetric){
@@ -743,7 +818,6 @@ export class ChartComponent {
 
   generateYearlyDataset() {
     this.resetTotalMonthlyData();
-
     const year = new Date().getFullYear(); 
     
     this.selectedMetrics.forEach(metric => {
@@ -751,7 +825,7 @@ export class ChartComponent {
 
       let monthlyData = this.initMonthlyData();
 
-      const isTaskMetric = metric.includes('tasks');
+      const isTaskMetric = metric.includes('tasks') || metric.includes('Tasks');
       const isOccupancyMetric = metric.includes('occupancy');
 
       let metricData;
@@ -963,7 +1037,10 @@ export class ChartComponent {
       scales: {
         x: {
           ticks: {
-            color: chartData.textColorSecondary
+            color: chartData.textColorSecondary,
+        autoSkip: false,       // ✅ show all labels
+        maxRotation: 90,       // ✅ rotate if too long
+        minRotation: 45
           },
           grid: {
             color: chartData.surfaceBorder
@@ -974,6 +1051,7 @@ export class ChartComponent {
           max: chartData.hasOccupancy ? Math.max(100, chartData.maxDataValue) : undefined,
           ticks: {
             color: chartData.textColorSecondary,
+            autoSkip: false,  
             callback: isHorizontalBar
             ? (value: any, index: number) => this.xLabels[index]
             : undefined
