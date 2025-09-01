@@ -8,7 +8,7 @@ import { SelectModule } from 'primeng/select';
 import { CommonModule, isPlatformBrowser, TitleCasePipe } from '@angular/common';
 import { House, HouseAvailability, Profile, Task } from '../../core/models/data.models';
 import { TaskService } from '../../core/services/task.service';
-import { combineLatest } from 'rxjs';
+import { combineLatest, take } from 'rxjs';
 import { LayoutService } from '../../layout/services/layout.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
@@ -330,7 +330,9 @@ export class ChartComponent {
       this.dataService.houses$.pipe(nonNull()),
       this.dataService.tasks$.pipe(nonNull()),
       this.dataService.profiles$.pipe(nonNull()),
-    ]).subscribe(([houseAvailabilities, houses, tasks, profiles]) => {
+    ])
+    .pipe(take(1))
+    .subscribe(([houseAvailabilities, houses, tasks, profiles]) => {
       this.houseAvailabilities = houseAvailabilities;
       this.houses = houses;
       this.tasks = tasks;
