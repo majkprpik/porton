@@ -126,9 +126,9 @@ export class AuthService {
       if(storedUserID && deviceId){
         await this.pushNotificationsService.deleteUserDeviceData(storedUserID, deviceId);
       }
-      await this.supabaseService.getClient().auth.signOut();
 
-      localStorage.clear();
+      await this.supabaseService.getClient().auth.signOut();
+      this.clearLocalStorage();
 
       await this.router.navigate(['/login']);
     } catch (error) {
@@ -138,6 +138,17 @@ export class AuthService {
     } finally {
       this.isLoggingOut = false;
     }
+  }
+
+  clearLocalStorage(){
+    const keysToKeep = ['pinnedCharts', 'portonSelectedLanguage'];
+    const allKeys = Object.keys(localStorage);
+
+    allKeys.forEach(key => {
+      if (!keysToKeep.includes(key)) {
+        localStorage.removeItem(key);
+      }
+    });
   }
   
   setupAuthStateListener(){
