@@ -280,6 +280,7 @@ export class ChartComponent {
   dataToDisplay: { [metric: string]: number[] } = {};
   month: string = '';
   timePeriod: string = 'month';
+  profileTaskMap: { [profileName: string]: number} = {}
   
   months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   season = ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'];
@@ -523,13 +524,15 @@ export class ChartComponent {
 
     if(this.dataType == 'staff') {
       const numberOfProfiles = this.staff.length;
-      data = Array(numberOfProfiles).fill(0)
+      data = Array(numberOfProfiles).fill(0);
+      this.profileTaskMap = {};
 
       for (let profileIndex = 0; profileIndex <= numberOfProfiles - 1; profileIndex++) {
         const profile = this.profiles[profileIndex];
+        let completedTasksByProfileCount;
 
         if(this.selectedHouseNumber == 'All'){
-          const completedTasksByProfileCount = this.tasks.filter(t =>
+          completedTasksByProfileCount = this.tasks.filter(t =>
             t.completed_by == profile.id && 
             t.end_time?.split('T')[0].substring(0, 7) == wantedDate
           ).length;
@@ -538,14 +541,16 @@ export class ChartComponent {
         } else {
           const house = this.houses.find(h => h.house_name == this.selectedHouseNumber)
 
-          const completedHouseTasksByProfileCount = this.tasks.filter(t => 
+          completedTasksByProfileCount = this.tasks.filter(t => 
             t.completed_by == profile.id && 
             t.house_id == house?.house_id && 
             t.end_time?.split('T')[0].substring(0, 7) == wantedDate
           ).length;
 
-          data[profileIndex] = completedHouseTasksByProfileCount;
+          data[profileIndex] = completedTasksByProfileCount;
         }
+
+        this.profileTaskMap[profile.first_name!] = completedTasksByProfileCount;
       }
     } else {
       const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -645,7 +650,9 @@ export class ChartComponent {
   calculateTaskMetric(metric: string, year: number, monthlyData: any){
     if(this.timePeriod == 'season'){
       if(metric == 'totalCompletedTasks') {
+        this.profileTaskMap = {};
         let completedTasksInSeason = [];
+        let profile;
 
         for (let month = 0; month < this.season.length - 1; month++) {
           const tasks = this.filterTasksForMetric(metric, year, this.getMonthIndex(month));
@@ -653,8 +660,10 @@ export class ChartComponent {
         }
 
         for(let profileIndex = 0; profileIndex < this.profiles.length; profileIndex++){
+          profile = this.profiles[profileIndex];
           const completedTasksForProfile = completedTasksInSeason.filter(t => t.completed_by == this.profiles[profileIndex].id);
           monthlyData[profileIndex] += completedTasksForProfile.length;
+          this.profileTaskMap[profile?.first_name!] = completedTasksForProfile.length;
         }
       } else {
         for (let month = 0; month < this.season.length - 1; month++) {
@@ -998,16 +1007,19 @@ export class ChartComponent {
   }
 
   createChartData(chartData: ChartData, isHorizontalBar: boolean = false) {
-    if(this.dataType == 'staff') {
-      const combined = this.xLabels.map((label: string, i: number) => ({
+    if (this.dataType === 'staff') {
+      const combined = Object.entries(this.profileTaskMap).map(([label, value]) => ({
         label,
-        value: chartData.datasets[0].data[i]
+        value
       }));
 
       combined.sort((a, b) => b.value - a.value);
+
+      const sortedLabels = combined.map(item => item.label);
       const sortedValues = combined.map(item => item.value);
 
       chartData.datasets[0].data = sortedValues;
+      this.xLabels = sortedLabels;
     }
 
     this.data = {
@@ -1031,6 +1043,7 @@ export class ChartComponent {
           ticks: {
             color: chartData.textColor,
             autoSkip: false,  
+            stepSize: 1,
           },
           grid: {
             color: chartData.surfaceBorder
