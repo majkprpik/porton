@@ -16,6 +16,7 @@ import { LayoutService } from '../../layout/services/layout.service';
 import { ChartComponent } from '../statistics/chart.component';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { StatisticsService } from '../../core/services/statistics.service';
 
 // Define the special location option interface
 interface SpecialLocation {
@@ -296,29 +297,28 @@ interface SpecialLocation {
                 </div>
             </div>
 
-            @for(chart of pinnedCharts; track chart){
-                <div class="pinned-container">
-                    <app-chart
-                        [title]="'Occupancy'"
-                        [dataType]="'occupancy'"
-                        [metrics]="occupancyMetrics"
-                    ></app-chart>
+            <div class="statistics-container">
+                <div class="chart-row">
+                    @for(chart of pinnedCharts; track chart){
+                        <div class="pinned-container">
+                            <app-chart
+                                [title]="chart.title"
+                                [dataType]="chart.dataType"
+                                [canSelectDiagramType]="chart.canSelectDiagramType"
+                                [periods]="chart.periods"
+                                [metrics]="chart.metrics"
+                                [metricFields]="chart.metricFields"
+                                [isPinnableToHome]="chart.isPinnableToHome"
+                                [chartTypes]="chart.chartTypes"
+                            ></app-chart>
+                        </div>
+                    }
                 </div>
-            }
+            </div>
         </div>
     `,
     styles: [
         `
-            .pinned-container{
-                height: 900px;
-                background-color: white;
-                border-radius: 6px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                box-sizing: border-box;
-                padding: 20px;
-                margin-bottom: 20px;
-            }
-
             .legend-container {
                 padding: 0.8rem 1rem;
                 background-color: var(--surface-card);
@@ -488,6 +488,33 @@ interface SpecialLocation {
                 width: 100%;
                 box-sizing: border-box;
                 padding: 15px;
+            }
+            
+            .statistics-container{
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                background-color: transparent;
+                align-items: start;
+                gap: 10px;
+                margin-bottom: 20px;
+
+                .chart-row {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                    width: 100%;
+
+                    .pinned-container {
+                        flex: 1 1 45%; 
+                        width: 50%;
+                        height: 900px;
+                        background-color: var(--surface-card);
+                        border-radius: 10px;
+                        padding: 20px;
+                        box-sizing: border-box;
+                    }
+                }
             }
 
             .house-card {
@@ -920,7 +947,7 @@ export class Home implements OnInit, OnDestroy {
 
     isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
 
-    pinnedCharts: string[] = [];
+    pinnedCharts: any[] = [];
 
     private destroy$ = new Subject<void>();
 
@@ -929,6 +956,7 @@ export class Home implements OnInit, OnDestroy {
         public taskService: TaskService,
         public houseService: HouseService,
         private layoutService: LayoutService,
+        private statisticsService: StatisticsService,
     ) {}
 
     ngOnInit(): void {
@@ -947,7 +975,7 @@ export class Home implements OnInit, OnDestroy {
         this.layoutService.$chartToRemove
         .pipe(takeUntil(this.destroy$))
         .subscribe(chartToRemove => {
-            this.pinnedCharts = this.pinnedCharts.filter(pinnedChart => pinnedChart !== chartToRemove);
+            this.pinnedCharts = this.pinnedCharts.filter(pinnedChart => pinnedChart.dataType !== chartToRemove);
         });
     }
 
@@ -993,7 +1021,8 @@ export class Home implements OnInit, OnDestroy {
     }
 
     loadPinnedCharts(){
-        this.pinnedCharts = this.layoutService.loadPinnedCharts();
+        const pinnedChartsNames = this.layoutService.loadPinnedCharts();
+        this.pinnedCharts = this.statisticsService.charts.filter(c => pinnedChartsNames.some((pc: any) => pc == c.dataType))
     }
 
     @HostListener('document:click', ['$event'])

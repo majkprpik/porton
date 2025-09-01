@@ -34,41 +34,44 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
           <h1>{{ 'STATISTICS.TITLES.' + dataType | uppercase | translate }}</h1>
         </div>
 
-        @if(canSelectDiagramType){
-          <div class="field">
-            <label for="chartType" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.CHART-TYPE' | translate }}*</label>
-            <p-select 
-              id="chartType" 
-              [options]="chartTypes" 
-              [(ngModel)]="chartType" 
-              [style]="{ width: '150px' }" 
-              (onChange)="onChartSelect()"
-            >
-              <ng-template let-item pTemplate="item">
-                <span>{{ item | titlecase }}</span>
-              </ng-template>
-              <ng-template let-item pTemplate="selectedItem">
-                <span>{{ item | titlecase }}</span>
-              </ng-template>
-            </p-select>
-          </div>
-        }
-
-        @if(isPinnableToHome){ 
-          @if(isChartPinnedToHome('occupancy')){
-            <p-button
-              [label]="'BUTTONS.REMOVE-FROM-HOME' | translate" 
-              [severity]="'danger'"
-              (click)="removeChartFromHome('occupancy')"
-            />
-          } @else {
-            <p-button
-              [label]="'BUTTONS.ADD-TO-HOME' | translate" 
-              [severity]="'primary'"
-              (click)="pinChartToHome('occupancy')"
-            />
+        <div class="right-side">
+          @if(canSelectDiagramType){
+            <div class="field">
+              <label for="chartType" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.CHART-TYPE' | translate }}*</label>
+              <p-select 
+                id="chartType" 
+                [options]="chartTypes" 
+                [(ngModel)]="chartType" 
+                [style]="{ width: '150px' }" 
+                (onChange)="onChartSelect()"
+              >
+                <ng-template let-item pTemplate="item">
+                  <span>{{ item | titlecase }}</span>
+                </ng-template>
+                <ng-template let-item pTemplate="selectedItem">
+                  <span>{{ item | titlecase }}</span>
+                </ng-template>
+              </p-select>
+            </div>
           }
-        }
+  
+          @if(isPinnableToHome){ 
+            @if(isChartPinnedToHome(dataType)){
+              <p-button
+                [label]="'BUTTONS.REMOVE-FROM-HOME' | translate" 
+                [severity]="'danger'"
+                (click)="removeChartFromHome(dataType)"
+              />
+            } @else {
+              <p-button
+                [label]="'BUTTONS.ADD-TO-HOME' | translate" 
+                [severity]="'primary'"
+                (click)="pinChartToHome(dataType)"
+              />
+            }
+          }
+        </div>
+
       </div>
 
       <div class="buttons">
@@ -202,6 +205,15 @@ type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'p
         justify-content: space-between;
         width: 100%;
         padding: 0 15px 0 15px;
+
+        .right-side{
+          display: flex;
+          flex-direction: row;
+          align-items: end;
+          justify-content: flex-end;
+          gap: 10px;
+          width: 50%;
+        }
       }
 
       .buttons{
@@ -294,8 +306,6 @@ export class ChartComponent {
   isOccupancyChartAddedToHome: boolean = false
 
   chartType?: ChartType;
-  
-  completedTasksByUser: { profile: Profile, numberOfCompletedTasks: number }[] = [];
 
   constructor(
     private cd: ChangeDetectorRef,

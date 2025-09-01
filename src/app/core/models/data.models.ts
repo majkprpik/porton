@@ -185,6 +185,19 @@ export interface Season {
   updated_at: string; 
 }
 
+export interface Chart {
+  title: string,
+  dataType: string,
+  canSelectDiagramType: boolean,
+  periods: string[],
+  metrics: any[],
+  metricFields: any[],
+  isPinnableToHome: boolean,
+  chartTypes: ChartType[],
+}
+
+export type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'polarArea' | 'radar';
+
 export enum ExportTypes {
   PDF = 'pdf',
 }
