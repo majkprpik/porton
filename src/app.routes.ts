@@ -20,6 +20,7 @@ import { ProfileRoles } from './app/core/models/data.models';
 import { Login } from './app/pages/auth/login';
 import { LoginGuard } from './app/core/guards/login.guard';
 import { ContentManagementComponent } from './app/pages/content-management/content-management.component';
+import { PrivacyPolicyComponent } from './app/pages/privacy-policy/privacy-policy.component';
 
 export const appRoutes: Routes = [
     {
@@ -184,5 +185,6 @@ export const appRoutes: Routes = [
         ]
     },
     { path: 'login', component: Login, canActivate: [LoginGuard] },
-    { path: '**', redirectTo: '/' }
+    { path: 'privacy-policy', component: PrivacyPolicyComponent },
+    { path: '**', redirectTo: '/' },
 ];

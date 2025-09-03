@@ -536,5 +536,9 @@
             "HOUSE-NUMBER-EXISTS-ERROR": "A house with the same number already exists",
             "HOUSE-NAME-EXISTS-ERROR": "A house with the same name already exists"
         }
+    },
+    "PRIVACY-POLICY": {
+        "TITLE": "Privacy policy",
+        "TEXT": "The Porton app collects photos and information about camp houses so that workers can report damages and tasks. The data is used exclusively within the camp and will not be shared with third parties. If you have any privacy questions, please contact us at "
     }
 }

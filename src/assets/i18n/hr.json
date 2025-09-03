@@ -536,5 +536,9 @@
             "HOUSE-NUMBER-EXISTS-ERROR": "Kućica s istim brojem već postoji",
             "HOUSE-NAME-EXISTS-ERROR": "Kućica s istim imenom već postoji"
         }
+    },
+    "PRIVACY-POLICY": {
+        "TITLE": "Politika privatnosti",
+        "TEXT": "Porton aplikacija prikuplja slike i informacije o kućicama kampa kako bi radnici mogli prijaviti oštećenja i zadatke. Podaci se koriste isključivo unutar kampa i neće se dijeliti s trećim stranama. Ako imate pitanja o privatnosti, kontaktirajte nas na "
     }
 }

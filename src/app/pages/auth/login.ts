@@ -65,6 +65,13 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                                 [loading]="loading"
                                 [disabled]="loading">
                             </p-button>
+
+                        </div>
+
+                        <div class="flex flex-col items-center justify-center pt-5">
+                            <u>
+                                <a href="/privacy-policy">Privacy policy</a>
+                            </u>
                         </div>
                     </div>
                 </div>
