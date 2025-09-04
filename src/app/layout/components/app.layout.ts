@@ -455,6 +455,41 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
             </ng-template>
         </p-dialog>
 
+        <p-dialog
+            [header]="'APP-LAYOUT.LOGGED-USER-DETAILS.TITLE' | translate"
+            [(visible)]="isLoggedUserDetailsVisible"  
+            [modal]="true"
+            [style]="{ wdith: '30rem' }"
+        >
+            <div style="max-width: 400px;">
+                <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.NAME' | translate }}:</b> {{ loggedUser?.first_name }}</div>
+                <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.EMAIL' | translate }}:</b> {{ authService.getStoredUsername() || '' }}</div>
+                <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.PHONE' | translate }}:</b> {{ loggedUser?.phone_number }}</div>
+                <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.ROLE' | translate }}:</b> {{ profileService.getProfileRoleNameById(loggedUser?.role_id ?? 0) }}</div>
+                @if(profileService.getProfileById(storedUserId)?.is_test_user){
+                    <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.ACCESS-TOKEN' | translate }}:</b> </div>
+                    <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.FCM-TOKEN' | translate }}:</b> </div> 
+                }
+            </div>
+
+            <ng-template pTemplate="footer">
+                <div class="w-full flex justify-evenly">
+                    <button 
+                        pButton 
+                        [severity]="'primary'"
+                        [label]="'BUTTONS.DETAILS' | translate" 
+                        (click)="navigateToProfileDetails()">
+                    </button>
+                    <button 
+                        pButton 
+                        [severity]="'danger'"
+                        [label]="'BUTTONS.LOG-OUT' | translate" 
+                        (click)="logout()">
+                    </button>
+                </div>
+            </ng-template>
+        </p-dialog>
+
         <p-toast></p-toast>
         <p-confirmdialog />
     </div>`,
@@ -924,6 +959,7 @@ export class AppLayout {
     isTaskDetailsWindowVisible: boolean = false;
     isProfileDetailsWindowVisible: boolean = false;
     isSpeedDialVisible: boolean = false;
+    isLoggedUserDetailsVisible: boolean = false;
 
     selectedHouse: House | null = null;
     faultDescription: string = '';
@@ -1146,6 +1182,10 @@ export class AppLayout {
             error: (error) => {
                 console.error(error);
             }
+        });
+
+        this.layoutService.$showLoggedUserDetailsWindow.pipe(nonNull()).subscribe(res => {
+            this.isLoggedUserDetailsVisible = res;
         });
     }
 
@@ -1638,6 +1678,30 @@ export class AppLayout {
                 translated_role: this.languageService.getSelectedLanguageCode() == 'en' ? this.profileService.translationMap[profileRoleName] : profileRoleName,
             }
         });
+    }
+
+    navigateToProfileDetails(){
+        this.router.navigate(['/profile-details']);
+        this.layoutService.$showLoggedUserDetailsWindow.next(false);
+    }
+
+    logout(){
+        this.resetAllForms();
+        this.authService.logout();
+    }
+
+    resetAllForms(){
+        this.faultReportVisible = false;
+        this.isUnscheduledTaskVisible = false;
+        this.isNotesWindowVisible = false;
+        this.isArrivalsAndDeparturesWindowVisible = false;
+        this.isTaskDetailsWindowVisible = false;
+        this.isProfileDetailsWindowVisible = false;
+        this.isLoggedUserDetailsVisible = false;
+        this.layoutService.$showLoggedUserDetailsWindow.next(false);
+
+        this.resetFaultReportForm();
+        this.resetUnscheduledTaskForm();
     }
 
     subscribeToDataUpdates(){

@@ -33,7 +33,10 @@
         "ADD-TO-HOME": "Add to home",
         "REMOVE-FROM-HOME": "Remove from home",
         "CANCEL-SELECTION": "Cancel selection",
-        "EXPORT": "Export"
+        "EXPORT": "Export",
+        "LOG-OUT": "Log out",
+        "DETAILS": "Details",
+        "DELETE-PROFILE": "Delete profile"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Assigned",
@@ -228,6 +231,15 @@
                     "CANCELLED": "Change was cancelled"
                 }
             }
+        },
+        "LOGGED-USER-DETAILS": {
+            "TITLE": "Profile",
+            "NAME": "Name",
+            "EMAIL": "Email",
+            "PHONE": "Phone",
+            "ROLE": "Role",
+            "ACCESS-TOKEN": "Access token",
+            "FCM-TOKEN": "FCM token"
         }
     },
     "TEAMS": {
@@ -540,5 +552,24 @@
     "PRIVACY-POLICY": {
         "TITLE": "Privacy policy",
         "TEXT": "The Porton app collects photos and information about camp houses so that workers can report damages and tasks. The data is used exclusively within the camp and will not be shared with third parties. If you have any privacy questions, please contact us at "
+    },
+    "PROFILE-DETAILS": {
+        "TITLE": "Profile",
+        "NAME": "Name",
+        "EMAIL": "Email",
+        "PHONE": "Phone",
+        "ROLE": "Role",
+        "ACCESS-TOKEN": "Access token",
+        "FCM-TOKEN": "FCM token",
+        "DATE-CREATED": "Date created",
+        "MESSAGES": {
+            "SUCCESS": "Success",
+            "UPDATED": "Update",
+            "CANCELLED": "Cancelled",
+            "DELETED-SUCCESS": "Profile deleted",
+            "HEADER": "Confirm profile delete",
+            "CONFIRM-DELETE": "Are you sure you want to delete your profile?",
+            "CANCELLED-DELETE": "Delete cancelled"
+        }
     }
 }

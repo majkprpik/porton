@@ -14,9 +14,7 @@ import { LanguageService } from '../../core/services/language.service';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { ProfileService } from '../../core/services/profile.service';
-import { PushNotificationsService } from '../../core/services/push-notifications.service';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
-import { SupabaseService } from '../../core/services/supabase.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
@@ -72,8 +70,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 <button
                     class="logged-user p-button-secondary"
                     pButton
-                    iconPos="right"
-                    (click)="confirm1($event)"
+                    (click)="openLoggedUserDetails()"
                 >
                     <i class="pi pi-user"></i>
                 </button>
@@ -108,8 +105,6 @@ export class AppTopbar {
         private dataService: DataService,
         public languageService: LanguageService,
         public profileService: ProfileService,
-        private pushNotificationService: PushNotificationsService,
-        private supabaseService: SupabaseService,
     ) {}
 
     ngOnInit() {
@@ -149,55 +144,7 @@ export class AppTopbar {
         this.layoutService.layoutConfig.update((state) => ({ ...state, darkTheme: !state.darkTheme }));
     }
 
-    async confirm1(event: Event) {    
-        const userId = this.authService.getStoredUserId();
-        const profile = this.profiles.find(p => p.id == userId);
-        const email = this.authService.getStoredUsername() || '';
-        const name = profile ? `${profile.first_name} ${profile.last_name ? profile.last_name : ''}` : '';
-        const phone = profile?.phone_number || '';
-        const role = this.profileRoles.find(profileRole => profileRole.id == profile?.role_id)?.name || '';
-
-        if(profile && profile.first_name == 'Test User2'){
-            this.confirmationService.confirm({
-                target: event.target as EventTarget,
-                header: 'Profil',
-                message: 
-                    `<div style="max-width: 400px;">
-                        <div class="new-profile-row"><b>Ime:</b> ${name}</div>
-                        <div class="new-profile-row"><b>Email:</b> ${email}</div>
-                        <div class="new-profile-row"><b>Mobitel:</b> ${phone}</div>
-                        <div class="new-profile-row"><b>Pozicija:</b> ${role}</div>
-                        <div class="new-profile-row"><b>Access token:</b> ${await this.supabaseService.getAccessToken()}</div>
-                        <div class="new-profile-row"><b>fcmToken:</b> ${this.pushNotificationService.getFirebaseMessagingSubscription()}</div> 
-                    </div>`,
-                acceptButtonProps: {
-                    label: 'Odjava',
-                    severity: 'danger',
-                },
-                rejectVisible: false,
-                accept: () => {
-                    this.authService.logout();
-                }
-            });
-        } else {
-            this.confirmationService.confirm({
-                target: event.target as EventTarget,
-                header: 'Profil',
-                message: 
-                    `<div class="new-profile-row"><b>Ime:</b> ${name}</div>` +
-                    `<div class="new-profile-row"><b>Email:</b> ${email}</div>` +
-                    `<div class="new-profile-row"><b>Mobitel:</b> ${phone}</div>` +
-                    `<div class="new-profile-row"><b>Pozicija:</b> ${role}</div>`,
-                acceptButtonProps: {
-                    label: 'Odjava',
-                    severity: 'danger',
-                },
-                rejectVisible: false,
-                accept: () => {
-                    this.authService.logout();
-                }
-            });
-        }
-
+    openLoggedUserDetails() {    
+        this.layoutService.$showLoggedUserDetailsWindow.next(true);
     }
 }

@@ -62,6 +62,7 @@ export class LayoutService {
     transitionComplete = signal<boolean>(false);
     private initialized = false;
     $chartToRemove: BehaviorSubject<string> = new BehaviorSubject<string>('');
+    $showLoggedUserDetailsWindow: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     constructor() {
         effect(() => {

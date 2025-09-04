@@ -33,7 +33,10 @@
         "ADD-TO-HOME": "Dodaj na pregled",
         "REMOVE-FROM-HOME": "Ukloni s pregleda",
         "CANCEL-SELECTION": "Odustani",
-        "EXPORT": "Izvezi"
+        "EXPORT": "Izvezi",
+        "LOG-OUT": "Odjava",
+        "DETAILS": "Detalji",
+        "DELETE-USER": "Delete user"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Dodijeljeno",
@@ -228,6 +231,15 @@
                     "CANCELLED": "Promjena otkazana"
                 }
             }
+        },
+        "LOGGED-USER-DETAILS": {
+            "TITLE": "Profil",
+            "NAME": "Ime",
+            "EMAIL": "Email",
+            "PHONE": "Mobitel",
+            "ROLE": "Pozicija",
+            "ACCESS-TOKEN": "Access token",
+            "FCM-TOKEN": "FCM token"
         }
     },
     "TEAMS": {
@@ -540,5 +552,24 @@
     "PRIVACY-POLICY": {
         "TITLE": "Politika privatnosti",
         "TEXT": "Porton aplikacija prikuplja slike i informacije o kućicama kampa kako bi radnici mogli prijaviti oštećenja i zadatke. Podaci se koriste isključivo unutar kampa i neće se dijeliti s trećim stranama. Ako imate pitanja o privatnosti, kontaktirajte nas na "
+    },
+    "PROFILE-DETAILS": {
+        "TITLE": "Profil",
+        "NAME": "Ime",
+        "EMAIL": "Email",
+        "PHONE": "Mobitel",
+        "ROLE": "Pozicija",
+        "ACCESS-TOKEN": "Access token",
+        "FCM-TOKEN": "FCM token",
+        "DATE-CREATED": "Datum kreiranja",
+        "MESSAGES": {
+            "SUCCESS": "Success",
+            "UPDATED": "Promjena",
+            "CANCELLED": "Otkazano",
+            "DELETED-SUCCESS": "Profil obrisan",
+            "HEADER": "Potvrdi brisanje profila",
+            "CONFIRM-DELETE": "Jeste li sigurni da želite obrisati svoj profil?",
+            "CANCELLED-DELETE": "Brisanje otkazano"
+        }
     }
 }

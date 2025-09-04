@@ -49,7 +49,9 @@ export class ProfileService {
     });
   }
 
-  getProfileRoleNameById(roleId: number){
+  getProfileRoleNameById(roleId: number | undefined | null){
+    if(!roleId) return '';
+
     return this.profileRoles.find(role => role.id == roleId)!.name;
   }
 

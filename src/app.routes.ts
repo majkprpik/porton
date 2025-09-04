@@ -21,6 +21,7 @@ import { Login } from './app/pages/auth/login';
 import { LoginGuard } from './app/core/guards/login.guard';
 import { ContentManagementComponent } from './app/pages/content-management/content-management.component';
 import { PrivacyPolicyComponent } from './app/pages/privacy-policy/privacy-policy.component';
+import { ProfileDetailsComponent } from './app/pages/profile-details/profile-details.component';
 
 export const appRoutes: Routes = [
     {
@@ -182,6 +183,7 @@ export const appRoutes: Routes = [
                 ] }
             },
             { path: 'documentation', component: Documentation },
+            { path: 'profile-details', component: ProfileDetailsComponent },
         ]
     },
     { path: 'login', component: Login, canActivate: [LoginGuard] },
