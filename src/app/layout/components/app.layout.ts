@@ -406,17 +406,17 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 <div class="field">
                     <label for="location" class="font-bold block mb-2">{{ 'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.LOCATION' | translate }}*</label>
                     <p-multiselect 
-                            [options]="houses" 
-                            [(ngModel)]="selectedHouseNamesForTaskReport"
-                            optionLabel="house_name" 
-                            optionValue="house_name" 
-                            [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-LOCATION' | translate" 
-                            [style]="{ width: '100%' }" 
-                            (onChange)="onLocationSelect()"
-                        >
-                            <ng-template let-item pTemplate="item">
-                                <span>{{ item.house_name }}</span>
-                            </ng-template>
+                        [options]="houses" 
+                        [(ngModel)]="selectedHouseNamesForTaskReport"
+                        optionLabel="house_name" 
+                        optionValue="house_name" 
+                        [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-LOCATION' | translate" 
+                        [style]="{ width: '100%' }" 
+                        (onChange)="onLocationSelect()"
+                    >
+                        <ng-template let-item pTemplate="item">
+                            <span>{{ item.house_name }}</span>
+                        </ng-template>
                     </p-multiselect>
                 </div>
 
