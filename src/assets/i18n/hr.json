@@ -36,7 +36,7 @@
         "EXPORT": "Izvezi",
         "LOG-OUT": "Odjava",
         "DETAILS": "Detalji",
-        "DELETE-USER": "Delete user"
+        "DELETE-PROFILE": "Obriši profil"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Dodijeljeno",
