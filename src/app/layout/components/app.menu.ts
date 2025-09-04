@@ -237,9 +237,7 @@ export class AppMenu implements OnInit {
             menuItems.push({ label: this.translateService.instant('MENU.NOTES'), icon: 'pi pi-clipboard', routerLink: ['/notes'] });
         }
 
-        if(this.canViewSchedule(userRole?.name)){
-            menuItems.push({ label: this.translateService.instant('MENU.WORK-SCHEDULE'), icon: 'pi pi-calendar-clock', routerLink: ['/work-schedule'] });
-        }
+        menuItems.push({ label: this.translateService.instant('MENU.WORK-SCHEDULE'), icon: 'pi pi-calendar-clock', routerLink: ['/work-schedule'] });
 
         if (this.isVoditeljKampa(userRole?.name)) {
             menuItems.push(

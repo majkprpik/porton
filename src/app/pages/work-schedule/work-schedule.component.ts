@@ -1,7 +1,7 @@
 import { WorkScheduleExportFormComponent } from './work-schedule-form/work-schedule-export-form.component';
 import { Component, effect, signal } from '@angular/core';
 import { Departments, Profile, ProfileRole, ProfileRoles, ProfileWorkDay, ProfileWorkSchedule, ScheduleCellData, Season } from '../../core/models/data.models';
-import { combineLatest, firstValueFrom, Subject, takeUntil } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -12,6 +12,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { LayoutService } from '../../layout/services/layout.service';
 import { WorkScheduleService } from '../../core/services/work-schedule.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { ProfileService } from '../../core/services/profile.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-work-schedule',
@@ -28,12 +30,14 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       <div class="work-schedule-container">
         <div class="top">
           <div class="profile-buttons">
-            @for(department of departments; track $index){
-              <p-button 
-                [severity]="selectedDepartment == department ? 'primary': 'secondary'" 
-                [label]="'WORK-SCHEDULE.HEADER.TABS.' + (department | uppercase) | translate" 
-                (click)="filterProfilesByDepartment(department)"
-              ></p-button>  
+            @if(!isRestrictedUser){
+              @for(department of departments; track $index){
+                <p-button 
+                  [severity]="selectedDepartment == department ? 'primary': 'secondary'" 
+                  [label]="'WORK-SCHEDULE.HEADER.TABS.' + (department | uppercase) | translate" 
+                  (click)="filterProfilesByDepartment(department)"
+                ></p-button>  
+              }
             }
           </div>
 
@@ -44,49 +48,51 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
           </div>
 
           <div class="schedule-buttons">
-            <div 
-              class="quick-delete"
-              tooltipPosition="top"
-            >
-              @if(isDeleteMode){
-                <span id="selected-schedules">Selected schedules: {{ schedulesToDelete.length }}</span>
-                <p-button
-                  [severity]="'danger'"
-                  (click)="deleteSelectedSchedules()"
-                  [raised]="true"
-                >
-                  <span>Delete</span>
-                </p-button>
-                <p-button
-                  [severity]="'danger'"
-                  (click)="cancelQuickDelete()"
-                  styleClass="p-button-text"
-                  [raised]="true"
-                >
-                  <span>Cancel</span>
-                </p-button>
-              } @else {
-                <p-button
-                  [severity]="'danger'"
-                  (click)="onQuickDelete()"
-                  [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.QUICK-DELETE' | translate"
-                  tooltipPosition="top"
-                >
-                  <i class="pi pi-eraser"></i>
-                </p-button>
-              }
-            </div>
-            <div class="export"
-              [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.EXPORT' | translate" 
-              tooltipPosition="top"
-            >
-              <p-button
-                [severity]="'info'"
-                (click)="openExportSchedule()"
+            @if(!isRestrictedUser){
+              <div 
+                class="quick-delete"
+                tooltipPosition="top"
               >
-                <i class="pi pi-file-export"></i>
-              </p-button>
-            </div>
+                @if(isDeleteMode){
+                  <span id="selected-schedules">Selected schedules: {{ schedulesToDelete.length }}</span>
+                  <p-button
+                    [severity]="'danger'"
+                    (click)="deleteSelectedSchedules()"
+                    [raised]="true"
+                  >
+                    <span>Delete</span>
+                  </p-button>
+                  <p-button
+                    [severity]="'danger'"
+                    (click)="cancelQuickDelete()"
+                    styleClass="p-button-text"
+                    [raised]="true"
+                  >
+                    <span>Cancel</span>
+                  </p-button>
+                } @else {
+                  <p-button
+                    [severity]="'danger'"
+                    (click)="onQuickDelete()"
+                    [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.QUICK-DELETE' | translate"
+                    tooltipPosition="top"
+                  >
+                    <i class="pi pi-eraser"></i>
+                  </p-button>
+                }
+              </div>
+              <div class="export"
+                [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.EXPORT' | translate" 
+                tooltipPosition="top"
+              >
+                <p-button
+                  [severity]="'info'"
+                  (click)="openExportSchedule()"
+                >
+                  <i class="pi pi-file-export"></i>
+                </p-button>
+              </div>
+            }
             <div class="density-buttons">
               @for(densityButton of densityButtons; track $index){
                 <p-button
@@ -243,13 +249,13 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         flex-direction: row;
         align-items: start;
         justify-content: space-between;
+        padding-bottom: 10px;
 
         .profile-buttons{
           width: 500px;
           display: flex;
           flex-direction: row;
           gap: 10px;
-          padding-bottom: 10px;
         }
 
         .year-switcher {
@@ -679,12 +685,12 @@ export class WorkScheduleComponent {
   schedulesToDelete: ProfileWorkSchedule[] = [];
   seasons: Season[] = [];
   selectedSeason: Season = {
-      id: -1,
-      year: new Date().getFullYear(),
-      season_start_date: new Date().getFullYear() + "03-15",
-      season_end_date: new Date().getFullYear() + "11-15",
-      created_at: new Date().toString(),
-      updated_at: new Date().toString(),
+    id: -1,
+    year: new Date().getFullYear(),
+    season_start_date: new Date().getFullYear() + "03-15",
+    season_end_date: new Date().getFullYear() + "11-15",
+    created_at: new Date().toString(),
+    updated_at: new Date().toString(),
   };
 
   nextProfileScheduleDate: Date | null = null;
@@ -729,10 +735,21 @@ export class WorkScheduleComponent {
   
   private destroy$ = new Subject<void>();
 
+  nonRestrictedUserRoles = [
+    ProfileRoles.VoditeljKampa,
+    ProfileRoles.Uprava,
+    ProfileRoles.VoditeljDomacinstva,
+    ProfileRoles.Prodaja,
+    ProfileRoles.VoditeljRecepcije,
+  ];
+  isRestrictedUser = false;
+
   constructor(
     private dataService: DataService,
     private layoutService: LayoutService,
     private workScheduleService: WorkScheduleService,
+    private profileService: ProfileService,
+    private authService: AuthService,
   ) {
     effect(() => {
       this.isNightMode = this.layoutService.layoutConfig().darkTheme;
@@ -757,7 +774,7 @@ export class WorkScheduleComponent {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ([profiles, schedule, profileRoles, profileWorkDays, seasons]) => {
-          this.profiles = profiles.filter(p => !p.is_deleted || p.is_test_user);
+          this.filterProfiles(profiles);
           this.fullWorkSchedule = schedule;
           this.profileRoles = profileRoles;
           this.profileWorkDays = profileWorkDays;
@@ -771,6 +788,23 @@ export class WorkScheduleComponent {
           console.error('Error loading profile data:', error);
         }
       });
+  }
+
+  isUserRestricted(profiles: Profile[]){
+    const profile = profiles.find(p => p.id == this.authService.getStoredUserId())
+    const userRole = this.profileService.getProfileRoleNameById(profile?.role_id);
+
+    return !this.nonRestrictedUserRoles.includes(userRole as ProfileRoles);
+  }
+
+  filterProfiles(profiles: Profile[]){
+    if(this.isUserRestricted(profiles)){
+      this.profiles = profiles.filter(p => p.id == this.authService.getStoredUserId() && (!p.is_deleted || p.is_test_user));
+      this.isRestrictedUser = true;
+    } else {
+      this.profiles = profiles.filter(p => !p.is_deleted || p.is_test_user);
+      this.isRestrictedUser = false;
+    }
   }
 
   private applyProfileFilters() {
@@ -1220,7 +1254,7 @@ export class WorkScheduleComponent {
   }
 
   onCellMouseDown(event: MouseEvent, row: number, col: number): void {
-    // if (this.isCellInPast(col)) return;
+    if(this.isRestrictedUser) return;
 
     this.selectedCellRowIndex.set(row);
     this.selectedStartColIndex.set(col);
@@ -1232,6 +1266,8 @@ export class WorkScheduleComponent {
 
   // Handle mouse move to update selection range
   onCellMouseMove(event: MouseEvent, row: number, col: number): void {
+    if(this.isRestrictedUser) return;
+
     if (this.isSelecting && row === this.selectedCellRowIndex()) {
       if (this.hasCellSchedule(row, col)) return;
       // if (this.isCellInPast(col)) return;
@@ -1274,6 +1310,8 @@ export class WorkScheduleComponent {
 
   // Handle mouse up to end selection
   onDocumentMouseUp(event: any, row: number, col: number): void {
+    if(this.isRestrictedUser) return;
+
     setTimeout(() => {
       if(!this.isSelecting) return;
 

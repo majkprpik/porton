@@ -158,13 +158,13 @@ export const appRoutes: Routes = [
             {
                 path: 'work-schedule',
                 component: WorkScheduleComponent,
-                data: { roles: [
-                    ProfileRoles.VoditeljKampa,
-                    ProfileRoles.Uprava,
-                    ProfileRoles.VoditeljDomacinstva,
-                    ProfileRoles.Prodaja,
-                    ProfileRoles.VoditeljRecepcije
-                ] }
+                // data: { roles: [
+                //     ProfileRoles.VoditeljKampa,
+                //     ProfileRoles.Uprava,
+                //     ProfileRoles.VoditeljDomacinstva,
+                //     ProfileRoles.Prodaja,
+                //     ProfileRoles.VoditeljRecepcije
+                // ] }
             },
             {
                 path: 'console-messages',
