@@ -141,6 +141,8 @@ interface CellData {
                                                 'height-40-important': cellHeightInPx == 40,
                                             }"
                                             [style.background-color]="gridMatrix()[i][j].color"
+                                            [pTooltip]="gridMatrix()[i][j].isReserved ? getReservationNoteForCell(i, j) : ''"
+                                            tooltipPosition="top"
                                         >
                                             @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j].isReservationStart) {
                                                 <div class="reservation-item">
@@ -1857,5 +1859,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     isLastSeason(season: Season){
         const index = this.seasons.findIndex(s => s.id == season.id);
         return index == this.seasons.length - 1;
+    }
+
+    getReservationNoteForCell(row: number, col: number){
+        const reservation = this.getReservationByRowAndColumn(row, col);
+        return reservation?.note ?? '';
     }
 }
