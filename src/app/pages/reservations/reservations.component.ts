@@ -1137,11 +1137,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         const days = this.days();
         
         if (houses.length > row && days.length > col) {
-            const house = houses[row];
-            const day = days[col];
-            
-            const key = this.getReservationKey(house.house_id, day);
-            const reservation = this.reservationMap.get(key);
+            const reservation = this.getReservationByRowAndColumn(row, col);
             
             if (!reservation) {
                 return;
@@ -1778,11 +1774,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         const days = this.days();
         
         if (houses.length > row && days.length > col) {
-            const house = houses[row];
-            const day = days[col];
-            
-            const key = this.getReservationKey(house.house_id, day);
-            const reservation = this.reservationMap.get(key);
+            const reservation = this.getReservationByRowAndColumn(row, col);
             
             if (reservation) {
                 if (this.selectedReservationId() === reservation.house_availability_id) {
