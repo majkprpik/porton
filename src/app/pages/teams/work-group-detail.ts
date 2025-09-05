@@ -16,6 +16,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { WorkGroupService } from '../../core/services/work-group.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
 
 @Component({
     selector: 'app-work-group-detail',
@@ -28,6 +29,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         TasksIndexSortPipe,
         TranslateModule,
         StaffCardComponent,
+        AddDaysPipe,
     ],
     template: `
         @if (loading) {
@@ -121,27 +123,42 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                                                         !houseService.isHouseReservedToday(task.house_id) &&
                                                         houseService.getNextHouseAvailabilityForHouse(task.house_id)
                                                     ){ 
-                                                        <span>Dolazak: {{ houseService.getNextHouseAvailabilityForHouse(task.house_id).house_availability_start_date | date: 'dd/MM/yyyy' }}</span>
+                                                        <span>
+                                                            <b>Check IN</b>: {{ houseService.getNextHouseAvailabilityForHouse(task.house_id).house_availability_start_date | date: 'dd/MM/yyyy' }}
+                                                        </span>
                                                     } @else if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length == 1){
-                                                        @if(
-                                                            houseService.hasDepartureForToday(task.house_id) && 
-                                                            !houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_departed
-                                                        ){
-                                                            Odlazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
-                                                        } @else if(
-                                                            houseService.hasArrivalForToday(task.house_id) &&
-                                                            !houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_arrived
-                                                        ) {
-                                                            Dolazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].arrival_time }}
+                                                        @if(houseService.hasArrivalForToday(task.house_id)){
+                                                            <span>
+                                                                <b>Check IN</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].arrival_time }}
+                                                            </span>
+                                                        } @else if(houseService.hasDepartureForToday(task.house_id)){
+                                                            <span>
+                                                                <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
+                                                            </span>
+                                                            @if(houseService.getNextHouseAvailabilityForHouse(task.house_id)){
+                                                                <span>
+                                                                    <b>Check IN</b>: {{ houseService.getNextHouseAvailabilityForHouse(task.house_id).house_availability_start_date | date: 'dd/MM/yyyy' }}
+                                                                </span>
+                                                            }
+                                                        } @else {
+                                                            <span>
+                                                                <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].house_availability_end_date | addDays:1 | date: 'dd/MM/yyyy' }}
+                                                            </span>
                                                         }
                                                     } @else if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length == 2){
                                                         @if(!houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_departed){
-                                                            Odlazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
-                                                        } @else if(
-                                                            houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_departed &&
-                                                            !houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].has_arrived
-                                                        ){
-                                                            Dolazak danas u {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].arrival_time }}
+                                                            <span>
+                                                                <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
+                                                            </span>
+                                                        }
+                                                        @if(!houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].has_arrived){
+                                                            <span>
+                                                                <b>Check IN</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].arrival_time }}
+                                                            </span>
+                                                        } @else if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].has_arrived){
+                                                            <span>
+                                                                <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].house_availability_end_date | addDays:1 | date: 'dd/MM/yyyy' }}
+                                                            </span>
                                                         }
                                                     }
                                                 </div>
@@ -434,6 +451,8 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 }
 
                 .next-reservation-date{
+                    display: flex;
+                    flex-direction: column;
                     height: 20px;
                 }
 
