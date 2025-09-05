@@ -384,12 +384,12 @@ export class NotesPageComponent {
 
       selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
 
-      await this.notesService.createNote(this.note, selectedDate);
+      const sentNote = await this.notesService.createNote(this.note, selectedDate);
 
-      if(mentionedProfiles.length) {
+      if(sentNote && mentionedProfiles.length) {
         this.notesService.sendNotificationToMentionedUsers(this.activeProfiles.find(p => p.id == this.authService.getStoredUserId())?.first_name ?? 'User', mentionedProfiles, this.note);
       }
-      
+
       this.note = '';
     }
   }
