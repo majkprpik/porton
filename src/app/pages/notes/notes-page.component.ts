@@ -10,6 +10,8 @@ import { DatePicker } from 'primeng/datepicker';
 import { TranslateModule } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { MentionModule } from 'angular-mentions';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-notes-page',
@@ -19,6 +21,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
     FormsModule,
     DatePicker,
     TranslateModule,
+    MentionModule,
   ],
   template: `
     <div class="notes-container">
@@ -103,6 +106,8 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
           [(ngModel)]="note"
           (keydown.enter)="addNote($event)"
           [disabled]="daysIndex < 0"
+          [mention]="profileNames"
+          [mentionConfig]="{ dropUp: true }"
         ></textarea>
       </div>
     </div>
@@ -232,6 +237,8 @@ export class NotesPageComponent {
   areNotesLoaded: boolean = false;
   selectedDate: Date = new Date();
   profiles: Profile[] = [];
+  activeProfiles: Profile[] = [];
+  profileNames: string[] = [];
 
   private destroy$ = new Subject<void>();
 
@@ -240,6 +247,7 @@ export class NotesPageComponent {
     private notesService: NotesService,
     private dataService: DataService,
     public profileService: ProfileService,
+    private authService: AuthService,
   ) {}
 
   increaseIndex(){
@@ -306,6 +314,11 @@ export class NotesPageComponent {
           this.notes = this.normalizeAndSortNotes(notes);
           this.areNotesLoaded = areNotesLoaded;
           this.profiles = profiles;
+          this.activeProfiles = profiles
+            .filter(p => !p.is_deleted || !p.is_test_user);
+          this.profileNames = profiles
+            .filter(p => !p.is_deleted || !p.is_test_user)
+            .map(p => p.first_name!);
 
           if (areNotesLoaded) {
             setTimeout(() => this.scrollToBottom(), 0);
@@ -363,6 +376,7 @@ export class NotesPageComponent {
   async addNote(event: any){
     event.preventDefault();
     this.note = this.note.trim();
+    const mentionedProfiles = this.notesService.getMentionedProfilesFromNote(this.activeProfiles, this.note);
 
     if(this.note && this.daysIndex >= 0){    
       const now = new Date();
@@ -371,6 +385,11 @@ export class NotesPageComponent {
       selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
 
       await this.notesService.createNote(this.note, selectedDate);
+
+      if(mentionedProfiles.length) {
+        this.notesService.sendNotificationToMentionedUsers(this.activeProfiles.find(p => p.id == this.authService.getStoredUserId())?.first_name ?? 'User', mentionedProfiles, this.note);
+      }
+      
       this.note = '';
     }
   }

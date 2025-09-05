@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
-import { Note } from '../models/data.models';
+import { Note, Profile, PushNotification } from '../models/data.models';
 import { DataService } from './data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { PushNotificationsService } from './push-notifications.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +16,7 @@ export class NotesService {
     private supabaseService: SupabaseService,
     private authService: AuthService,
     private dataService: DataService,
+    private pushNotificationsService: PushNotificationsService,
   ) {
     this.dataService.notes$
       .pipe(nonNull())
@@ -48,5 +50,33 @@ export class NotesService {
       console.log(error);
       return null;
     }
+  }
+
+  getMentionedProfilesFromNote(profiles: Profile[], note: string): any[] {
+    const matches: any[] = [];
+
+    profiles.forEach(profile => {
+      const name = profile.first_name;
+      const regex = new RegExp(`@${name!.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}`, 'g');
+
+      if (regex.test(note) && !matches.includes(profile)) {
+        matches.push(profile);
+      }
+    });
+
+    return matches;
+  }
+
+  async sendNotificationToMentionedUsers(sendingProfileFirstName: string, mentionedProfiles: Profile[], note: string){
+    const notification: PushNotification = {
+      title: sendingProfileFirstName + ' mentioned you in a note',
+      body: note,
+    }
+
+    const sendPromises = mentionedProfiles.map(profile => 
+      this.pushNotificationsService.sendNotification(profile.id, notification)
+    );
+
+    await Promise.all(sendPromises);
   }
 }
