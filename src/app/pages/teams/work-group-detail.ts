@@ -126,14 +126,20 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
                                                         <span>
                                                             <b>Check IN</b>: {{ houseService.getNextHouseAvailabilityForHouse(task.house_id).house_availability_start_date | date: 'dd/MM/yyyy' }}
                                                         </span>
+                                                        <span>
+                                                            <b>Check OUT</b>: {{ houseService.getNextHouseAvailabilityForHouse(task.house_id).house_availability_end_date | addDays:1 | date: 'dd/MM/yyyy' }}
+                                                        </span>
                                                     } @else if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length == 1){
                                                         @if(houseService.hasArrivalForToday(task.house_id)){
                                                             <span>
-                                                                <b>Check IN</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].arrival_time }}
+                                                                <b>Check IN</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].arrival_time.split(':').slice(0,2).join(':') }}
+                                                            </span>
+                                                            <span>
+                                                                <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].house_availability_end_date | addDays:1 | date: 'dd/MM/yyyy' }}
                                                             </span>
                                                         } @else if(houseService.hasDepartureForToday(task.house_id)){
                                                             <span>
-                                                                <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
+                                                                <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time.split(':').slice(0,2).join(':') }}
                                                             </span>
                                                             @if(houseService.getNextHouseAvailabilityForHouse(task.house_id)){
                                                                 <span>
@@ -144,16 +150,21 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
                                                             <span>
                                                                 <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].house_availability_end_date | addDays:1 | date: 'dd/MM/yyyy' }}
                                                             </span>
+                                                            @if(houseService.getNextHouseAvailabilityForHouse(task.house_id)){
+                                                                <span>
+                                                                    <b>Check IN</b>: {{ houseService.getNextHouseAvailabilityForHouse(task.house_id).house_availability_start_date | date: 'dd/MM/yyyy' }}
+                                                                </span>
+                                                            }
                                                         }
                                                     } @else if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id).length == 2){
                                                         @if(!houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].has_departed){
                                                             <span>
-                                                                <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time }}
+                                                                <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time.split(':').slice(0,2).join(':') }}
                                                             </span>
                                                         }
                                                         @if(!houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].has_arrived){
                                                             <span>
-                                                                <b>Check IN</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].arrival_time }}
+                                                                <b>Check IN</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].arrival_time.split(':').slice(0,2).join(':') }}
                                                             </span>
                                                         } @else if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].has_arrived){
                                                             <span>
