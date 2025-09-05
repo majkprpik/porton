@@ -31,6 +31,7 @@
     "@ngx-translate/http-loader": "^16.0.1",
     "@primeng/themes": "^19.0.5",
     "@supabase/supabase-js": "^2.49.4",
+    "angular-mentions": "^1.5.0",
     "browser-image-compression": "^2.0.2",
     "chart.js": "^4.4.2",
     "colors": "^1.4.0",
