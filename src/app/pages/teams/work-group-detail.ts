@@ -161,12 +161,13 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
                                                             <span>
                                                                 <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time.split(':').slice(0,2).join(':') }}
                                                             </span>
-                                                        }
-                                                        @if(!houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].has_arrived){
                                                             <span>
                                                                 <b>Check IN</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].arrival_time.split(':').slice(0,2).join(':') }}
                                                             </span>
-                                                        } @else if(houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].has_arrived){
+                                                        } @else {
+                                                            <span>
+                                                                <b>Check IN</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].arrival_time.split(':').slice(0,2).join(':') }}
+                                                            </span>
                                                             <span>
                                                                 <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[1].house_availability_end_date | addDays:1 | date: 'dd/MM/yyyy' }}
                                                             </span>
