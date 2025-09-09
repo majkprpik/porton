@@ -67,27 +67,27 @@ export class HouseService {
     const yesterdayTime = yesterday.getTime();
 
     const houseAvailabilities = this.houseAvailabilities
-        .filter((availability) => {
-            if (availability.house_id == houseId) {
-                const start = new Date(availability.house_availability_start_date);
-                start.setHours(0, 0, 0, 0);
+      .filter((availability) => {
+        if (availability.house_id == houseId) {
+          const start = new Date(availability.house_availability_start_date);
+          start.setHours(0, 0, 0, 0);
 
-                const end = new Date(availability.house_availability_end_date);
-                end.setHours(23, 59, 59, 999);
+          const end = new Date(availability.house_availability_end_date);
+          end.setHours(23, 59, 59, 999);
 
-                const isTodayInRange = start.getTime() <= todayTime && end.getTime() >= todayTime;
-                const endedYesterday = end.getTime() >= yesterdayTime && end.getTime() < todayTime;
+          const isTodayInRange = start.getTime() <= todayTime && end.getTime() >= todayTime;
+          const endedYesterday = end.getTime() >= yesterdayTime && end.getTime() < todayTime;
 
-                return isTodayInRange || endedYesterday;
-            }
+          return isTodayInRange || endedYesterday;
+        }
 
-            return false;
-        })
-        .sort((a, b) => {
-            const endA = new Date(a.house_availability_end_date).getTime();
-            const endB = new Date(b.house_availability_end_date).getTime();
-            return endA - endB;
-        });
+        return false;
+      })
+      .sort((a, b) => {
+        const endA = new Date(a.house_availability_end_date).getTime();
+        const endB = new Date(b.house_availability_end_date).getTime();
+        return endA - endB;
+      });
 
     if (houseAvailabilities && houseAvailabilities.length == 1) {
       if(!houseAvailabilities[0].has_arrived){
