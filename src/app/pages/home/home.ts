@@ -17,6 +17,7 @@ import { ChartComponent } from '../statistics/chart.component';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { StatisticsService } from '../../core/services/statistics.service';
+import { HouseCardComponent } from './house-card/house-card.component';
 
 // Define the special location option interface
 interface SpecialLocation {
@@ -37,6 +38,7 @@ interface SpecialLocation {
         InputTextModule,
         TranslateModule,
         ChartComponent,
+        HouseCardComponent,
     ],
     template: `
         <div class="home-container" (click)="handleContainerClick($event)">
@@ -91,136 +93,23 @@ interface SpecialLocation {
                 <div class="house-grid">
                     @if (sortType == 'number' || !sortType) {
                         @for (house of filteredHouses(); track house.house_id) {
-                            <div 
-                                class="house-card" 
-                                [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
-                                [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasScheduledNotCompletedTasks(house.house_id)" 
-                                [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasScheduledNotCompletedTasks(house.house_id)"
-                                [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.isHouseReservedToday(house.house_id)"
-                                [class.expanded]="expandedHouseId === house.house_id" 
-                                (click)="toggleExpand($event, house.house_id)">
-                                <div class="house-content">
-                                    <div class="house-number">{{ house.house_name }}</div>
-                                    <div class="house-icons">
-                                        @if (houseService.hasNotCompletedTasks(house.house_id)) {
-                                            @for (task of houseService.getTasksForHouse(house.house_id); track task.task_id) {
-                                                @if (!taskService.isTaskCompleted(task)){
-                                                    <i
-                                                        [ngClass]="[
-                                                            getTaskIcon(task),
-                                                            taskService.isTaskInProgress(task) 
-                                                                ? (isUrgentIconVisibleMap[task.task_id] ? 'rotating' : 'rotating-wrench') 
-                                                                : ''
-                                                        ]"
-                                                        (click)="openTaskDetails($event, task)">
-                                                    </i>
-                                                }
-                                            }
-                                        }
-                                    </div>
-                                </div>
-                                <div
-                                    class="expanded-content"
-                                    [class.expanded-occupied]="!isCurrentSlotGap(house.house_id) && isCurrentSlotOccupied(house.house_id)"
-                                    [class.expanded-free]="isCurrentSlotGap(house.house_id) || !isCurrentSlotOccupied(house.house_id)"
-                                    (click)="handleExpandedContentClick($event)"
-                                >
-                                    <div class="date-range">
-                                        <div class="date-nav">
-                                            <i class="fa fa-chevron-left" (click)="navigateReservation(house.house_id, 'prev')"></i>
-                                            <span>{{ getCurrentReservationDates(house.house_id) }}</span>
-                                            <i class="fa fa-chevron-right" (click)="navigateReservation(house.house_id, 'next')"></i>
-                                        </div>
-                                         @if(!isCurrentSlotGap(house.house_id)){
-                                            <div class="numbers">
-                                                <div class="number-item">
-                                                    <span>{{ getAdultsCount(house.house_id) }}</span>
-                                                    <i class="fa-solid fa-person"></i>
-                                                </div>
-                                                <span class="separator">|</span>
-                                                <div class="number-item">
-                                                    <span>{{ getDogsCount(house.house_id) }}</span>
-                                                    <i class="fa-solid fa-paw"></i>
-                                                </div>
-                                                <span class="separator">|</span>
-                                                <div class="number-item">
-                                                    <span>{{ getBabiesCount(house.house_id) }}</span>
-                                                    <i class="fa-solid fa-baby"></i>
-                                                </div>
-                                                <span class="separator">|</span>
-                                                <div class="number-item">
-                                                    <span>{{ getBabyCribsCount(house.house_id) }}</span>
-                                                    <i class="fa-solid fa-baby-carriage"></i>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
+                            <app-house-card
+                                [house]="house"
+                                [houseAvailabilities]="houseAvailabilities"
+                                [expandedHouseId]="expandedHouseId"
+                                [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+                            ></app-house-card>
                         }
                     } @else if (sortType == 'type') {
                         @for (group of groupedHouses(); track group.type.house_type_id) {
                             <div class="type-divider">{{ group.type.house_type_name }}</div>
                             @for (house of group.houses; track house.house_id) {
-                                <div 
-                                    class="house-card" 
-                                    [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
-                                    [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasScheduledNotCompletedTasks(house.house_id)" 
-                                    [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasScheduledNotCompletedTasks(house.house_id)"
-                                    [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.isHouseReservedToday(house.house_id)"
-                                    [class.expanded]="expandedHouseId === house.house_id" 
-                                    (click)="toggleExpand($event, house.house_id)">
-                                    <div class="house-content">
-                                        <div class="house-number">{{ house.house_name }}</div>
-                                        <div class="house-icons">
-                                            @if (houseService.hasNotCompletedTasks(house.house_id)) {
-                                                @for (task of houseService.getTasksForHouse(house.house_id); track task.task_id) {
-                                                    @if (!taskService.isTaskCompleted(task)){
-                                                        <i
-                                                            [ngClass]="[
-                                                                getTaskIcon(task),
-                                                                taskService.isTaskInProgress(task) 
-                                                                    ? (isUrgentIconVisibleMap[task.task_id] ? 'rotating' : 'rotating-wrench') 
-                                                                    : ''
-                                                            ]"
-                                                            (click)="openTaskDetails($event, task)">
-                                                        </i>
-                                                    }
-                                                }
-                                            }
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="expanded-content"
-                                        [class.expanded-occupied]="!isCurrentSlotGap(house.house_id) && isCurrentSlotOccupied(house.house_id)"
-                                        [class.expanded-free]="isCurrentSlotGap(house.house_id) || !isCurrentSlotOccupied(house.house_id)"
-                                        (click)="handleExpandedContentClick($event)"
-                                    >
-                                        <div class="date-range">
-                                            <div class="date-nav">
-                                                <i class="fa fa-chevron-left" (click)="navigateReservation(house.house_id, 'prev')"></i>
-                                                <span>{{ getCurrentReservationDates(house.house_id) }}</span>
-                                                <i class="fa fa-chevron-right" (click)="navigateReservation(house.house_id, 'next')"></i>
-                                            </div>
-                                            <div class="numbers">
-                                                <div class="number-item">
-                                                    <i class="fa fa-user"></i>
-                                                    <span>{{ getAdultsCount(house.house_id) }}</span>
-                                                </div>
-                                                <span class="separator">|</span>
-                                                <div class="number-item">
-                                                    <i class="fa fa-heart"></i>
-                                                    <span>{{ getBabiesCount(house.house_id) }}</span>
-                                                </div>
-                                                <span class="separator">|</span>
-                                                <div class="number-item">
-                                                    <i class="fa fa-star"></i>
-                                                    <span>{{ getDogsCount(house.house_id) }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <app-house-card
+                                    [house]="house"
+                                    [houseAvailabilities]="houseAvailabilities"
+                                    [expandedHouseId]="expandedHouseId"
+                                    [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+                                ></app-house-card>
                             }
                         }
                     } @else if(sortType == 'status'){
@@ -232,65 +121,12 @@ interface SpecialLocation {
                                 </span>
                             </div> 
                             @for (house of group.houses; track house.house_id) {
-                                <div 
-                                    class="house-card" 
-                                    [class.occupied]="houseService.isHouseOccupied(house.house_id)" 
-                                    [class.available]="!houseService.isHouseOccupied(house.house_id) && !houseService.hasScheduledNotCompletedTasks(house.house_id)" 
-                                    [class.available-with-tasks]="!houseService.isHouseOccupied(house.house_id) && houseService.hasScheduledNotCompletedTasks(house.house_id)"
-                                    [class.available-with-arrival]="!houseService.isHouseOccupied(house.house_id) && houseService.isHouseReservedToday(house.house_id)"
-                                    [class.expanded]="expandedHouseId === house.house_id" 
-                                    (click)="toggleExpand($event, house.house_id)">
-                                    <div class="house-content">
-                                        <div class="house-number">{{ house.house_name }}</div>
-                                        <div class="house-icons">
-                                            @if (houseService.hasNotCompletedTasks(house.house_id)) {
-                                                @for (task of houseService.getTasksForHouse(house.house_id); track task.task_id) {
-                                                    @if (!taskService.isTaskCompleted(task)){
-                                                        <i
-                                                            [ngClass]="[
-                                                                getTaskIcon(task),
-                                                                taskService.isTaskInProgress(task) 
-                                                                    ? (isUrgentIconVisibleMap[task.task_id] ? 'rotating' : 'rotating-wrench') 
-                                                                    : ''
-                                                            ]"
-                                                            (click)="openTaskDetails($event, task)">
-                                                        </i>
-                                                    }
-                                                }
-                                            }
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="expanded-content"
-                                        [class.expanded-occupied]="!isCurrentSlotGap(house.house_id) && isCurrentSlotOccupied(house.house_id)"
-                                        [class.expanded-free]="isCurrentSlotGap(house.house_id) || !isCurrentSlotOccupied(house.house_id)"
-                                        (click)="handleExpandedContentClick($event)"
-                                    >
-                                        <div class="date-range">
-                                            <div class="date-nav">
-                                                <i class="fa fa-chevron-left" (click)="navigateReservation(house.house_id, 'prev')"></i>
-                                                <span>{{ getCurrentReservationDates(house.house_id) }}</span>
-                                                <i class="fa fa-chevron-right" (click)="navigateReservation(house.house_id, 'next')"></i>
-                                            </div>
-                                            <div class="numbers">
-                                                <div class="number-item">
-                                                    <i class="fa fa-user"></i>
-                                                    <span>{{ getAdultsCount(house.house_id) }}</span>
-                                                </div>
-                                                <span class="separator">|</span>
-                                                <div class="number-item">
-                                                    <i class="fa fa-heart"></i>
-                                                    <span>{{ getBabiesCount(house.house_id) }}</span>
-                                                </div>
-                                                <span class="separator">|</span>
-                                                <div class="number-item">
-                                                    <i class="fa fa-star"></i>
-                                                    <span>{{ getDogsCount(house.house_id) }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <app-house-card
+                                    [house]="house"
+                                    [houseAvailabilities]="houseAvailabilities"
+                                    [expandedHouseId]="expandedHouseId"
+                                    [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+                                ></app-house-card>
                             }
                         }
                     }
@@ -517,258 +353,10 @@ interface SpecialLocation {
                 }
             }
 
-            .house-card {
-                background: var(--surface-card);
-                border-radius: 6px;
-                transition: all 0.2s ease;
-                cursor: pointer;
-                min-width: unset;
-                position: relative;
-                z-index: 1;
-                max-width: 400px;
-
-                &.expanded {
-                    z-index: 2;
-                    border-radius: 6px 6px 0 0;
-                    box-shadow: none;
-                    outline: 1px solid rgba(255, 255, 255, 0.3);
-
-                    .house-content {
-                        border-radius: 6px 6px 0 0;
-                    }
-
-                    .expanded-content {
-                        visibility: visible;
-                        opacity: 1;
-                        transform: translateY(0);
-                        border-radius: 0 0 6px 6px;
-                        outline: 1px solid rgba(255, 255, 255, 0.3);
-                        outline-top: none;
-                        margin-top: -1px;
-                    }
-
-                    &:before {
-                        content: '';
-                        position: absolute;
-                        top: -1px;
-                        left: -1px;
-                        right: -1px;
-                        bottom: -1px;
-                        z-index: -1;
-                        border-radius: 7px;
-                        box-shadow: var(--p-shadow-2);
-                    }
-                }
-
-                .house-content {
-                    padding: 0.5rem;
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-
-                .expanded-content {
-                    position: absolute;
-                    top: 100%;
-                    left: 0;
-                    width: 100%;
-                    background: var(--surface-card);
-                    border-radius: 6px;
-                    box-shadow: var(--p-shadow-2);
-                    padding: 0.5rem;
-                    visibility: hidden;
-                    opacity: 0;
-                    transform: translateY(-10px);
-                    transition: all 0.3s ease;
-                    z-index: 3;
-
-                    &.expanded-occupied {
-                        background: var(--p-red-400);
-                        color: white;
-
-                        .date-nav i {
-                            color: white;
-                            &:hover {
-                                background-color: rgba(255, 255, 255, 0.2);
-                            }
-                        }
-                    }
-
-                    &.expanded-free {
-                        background: var(--p-green-500);
-                        color: white;
-
-                        .date-nav i {
-                            color: white;
-                            &:hover {
-                                background-color: rgba(255, 255, 255, 0.2);
-                            }
-                        }
-                    }
-
-                    .date-range {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 0.5rem;
-
-                        .date-nav {
-                            display: flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                            font-size: 1rem;
-
-                            i {
-                                cursor: pointer;
-                                padding: 0.25rem;
-                                border-radius: 50%;
-                                transition: background-color 0.2s;
-
-                                &:hover {
-                                    background-color: var(--p-surface-hover);
-                                }
-                            }
-                        }
-
-                        .numbers {
-                            display: flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                            font-size: 1.2rem;
-                            font-weight: 500;
-
-                            .number-item {
-                                display: flex;
-                                align-items: center;
-                                gap: 0.25rem;
-
-                                i {
-                                    font-size: 1rem;
-                                }
-                            }
-
-                            .separator {
-                                opacity: 0.8;
-                            }
-                        }
-                    }
-                }
-
-                &.available {
-                    background: var(--p-green-600);
-
-                    .house-number,
-                    .house-icons i {
-                        color: white;
-                    }
-                    
-                    @media (prefers-color-scheme: dark) {
-                        background: var(--p-green-600);
-                    }
-                }
-
-                &.occupied {
-                    background: var(--p-red-600);
-
-                    .house-number,
-                    .house-icons i {
-                        color: white;
-
-                    }
-
-                    @media (prefers-color-scheme: dark) {
-                        background: var(--p-red-600);
-                    }
-                }
-
-                &.available-with-arrival{
-                    background: var(--p-red-400);
-
-                    .house-number,
-                    .house-icons i {
-                        color: white;
-                    }
-
-                    @media (prefers-color-scheme: dark) {
-                        background: var(--p-red-400);
-                    }
-                }
-
-                &.available-with-tasks {
-                    background: var(--p-yellow-400);
-
-                    .house-number,
-                    .house-icons i {
-                        color: white;
-                    }
-
-                    @media (prefers-color-scheme: dark) {
-                        background: var(--p-yellow-400);
-                    }
-                }
-
-                &:hover {
-                    box-shadow: var(--p-shadow-2);
-                    transform: translateY(-1px);
-                }
-
-                .house-number {
-                    font-size: 1.25rem;
-                    font-weight: 700;
-                    padding-left: 0;
-                    padding-right: 10px;
-                }
-
-                .house-icons {
-                    padding-right: 0;
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    gap: 10px;
-
-                    i {
-                        font-size: 1.25rem;
-                        display: flex;
-                        flex-direction: row;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                }
-            }
-
             @media screen and (min-width: 768px) {
                 .house-grid {
                     grid-template-columns: repeat(4, 1fr);
                     gap: 0.5rem;
-                }
-
-                .house-card {
-                    .house-content {
-                        padding: 0.75rem 1rem;
-                    }
-
-                    .house-number {
-                        font-size: 1.5rem;
-                    }
-
-                    .house-icons {
-                        display: flex;
-                        flex-direction: row;
-                        align-items: center;
-                        flex-wrap: wrap;
-                        gap: 5px;
-
-                        i {
-                            font-size: 1.5rem;
-                            width: 25px;
-                            
-                            display: flex;
-                            flex-direction: row;
-                            align-items: center;
-                            justify-content: center;
-                        }
-                    }
                 }
             }
 
