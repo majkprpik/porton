@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup, Profile, HouseOccupant, HouseType } from '../models/data.models';
+import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup, Profile, HouseOccupant, HouseType, TaskTypeName } from '../models/data.models';
 import { combineLatest } from 'rxjs';
 import { TaskService } from './task.service';
 import { DataService } from './data.service';
@@ -387,6 +387,20 @@ export class HouseService {
     catch (error) {
       console.error('Error updating house availability:', error);
       return null;
+    }
+  }
+
+  handleHouseDepartureTaskCreation(updatedHouseAvailability: HouseAvailability){
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const departureDay = new Date(updatedHouseAvailability.house_availability_end_date);
+    departureDay.setHours(0, 0, 0 ,0);  
+    departureDay.setDate(departureDay.getDate() + 1);
+
+    if(departureDay.getTime() > today.getTime()){
+      this.taskService.createTask(updatedHouseAvailability.house_id, '', TaskTypeName.HouseCleaning, false);
+      this.taskService.createTask(updatedHouseAvailability.house_id, '', TaskTypeName.DeckCleaning, false);
     }
   }
 

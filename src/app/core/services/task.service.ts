@@ -89,7 +89,7 @@ export class TaskService {
     }
   }
 
-  async createTask(houseId: string, description: string, taskTypeName: TaskTypeName, isUnscheduled: boolean = false){
+  async createTask(houseId: number, description: string, taskTypeName: TaskTypeName, isUnscheduled: boolean = false){
     try {
       const { data: createdTask, error: createTaskError } = await this.supabaseService.getClient()
         .schema('porton')
@@ -97,7 +97,7 @@ export class TaskService {
         .insert({
           task_type_id: this.getTaskTypeByName(taskTypeName)?.task_type_id,
           task_progress_type_id: this.getTaskProgressTypeByName(TaskProgressTypeName.NotAssigned)?.task_progress_type_id,
-          house_id: parseInt(houseId),
+          house_id: houseId,
           description: description,
           created_by: this.authService.getStoredUserId(),
           created_at: this.supabaseService.formatDateTimeForSupabase(new Date()),

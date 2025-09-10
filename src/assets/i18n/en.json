@@ -36,7 +36,8 @@
         "EXPORT": "Export",
         "LOG-OUT": "Log out",
         "DETAILS": "Details",
-        "DELETE-PROFILE": "Delete profile"
+        "DELETE-PROFILE": "Delete profile",
+        "CREATE": "Create"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Assigned",
@@ -139,7 +140,17 @@
             "NO-ARRIVALS-FOR-TODAY": "No arrivals for today",
             "NO-DEPARTURES-FOR-TODAY": "No departures for today",
             "NO-ARRIVALS-FOR-THIS-DAY": "No arrivals for this day",
-            "NO-DEPARTURES-FOR-THIS-DAY": "No departures for this day"
+            "NO-DEPARTURES-FOR-THIS-DAY": "No departures for this day",
+            "MODALS": {
+                "CREATE-TASKS": {
+                    "TITLE": "Create tasks",
+                    "TEXT": "Would you like to create <b>House cleaning</b> and <b>Deck cleaning</b> tasks for house <b>{{houseNumber}}</b>?"
+                },
+                "CONFIRM-UNDO-DEPARTURE": {
+                    "TITLE": "Confirm departure uncheck",
+                    "MESSAGE": "Are you sure you want to uncheck departure for house <b>{{houseNumber}}</b>?"
+                }
+            }
         },
         "NOTES": {
             "TITLE": "Notes",

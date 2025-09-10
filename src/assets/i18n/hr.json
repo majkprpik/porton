@@ -36,7 +36,8 @@
         "EXPORT": "Izvezi",
         "LOG-OUT": "Odjava",
         "DETAILS": "Detalji",
-        "DELETE-PROFILE": "Obriši profil"
+        "DELETE-PROFILE": "Obriši profil",
+        "CREATE": "Kreiraj"
     },
     "TASK-PROGRESS-TYPES": {
         "Dodijeljeno": "Dodijeljeno",
@@ -139,7 +140,17 @@
             "NO-ARRIVALS-FOR-TODAY": "Nema dolazaka za danas",
             "NO-DEPARTURES-FOR-TODAY": "Nema odlazaka za danas",
             "NO-ARRIVALS-FOR-THIS-DAY": "Nema dolazaka za ovaj dan",
-            "NO-DEPARTURES-FOR-THIS-DAY": "Nema odlazaka za ovaj dan"
+            "NO-DEPARTURES-FOR-THIS-DAY": "Nema odlazaka za ovaj dan",
+            "MODALS": {
+                "CREATE-TASKS": {
+                    "TITLE": "Kreiraj zadatke",
+                    "TEXT": "Želite li napraviti zadatke <b>Čišćenje kućice</b> i <b>Čišćenje terase</b> za kućicu <b>{{houseNumber}}</b>?"
+                },
+                "CONFIRM-UNDO-DEPARTURE": {
+                    "TITLE": "Potvrdi odznačivanje odlaska",
+                    "MESSAGE": "Jeste li sigurni da želite odznačiti odlazak kućice <b>{{houseNumber}}</b>?"
+                }
+            }
         },
         "NOTES": {
             "TITLE": "Bilješke",

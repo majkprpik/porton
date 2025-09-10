@@ -5,7 +5,7 @@ import { HouseService } from '../../core/services/house.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DividerModule } from 'primeng/divider';
 import { CommonModule } from '@angular/common';
@@ -278,6 +278,7 @@ export class ArrivalsAndDeparturesPageComponent {
     private confirmationService: ConfirmationService,
     public profileService: ProfileService,
     private authService: AuthService,
+    private translateService: TranslateService,
   ) {}
   
   async ngOnInit() {
@@ -362,7 +363,6 @@ export class ArrivalsAndDeparturesPageComponent {
 
     this.arrivals = todaysHouseAvailabilities.map(ha => {
       const house_number = this.houses.find(house => house.house_id == ha.house_id)?.house_number;
-      // Parse time string into Date object for the calendar component
       const arrivalTimeObj = this.getTimeObjFromTimeString(ha.arrival_time || '16:00');
       return { ...ha, house_number, arrivalTimeObj };
     });
@@ -384,7 +384,6 @@ export class ArrivalsAndDeparturesPageComponent {
 
     this.departures = todaysHouseAvailabilities.map(ha => {
       const house_number = this.houses.find(house => house.house_id == ha.house_id)?.house_number;
-      // Parse time string into Date object for the calendar component
       const departureTimeObj = this.getTimeObjFromTimeString(ha.departure_time || '10:00');
       return { ...ha, house_number, departureTimeObj };
     });
@@ -463,7 +462,6 @@ export class ArrivalsAndDeparturesPageComponent {
     }
   }
 
-  // Update departure time in database
   async updateDepartureTime(departure: any) {
     const timeString = this.getTimeStringFromObj(departure.departureTimeObj);
 
@@ -517,17 +515,17 @@ export class ArrivalsAndDeparturesPageComponent {
   
       this.confirmationService.confirm({
         target: event.target,
-        message: `Are you sure you want to mark <b>House ${departure.house_number}</b> as NOT departed?`, // Use HTML to make the house number bold
-        header: 'Confirm Departure Uncheck',
+        header: this.translateService.instant('APP-LAYOUT.ARRIVALS-AND-DEPARTURES.MODALS.CONFIRM-UNDO-DEPARTURE.TITLE'),
+        message: this.translateService.instant('APP-LAYOUT.ARRIVALS-AND-DEPARTURES.MODALS.CONFIRM-UNDO-DEPARTURE.MESSAGE', { houseNumber: this.houses.find(h => h.house_id == departure.house_id)?.house_number } ),
         icon: 'pi pi-exclamation-triangle',
         rejectLabel: 'Cancel',
         rejectButtonProps: {
-          label: 'Cancel',
+          label: this.translateService.instant('BUTTONS.CANCEL'),
           severity: 'secondary',
           outlined: true,
         },
         acceptButtonProps: {
-          label: 'Confirm',
+          label: this.translateService.instant('BUTTONS.CONFIRM'),
           severity: 'danger',
         },
         accept: async () => {
@@ -549,6 +547,39 @@ export class ArrivalsAndDeparturesPageComponent {
           departure.has_departed = updatedHouseAvailability.has_departed;
         }
       }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+    
+      const departureDay = new Date(departure.house_availability_end_date);
+      departureDay.setHours(0, 0, 0 ,0);  
+      departureDay.setDate(departureDay.getDate() + 1);
+    
+      if(departureDay.getTime() > today.getTime()){
+        this.confirmationService.confirm({
+          target: event.target,
+          header: this.translateService.instant('APP-LAYOUT.ARRIVALS-AND-DEPARTURES.MODALS.CREATE-TASKS.TITLE'),
+          message: this.translateService.instant('APP-LAYOUT.ARRIVALS-AND-DEPARTURES.MODALS.CREATE-TASKS.TEXT',  { houseNumber: this.houses.find(h => h.house_id == departure.house_id)?.house_number }),
+          icon: undefined,
+          rejectLabel: 'Cancel',
+          rejectButtonProps: {
+            label: this.translateService.instant('BUTTONS.CANCEL'),
+            severity: 'secondary',
+            outlined: true,
+          },
+          acceptButtonProps: {
+            label: this.translateService.instant('BUTTONS.CREATE'),
+            severity: 'primary',
+          },
+          accept: async () => {
+            this.houseService.handleHouseDepartureTaskCreation(departure);
+            this.messageService.add({ severity: 'info', summary: 'Updated', detail: 'Tasks created' });
+          },
+          reject: () => {
+            this.messageService.add({ severity: 'warn', summary: 'Cancelled', detail: 'Change was cancelled' });
+          }
+        });
+      } 
     }
   }
 

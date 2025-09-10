@@ -1362,7 +1362,7 @@ export class AppLayout {
         if (!this.isFaultReportFormValid()) return;
 
         this.taskService.createTask(
-            this.selectedHouseForFaultReport!.house_id.toString(),
+            this.selectedHouseForFaultReport!.house_id,
             this.faultDescription,
             TaskTypeName.Repair,
             true
@@ -1401,7 +1401,7 @@ export class AppLayout {
             if (!house) return Promise.resolve(null);
 
             return this.taskService.createTask(
-                house.house_id.toString(),
+                house.house_id,
                 this.taskDescription,
                 this.selectedTaskType!.task_type_name as TaskTypeName,
                 true
