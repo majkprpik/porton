@@ -352,9 +352,9 @@ export class ChartComponent {
       this.houses = houses;
       this.tasks = tasks;
       this.profiles = profiles
-        .filter(p => !p.is_deleted && !p.is_test_user);
+        .filter(p => !p.is_test_user);
       this.staff = profiles
-        .filter(p => !p.is_deleted && !p.is_test_user)
+        .filter(p => !p.is_test_user)
         .map(profile => profile.first_name ?? 'Staff');
 
       this.houses.forEach(house => {
