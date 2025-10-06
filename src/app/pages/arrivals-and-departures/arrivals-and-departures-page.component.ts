@@ -432,7 +432,6 @@ export class ArrivalsAndDeparturesPageComponent {
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   }
 
-  // Update arrival time in database
   async updateArrivalTime(arrival: any) {
     const timeString = this.getTimeStringFromObj(arrival.arrivalTimeObj);
 

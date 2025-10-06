@@ -159,8 +159,6 @@ export class TaskCardComponent {
   @Output() removeFromGroup = new EventEmitter<void>();
 
   private destroy$ = new Subject<void>();
-
-  private urgentIconSubscription?: Subscription;
   isUrgentIconVisible = false;
 
   taskIcon: string = 'fa fa-file';
