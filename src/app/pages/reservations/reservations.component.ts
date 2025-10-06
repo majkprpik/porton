@@ -113,7 +113,8 @@ interface CellData {
                                     class="row-header" 
                                     [ngClass]="{
                                         'active-row': selectedCellRowIndex() === i,
-                                        'has-pool': handleHasPoolDisplay(house)
+                                        'has-pool': handleHasPoolDisplay(house),
+                                        'is-active-header': handleIsActiveDisplay(house),
                                     }"
                                 >
                                     {{ house.house_name || house.house_number }}
@@ -149,6 +150,7 @@ interface CellData {
                                                 'height-25-important': cellHeightInPx == 25,
                                                 'height-30-important': cellHeightInPx == 30,
                                                 'height-40-important': cellHeightInPx == 40,
+                                                'is-active': handleIsActiveDisplay(house),
                                             }"
                                             [style.background-color]="gridMatrix()[i][j].color"
                                             [pTooltip]="gridMatrix()[i][j].isReserved ? getReservationNoteForCell(i, j) : ''"
@@ -266,7 +268,7 @@ interface CellData {
                             max-height: 33px;
 
                             i{
-                            font-size: 16px;
+                                font-size: 16px;
                             }
                         }
                     }
@@ -628,6 +630,17 @@ interface CellData {
 
                     .border-bottom-important-has-pool {
                         border-bottom: 3px solid var(--p-orange-400) !important;
+                    }
+
+                    .is-active {
+                        background-color: red !important;
+                        color: white;
+                        border: 1px solid red;
+                    }
+
+                    .is-active-header {
+                        background-color: red !important;
+                        color: white;
                     }
 
                     user-select: none;
@@ -1886,5 +1899,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     handleHasPoolDisplay(house: House){
         return !house.has_pool && house.house_id > 0 && house.house_number > 0;
+    }
+
+    handleIsActiveDisplay(house: House){
+        return !house.is_active && house.house_id > 0;
     }
 }

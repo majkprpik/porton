@@ -20,6 +20,7 @@ export interface House {
   house_type_id: number;
   is_deleted?: boolean;
   has_pool: boolean;
+  is_active: boolean;
 }
 
 export interface Profile {

@@ -56,18 +56,20 @@ interface ExtendedHouse extends House{
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-NAME' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-TYPE' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HAS-POOL' | translate }}</th>
+            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.IS-ACTIVE' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-house>
           <tr [ngClass]="{'divider-row': house.is_divider}">
             @if(house.is_divider){
-              <td colspan="5" class="divider-cell">{{ ('HOUSE-TYPES.' + house.title | translate) | uppercase}}</td>
+              <td colspan="6" class="divider-cell">{{ ('HOUSE-TYPES.' + house.title | translate) | uppercase}}</td>
             } @else {
               <td>{{ house.house_number }}</td>
               <td>{{ house.house_name }}</td>
               <td>{{ houseService.getHouseType(house.house_type_id)?.house_type_name }}</td>
               <td>{{ house.has_pool }}</td>
+              <td>{{ house.is_active }}</td>
               <td>
                 <p-button 
                   icon="pi pi-pencil" 
@@ -114,6 +116,34 @@ interface ExtendedHouse extends House{
             id="houseTypes"
           >
           </p-select>
+        </div>
+        <div class="field flex items-center gap-2 mt-5">
+          <p-checkbox 
+            inputId="hasPool" 
+            name="hasPool" 
+            binary="true"
+            [(ngModel)]="selectedHouse.has_pool" 
+          />
+          <label 
+            [ngStyle]="{'margin-bottom': '0px'}" 
+            for="hasPool"
+          >
+            {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.HAS-POOL' | translate }}
+          </label>
+        </div>
+        <div class="field flex items-center gap-2 mt-5">
+          <p-checkbox 
+            inputId="isActive" 
+            name="isActive" 
+            binary="true"
+            [(ngModel)]="selectedHouse.is_active" 
+          />
+          <label 
+            [ngStyle]="{'margin-bottom': '0px'}" 
+            for="isActive"
+          >
+            {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.IS-ACTIVE' | translate }}
+          </label>
         </div>
       }
       @if(isExistingHouseErrorDisplayed){
@@ -178,6 +208,20 @@ interface ExtendedHouse extends House{
             for="hasPool"
           >
             {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.HAS-POOL' | translate }}
+          </label>
+        </div>
+        <div class="field flex items-center gap-2 mt-5">
+          <p-checkbox 
+            inputId="isActive" 
+            name="isActive" 
+            binary="true"
+            [(ngModel)]="houseToCreate.is_active" 
+          />
+          <label 
+            [ngStyle]="{'margin-bottom': '0px'}" 
+            for="isActive"
+          >
+            {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.IS-ACTIVE' | translate }}
           </label>
         </div>
       }
@@ -250,6 +294,7 @@ interface ExtendedHouse extends House{
     label {
       display: block;
       margin-bottom: 0.5rem;
+      user-select: none;
     }
     
     .p-dialog-footer {
@@ -396,10 +441,6 @@ export class HousesComponent implements OnInit {
   }
 
   createHouse(house: Partial<House>){
-    if(house.has_pool == undefined){
-      house.has_pool = false;
-    }
-
     if(this.houses.find(h => h.house_name == house.house_name)){
       this.isExistingHouseErrorDisplayed = true;
       this.existingHouseErrorMessage = this.translateService.instant('CONTENT-MANAGEMENT.HOUSES.HOUSE-NAME-EXISTS-ERROR');
@@ -435,7 +476,7 @@ export class HousesComponent implements OnInit {
     });
   }
 
-  saveHouse(house: House){    
+  saveHouse(house: House){
     if(this.houses.find(h => h.house_name == house.house_name && h.house_id !== house.house_id)){
       this.isExistingHouseErrorDisplayed = true;
       this.existingHouseErrorMessage = this.translateService.instant('CONTENT-MANAGEMENT.HOUSES.HOUSE-NAME-EXISTS-ERROR');
@@ -498,7 +539,9 @@ export class HousesComponent implements OnInit {
     this.houseToCreate = {
       house_name: '',
       house_number: undefined,
-      house_type_id: this.houseTypes.find(ht => ht.house_type_name == HouseTypes.Family1)?.house_type_id
+      house_type_id: this.houseTypes.find(ht => ht.house_type_name == HouseTypes.Family1)?.house_type_id,
+      has_pool: false,
+      is_active: true,
     }
   }
 
