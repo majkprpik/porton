@@ -15,6 +15,7 @@ import { SelectModule } from 'primeng/select';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { HouseService } from '../../core/services/house.service';
+import { CheckboxModule } from 'primeng/checkbox';
 
 interface ExtendedHouse extends House{
   id: string;
@@ -35,6 +36,7 @@ interface ExtendedHouse extends House{
     InputTextModule,
     TranslateModule,
     SelectModule,
+    CheckboxModule,
   ],
   providers: [MessageService],
   template: `
@@ -53,6 +55,7 @@ interface ExtendedHouse extends House{
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-NUMBER' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-NAME' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-TYPE' | translate }}</th>
+            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HAS-POOL' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
@@ -64,6 +67,7 @@ interface ExtendedHouse extends House{
               <td>{{ house.house_number }}</td>
               <td>{{ house.house_name }}</td>
               <td>{{ houseService.getHouseType(house.house_type_id)?.house_type_name }}</td>
+              <td>{{ house.has_pool }}</td>
               <td>
                 <p-button 
                   icon="pi pi-pencil" 
@@ -161,6 +165,20 @@ interface ExtendedHouse extends House{
             id="houseTypes"
           >
           </p-select>
+        </div>
+        <div class="field flex items-center gap-2 mt-5">
+          <p-checkbox 
+            inputId="hasPool" 
+            name="hasPool" 
+            binary="true"
+            [(ngModel)]="houseToCreate.has_pool" 
+          />
+          <label 
+            [ngStyle]="{'margin-bottom': '0px'}" 
+            for="hasPool"
+          >
+            {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.HAS-POOL' | translate }}
+          </label>
         </div>
       }
       @if(isExistingHouseErrorDisplayed){
@@ -378,6 +396,10 @@ export class HousesComponent implements OnInit {
   }
 
   createHouse(house: Partial<House>){
+    if(house.has_pool == undefined){
+      house.has_pool = false;
+    }
+
     if(this.houses.find(h => h.house_name == house.house_name)){
       this.isExistingHouseErrorDisplayed = true;
       this.existingHouseErrorMessage = this.translateService.instant('CONTENT-MANAGEMENT.HOUSES.HOUSE-NAME-EXISTS-ERROR');

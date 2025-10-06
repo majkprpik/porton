@@ -109,7 +109,15 @@ interface CellData {
                     <tbody>
                         @for (house of filteredHouses(); track house.house_id; let i = $index) {
                             <tr>
-                                <th class="row-header" [ngClass]="{'active-row': selectedCellRowIndex() === i}">{{ house.house_name || house.house_number }}</th>
+                                <th 
+                                    class="row-header" 
+                                    [ngClass]="{
+                                        'active-row': selectedCellRowIndex() === i,
+                                        'has-pool': handleHasPoolDisplay(house)
+                                    }"
+                                >
+                                    {{ house.house_name || house.house_number }}
+                                </th>
                                 @for (day of days(); track day.getTime(); let j = $index) {
                                     @if (gridMatrix()[i] && gridMatrix()[i][j]){
                                         <td 
@@ -135,6 +143,8 @@ interface CellData {
                                                 'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationEnd,
                                                 'border-top-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
                                                 'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
+                                                'border-top-important-has-pool': handleHasPoolDisplay(house),
+                                                'border-bottom-important-has-pool': handleHasPoolDisplay(house),
                                                 'free-column': isSpotAvailable(i, j),
                                                 'height-25-important': cellHeightInPx == 25,
                                                 'height-30-important': cellHeightInPx == 30,
@@ -410,6 +420,11 @@ interface CellData {
                             border-left: 3px solid #4caf50;
                             font-weight: 900;
                         }
+
+                        &.has-pool {
+                            background-color: var(--p-orange-400);
+                            color: white;
+                        }
                     }
 
                     .selected-cell {
@@ -594,14 +609,25 @@ interface CellData {
                     .border-left-important {
                         border-left: 1px solid black !important;
                     }
+
                     .border-right-important {
                         border-right: 1px solid black !important;
                     }
+
                     .border-top-important {
                         border-top: 1px solid black !important;
                     }
+
                     .border-bottom-important {
                         border-bottom: 1px solid black !important;
+                    }
+
+                    .border-top-important-has-pool {
+                        border-top: 3px solid var(--p-orange-400) !important;
+                    }
+
+                    .border-bottom-important-has-pool {
+                        border-bottom: 3px solid var(--p-orange-400) !important;
                     }
 
                     user-select: none;
@@ -1856,5 +1882,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     getReservationNoteForCell(row: number, col: number){
         const reservation = this.getReservationByRowAndColumn(row, col);
         return reservation?.note ?? '';
+    }
+
+    handleHasPoolDisplay(house: House){
+        return !house.has_pool && house.house_id > 0 && house.house_number > 0;
     }
 }

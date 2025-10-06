@@ -528,19 +528,22 @@
                 "HOUSE-NUMBER": "House number",
                 "HOUSE-NAME": "House name",
                 "HOUSE-TYPE": "House type",
+                "HAS-POOL": "Has pool",
                 "ACTIONS": "Actions"
             },
             "ADD": {
                 "TITLE": "Add new house",
                 "HOUSE-NUMBER": "House number",
                 "HOUSE-NAME": "House name",
-                "HOUSE-TYPE": "House type"
+                "HOUSE-TYPE": "House type",
+                "HAS-POOL": "Has pool"
             },
             "EDIT": {
                 "TITLE": "Edit house",
                 "HOUSE-NUMBER": "House number",
                 "HOUSE-NAME": "House name",
-                "HOUSE-TYPE": "House type"
+                "HOUSE-TYPE": "House type",
+                "HAS-POOL": "Has pool"
             },
             "DELETE": {
                 "TITLE": "Delete house",
