@@ -419,7 +419,7 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
             }
 
             &.in-progress {
-                background: var(--p-yellow-500);
+                background: var(--p-yellow-400);
                 color: var(--p-surface-0);
             }
 

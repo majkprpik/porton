@@ -177,7 +177,7 @@ import { TasksIndexSortPipe } from '../../shared/pipes/tasks-index-sort.pipe';
       }
 
       &.in-progress {
-        background: var(--p-yellow-500);
+        background: var(--p-yellow-400);
         color: var(--p-surface-0);
       }
 
