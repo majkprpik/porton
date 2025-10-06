@@ -6,14 +6,12 @@ import { ChartModule } from 'primeng/chart';
 import { MultiSelect } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { CommonModule, isPlatformBrowser, TitleCasePipe } from '@angular/common';
-import { House, HouseAvailability, Profile, Task } from '../../core/models/data.models';
+import { ChartType, House, HouseAvailability, Profile, Task } from '../../core/models/data.models';
 import { TaskService } from '../../core/services/task.service';
 import { combineLatest, take } from 'rxjs';
 import { LayoutService } from '../../layout/services/layout.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
-
-type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'polarArea' | 'radar';
 
 @Component({
   selector: 'app-chart',
@@ -1055,8 +1053,12 @@ export class ChartComponent {
           ticks: {
             color: chartData.textColor,
             autoSkip: false,
-            callback: (value: any) => {
-              return Number.isInteger(value) ? value : null;
+            callback: (value: any, index: number) => {
+              if(this.dataType == 'general' || this.dataType == 'occupancy') {
+                return this.xLabels[index];
+              } else {
+                return Number.isInteger(value) ? value : null;
+              }
             }
           },
           grid: {

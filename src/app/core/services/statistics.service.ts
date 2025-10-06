@@ -35,7 +35,7 @@ export class StatisticsService {
   occupancyMetricsPeriods: string[] = ['season', 'month'];
   staffMetricsPeriods: string[] = ['season', 'month'];
 
-  generalMetricsChartTypes: ChartType[] = ['bar', 'line', 'bubble', 'pie', 'doughnut'];
+  generalMetricsChartTypes: ChartType[] = ['bar', 'line', 'pie', 'doughnut'];
   occupancyMetricsChartTypes: ChartType[] = ['line'];
   staffMetricsChartTypes: ChartType[] = ['bar'];
 
