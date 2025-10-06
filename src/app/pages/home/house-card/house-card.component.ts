@@ -218,6 +218,32 @@ import { CommonModule } from '@angular/common';
             }
         }
 
+        .rotating {
+            animation: rotate 2s linear infinite;
+        }
+
+        .rotating-wrench {
+            animation: rotate-180 2s linear infinite
+        }
+
+        @keyframes rotate-180 {
+            from {
+                transform: rotate(130deg);
+            }
+            to {
+                transform: rotate(490deg);
+            }
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         &.available {
             background: var(--p-green-600);
 
@@ -506,7 +532,7 @@ export class HouseCardComponent {
     
     getTaskIcon(task: Task): string {
         if (this.isUrgentIconVisibleMap[task.task_id]) {
-        return 'fa fa-exclamation-triangle';
+            return 'fa fa-exclamation-triangle';
         }
     
         return this.taskService.getTaskIcon(task.task_type_id);

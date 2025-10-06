@@ -197,12 +197,6 @@ interface SpecialLocation {
             .legend-red { background: var(--p-red-600, #ef4444); }
             .legend-lightred { background: var(--p-red-400, #f87171); }
             
-            .legend-desc {
-                color: #555;
-                font-size: 0.9em;
-                margin-left: 0.2em;
-            }
-            
             .house-controls {
                 display: flex;
                 flex-wrap: wrap;
@@ -225,18 +219,6 @@ interface SpecialLocation {
             
             .sort-button, .sort-button:hover, .sort-button.active {
                 display: none;
-            }
-
-            .urgent-task-icon{
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 15px;
-
-                i {
-                    color: red;
-                    font-size: 0.875rem;
-                }
             }
             
             @media screen and (min-width: 992px) {
@@ -295,19 +277,6 @@ interface SpecialLocation {
                 position: relative;
             }
 
-            .header-card {
-                background: var(--surface-card);
-                padding: 1rem;
-                border-radius: 6px;
-                margin-bottom: 1rem;
-
-                h2 {
-                    margin: 0;
-                    color: var(--text-color);
-                    font-size: 1.5rem;
-                }
-            }
-
             .house-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -363,92 +332,6 @@ interface SpecialLocation {
             @media screen and (min-width: 1200px) {
                 .house-grid {
                     grid-template-columns: repeat(6, 1fr);
-                }
-            }
-
-            .tasks-section {
-                margin-top: 0.5rem;
-                border-top: 1px solid rgba(255, 255, 255, 0.2);
-                padding-top: 0.5rem;
-            }
-
-            .tasks-header {
-                font-size: 0.9rem;
-                margin-bottom: 0.3rem;
-                opacity: 0.9;
-            }
-
-            .tasks-list {
-                display: flex;
-                flex-direction: column;
-                gap: 0.3rem;
-            }
-
-            .task-item {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                font-size: 0.9rem;
-                padding: 0.2rem 0.5rem;
-                border-radius: 4px;
-                background: rgba(255, 255, 255, 0.1);
-
-                &.completed {
-                    background: rgba(255, 255, 255, 0.2);
-                }
-
-                i {
-                    font-size: 1rem;
-                }
-            }
-
-            .fault-report-form {
-                padding: 1.5rem 0;
-
-                .field {
-                    margin-bottom: 1rem;
-                }
-
-                label {
-                    color: var(--text-color);
-                }
-            }
-
-            .task-form {
-                padding: 1.5rem 0;
-
-                .field {
-                    margin-bottom: 1rem;
-                }
-
-                label {
-                    color: var(--text-color);
-                }
-            }
-
-            .rotating {
-                animation: rotate 2s linear infinite;
-            }
-
-            .rotating-wrench {
-                animation: rotate-180 2s linear infinite
-            }
-
-            @keyframes rotate-180 {
-                from {
-                    transform: rotate(130deg);
-                }
-                to {
-                    transform: rotate(490deg);
-                }
-            }
-
-            @keyframes rotate {
-                from {
-                    transform: rotate(0deg);
-                }
-                to {
-                    transform: rotate(360deg);
                 }
             }
 
