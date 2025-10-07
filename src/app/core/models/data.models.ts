@@ -21,6 +21,7 @@ export interface House {
   is_deleted?: boolean;
   has_pool: boolean;
   is_active: boolean;
+  description: string;
 }
 
 export interface Profile {

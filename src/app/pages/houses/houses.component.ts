@@ -117,33 +117,47 @@ interface ExtendedHouse extends House{
           >
           </p-select>
         </div>
-        <div class="field flex items-center gap-2 mt-5">
-          <p-checkbox 
-            inputId="hasPool" 
-            name="hasPool" 
-            binary="true"
-            [(ngModel)]="selectedHouse.has_pool" 
-          />
-          <label 
-            [ngStyle]="{'margin-bottom': '0px'}" 
-            for="hasPool"
-          >
-            {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.HAS-POOL' | translate }}
-          </label>
+        <div class="field flex flex-row gap-5">
+          <div class="field flex items-center gap-2 mt-5">
+            <p-checkbox 
+              inputId="hasPool" 
+              name="hasPool" 
+              binary="true"
+              [(ngModel)]="selectedHouse.has_pool" 
+            />
+            <label 
+              [ngStyle]="{'margin-bottom': '0px'}" 
+              for="hasPool"
+            >
+              {{ 'CONTENT-MANAGEMENT.HOUSES.EDIT.HAS-POOL' | translate }}
+            </label>
+          </div>
+          <div class="field flex items-center gap-2 mt-5">
+            <p-checkbox 
+              inputId="isActive" 
+              name="isActive" 
+              binary="true"
+              [(ngModel)]="selectedHouse.is_active" 
+            />
+            <label 
+              [ngStyle]="{'margin-bottom': '0px'}" 
+              for="isActive"
+            >
+              {{ 'CONTENT-MANAGEMENT.HOUSES.EDIT.IS-ACTIVE' | translate }}
+            </label>
+          </div>
         </div>
-        <div class="field flex items-center gap-2 mt-5">
-          <p-checkbox 
-            inputId="isActive" 
-            name="isActive" 
-            binary="true"
-            [(ngModel)]="selectedHouse.is_active" 
-          />
-          <label 
-            [ngStyle]="{'margin-bottom': '0px'}" 
-            for="isActive"
+        <div class="field">
+          <textarea 
+            id="description" 
+            rows="4" 
+            class="p-inputtext"
+            pTextarea  
+            [(ngModel)]="selectedHouse.description" 
+            [placeholder]="'CONTENT-MANAGEMENT.HOUSES.EDIT.DESCRIPTION-PLACEHOLDER' | translate"
+            style="resize: none"
           >
-            {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.IS-ACTIVE' | translate }}
-          </label>
+          </textarea>
         </div>
       }
       @if(isExistingHouseErrorDisplayed){
@@ -196,33 +210,47 @@ interface ExtendedHouse extends House{
           >
           </p-select>
         </div>
-        <div class="field flex items-center gap-2 mt-5">
-          <p-checkbox 
-            inputId="hasPool" 
-            name="hasPool" 
-            binary="true"
-            [(ngModel)]="houseToCreate.has_pool" 
-          />
-          <label 
-            [ngStyle]="{'margin-bottom': '0px'}" 
-            for="hasPool"
-          >
-            {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.HAS-POOL' | translate }}
-          </label>
+        <div class="field flex flex-row gap-5">
+          <div class="field flex items-center gap-2 mt-5">
+            <p-checkbox 
+              inputId="hasPool" 
+              name="hasPool" 
+              binary="true"
+              [(ngModel)]="houseToCreate.has_pool" 
+            />
+            <label 
+              [ngStyle]="{'margin-bottom': '0px'}" 
+              for="hasPool"
+            >
+              {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.HAS-POOL' | translate }}
+            </label>
+          </div>
+          <div class="field flex items-center gap-2 mt-5">
+            <p-checkbox 
+              inputId="isActive" 
+              name="isActive" 
+              binary="true"
+              [(ngModel)]="houseToCreate.is_active" 
+            />
+            <label 
+              [ngStyle]="{'margin-bottom': '0px'}" 
+              for="isActive"
+            >
+              {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.IS-ACTIVE' | translate }}
+            </label>
+          </div>
         </div>
-        <div class="field flex items-center gap-2 mt-5">
-          <p-checkbox 
-            inputId="isActive" 
-            name="isActive" 
-            binary="true"
-            [(ngModel)]="houseToCreate.is_active" 
-          />
-          <label 
-            [ngStyle]="{'margin-bottom': '0px'}" 
-            for="isActive"
+        <div class="field">
+          <textarea 
+            id="description" 
+            rows="4" 
+            class="p-inputtext"
+            pTextarea  
+            [(ngModel)]="houseToCreate.description" 
+            [placeholder]="'CONTENT-MANAGEMENT.HOUSES.ADD.DESCRIPTION-PLACEHOLDER' | translate"
+            style="resize: none"
           >
-            {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.IS-ACTIVE' | translate }}
-          </label>
+          </textarea>
         </div>
       }
       @if(isExistingHouseErrorDisplayed){
@@ -285,6 +313,10 @@ interface ExtendedHouse extends House{
 
     .field{
       margin-bottom: 10px;
+
+      textarea{
+        width: 100%;
+      }
 
       input{
         width: 100%;
@@ -542,6 +574,7 @@ export class HousesComponent implements OnInit {
       house_type_id: this.houseTypes.find(ht => ht.house_type_name == HouseTypes.Family1)?.house_type_id,
       has_pool: false,
       is_active: true,
+      description: '',
     }
   }
 

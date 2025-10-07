@@ -530,6 +530,7 @@
                 "HOUSE-TYPE": "Tip kućice",
                 "HAS-POOL": "Ima bazen",
                 "IS-ACTIVE": "Aktivna",
+                "DESCRIPTION": "Opis",
                 "ACTIONS": "Akcije"
             },
             "ADD": {
@@ -538,6 +539,8 @@
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
                 "HAS-POOL": "Ima bazen",
+                "DESCRIPTION": "Opis",
+                "DESCRIPTION-PLACEHOLDER": "Unesi dodatne informacije o ovoj kućici",
                 "IS-ACTIVE": "Aktivna"
             },
             "EDIT": {
@@ -546,6 +549,8 @@
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
                 "HAS-POOL": "Ima bazen",
+                "DESCRIPTION": "Opis",
+                "DESCRIPTION-PLACEHOLDER": "Unesi dodatne informacije o ovoj kućici",
                 "IS-ACTIVE": "Aktivna"
             },
             "DELETE": {

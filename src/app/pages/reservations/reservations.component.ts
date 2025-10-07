@@ -116,6 +116,7 @@ interface CellData {
                                         'has-pool': handleHasPoolDisplay(house),
                                         'is-active-header': handleIsActiveDisplay(house),
                                     }"
+                                    [pTooltip]="house.description"
                                 >
                                     {{ house.house_name || house.house_number }}
                                 </th>

@@ -530,6 +530,7 @@
                 "HOUSE-TYPE": "House type",
                 "HAS-POOL": "Has pool",
                 "IS-ACTIVE": "Is active",
+                "DESCRIPTION": "Description",
                 "ACTIONS": "Actions"
             },
             "ADD": {
@@ -538,6 +539,8 @@
                 "HOUSE-NAME": "House name",
                 "HOUSE-TYPE": "House type",
                 "HAS-POOL": "Has pool",
+                "DESCRIPTION": "Description",
+                "DESCRIPTION-PLACEHOLDER": "Add any notes or details about this house",
                 "IS-ACTIVE": "Is active"
             },
             "EDIT": {
@@ -546,6 +549,8 @@
                 "HOUSE-NAME": "House name",
                 "HOUSE-TYPE": "House type",
                 "HAS-POOL": "Has pool",
+                "DESCRIPTION": "Description",
+                "DESCRIPTION-PLACEHOLDER": "Add any notes or details about this house",
                 "IS-ACTIVE": "Is active"
             },
             "DELETE": {
