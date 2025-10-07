@@ -112,9 +112,9 @@ interface CellData {
                                 <th 
                                     class="row-header" 
                                     [ngClass]="{
-                                        'active-row': selectedCellRowIndex() === i,
                                         'has-pool': handleHasPoolDisplay(house),
                                         'is-active-header': handleIsActiveDisplay(house),
+                                        'active-row': selectedCellRowIndex() === i,
                                     }"
                                     [pTooltip]="house.description"
                                 >
@@ -418,10 +418,8 @@ interface CellData {
                         box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
                         
                         &.active-row {
-                            background-color: #e8f5e9;
-                            color: #2e7d32;
-                            border-left: 3px solid #4caf50;
-                            font-weight: 900;
+                            background-color: var(--p-green-500) !important;
+                            color: white;
                         }
 
                         &.has-pool {

@@ -28,6 +28,9 @@ import { DragDropModule } from "primeng/dragdrop";
                             ('RESERVATIONS.MODAL.CREATE-TEMP-RESERVATION' | translate)
                     }}
                 </h3>
+                <div class="house-number">
+                    {{ houseService.getHouseName(reservation.house_id) }} <i class="pi pi-home"></i> 
+                </div>
             </ng-template>
             <div class="p-fluid">
                 <div class="form-grid">
@@ -43,11 +46,7 @@ import { DragDropModule } from "primeng/dragdrop";
                         <div class="field">
                             <div class="pets-row">
                                 <div class="half-field">
-                                    <label for="defaultPets">{{ 'RESERVATIONS.MODAL.PETS' | translate }}</label>
-                                    <p-inputNumber class="small-input" id="defaultPets" [(ngModel)]="reservation.dogs_d" [min]="0" [max]="10"></p-inputNumber>
-                                </div>
-                                <div class="half-field">
-                                    <label for="smallPets">{{ 'RESERVATIONS.MODAL.CHECK-IN' | translate }}</label>
+                                    <label for="arrivalTime">{{ 'RESERVATIONS.MODAL.CHECK-IN' | translate }}</label>
                                     <p-datepicker [(ngModel)]="reservation.arrival_time" [iconDisplay]="'input'" [showIcon]="true" [timeOnly]="true" inputId="arrivalTime">
                                         <ng-template #inputicon let-clickCallBack="clickCallBack">
                                             <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
@@ -56,7 +55,7 @@ import { DragDropModule } from "primeng/dragdrop";
 
                                 </div>
                                 <div class="half-field">
-                                    <label for="bigPets">{{ 'RESERVATIONS.MODAL.CHECK-OUT' | translate }}</label>
+                                    <label for="departureTime">{{ 'RESERVATIONS.MODAL.CHECK-OUT' | translate }}</label>
                                     <p-datepicker [(ngModel)]="reservation.departure_time" [iconDisplay]="'input'" [showIcon]="true" [timeOnly]="true" inputId="departureTime">
                                         <ng-template #inputicon let-clickCallBack="clickCallBack">
                                             <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
@@ -90,6 +89,10 @@ import { DragDropModule } from "primeng/dragdrop";
                         </div>
                         <div class="field">
                             <div class="babies-cribs-row">
+                                <div class="half-field">
+                                    <label for="defaultPets">{{ 'RESERVATIONS.MODAL.PETS' | translate }}</label>
+                                    <p-inputNumber class="small-input" id="defaultPets" [(ngModel)]="reservation.dogs_d" [min]="0" [max]="10"></p-inputNumber>
+                                </div>
                                 <div class="half-field">
                                     <label for="babies">{{ 'RESERVATIONS.MODAL.BABIES' | translate }}</label>
                                     <p-inputNumber class="small-input" id="babies" [(ngModel)]="reservation.babies" [min]="0" [max]="10"></p-inputNumber>
@@ -199,9 +202,27 @@ import { DragDropModule } from "primeng/dragdrop";
                     padding: 1rem 1.5rem;
                     background-color: var(--surface-ground);
                     border-radius: 10px 10px 0 0;
+                    width: 100%;
 
-                    h3{
+                    h3 {
                         margin: 0;
+                        width: 100%;
+                    }
+
+                    .house-number{
+                        font-size: 24px;
+                        font-weight: bold;
+
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        gap: 8px;
+                        margin-right: 10px;
+
+                        i{
+                            font-size: 23px;
+                            font-weight: bold;
+                        }
                     }
                 }
                 
@@ -385,7 +406,7 @@ export class ReservationFormComponent implements OnInit {
         private confirmationService: ConfirmationService,
         private translateService: TranslateService,
         private messageService: MessageService,
-        private houseService: HouseService,
+        public houseService: HouseService,
     ) {}
 
     ngOnInit() {
