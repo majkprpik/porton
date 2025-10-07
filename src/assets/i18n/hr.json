@@ -528,7 +528,7 @@
                 "HOUSE-NUMBER": "Broj kućice",
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
-                "HAS-POOL": "Ima bazen",
+                "HAS-POOL": "Bazen",
                 "IS-ACTIVE": "Aktivna",
                 "DESCRIPTION": "Opis",
                 "ACTIONS": "Akcije"
@@ -538,7 +538,7 @@
                 "HOUSE-NUMBER": "Broj kućice",
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
-                "HAS-POOL": "Ima bazen",
+                "HAS-POOL": "Bazen",
                 "DESCRIPTION": "Opis",
                 "DESCRIPTION-PLACEHOLDER": "Unesi dodatne informacije o ovoj kućici",
                 "IS-ACTIVE": "Aktivna"
@@ -548,7 +548,7 @@
                 "HOUSE-NUMBER": "Broj kućice",
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
-                "HAS-POOL": "Ima bazen",
+                "HAS-POOL": "Bazen",
                 "DESCRIPTION": "Opis",
                 "DESCRIPTION-PLACEHOLDER": "Unesi dodatne informacije o ovoj kućici",
                 "IS-ACTIVE": "Aktivna"
