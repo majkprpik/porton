@@ -29,7 +29,7 @@ import { DragDropModule } from "primeng/dragdrop";
                     }}
                 </h3>
                 <div class="house-number">
-                    {{ houseService.getHouseName(reservation.house_id) }} <i class="pi pi-home"></i> 
+                    {{ houseService.getHouseName(reservation.house_id) }} <i class="fa fa-house"></i> 
                 </div>
             </ng-template>
             <div class="p-fluid">
@@ -220,7 +220,7 @@ import { DragDropModule } from "primeng/dragdrop";
                         margin-right: 10px;
 
                         i{
-                            font-size: 23px;
+                            font-size: 21px;
                             font-weight: bold;
                         }
                     }
