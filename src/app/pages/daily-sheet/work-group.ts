@@ -146,13 +146,29 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
               <div class="task-icon">
                 <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
               </div>
+
+              <ng-template cdkDragPreview>
+                <div 
+                  class="task-box" 
+                  [class.assigned]="taskService.isTaskAssigned(task)"
+                  [class.not-assigned]="taskService.isTaskNotAssigned(task)"
+                  [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
+                  [class.completed]="taskService.isTaskCompleted(task)"
+                >
+                  <div class="house-number">
+                    {{houseService.getHouseName(task.house_id)}}
+                  </div>
+                  <div class="task-icon">
+                    <i [class]="taskService.getTaskIcon(task.task_type_id)"></i>
+                  </div>
+                </div>
+              </ng-template>
             </div>
           </div>
         }
       </div>
     </p-dialog>
 
-    <p-contextMenu #staffContextMenu [model]="staffMenuItems"></p-contextMenu>
     <p-confirmDialog header="Potvrda" icon="pi pi-exclamation-triangle"></p-confirmDialog>
   `,
   styles: `
@@ -379,13 +395,39 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
     }
 
     .cdk-drag-preview {
-      border: none;
-      box-sizing: border-box;
-      border-radius: 4px;
-      box-shadow:
-        0 5px 5px -3px rgba(0, 0, 0, 0.2),
-        0 8px 10px 1px rgba(0, 0, 0, 0.14),
-        0 3px 14px 2px rgba(0, 0, 0, 0.12);
+      padding: 20px 10px;
+      border-radius: 5px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      background: white;
+      font-size: 14px;
+      color: rgba(0,0,0,0.87);
+
+      .house-number {
+        font-weight: 600;
+      }
+
+      &.completed {
+        background: var(--p-red-400);
+        color: var(--p-surface-0);
+      }
+
+      &.in-progress {
+        background: var(--p-yellow-500);
+        color: var(--p-surface-0);
+      }
+
+      &.assigned {
+        background: var(--p-blue-500);
+        color: var(--p-surface-0);
+      }
+
+      &.not-assigned {
+        background: var(--p-green-500);
+        color: var(--p-surface-0);
+      }
     }
 
     .cdk-drag-placeholder {
@@ -421,7 +463,6 @@ export class WorkGroup implements OnInit {
   @ViewChild('staffContextMenu') staffContextMenu!: ContextMenu;
 
   selectedStaff?: Profile;
-  staffMenuItems: MenuItem[] = [];
   
   tasks: Task[] = [];
   profiles: Profile[] = [];
