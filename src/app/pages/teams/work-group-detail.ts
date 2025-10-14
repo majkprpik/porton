@@ -216,39 +216,37 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
                                                     taskService.isTowelChangeTask(task))
                                                 {
                                                     <div class="buttons">
-                                                        <p-button 
-                                                            [label]="'BUTTONS.' + getActionButtonLabel(task) | translate"
-                                                            [severity]="getActionButtonSeverity(task)"
-                                                            (onClick)="handleTaskAction($event, task)"
-                                                        ></p-button>
-                                                        
                                                         @if (taskService.isHouseCleaningTask(task) && taskService.isTaskInProgress(task)) {
                                                             <p-button 
                                                                 [label]="'BUTTONS.PAUSE' | translate"
                                                                 severity="warn" 
                                                                 (onClick)="handleTaskPause($event, task)"
-                                                                [style]="{'margin-left': '0.5rem'}"
                                                             ></p-button>
                                                         }
+
+                                                        <p-button 
+                                                            [label]="'BUTTONS.' + getActionButtonLabel(task) | translate"
+                                                            [severity]="getActionButtonSeverity(task)"
+                                                            (onClick)="handleTaskAction($event, task)"
+                                                        ></p-button>
                                                     </div>
                                                 } @else if(houseService.isHouseOccupied(task.house_id)){
                                                     <span>{{ 'TEAMS.TEAM-DETAILS.HOUSE-OCCUPIED' | translate }}</span>
                                                 } @else {
                                                     <div class="buttons">
-                                                        <p-button 
-                                                            [label]="'BUTTONS.' + getActionButtonLabel(task) | translate"
-                                                            [severity]="getActionButtonSeverity(task)"
-                                                            (onClick)="handleTaskAction($event, task)"
-                                                        ></p-button>
-                                                        
                                                         @if (taskService.isHouseCleaningTask(task) && taskService.isTaskInProgress(task)) {
                                                             <p-button 
                                                                 [label]="'BUTTONS.PAUSE' | translate"
                                                                 severity="warn" 
                                                                 (onClick)="handleTaskPause($event, task)"
-                                                                [style]="{'margin-left': '0.5rem'}"
                                                             ></p-button>
                                                         }
+
+                                                        <p-button 
+                                                            [label]="'BUTTONS.' + getActionButtonLabel(task) | translate"
+                                                            [severity]="getActionButtonSeverity(task)"
+                                                            (onClick)="handleTaskAction($event, task)"
+                                                        ></p-button>
                                                     </div>
                                                 }
                                             } @else {    
@@ -493,6 +491,11 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
                 justify-content: space-between;
                 height: 33px;
 
+                .buttons{
+                    display: flex;
+                    gap: 10px;
+                }
+
                 .reservation-numbers{
                     display: flex;
                     flex-direction: row;
@@ -680,11 +683,9 @@ export class WorkGroupDetail implements OnInit {
     }
 
     getActionButtonLabel(task: Task): string {
-        const isPaused = this.taskService.isTaskPaused(task);
-        
         if (this.taskService.isTaskInProgress(task)) {
             return 'FINISH';
-        } else if (isPaused) {
+        } else if (this.taskService.isTaskPaused(task)) {
             return 'CONTINUE';
         } 
         
