@@ -12,6 +12,7 @@ import { combineLatest, take } from 'rxjs';
 import { LayoutService } from '../../layout/services/layout.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { StatisticsService } from '../../core/services/statistics.service';
 
 @Component({
   selector: 'app-chart',
@@ -313,6 +314,7 @@ export class ChartComponent {
     private dataService: DataService,
     private taskService: TaskService,
     private layoutService: LayoutService,
+    private statisticsService: StatisticsService,
   ) {
     effect(() => {
       const isDark = this.layoutService.layoutConfig().darkTheme;
@@ -877,15 +879,15 @@ export class ChartComponent {
   }
 
   pinChartToHome(chart: string){
-    this.layoutService.storePinnedChartToLocalStorage(chart);
+    this.statisticsService.createPinnedChart(chart);
   }
 
   removeChartFromHome(chart: string){
-    this.layoutService.removePinnedChartFromLocalStorage(chart);
+    this.statisticsService.deletePinnedChart(chart);
   }
 
   isChartPinnedToHome(chart: string){
-    return this.layoutService.isChartPinnedToHome(chart);
+    return this.statisticsService.isChartPinnedToHome(chart);
   }
 
   initPieChart(){

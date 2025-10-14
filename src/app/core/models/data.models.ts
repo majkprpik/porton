@@ -199,6 +199,12 @@ export interface Chart {
   chartTypes: ChartType[],
 }
 
+export interface PinnedChart {
+  id: number;
+  profile_id: string;
+  chart_name: string;
+}
+
 export type ChartType = 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'polarArea' | 'radar';
 
 export enum ExportTypes {

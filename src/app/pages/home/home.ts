@@ -18,6 +18,7 @@ import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { StatisticsService } from '../../core/services/statistics.service';
 import { HouseCardComponent } from './house-card/house-card.component';
+import { AuthService } from '../../core/services/auth.service';
 
 // Define the special location option interface
 interface SpecialLocation {
@@ -280,16 +281,12 @@ interface SpecialLocation {
                     margin-bottom: 20px;
     
                     .chart-row {
-                        display: flex;
-                        flex-direction: row;
-                        width: 100%;
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr); 
                         gap: 10px;
-                        min-width: 0;
+                        width: 100%;
     
                         .pinned-container {
-                            flex: 1 1 45%;
-                            min-width: 0;      
-                            max-width: 100%;  
                             height: 900px;
                             background-color: var(--surface-card);
                             border-radius: 10px;
@@ -298,6 +295,14 @@ interface SpecialLocation {
                             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
                             overflow: hidden;
                         }
+                    }
+                                        
+                    .chart-row:has(.pinned-container:only-child) {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .chart-row .pinned-container:nth-last-child(1):nth-child(odd):not(:only-child) {
+                        grid-column: span 2;
                     }
                 }
 
@@ -437,13 +442,11 @@ export class Home implements OnInit, OnDestroy {
         private dataService: DataService,
         public taskService: TaskService,
         public houseService: HouseService,
-        private layoutService: LayoutService,
+        private authService: AuthService,
         private statisticsService: StatisticsService,
     ) {}
 
     ngOnInit(): void {
-        this.monitorChartRemovals();
-        this.loadPinnedCharts();
         this.monitorTasksAndUrgentIcons();
         this.subscribeToDataStreams();
     }
@@ -451,14 +454,6 @@ export class Home implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
-    }
-
-    private monitorChartRemovals() {
-        this.layoutService.$chartToRemove
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(chartToRemove => {
-            this.pinnedCharts = this.pinnedCharts.filter(pinnedChart => pinnedChart.dataType !== chartToRemove);
-        });
     }
 
     private monitorTasksAndUrgentIcons() {
@@ -479,11 +474,19 @@ export class Home implements OnInit, OnDestroy {
             this.dataService.houseAvailabilities$.pipe(nonNull()),
             this.dataService.houseTypes$.pipe(nonNull()),
             this.dataService.houses$.pipe(nonNull()),
+            this.dataService.pinnedCharts$.pipe(nonNull())
         ])
         .pipe(takeUntil(this.destroy$))
-        .subscribe(([availabilities, houseTypes, houses]) => {
+        .subscribe(([availabilities, houseTypes, houses, pinnedCharts]) => {
             this.houseAvailabilities.set(availabilities);
             this.houseTypes.set(houseTypes);
+            
+            this.pinnedCharts = this.statisticsService.charts.filter(c =>
+                pinnedCharts.some(pc =>
+                    pc.chart_name === c.dataType &&
+                    pc.profile_id === this.authService.getStoredUserId()
+                )
+            );
 
             const filteredHouses = houses.filter(h => h.house_number > 0);
             this.houses.set(filteredHouses);
@@ -500,11 +503,6 @@ export class Home implements OnInit, OnDestroy {
                 this.isUrgentIconVisibleMap[task.task_id] = visible;
             }
         });
-    }
-
-    loadPinnedCharts(){
-        const pinnedChartsNames = this.layoutService.loadPinnedCharts();
-        this.pinnedCharts = this.statisticsService.charts.filter(c => pinnedChartsNames.some((pc: any) => pc == c.dataType))
     }
 
     @HostListener('document:click', ['$event'])

@@ -141,7 +141,7 @@ export class AuthService {
   }
 
   clearLocalStorage(){
-    const keysToKeep = ['pinnedCharts', 'portonSelectedLanguage'];
+    const keysToKeep = ['portonSelectedLanguage'];
     const allKeys = Object.keys(localStorage);
 
     allKeys.forEach(key => {

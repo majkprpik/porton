@@ -16,6 +16,7 @@ import {
   HouseAvailability, 
   HouseType, 
   Note,
+  PinnedChart,
   Profile, 
   ProfileRole, 
   ProfileWorkDay, 
@@ -59,6 +60,7 @@ export class DataService {
   private profileWorkScheduleSubject = new BehaviorSubject<ProfileWorkSchedule[] | null>(null);
   private profileWorkDaysSubject = new BehaviorSubject<ProfileWorkDay[] | null>(null);
   private seasonsSubject = new BehaviorSubject<Season[] | null>(null);
+  private pinnedChartsSubject = new BehaviorSubject<PinnedChart[] | null>(null);
 
   loading$ = this.loadingSubject.asObservable();
   error$ = this.errorSubject.asObservable();
@@ -81,6 +83,7 @@ export class DataService {
   profileWorkSchedule$ = this.profileWorkScheduleSubject.asObservable();
   profileWorkDays$ = this.profileWorkDaysSubject.asObservable();
   seasons$ = this.seasonsSubject.asObservable();
+  pinnedCharts$ = this.pinnedChartsSubject.asObservable();
   
   $houseAvailabilitiesUpdate = new BehaviorSubject<any>('');
   $tempHouseAvailabilitiesUpdate = new BehaviorSubject<any>('');
@@ -183,6 +186,12 @@ export class DataService {
     }
   }
 
+  setPinnedCharts(pinnedCharts: PinnedChart[]){
+    if(pinnedCharts){
+      this.pinnedChartsSubject.next(pinnedCharts);
+    }
+  }
+
   setHouses(house: House[]){
     if(house){
       this.housesSubject.next(house);
@@ -222,6 +231,7 @@ export class DataService {
       this.loadProfileWorkSchedule(),
       this.loadProfileWorkDays(),
       this.loadSeasons(),
+      this.loadPinnedCharts(),
       // this.loadAuthUsers()
     ]);
   }
@@ -540,6 +550,22 @@ export class DataService {
         if (data) {
           this.seasonsSubject.next(data);
           this.logData('Seasons', data);
+        }
+      }),
+      map((data) => data || []),
+      catchError((error) => this.handleError(error)),
+      tap(() => this.loadingSubject.next(false))
+    );
+  }
+
+  loadPinnedCharts(){
+    this.loadingSubject.next(true);
+
+    return from(this.supabaseService.getData('pinned_charts', this.schema)).pipe(
+      tap((data) => {
+        if (data) {
+          this.pinnedChartsSubject.next(data);
+          this.logData('Pinned charts', data);
         }
       }),
       map((data) => data || []),

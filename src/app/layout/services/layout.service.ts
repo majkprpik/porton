@@ -1,6 +1,6 @@
 import { Injectable, effect, signal, computed } from '@angular/core';
-import { MenuItem } from 'primeng/api';
 import { BehaviorSubject, Subject } from 'rxjs';
+import { DataService } from '../../core/services/data.service';
 
 export interface layoutConfig {
     preset?: string;
@@ -61,7 +61,6 @@ export class LayoutService {
     isOverlay = computed(() => this.layoutConfig().menuMode === 'overlay');
     transitionComplete = signal<boolean>(false);
     private initialized = false;
-    $chartToRemove: BehaviorSubject<string> = new BehaviorSubject<string>('');
     $showLoggedUserDetailsWindow: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     constructor() {
@@ -82,51 +81,6 @@ export class LayoutService {
 
             this.handleDarkModeTransition(config);
         });
-    }
-
-    loadPinnedCharts(){
-        const pinnedCharts = this.getPinnedChartsFromLocalStorage();
-
-        return pinnedCharts ? JSON.parse(pinnedCharts) : [];
-    }
-
-    storePinnedChartToLocalStorage(chartToPin: string){
-        const pinnedCharts = this.getPinnedChartsFromLocalStorage();
-        
-        if(pinnedCharts){
-            const pinnedChartsArray = JSON.parse(pinnedCharts);
-
-            pinnedChartsArray.push(chartToPin);
-            localStorage.setItem('pinnedCharts', JSON.stringify(pinnedChartsArray));
-        } else {
-            const chartsToPin: string[] = [];
-
-            chartsToPin.push(chartToPin);
-            localStorage.setItem('pinnedCharts', JSON.stringify(chartsToPin));
-        }
-    }
-
-    removePinnedChartFromLocalStorage(chartToRemove: string){
-        const pinnedCharts = this.getPinnedChartsFromLocalStorage();
-
-        if(pinnedCharts){
-            const pinnedChartsJSON = JSON.parse(pinnedCharts);
-            const filteredPinnedCharts = pinnedChartsJSON.filter((pinnedCharts: string) => pinnedCharts != chartToRemove);
-
-            localStorage.setItem('pinnedCharts', JSON.stringify(filteredPinnedCharts));
-
-            this.$chartToRemove.next(chartToRemove);
-        }
-    }
-
-    isChartPinnedToHome(chart: string){
-        const pinnedCharts = this.loadPinnedCharts();
-
-        return pinnedCharts.includes(chart);
-    }
-
-    getPinnedChartsFromLocalStorage(){
-        return localStorage.getItem('pinnedCharts');
     }
 
     private handleDarkModeTransition(config: layoutConfig): void {

@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Chart, ChartType } from '../models/data.models';
+import { Chart, ChartType, PinnedChart } from '../models/data.models';
+import { SupabaseService } from './supabase.service';
+import { AuthService } from './auth.service';
+import { DataService } from './data.service';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -72,5 +76,71 @@ export class StatisticsService {
     }
   ];
 
-  constructor() { }
+  pinnedCharts: PinnedChart[] = [];
+
+  constructor(
+    private supabaseService: SupabaseService,
+    private authService: AuthService,
+    private dataService: DataService,
+  ) {
+    this.dataService.pinnedCharts$
+      .pipe(nonNull())
+      .subscribe(pinnedCharts => {
+        this.pinnedCharts = pinnedCharts;
+      });
+  }
+
+  async createPinnedChart(chartName: string){
+    try {
+      const { data: createdPinnedChart, error: createPinnedChartError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('pinned_charts')
+        .insert({
+          profile_id: this.authService.getStoredUserId(),
+          chart_name: chartName,
+        })
+        .select()
+        .single();
+
+      if(createPinnedChartError) throw createPinnedChartError;
+
+      if(createdPinnedChart && !this.pinnedCharts.find(s => s.id == createdPinnedChart.id)) {
+        this.dataService.setPinnedCharts([...this.pinnedCharts, createdPinnedChart]);
+      }
+
+      return createdPinnedChart;
+    } catch(error){
+      console.error("Error creating pinned chart: ", error);
+      return null;
+    }
+  }
+
+  async deletePinnedChart(chartName: string){
+    try{
+      const { data: deletedPinnedChart, error: deletePinnedChartError } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('pinned_charts')
+        .delete()
+        .eq('profile_id', this.authService.getStoredUserId())
+        .eq('chart_name', chartName)
+        .select()
+        .single();
+
+      if(deletePinnedChartError) throw deletePinnedChartError;
+
+      if(deletedPinnedChart && deletedPinnedChart.id) {
+        const filteredPinnedCharts = this.pinnedCharts.filter(s => s.id != deletedPinnedChart.id);
+        this.dataService.setPinnedCharts(filteredPinnedCharts);
+      }
+
+      return deletedPinnedChart;
+    } catch (error){
+      console.error('Error deleting seasons:', error);
+      return null;
+    }
+  }
+
+  isChartPinnedToHome(chartName: string){
+    return this.pinnedCharts.find(pc => pc.chart_name == chartName && pc.profile_id == this.authService.getStoredUserId());
+  }
 }
