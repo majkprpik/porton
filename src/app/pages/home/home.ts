@@ -89,6 +89,7 @@ interface SpecialLocation {
                     </div>
                 </div>
             </div>
+
             <div class="houses-container">
                 <div class="house-grid">
                     @if (sortType == 'number' || !sortType) {
@@ -155,119 +156,8 @@ interface SpecialLocation {
     `,
     styles: [
         `
-            .legend-container {
-                padding: 0.8rem 1rem;
-                background-color: var(--surface-card);
-                border-radius: 6px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            }
-            
-            .legend-wrapper {
-                display: flex;
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .legend-items {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 1rem;
-            }
-            
-            .legend-item {
-                display: flex;
-                align-items: center;
-                gap: 0.5em;
-                font-size: 0.9em;
-                white-space: nowrap;
-            }
-            
-            .legend-color {
-                display: inline-block;
-                width: 16px;
-                height: 16px;
-                border-radius: 4px;
-                margin-right: 0.3em;
-                border: 1px solid #bbb;
-            }
-            
-            .legend-green { background: var(--p-green-600, #22c55e); }
-            .legend-yellow { background: var(--p-yellow-400, #fde047); }
-            .legend-red { background: var(--p-red-600, #ef4444); }
-            .legend-lightred { background: var(--p-red-400, #f87171); }
-            
-            .house-controls {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 1rem;
-            }
-            
-            .search-container {
-                flex: 1;
-                min-width: 200px;
-                max-width: 300px;
-                display: flex;
-            }
-            
-            .sort-buttons {
-                display: flex;
-                gap: 0.5rem;
-                align-items: center;
-            }
-            
-            .sort-button, .sort-button:hover, .sort-button.active {
-                display: none;
-            }
-            
-            @media screen and (min-width: 992px) {
-                .legend-wrapper {
-                    flex-direction: row;
-                    justify-content: space-between;
-                    align-items: center;
-                }
-                
-                .legend-items {
-                    justify-content: flex-start;
-                }
-                
-                .house-controls {
-                    justify-content: flex-end;
-                }
-                
-                .search-container {
-                    max-width: 250px;
-                }
-            }
-            
-            @media screen and (max-width: 767px) {
-                .legend-container {
-                    padding: 0.6rem;
-                }
-                
-                .legend-items {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 0.4rem;
-                }
-                
-                .legend-item {
-                    font-size: 0.85em;
-                }
-                
-                .house-controls {
-                    flex-direction: column;
-                    align-items: stretch;
-                }
-                
-                .search-container {
-                    max-width: none;
-                }
-                
-                .sort-buttons {
-                    justify-content: center;
-                }
+            :host ::ng-deep .sort-buttons .p-button {
+                height: 30px !important;
             }
 
             .home-container {
@@ -275,101 +165,222 @@ interface SpecialLocation {
                 flex-direction: column;
                 gap: 10px;
                 position: relative;
-            }
 
-            .house-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 0.25rem;
-                padding: 0;
-                position: relative;
-                padding-bottom: 20px;
-            }
+                .legend-container {
+                    padding: 0.8rem 1rem;
+                    background-color: var(--surface-card);
+                    border-radius: 6px;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    
+                    .legend-wrapper {
+                        display: flex;
+                        flex-direction: row;
+                        gap: 1rem;
+    
+                        .legend-items {
+                            display: flex;
+                            flex-wrap: wrap;
+                            justify-content: center;
+                            gap: 1rem;
+    
+                            .legend-item {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5em;
+                                font-size: 0.9em;
+                                white-space: nowrap;
+    
+                                .legend-color {
+                                    display: inline-block;
+                                    width: 16px;
+                                    height: 16px;
+                                    border-radius: 4px;
+                                    margin-right: 0.3em;
+                                    border: 1px solid #bbb;
+                                }
+                                
+                                .legend-green { background: var(--p-green-600, #22c55e); }
+                                .legend-yellow { background: var(--p-yellow-400, #fde047); }
+                                .legend-red { background: var(--p-red-600, #ef4444); }
+                                .legend-lightred { background: var(--p-red-400, #f87171); }
+                            }
+                        }
+    
+                        .house-controls {
+                            display: flex;
+                            flex-direction: row;
+                            flex-wrap: wrap;
+                            justify-content: center;
+                            gap: 1rem;
 
-            .houses-container {
-                background-color: var(--surface-card);
-                border-radius: 6px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                width: 100%;
-                box-sizing: border-box;
-                padding: 15px;
-            }
-            
-            .statistics-container{
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                background-color: transparent;
-                align-items: start;
-                gap: 10px;
-                margin-bottom: 20px;
-
-                .chart-row {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 10px;
-                    width: 100%;
-
-                    .pinned-container {
-                        flex: 1 1 45%; 
-                        width: 50%;
-                        height: 900px;
-                        background-color: var(--surface-card);
-                        border-radius: 10px;
-                        padding: 20px;
-                        box-sizing: border-box;
+                            .search-container {
+                                flex: 1;
+                                min-width: 200px;
+                                max-width: 300px;
+                                display: flex;
+                            }
+                            
+                            .sort-buttons {
+                                display: flex;
+                                gap: 0.5rem;
+                                align-items: center;
+                            }
+                        }
                     }
                 }
-            }
+                
+                .houses-container {
+                    background-color: var(--surface-card);
+                    border-radius: 6px;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 15px;
+    
+                    .house-grid {
+                        display: grid;
+                        grid-template-columns: repeat(6, 1fr);
+                        gap: 0.5rem;
+                        padding: 0;
+                        position: relative;
+                        padding-bottom: 20px;
 
-            @media screen and (min-width: 768px) {
-                .house-grid {
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 0.5rem;
-                }
-            }
-
-            @media screen and (min-width: 1200px) {
-                .house-grid {
-                    grid-template-columns: repeat(6, 1fr);
-                }
-            }
-
-            :host ::ng-deep .p-button.p-button-sm {
-                font-size: 0.875rem;
-                padding: 0.4rem 0.75rem;
-            }
+                        .type-divider {
+                            grid-column: 1 / -1;
+                            margin: 0.75rem 0 0.25rem;
+                            padding: 0 0 0 0.25rem;
+                            font-weight: 700;
+                            font-size: 0.95rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
             
-            :host ::ng-deep .p-button.p-button-sm .p-button-icon {
-                font-size: 0.875rem;
-            }
-
-            .type-divider {
-                grid-column: 1 / -1; /* Span all columns */
-                margin: 0.75rem 0 0.25rem;
-                padding: 0 0 0 0.25rem;
-                font-weight: 700;
-                font-size: 0.95rem;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-
-                .houses-count{
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 22px;
-                    height: 22px;
-                    background: var(--primary-color);
-                    color: var(--primary-color-text);
-                    border-radius: 50px;
-                    font-size: 12px;
-                    font-weight: 700;
+                            .houses-count{
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                                width: 22px;
+                                height: 22px;
+                                background: var(--primary-color);
+                                color: var(--primary-color-text);
+                                border-radius: 50px;
+                                font-size: 12px;
+                                font-weight: 700;
+                            }
+                        }
+                    }
                 }
-            }
-            
-            @media screen and (min-width: 768px) {
-                .type-divider {
-                    font-size: 1.05rem;
+                
+                .statistics-container{
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    background-color: transparent;
+                    align-items: start;
+                    gap: 10px;
+                    margin-bottom: 20px;
+    
+                    .chart-row {
+                        display: flex;
+                        flex-direction: row;
+                        width: 100%;
+                        gap: 10px;
+                        min-width: 0;
+    
+                        .pinned-container {
+                            flex: 1 1 45%;
+                            min-width: 0;      
+                            max-width: 100%;  
+                            height: 900px;
+                            background-color: var(--surface-card);
+                            border-radius: 10px;
+                            padding: 20px;
+                            box-sizing: border-box;
+                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                            overflow: hidden;
+                        }
+                    }
+                }
+
+                @media screen and (max-width: 1700px){
+                    .statistics-container {
+                        .chart-row {
+                            flex-direction: column;
+                        }
+                    }
+                }
+
+                @media screen and (max-width: 1200px) {
+                    .houses-container{
+                        .house-grid {
+                            grid-template-columns: repeat(4, 1fr);
+                        }
+                    }
+                }
+
+                @media screen and (min-width: 992px) {
+                    .legend-wrapper {
+                        flex-direction: row;
+                        justify-content: space-between;
+                        align-items: center;
+
+                        .legend-items {
+                            justify-content: flex-start;
+                        }
+                    }
+                    
+                    .house-controls {
+                        justify-content: flex-end;
+
+                        .search-container {
+                            max-width: 250px;
+                        }
+                    }
+                    
+                }
+                
+                @media screen and (max-width: 767px) {
+                    .legend-container {
+                        padding: 0.6rem;
+
+                        .legend-wrapper{
+                            .legend-items {
+                                flex-direction: column;
+                                align-items: flex-start;
+                                gap: 0.4rem;
+        
+                                .legend-item {
+                                    font-size: 0.85em;
+                                }
+                            }
+                        }
+                    }
+
+                    .houses-container{
+                        .house-grid {
+                            grid-template-columns: repeat(2, 1fr);
+                        }
+                    }
+                    
+                    .house-controls {
+                        align-items: stretch;
+
+                        .search-container {
+                            max-width: none;
+                        }
+                        
+                        .sort-buttons {
+                            justify-content: center;
+                        }
+                    }
+                }
+    
+                :host ::ng-deep .p-button.p-button-sm {
+                    font-size: 0.875rem;
+                    padding: 0.4rem 0.75rem;
+                }
+                
+                :host ::ng-deep .p-button.p-button-sm .p-button-icon {
+                    font-size: 0.875rem;
                 }
             }
         `

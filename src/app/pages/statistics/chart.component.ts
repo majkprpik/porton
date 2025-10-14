@@ -184,9 +184,11 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       height: 100% !important;
     }
 
-    .pie-card{
-      width: 500px;
+    .pie-card {
+      width: 100%;
+      max-width: 500px;
       padding: 50px 0 50px 0;
+      box-sizing: border-box;
     }
 
     .chart-container{
@@ -221,6 +223,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         align-items: center;
         justify-content: center;
         gap: 50px;
+        padding: 10px 0 10px 0;
   
         p-button{
   

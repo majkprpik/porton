@@ -52,6 +52,7 @@ import { StatisticsService } from '../../core/services/statistics.service';
           border-radius: 10px;
           padding: 20px;
           box-sizing: border-box;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
       }
     }
