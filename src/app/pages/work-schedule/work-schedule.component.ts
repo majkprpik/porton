@@ -81,7 +81,8 @@ import { AuthService } from '../../core/services/auth.service';
                   </p-button>
                 }
               </div>
-              <div class="export"
+              <div 
+                class="export"
                 [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.EXPORT' | translate" 
                 tooltipPosition="top"
               >

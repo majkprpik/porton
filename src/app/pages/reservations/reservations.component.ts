@@ -11,6 +11,7 @@ import { DataService } from '../../core/services/data.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { ReservationFormComponent } from './reservation-form/reservation-form.component';
 import { HouseService } from '../../core/services/house.service';
+import { ExportReservationsService } from '../../core/services/export-reservations.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 interface CellData {
@@ -50,6 +51,18 @@ interface CellData {
                     </div>
 
                     <div class="density-buttons">
+                        <div 
+                            class="export"
+                            [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.EXPORT' | translate" 
+                            tooltipPosition="top"
+                        >
+                            <p-button
+                                [severity]="'info'"
+                                (click)="exportReservationsService.exportToExcel(combinedHouses, houseAvailabilities(), selectedSeason)"
+                            >
+                            <i class="pi pi-download"></i>
+                            </p-button>
+                        </div>
                         @for(densityButton of densityButtons; track $index){
                             <p-button
                                 class="density-button"
@@ -678,13 +691,15 @@ interface CellData {
 }) 
 export class ReservationsComponent implements OnInit, OnDestroy {
     houses = signal<House[]>([]);
+    tempHouses: House[] = [];
+    combinedHouses: House[] = [];
+    filteredHouses = computed(() => this.filterHousesByType());
+
     houseAvailabilities = signal<HouseAvailability[]>([]);
     days = signal<Date[]>([]);
     
     houseTypes = signal<HouseType[]>([]);
     selectedHouseTypeId = signal<number>(0);
-    filteredHouses = computed(() => this.filterHousesByType());
-    tempHouses: House[] = [];
     
     gridMatrix = signal<CellData[][]>([]);
 
@@ -750,8 +765,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         private confirmationService: ConfirmationService,
         private datePipe: DatePipe,
         private layoutService: LayoutService,
+        public exportReservationsService: ExportReservationsService,
     ) {
-
         effect(() => {
             this.isNightMode = this.layoutService.layoutConfig().darkTheme;
         });
@@ -776,6 +791,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             next: ([houses, tempHouses]) => {
                 this.houses.set(houses.sort((a, b) => a.house_number - b.house_number));
                 this.tempHouses = tempHouses;
+                this.combinedHouses = [...this.houses(), ...this.tempHouses];
 
                 if(houses.length && tempHouses.length){
                     this.updateGridMatrix();
@@ -949,9 +965,11 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
             const resStartDate = new Date(reservation.house_availability_start_date);
             const resEndDate = new Date(reservation.house_availability_end_date);
+
             cellData.tooltip = `Reservation: ${reservation.last_name || 'Unknown'}`;
             cellData.tooltip += `\nFrom: ${resStartDate.toLocaleDateString()}`;
             cellData.tooltip += `\nTo: ${resEndDate.toLocaleDateString()}`;
+
             if (reservation.reservation_number) cellData.tooltip += `\nRef: ${reservation.reservation_number}`;
             if (reservation.adults > 0) cellData.tooltip += `\nAdults: ${reservation.adults}`;
             if (reservation.babies > 0) cellData.tooltip += `\nBabies: ${reservation.babies}`;
