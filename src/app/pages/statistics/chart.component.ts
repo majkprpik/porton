@@ -887,7 +887,7 @@ export class ChartComponent {
   }
 
   isChartPinnedToHome(chart: string){
-    return this.statisticsService.isChartPinnedToHome(chart);
+    return this.statisticsService.isChartPinnedToHome(chart); 
   }
 
   initPieChart(){
