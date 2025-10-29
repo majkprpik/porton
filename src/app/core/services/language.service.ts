@@ -17,7 +17,7 @@ export class LanguageService {
   constructor(private translateService: TranslateService) { 
     const savedLanguage = this.getSelectedLanguageFromLocalStorage();
 
-     if (savedLanguage) {
+    if (savedLanguage) {
       this.setLanguage(JSON.parse(savedLanguage));
     } else {
       this.setLanguage(this.languages.find(language => language.code == 'hr'));
