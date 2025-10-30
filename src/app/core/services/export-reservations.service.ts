@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx-js-style';
 import { saveAs } from 'file-saver';
 import { House, HouseAvailability, Season } from '../models/data.models';
 import { HouseService } from './house.service';
+import { LanguageService } from './language.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,40 @@ export class ExportReservationsService {
     sunday: 'DC2626', // Tailwind red-500
   };
 
-  constructor(private houseService: HouseService) {} 
+  private reservationColors = [
+    '#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA',
+    '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'
+  ];
+
+  private selectedLanguage: any;
+
+  private translations = {
+    en: {
+      adults: 'Adults',
+      pets: 'Pets',
+      babies: 'Babies',
+      cribs: 'Cribs',
+      note: 'Note',
+      filename: 'reservations'
+    },
+    hr: {
+      adults: 'Odrasli',
+      pets: 'Ljubimci',
+      babies: 'Bebe',
+      cribs: 'Krevetići',
+      note: 'Napomena',
+      filename: 'rezervacije'
+    }
+  };
+
+  constructor(
+    private houseService: HouseService,
+    private languageService: LanguageService,
+  ) {
+    this.languageService.$selectedLanguage.subscribe(selectedLanguage => {
+      this.selectedLanguage = selectedLanguage;
+    });
+  } 
 
   exportToExcel(
     combinedHouses: House[], 
@@ -161,11 +195,25 @@ export class ExportReservationsService {
               border,
             };
 
-            if (res._note && cell.v) {
-              cell.c = [{ t: res._note }];
+            if (cell.v) {
+              const t = this.translations[this.selectedLanguage.code as keyof typeof this.translations];
+              const details: string[] = [];
+
+              if (res.adults) details.push(`${t.adults}: ${res.adults}`);
+              if (res.dogs_d) details.push(`${t.pets}: ${res.dogs_d}`);
+              if (res.babies) details.push(`${t.babies}: ${res.babies}`);
+              if (res.cribs) details.push(`${t.cribs}: ${res.cribs}`);
+
+              if (res.note) {
+                details.push('', `${t.note}: ${res.note}`);
+              }
+
+              const commentText = details.join('\n');
+              if (commentText) {
+                cell.c = [{ t: commentText }];
+              }
             }
           }
-
         }
       } 
 
@@ -175,7 +223,14 @@ export class ExportReservationsService {
     } 
     
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
-    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'reservations_by_type.xlsx');
+    const t = this.translations[this.selectedLanguage.code as keyof typeof this.translations];
+    
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0'); 
+    const timestamp = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}_${pad(now.getHours())}h${pad(now.getMinutes())}m`;
+    const fileName = `${t.filename}_${timestamp}.xlsx`;
+
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), fileName);
   } 
 
   private groupBy(arr: any[], key: string) {
@@ -196,13 +251,8 @@ export class ExportReservationsService {
     return dates;
   } 
 
-  private colors = [
-    '#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA',
-    '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'
-  ];
-
   private colorForReservation(r: any): string {
-    const baseColor = this.colors[r.color_theme % this.colors.length];
+    const baseColor = this.reservationColors[r.color_theme % this.reservationColors.length];
     const opacity = 0.7 + (r.color_tint * 0.3);
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor);
 
@@ -228,13 +278,6 @@ export class ExportReservationsService {
 
     return new Date(year, month - 1, day);
   } 
-
-  private formatDateKey(d: Date): string {
-    const year = d.getFullYear();
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const day = d.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
 
   private formatExcelHeaderDate(d: Date): string {
     const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
