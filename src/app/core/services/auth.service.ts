@@ -233,8 +233,8 @@ export class AuthService {
   // za majstora zadaci
   // odlasci/dolasci - vide svi? ureduje Recepcija, matej, customer service
   // pregled - svi mogu videti
-  //testuser3 VeyD0z
-  //testuser2 URBx0m
+  // testuser3 VeyD0z
+  // testuser2 URBx0m
 
   async createRealUsers() {
     const users = [
@@ -307,7 +307,7 @@ export class AuthService {
     }
   }
 
-  normalizeEmail (name: string) {
+  normalizeEmail(name: string) {
     return name.toLowerCase().replace(/[^a-z0-9]/g, '').concat('@porton.com');
   }
 
