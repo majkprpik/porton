@@ -287,6 +287,7 @@
                 "MOBILE": "Mobilne"
             },
             "TOOLTIPS": {
+                "DOWNLOAD-XLSX": "Preuzmi .xlsx",
                 "ROW-HEIGHT-SPACIOUS": "Visina ćelije: Prostrano",
                 "ROW-HEIGHT-COMFORTABLE": "Visina ćelije: Zadano",
                 "ROW-HEIGHT-COMPACT": "Visina ćelije: Kompaktno"

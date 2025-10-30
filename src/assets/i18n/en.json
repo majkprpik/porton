@@ -287,6 +287,7 @@
                 "MOBILE": "Mobile"
             },
             "TOOLTIPS": {
+                "DOWNLOAD-XLSX": "Download .xlsx",
                 "ROW-HEIGHT-SPACIOUS": "Row height: Spacious",
                 "ROW-HEIGHT-COMFORTABLE": "Row height: Default",
                 "ROW-HEIGHT-COMPACT": "Row height: Compact"

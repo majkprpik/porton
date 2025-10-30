@@ -53,16 +53,17 @@ interface CellData {
                     <div class="density-buttons">
                         <div 
                             class="export"
-                            [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.EXPORT' | translate" 
+                            [pTooltip]="'RESERVATIONS.HEADER.TOOLTIPS.DOWNLOAD-XLSX' | translate" 
                             tooltipPosition="top"
                         >
                             <p-button
-                                [severity]="'info'"
+                                [severity]="'primary'"
                                 (click)="exportReservationsService.exportToExcel(combinedHouses, houseAvailabilities(), selectedSeason)"
                             >
-                            <i class="pi pi-download"></i>
+                            <i class="pi pi-file-excel"></i>
                             </p-button>
                         </div>
+                        <div class="vertical-line"></div>
                         @for(densityButton of densityButtons; track $index){
                             <p-button
                                 class="density-button"
@@ -278,7 +279,13 @@ interface CellData {
                         justify-content: flex-end;
                         gap: 10px;
 
-                        .density-button{
+                        .vertical-line {
+                            height: 100%;
+                            width: 1px;
+                            background-color: lightgray;
+                        }
+                
+                        .density-button, .export{
                             max-height: 33px;
 
                             i{
