@@ -93,6 +93,7 @@ import { AuthService } from '../../core/services/auth.service';
                   <i class="pi pi-file-export"></i>
                 </p-button>
               </div>
+              <div class="vertical-line"></div>
             }
             <div class="density-buttons">
               @for(densityButton of densityButtons; track $index){
@@ -277,7 +278,7 @@ import { AuthService } from '../../core/services/auth.service';
           display: flex;
           flex-direction: row;
           justify-content: flex-end;
-          gap: 15px;
+          gap: 10px;
 
           .quick-delete{
             display: flex;
@@ -302,6 +303,11 @@ import { AuthService } from '../../core/services/auth.service';
                 font-size: 16px;
               }
             }
+          }
+
+          .vertical-line {
+            width: 1px;
+            background-color: lightgray;
           }
 
           .density-buttons{
