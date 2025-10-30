@@ -102,9 +102,16 @@ export class DataService {
 
   private realtimeChannel: RealtimeChannel | null = null;
 
-  constructor(private supabaseService: SupabaseService) {
-    this.loadAllEnumTypes();
-    this.loadInitialData().subscribe();
+  constructor(
+    private supabaseService: SupabaseService,
+  ) {
+    this.init();
+  }
+
+  private async init(){
+    if(await this.supabaseService.isUserLoggedIn()) {
+      this.loadInitialData().subscribe();
+    }
   }
 
   setTasks(tasks: Task[]){
@@ -215,6 +222,7 @@ export class DataService {
 
   loadInitialData() {
     return forkJoin([
+      this.loadAllEnumTypes(),
       this.loadHouseAvailabilities(),
       this.loadTempHouseAvailabilities(),
       this.loadTasks(),
@@ -236,10 +244,12 @@ export class DataService {
     ]);
   }
 
-  private loadAllEnumTypes(): void {
-    this.getTaskTypes().subscribe();
-    this.getTaskProgressTypes().subscribe();
-    this.getHouseTypes().subscribe();
+  private loadAllEnumTypes() {
+    return forkJoin([
+      this.getTaskTypes(),
+      this.getTaskProgressTypes(),
+      this.getHouseTypes()
+    ]);
   }
 
   getTaskTypes(): Observable<TaskType[]> {

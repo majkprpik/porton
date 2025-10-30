@@ -79,14 +79,12 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         </div>
     `
 })
-export class Login implements OnInit {
+export class Login {
     email: string = '';
     password: string = '';
     checked: boolean = false;
     loading: boolean = false;
     errorMessage: string = '';
-    profileRoles: ProfileRole[] = [];
-    profiles: Profile[] = [];
 
     private destroy$ = new Subject<void>();
 
@@ -95,27 +93,6 @@ export class Login implements OnInit {
         private router: Router,
         private dataService: DataService,
     ) {}
-
-    ngOnInit() {
-        this.subscribeToDataStreams();
-    }
-
-    private subscribeToDataStreams() {
-        combineLatest([
-            this.dataService.profileRoles$.pipe(nonNull()),
-            this.dataService.profiles$.pipe(nonNull()),
-        ])
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-            next: ([profileRoles, profiles]) => {
-                this.profileRoles = profileRoles;
-                this.profiles = profiles.filter(p => !p.is_deleted);
-            },
-            error: (error) => {
-                console.error('Error loading profiles:', error);
-            }
-        });
-    }
 
     ngOnDestroy(): void {
         this.destroy$.next();
@@ -133,15 +110,22 @@ export class Login implements OnInit {
                     this.errorMessage = 'Invalid email or password';
                     return;
                 }
-                
-                await firstValueFrom(this.dataService.loadInitialData());
 
-                const user = this.profiles.find(p => p.id == data.user.id)
-                if(!user || user?.is_deleted) {
+                const userAccessData = await this.authService.getUserAccessData();
+
+                if(!userAccessData || userAccessData.is_deleted) {
                     this.authService.logout();
                 }
                 
-                this.redirectUserByRole();
+                this.dataService.loadInitialData().subscribe({
+                    next: () => {
+                        this.redirectUserByRole(userAccessData.role)
+                    },
+                    error: (err) => {
+                        console.error("Failed to load data:", err);
+                        this.authService.logout();
+                    },
+                });
             } catch (error) {
                 this.errorMessage = 'An error occurred during login';
                 console.error('Login error:', error);
@@ -151,22 +135,7 @@ export class Login implements OnInit {
         }
     }
 
-    redirectUserByRole() {
-        const userId = localStorage.getItem('profileId');
-        if (!userId) {
-            this.router.navigate(['/login']);
-            return;
-        }
-
-        const userProfile = this.profiles.find(p => p.id == userId);
-        if(!userProfile) {
-            this.router.navigate(['/login']);
-            return;
-        }
-
-        const userRole = this.profileRoles.find(r => r.id === userProfile.role_id);
-        const roleName = userRole?.name;
-
+    redirectUserByRole(roleName: string) {
         switch (roleName) {
             case ProfileRoles.Sobarica:
             case ProfileRoles.Terasar:

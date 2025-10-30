@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { ProfileService } from './profile.service';
 import { ProfileRole, ProfileRoles } from '../models/data.models';
-import { LayoutService } from '../../layout/services/layout.service';
 import { PushNotificationsService } from './push-notifications.service';
 import { DataService } from './data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
@@ -21,18 +19,12 @@ export class AuthService {
     private supabaseService: SupabaseService,
     private profileService: ProfileService,
     private dataService: DataService,
-    private layoutService: LayoutService,
     private pushNotificationsService: PushNotificationsService,
   ) {
     this.dataService.profileRoles$
       .pipe(nonNull())
       .subscribe(profileRoles => {
         this.profileRoles = profileRoles;
-
-        if(this.profileRoles.length){
-          // this.initializeTestUsers();
-          // this.createRealUsers();
-        }
     });
   }
 
@@ -166,9 +158,17 @@ export class AuthService {
     });
   }
 
-  async isLoggedIn() {
-    const { data, error } = await this.supabaseService.getSession();
-    return !!data.session?.user;
+  async getUserAccessData() {
+    try {
+      const { data, error } = await this.supabaseService.getClient().functions.invoke("user-role");
+
+      if(error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
   }
 
   getStoredUsername(): string | null {
