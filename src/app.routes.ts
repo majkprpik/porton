@@ -22,6 +22,7 @@ import { LoginGuard } from './app/core/guards/login.guard';
 import { ContentManagementComponent } from './app/pages/content-management/content-management.component';
 import { PrivacyPolicyComponent } from './app/pages/privacy-policy/privacy-policy.component';
 import { ProfileDetailsComponent } from './app/pages/profile-details/profile-details.component';
+import { MapComponent } from './app/pages/map/map.component';
 
 export const appRoutes: Routes = [
     {
@@ -184,6 +185,14 @@ export const appRoutes: Routes = [
             },
             { path: 'documentation', component: Documentation },
             { path: 'profile-details', component: ProfileDetailsComponent },
+            { 
+                path: 'map', 
+                component: MapComponent,
+                data: { roles: [
+                    ProfileRoles.VoditeljKampa,
+                    ProfileRoles.Uprava
+                ] }
+            }
         ]
     },
     { path: 'login', component: Login, canActivate: [LoginGuard] },
