@@ -35,7 +35,7 @@ import {
   providedIn: 'root',
 })
 export class DataService {
-  private debug = true;
+  private debug = false;
   private schema = 'porton';
 
   private loadingSubject = new BehaviorSubject<boolean>(false);
@@ -200,7 +200,7 @@ export class DataService {
 
   private logData(source: string, data: any): void {
     if (this.debug) {
-      console.log(`[DataService] ${source}:`, data);
+      // console.log(`[DataService] ${source}:`, data);
     }
   }
 
