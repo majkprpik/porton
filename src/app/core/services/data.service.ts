@@ -35,7 +35,7 @@ import {
   providedIn: 'root',
 })
 export class DataService {
-  private debug = false;
+  private debug = true;
   private schema = 'porton';
 
   private loadingSubject = new BehaviorSubject<boolean>(false);
