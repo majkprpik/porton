@@ -200,7 +200,7 @@ export class DataService {
 
   private logData(source: string, data: any): void {
     if (this.debug) {
-      //console.log(`[DataService] ${source}:`, data);
+      console.log(`[DataService] ${source}:`, data);
     }
   }
 
