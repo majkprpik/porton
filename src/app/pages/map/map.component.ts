@@ -4,7 +4,7 @@ import {
   provideMapboxGL,
 } from 'ngx-mapbox-gl';
 import { HouseService } from '../../core/services/house.service';
-import { House, HouseAvailability } from '../../core/models/data.models';
+import { House, HouseAvailability, Task, TaskTypeName } from '../../core/models/data.models';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import type { Feature, FeatureCollection, Polygon, Point } from 'geojson';
@@ -12,6 +12,8 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
 import { combineLatest } from 'rxjs';
+import { TaskService } from '../../core/services/task.service';
+import { GeoJSONFeature, Popup } from 'mapbox-gl';
 
 @Component({
   selector: 'app-map',
@@ -28,17 +30,27 @@ import { combineLatest } from 'rxjs';
     })
   ],
   template: `
-    <div
-      class="buttons"
-    >
-      <p-checkbox
-        inputId="showHouseNumbers"
-        name="showHouseNumbers"
-        [(ngModel)]="showHouseNumbers"
-        binary="true"
-        (ngModelChange)="toggleHouseNumbers()"
-      ></p-checkbox>
-      <label for="showHouseNumbers" class="cursor-pointer">Show house numbers</label>
+    <div class="toggles">
+      <div class="house-numbers-toggle">
+        <p-checkbox
+          inputId="showHouseNumbers"
+          name="showHouseNumbers"
+          [(ngModel)]="areHouseNumbersVisible"
+          binary="true"
+          (ngModelChange)="toggleHouseNumbers()"
+        ></p-checkbox>
+        <label for="showHouseNumbers">Show house numbers</label>
+      </div>
+      <div class="house-icons-toggle">
+        <p-checkbox
+          inputId="showHouseIcons"
+          name="showHouseIcons"
+          [(ngModel)]="areHouseIconsVisible"
+          binary="true"
+          (ngModelChange)="toggleHouseIcons()"
+        ></p-checkbox>
+        <label for="showHouseIcons">Show house icons</label>
+      </div>
     </div>
 
     <mgl-map
@@ -50,19 +62,24 @@ import { combineLatest } from 'rxjs';
     ></mgl-map>
   `,
   styles: `
-    .buttons{
+    .toggles{
       position: absolute;
+      bottom: 20px;
+      left: 42%;
+      z-index: 10;
       display: flex;
       gap: 10px;
-      bottom: 20px;
-      left: 46%;
-      z-index: 10;
-      box-sizing: border-box;
+      border-radius: 5px;
       padding: 5px 10px 5px 10px;
       background-color: var(--p-cyan-900);
-      color: white;
-      border-radius: 5px;
-      user-select: none;
+
+      .house-numbers-toggle, .house-icons-toggle{
+        display: flex;
+        gap: 10px;
+        box-sizing: border-box;
+        color: white;
+        user-select: none;
+      }
     }
 
     .map-container {
@@ -75,17 +92,20 @@ import { combineLatest } from 'rxjs';
   `
 })
 export class MapComponent {
-  showHouseNumbers: boolean = true;
+  areHouseNumbersVisible: boolean = true;
+  areHouseIconsVisible: boolean = true;
 
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
   house?: House;
+  tasks: Task[] = [];
 
   isOccupied: boolean = false;
   isAvailable: boolean = false;
   isAvailableWithTasks: boolean = false;
   isAvailableWithArrival: boolean = false;
 
+  private taskIconsGeoJson: any;
   private streetGeoJson?: GeoJSON.FeatureCollection
   private map?: mapboxgl.Map;
 
@@ -93,21 +113,26 @@ export class MapComponent {
   constructor(
     private houseService: HouseService,
     private dataService: DataService,
+    private taskService: TaskService,
   ) {
     combineLatest([
       this.dataService.houseAvailabilities$.pipe(nonNull()),
       this.dataService.houses$.pipe(nonNull()),
-    ]).subscribe(([ha, houses]) => {
+      this.dataService.tasks$.pipe(nonNull()),
+    ]).subscribe(([ha, houses, tasks]) => {
       this.houseAvailabilities = ha;
       this.houses = houses;
+      this.tasks = tasks;
 
       this.updateHouseColors();
     });
   }
 
-  onMapLoad(event: { target: mapboxgl.Map }) {
+  async onMapLoad(event: { target: mapboxgl.Map }) {
     this.map = event.target;
+
     this.initHouses();
+    this.initTaskIcons();
 
     const layers = this.map.getStyle().layers!;
     const labelLayerId = layers.find(l => l.type === 'symbol' && l.layout && l.layout['text-field'])?.id;
@@ -148,14 +173,267 @@ export class MapComponent {
       );
     }
 
+    this.map!.addSource('task-icons', { type: 'geojson', data: this.taskIconsGeoJson });
+
+    this.map!.addLayer({
+      id: 'task-icons-layer',
+      type: 'symbol',
+      source: 'task-icons',
+      layout: {
+        'icon-image': ['concat', ['get', 'icon']],
+        'icon-size': 1.6,
+        'icon-offset': [0, 0],
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'icon-rotate': ['get', 'rotation'],
+        'icon-anchor': 'center',
+      },
+    });
+
+    let rotation = 0;
+    const spinSpeed = 4; // degrees per frame
+
+    const animateSpinningIcons = () => {
+      rotation = (rotation + spinSpeed) % 360;
+
+      const updatedGeoJson = {
+        ...this.taskIconsGeoJson,
+        features: this.taskIconsGeoJson.features.map((f: any) => ({
+
+          ...f,
+          properties: {
+            ...f.properties,
+            rotation: this.taskService.isTaskInProgress(this.tasks.find(t => t.task_id == f.properties.task_id)) ? rotation : 0,
+          },
+        })),
+      };
+
+      const source = this.map!.getSource('task-icons') as mapboxgl.GeoJSONSource;
+      if (source) source.setData(updatedGeoJson);
+
+      requestAnimationFrame(animateSpinningIcons);
+    };
+
+    animateSpinningIcons();
+
     this.getStreetLabelFeatures();
 
     this.map.easeTo({
-      pitch: 60,          // tilt down 60°
-      bearing: 40,       // rotate left 30°
-      duration: 1500,     // 1.5 second animation
-      easing: (t) => t,   // linear easing (you can adjust)
+      pitch: 60, // tilt down 
+      bearing: 40, // rotate left °
+      duration: 1500, //animation in s
+      easing: (t) => t, // linear easing (you can adjust)
     });
+
+    this.map.on('click', 'task-icons-layer', (e) => {
+      const feature = e.features?.[0] as GeoJSONFeature;
+      if (!feature || !feature.properties) return;
+
+      const task = this.tasks.find(t => t.task_id == feature.properties?.['task_id'])
+
+      this.taskService.$taskModalData.next(task);
+    });
+  }
+
+
+  getHouseCentroid(houseOrFeature: string | any): [number, number] | null {
+    let feature: any;
+
+    if (typeof houseOrFeature === 'string') {
+      if (!this.streetGeoJson) return null;
+
+      feature = this.streetGeoJson.features.find(
+        (f: any) => f.properties?.house_name === houseOrFeature
+      );
+
+      if (!feature) return null;
+    } else {
+      feature = houseOrFeature;
+    }
+    
+    if (!feature.geometry || feature.geometry.type !== 'Polygon') return null;
+
+    const polygon = feature.geometry as Polygon;
+    const coords = polygon.coordinates[0];
+    if (!coords?.length) return null;
+
+    let x = 0, y = 0;
+    coords.forEach(([lon, lat]) => {
+      x += lon;
+      y += lat;
+    });
+
+    const len = coords.length;
+    return [x / len, y / len];
+  }
+
+  getStreetLabelFeatures(){
+    const streetLabelFeatures = this.streetGeoJson!.features
+      .map((feature: any) => {
+        const centroid = this.getHouseCentroid(feature);
+        if (!centroid) return null;
+
+        return {
+          type: 'Feature' as const,
+          properties: {
+            name: feature.properties?.['house_name'] ?? '',
+            icon: feature.properties?.['icon'] ?? 'home',
+          },
+          geometry: {
+            type: 'Point' as const,
+            coordinates: centroid,
+          },
+        } as Feature<Point, HouseLabelProps>;
+      })
+      .filter((f): f is Feature<Point, HouseLabelProps> => f !== null);
+
+    const streetLabelGeoJson: FeatureCollection<Point> = {
+      type: 'FeatureCollection',
+      features: streetLabelFeatures,
+    };
+
+    this.map!.addSource('street-label', { type: 'geojson', data: streetLabelGeoJson });
+
+    this.map!.addLayer({
+      id: 'street-text-layer',
+      type: 'symbol',
+      source: 'street-label',
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-size': 14,
+        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Regular'],
+        'text-anchor': 'center',
+        'text-offset': [0, -1],
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
+      },
+      paint: {
+        'text-color': '#333333',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 1,
+        'text-halo-blur': 0.5,
+      },
+    });
+
+    this.map!.setLayoutProperty(
+      'street-text-layer',
+      'visibility',
+      this.areHouseNumbersVisible ? 'visible' : 'none'
+    );
+  }
+
+  toggleHouseIcons() {
+    if (this.map!.getLayer('task-icons-layer')) {
+      this.map!.setLayoutProperty(
+        'task-icons-layer',
+        'visibility',
+        this.areHouseIconsVisible ? 'visible' : 'none'
+      );
+    }
+  }
+
+  toggleHouseNumbers() {
+    if (this.map!.getLayer('street-text-layer')) {
+      this.map!.setLayoutProperty(
+        'street-text-layer',
+        'visibility',
+        this.areHouseNumbersVisible ? 'visible' : 'none'
+      );
+    }
+  }
+
+  getHouseColor(house: House){
+    this.isOccupied = this.houseService.isHouseOccupied(house.house_id);
+    this.isAvailable = !this.houseService.isHouseOccupied(house.house_id) && !this.houseService.hasScheduledNotCompletedTasks(house.house_id);
+    this.isAvailableWithTasks = !this.houseService.isHouseOccupied(house.house_id) && this.houseService.hasScheduledNotCompletedTasks(house.house_id);
+    this.isAvailableWithArrival = !this.houseService.isHouseOccupied(house.house_id) && !!this.houseService.isHouseReservedToday(house.house_id);
+
+    if(this.isOccupied) {
+      return "#dc2626";
+    } else if(this.isAvailableWithArrival){
+      return "#f87171";
+    } else if(this.isAvailableWithTasks) {
+      return "#facc15";
+    } else if(this.isAvailable) {
+      return "#16a34a";
+    }
+
+    return '#aaa'
+  }
+
+  updateHouseColors() {
+    if (!this.streetGeoJson) return
+    this.streetGeoJson.features.forEach((f: any) => {
+      const house = this.houses.find(h => h.house_name === f.properties.house_name);
+      if (house) {
+        f.properties.color = this.getHouseColor(house);
+      }
+    });
+
+    const source = this.map?.getSource('street') as mapboxgl.GeoJSONSource;
+    if (source) {
+      source.setData(this.streetGeoJson);
+    }
+  }
+
+  updateTaskIcons() {
+    this.initTaskIcons();
+    const src = this.map!.getSource('task-icons') as mapboxgl.GeoJSONSource;
+    if (src) src.setData(this.taskIconsGeoJson);
+  }
+
+  initTaskIcons() {
+    const taskIconFeatures: any[] = [];
+
+    this.houses.forEach((house) => {
+      const tasks = this.houseService.getTasksForHouse(house.house_id);
+      const centroid = this.getHouseCentroid(house.house_name);
+      const visibleTasks = tasks.filter(task => !this.taskService.isTaskCompleted(task));
+
+      if (!centroid) return;
+
+      visibleTasks.forEach((task, index) => {
+        const step = 0.00002;
+        const offset = step * (index - (visibleTasks.length - 1) / 2);
+        const taskIcon = this.getTaskMakiIcon(task.task_type_id);
+
+        taskIconFeatures.push({
+          type: 'Feature',
+          properties: {
+            icon: taskIcon,
+            task_id: task.task_id,
+            task_progress_type_id: task.task_progress_type_id,
+            house_name: house.house_name,
+          },
+          geometry: {
+            type: 'Point',
+            coordinates: [centroid[0] + offset, centroid[1]],
+          },
+        });
+      });
+    });
+
+    this.taskIconsGeoJson = {
+      type: 'FeatureCollection',
+      features: taskIconFeatures,
+    };
+  }
+
+  getTaskMakiIcon(taskTypeId: number | undefined): string {
+    switch (taskTypeId) {
+      case this.taskService.getTaskTypeByName(TaskTypeName.HouseCleaning)?.task_type_id:
+        return 'museum';
+      case this.taskService.getTaskTypeByName(TaskTypeName.DeckCleaning)?.task_type_id:
+        return 'beach';
+      case this.taskService.getTaskTypeByName(TaskTypeName.SheetChange)?.task_type_id:
+        return 'lodging';
+      case this.taskService.getTaskTypeByName(TaskTypeName.TowelChange)?.task_type_id:
+        return 'waterfall';
+      case this.taskService.getTaskTypeByName(TaskTypeName.Repair)?.task_type_id:
+        return 'hardware';
+      default:
+        return '';
+    }
   }
 
   initHouses(){
@@ -751,110 +1029,9 @@ export class MapComponent {
 
     this.map!.addSource('street', { type: 'geojson', data: this.streetGeoJson });
   }
+}
 
-  getStreetLabelFeatures(){
-    const streetLabelFeatures: Feature<Point>[] = this.streetGeoJson!.features.map((feature: any, index: number) => {
-      if (feature.geometry.type !== 'Polygon') {
-        return null as any;
-      }
-
-      const polygon = feature.geometry as Polygon;
-      const coords = polygon.coordinates[0];
-      let x = 0, y = 0;
-      coords.forEach(([lon, lat]) => {
-        x += lon;
-        y += lat;
-      });
-      const len = coords.length;
-      const centroid: [number, number] = [x / len, y / len];
-
-      return {
-        type: 'Feature',
-        properties: {
-        name: feature.properties?.['house_name'] ?? '',
-        },
-        geometry: {
-          type: 'Point',
-          coordinates: centroid,
-        },
-      };
-    }).filter((f: any): f is Feature<Point> => f !== null);
-
-    const streetLabelGeoJson: FeatureCollection<Point> = {
-      type: 'FeatureCollection',
-      features: streetLabelFeatures,
-    };
-
-    this.map!.addSource('street-label', { type: 'geojson', data: streetLabelGeoJson });
-
-    this.map!.addLayer({
-      id: 'street-label-layer',
-      type: 'symbol',
-      source: 'street-label',
-      layout: {
-        'text-field': ['get', 'name'],
-        'text-size': 14,
-        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Regular'],
-        'text-anchor': 'center',
-        'text-offset': [0, -0.5],
-        'text-allow-overlap': false,
-      },
-      paint: {
-        'text-color': '#333333',
-        'text-halo-color': '#ffffff',
-        'text-halo-width': 1,
-        'text-halo-blur': 0.5,
-      },
-    });
-
-    this.map!.setLayoutProperty(
-      'street-label-layer',
-      'visibility',
-      this.showHouseNumbers ? 'visible' : 'none'
-    );
-  }
-
-  toggleHouseNumbers(){
-    if (this.map!.getLayer('street-label-layer')) {
-      this.map!.setLayoutProperty(
-        'street-label-layer',
-        'visibility',
-        this.showHouseNumbers ? 'visible' : 'none'
-      );
-    }
-  }
-
-  getHouseColor(house: House){
-    this.isOccupied = this.houseService.isHouseOccupied(house.house_id);
-    this.isAvailable = !this.houseService.isHouseOccupied(house.house_id) && !this.houseService.hasScheduledNotCompletedTasks(house.house_id);
-    this.isAvailableWithTasks = !this.houseService.isHouseOccupied(house.house_id) && this.houseService.hasScheduledNotCompletedTasks(house.house_id);
-    this.isAvailableWithArrival = !this.houseService.isHouseOccupied(house.house_id) && !!this.houseService.isHouseReservedToday(house.house_id);
-
-    if(this.isOccupied) {
-      return "#dc2626";
-    } else if(this.isAvailableWithArrival){
-      return "#f87171";
-    } else if(this.isAvailableWithTasks) {
-      return "#facc15";
-    } else if(this.isAvailable) {
-      return "#16a34a";
-    }
-
-    return '#aaa'
-  }
-
-  updateHouseColors() {
-    if (!this.streetGeoJson) return
-    this.streetGeoJson.features.forEach((f: any) => {
-      const house = this.houses.find(h => h.house_name === f.properties.house_name);
-      if (house) {
-        f.properties.color = this.getHouseColor(house);
-      }
-    });
-
-    const source = this.map?.getSource('street') as mapboxgl.GeoJSONSource;
-    if (source) {
-      source.setData(this.streetGeoJson);
-    }
-  }
+export interface HouseLabelProps {
+  name: string;
+  icon: string;
 }
