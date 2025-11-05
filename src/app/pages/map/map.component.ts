@@ -231,6 +231,24 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
       background: white
     }
 
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--p-cyan-950);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: var(--p-cyan-800);
+      border-radius: 10px;
+      border: 2px solid var(--p-cyan-950);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: var(--p-cyan-700);
+    }
+
     .toggles{
       position: absolute;
       bottom: 20px;
@@ -332,24 +350,6 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
           overflow-y: auto;
           box-sizing: border-box;
           padding-right: 10px;
-
-          &::-webkit-scrollbar {
-            width: 8px;
-          }
-
-          &::-webkit-scrollbar-track {
-            background: var(--p-cyan-950);
-          }
-
-          &::-webkit-scrollbar-thumb {
-            background-color: var(--p-cyan-800);
-            border-radius: 10px;
-            border: 2px solid var(--p-cyan-950);
-          }
-
-          &::-webkit-scrollbar-thumb:hover {
-            background-color: var(--p-cyan-700);
-          }
 
           .house-availability-card-wrapper{
             display: flex;
