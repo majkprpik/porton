@@ -316,8 +316,11 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
 
       .house-info{
         .selected-house-tasks{
+          height: calc(100vh - 500px);
+          overflow-y: auto;
           display: flex;
           flex-direction: row;
+          align-content: flex-start;
           gap: 5px;
           flex-wrap: wrap;
         }
@@ -326,7 +329,6 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
           height: calc(100vh - 500px);
           display: flex;
           flex-direction: column;
-          min-height: 0;
           overflow-y: auto;
           box-sizing: border-box;
           padding-right: 10px;
