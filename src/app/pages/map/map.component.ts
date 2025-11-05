@@ -1,10 +1,7 @@
 import { Component } from '@angular/core';
-import {
-  MapComponent as MglMap,
-  provideMapboxGL,
-} from 'ngx-mapbox-gl';
+import { MapComponent as MglMap, provideMapboxGL } from 'ngx-mapbox-gl';
 import { HouseService } from '../../core/services/house.service';
-import { House, HouseAvailability, Task, TaskTypeName } from '../../core/models/data.models';
+import { House, HouseAvailability, Season, Task, TaskTypeName } from '../../core/models/data.models';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import type { Feature, FeatureCollection, Polygon, Point } from 'geojson';
@@ -13,7 +10,12 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
 import { combineLatest } from 'rxjs';
 import { TaskService } from '../../core/services/task.service';
-import { GeoJSONFeature, Popup } from 'mapbox-gl';
+import { GeoJSONFeature } from 'mapbox-gl';
+import { TabsModule } from 'primeng/tabs';
+import { animate, state, style, transition, trigger } from '@angular/animations';
+import { TaskCardComponent } from '../daily-sheet/task-card';
+import { CommonModule } from '@angular/common';
+import { ReservationFormComponent } from '../reservations/reservation-form/reservation-form.component';
 
 @Component({
   selector: 'app-map',
@@ -23,6 +25,10 @@ import { GeoJSONFeature, Popup } from 'mapbox-gl';
     ButtonModule,
     CheckboxModule,
     FormsModule,
+    TabsModule,
+    TaskCardComponent,
+    CommonModule,
+    ReservationFormComponent,
   ], 
   providers: [
     provideMapboxGL({
@@ -53,6 +59,150 @@ import { GeoJSONFeature, Popup } from 'mapbox-gl';
       </div>
     </div>
 
+    <div 
+      class="sidebar"
+      [@sidebarAnimation]="isSidebarVisible ? 'visible' : 'hidden'"
+    >
+      <div class="header">
+        <div class="close-icon-container" (click)="closeSidebar()">
+          <i class="pi pi-angle-double-right"></i>
+        </div>
+        <span class="house-name">Kućica {{ this.selectedHouse?.house_name }}</span>
+        <div class="empty-box"></div>
+      </div>
+
+      <div class="images-container">
+        <img src="/assets/images/kucica_206.jpg" alt="house-image">
+      </div>
+
+      <div class="house-info">
+        <p-tabs [(value)]="selectedTab">
+          <p-tablist>
+            <p-tab value="0">Zadaci</p-tab>
+            <p-tab value="1">Rezervacije</p-tab>
+            <p-tab value="2">Details</p-tab>
+          </p-tablist>
+          <p-tabpanels>
+            <p-tabpanel value="0">
+              <div class="selected-house-tasks">
+                @for(task of selectedHouseTasks; track task.task_id){
+                  <app-task-card [task]="task"></app-task-card>
+                }
+              </div>
+            </p-tabpanel>
+            <p-tabpanel value="1">
+              <div class="selected-house-availabilities">
+                @for(ha of selectedHouseAvailabilities; track ha.house_availability_id){
+                  <div 
+                    class="house-availability-card-wrapper"
+                    [ngClass]="{'current-reservation': isCurrentHouseAvailability(ha)}"
+                  >
+                    <div 
+                      class="house-availability-card"
+                      [ngStyle]="{
+                        'background-color': houseService.getColorForReservation(ha),
+                      }"
+                      (click)="handleReservationSelect(ha)"
+                    >
+                      <span>{{ ha.last_name }}</span>
+  
+                      <div class="reservation-numbers">
+                        @if (ha.adults){
+                          <div class="adults-count">
+                            {{ ha.adults }} 
+                            <i class="fa-solid fa-person"></i>
+                          </div>
+                        }
+                        @if (ha.dogs_d) {
+                          <div class="pets-count">
+                            {{ ha.dogs_d }} 
+                            <i class="fa-solid fa-paw"></i>
+                          </div>
+                        } 
+                        @if (ha.babies) {
+                          <div class="babies-count">
+                            {{ ha.babies }}
+                            <i class="fa-solid fa-baby"></i>
+                          </div>
+                        }
+                        @if (ha.cribs) {
+                          <div class="cribs-count">
+                            {{ ha.cribs }}
+                            <i class="fa-solid fa-baby-carriage"></i>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </p-tabpanel>
+            <p-tabpanel value="2">
+              <div class="selected-house-details">
+                <div class="first-row">
+                  <div class="house-number">
+                    <div class="top">
+                      <span class="material-icons">home</span>
+                      <span>{{ selectedHouse?.house_name }}</span>
+                    </div>
+                    <div class="bottom">
+                      <span>House number</span>
+                    </div>
+                  </div>
+    
+                  @if(selectedHouse?.has_pool){
+                    <div class="swimming-pool">
+                      <div class="top">
+                        <span class="material-icons">pool</span>
+                        <span>Swimming pool</span>
+                      </div>
+                      <div class="bottom">
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <div class="second-row">
+                  <div class="area">
+                    <div class="top">
+                      <span class="material-icons">square_foot</span>
+                      <span>34m<sup>2</sup></span>
+                    </div>
+                    <div class="bottom">
+                      <span>Accommodation</span>
+                    </div>
+                  </div>
+    
+                  <div class="deck">
+                    <div class="top">
+                      <span class="material-icons">deck</span>
+                      <span>50m<sup>2</sup></span>
+                    </div>
+                    <div class="bottom">
+                      <span>Terrace</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </p-tabpanel>
+          </p-tabpanels>
+        </p-tabs>
+      </div>
+    </div>
+
+    @if(isSelectedHouseAvailabilityFormVisible){
+      <app-reservation-form 
+        [reservation]="selectedHouseAvailability!"
+        [visible]="isSelectedHouseAvailabilityFormVisible"
+        [colors]="houseService.reservationColors"
+        [season]="selectedSeason!"
+        [existingReservations]="houseAvailabilities"
+        (cancel)="handleReservationCancel()"
+        (visibleChange)="handleVisibilityChange($event)">
+      </app-reservation-form>
+    }
+
     <mgl-map
       class="map-container"
       [style]="'mapbox://styles/majkprpik/cldvqs70j00dp01qqved11ubg'"
@@ -62,6 +212,25 @@ import { GeoJSONFeature, Popup } from 'mapbox-gl';
     ></mgl-map>
   `,
   styles: `
+    ::ng-deep .house-info .p-tabs .p-tablist .p-tablist-content .p-tablist-tab-list {
+      background-color: transparent !important;
+      border: none !important;
+    }
+
+    ::ng-deep .house-info .p-tabs .p-tabpanels {
+      background-color: var(--p-cyan-950) !important;
+      border-bottom: none;
+      color: white;
+    }
+
+    ::ng-deep .house-info .p-tabs .p-tablist .p-tablist-content .p-tablist-tab-list .p-tab-active {
+      color: white
+    }
+
+    ::ng-deep .house-info .p-tabs .p-tablist .p-tablist-content .p-tablist-tab-list .p-tablist-active-bar {
+      background: white
+    }
+
     .toggles{
       position: absolute;
       bottom: 20px;
@@ -71,7 +240,7 @@ import { GeoJSONFeature, Popup } from 'mapbox-gl';
       gap: 10px;
       border-radius: 5px;
       padding: 5px 10px 5px 10px;
-      background-color: var(--p-cyan-900);
+      background-color: var(--p-cyan-950);
 
       .house-numbers-toggle, .house-icons-toggle{
         display: flex;
@@ -82,6 +251,211 @@ import { GeoJSONFeature, Popup } from 'mapbox-gl';
       }
     }
 
+    .sidebar{
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 442px;
+      height: 100vh;
+      background-color: var(--p-cyan-950);
+      z-index: 10;
+      box-sizing: border-box;
+      padding-top: 90px;
+      transform: translateX(100%);
+
+      .header{
+        padding: 0px 20px 0px 20px;
+        width: 100;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+
+        .close-icon-container{
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          height: 32px;
+          width: 32px;
+          background-color: var(--p-cyan-900);
+          border-radius: 5px;
+
+          i{
+            font-size: 16px;
+            font-weight: bold;
+            color: white
+          }
+
+          &:hover{
+            cursor: pointer;
+          }
+        }
+
+        span{
+          color: white;
+          font-weight: bold;
+          font-size: 24px;
+        }
+
+        .empty-box{
+          height: 14px;
+          width: 14px;
+        }
+      }
+
+      .images-container{
+        box-sizing: border-box;
+        padding: 20px;
+
+        img{
+          border-radius: 10px;
+        }
+      }
+
+      .house-info{
+        .selected-house-tasks{
+          display: flex;
+          flex-direction: row;
+          gap: 5px;
+          flex-wrap: wrap;
+        }
+
+        .selected-house-availabilities{
+          height: calc(100vh - 500px);
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          overflow-y: auto;
+          box-sizing: border-box;
+          padding-right: 10px;
+
+          &::-webkit-scrollbar {
+            width: 8px;
+          }
+
+          &::-webkit-scrollbar-track {
+            background: var(--p-cyan-950);
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background-color: var(--p-cyan-800);
+            border-radius: 10px;
+            border: 2px solid var(--p-cyan-950);
+          }
+
+          &::-webkit-scrollbar-thumb:hover {
+            background-color: var(--p-cyan-700);
+          }
+
+          .house-availability-card-wrapper{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex: 0 0 50px;
+            width: 100%;
+            padding-left: 10px;
+            
+            .house-availability-card{
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+              gap: 5px;
+              border: 1px solid black;
+              padding: 0px 10px 0px 10px;
+              height: 40px;
+              width: 100%;
+              color: black;
+              font-weight: bold;
+  
+              &:hover{
+                cursor: pointer;
+              }
+  
+              .reservation-numbers{
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 5px;
+              }
+            }
+  
+          }
+
+          .current-reservation{
+            background-image: linear-gradient(to right, var(--p-cyan-400) 0%, var(--p-cyan-950) 40%);
+          }
+        }
+
+        .selected-house-details{
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+          padding: 20px;
+          gap: 20px;
+
+          .first-row{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between; 
+
+            .house-number, .swimming-pool{
+              display: flex;
+              flex-direction: column; 
+              gap: 5px;
+
+              .top, .bottom{
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+              }
+
+              .material-icons{
+                font-size: 24px;
+              }
+
+              span{
+                font-size: 18px;
+              }
+            }
+          }
+
+          .second-row{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between; 
+
+            .area, .deck{
+              display: flex;
+              flex-direction: column; 
+              gap: 5px;
+  
+              .top, .bottom{
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+              }
+  
+              .material-icons{
+                font-size: 24px;
+              }
+  
+              span{
+                font-size: 18px;
+              }
+            }
+          }
+
+        }
+      }
+    }
+
     .map-container {
       position: absolute;
       top: 0;
@@ -89,16 +463,46 @@ import { GeoJSONFeature, Popup } from 'mapbox-gl';
       width: 100vw;
       height: 100vh;
     }
-  `
+  `,
+  animations: [
+    trigger('sidebarAnimation', [
+      state('visible', style({
+        transform: 'translateX(0%)',
+        opacity: 1
+      })),
+      state('hidden', style({
+        transform: 'translateX(100%)',
+        opacity: 0
+      })),
+      transition('hidden => visible', [
+        animate('300ms ease-out')
+      ]),
+      transition('visible => hidden', [
+        animate('300ms ease-in')
+      ])
+    ])
+  ]
 })
 export class MapComponent {
   areHouseNumbersVisible: boolean = true;
   areHouseIconsVisible: boolean = true;
+  isSidebarVisible: boolean = false;
 
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
-  house?: House;
   tasks: Task[] = [];
+
+  selectedHouse?: House;
+  selectedHouseTasks: Task[] = [];
+  selectedHouseAvailabilities: HouseAvailability[] = [];
+
+  selectedTab: string = '0';
+
+  seasons: Season[] = [];
+  selectedSeason?: Season;
+
+  selectedHouseAvailability?: HouseAvailability;
+  isSelectedHouseAvailabilityFormVisible: boolean = false;
 
   isOccupied: boolean = false;
   isAvailable: boolean = false;
@@ -109,23 +513,57 @@ export class MapComponent {
   private streetGeoJson?: GeoJSON.FeatureCollection
   private map?: mapboxgl.Map;
 
-
   constructor(
-    private houseService: HouseService,
+    public houseService: HouseService,
     private dataService: DataService,
-    private taskService: TaskService,
+    public taskService: TaskService,
   ) {
     combineLatest([
       this.dataService.houseAvailabilities$.pipe(nonNull()),
       this.dataService.houses$.pipe(nonNull()),
       this.dataService.tasks$.pipe(nonNull()),
-    ]).subscribe(([ha, houses, tasks]) => {
+      this.dataService.seasons$.pipe(nonNull()),
+    ]).subscribe(([ha, houses, tasks, seasons]) => {
       this.houseAvailabilities = ha;
       this.houses = houses;
       this.tasks = tasks;
+      this.seasons = seasons;
 
       this.updateHouseColors();
     });
+  }
+
+  closeSidebar(){
+    this.isSidebarVisible = false;
+    this.selectedTab = '0';
+  }
+
+  hasReservationPassed(reservation: HouseAvailability){
+    return reservation.house_availability_end_date < new Date().toLocaleDateString('en-CA'); 
+  }
+
+  isCurrentHouseAvailability(reservation: HouseAvailability){
+    return reservation.house_availability_start_date < new Date().toLocaleDateString('en-CA') &&
+          reservation.house_availability_end_date > new Date().toLocaleDateString('en-CA');
+  }
+
+  handleReservationSelect(reservation: HouseAvailability){
+    this.selectedHouseAvailability = reservation;
+    const year = reservation.house_availability_start_date.slice(0, 4);
+    this.selectedSeason = this.seasons.find(s => s.year == +year);
+
+    this.isSelectedHouseAvailabilityFormVisible = true;
+  }
+
+  handleReservationCancel(){
+    this.isSelectedHouseAvailabilityFormVisible = false;
+    this.selectedHouseAvailability = undefined;
+  }
+
+  handleVisibilityChange(isVisible: any){
+    if(!isVisible){
+      this.handleReservationCancel();
+    }
   }
 
   async onMapLoad(event: { target: mapboxgl.Map }) {
@@ -191,7 +629,7 @@ export class MapComponent {
     });
 
     let rotation = 0;
-    const spinSpeed = 4; // degrees per frame
+    const spinSpeed = 4;
 
     const animateSpinningIcons = () => {
       rotation = (rotation + spinSpeed) % 360;
@@ -233,8 +671,23 @@ export class MapComponent {
 
       this.taskService.$taskModalData.next(task);
     });
-  }
 
+    this.map.on('click', 'street-extrusion', (e) => {
+      const feature = e.features?.[0] as GeoJSONFeature;
+      if (!feature || !feature.properties) return;
+
+      this.selectedHouse = this.houses.find(h => h.house_name == feature.properties?.['house_name']);
+      this.selectedHouseTasks = this.tasks
+        .filter(t => t.house_id == this.selectedHouse?.house_id)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      this.selectedHouseAvailabilities = this.houseAvailabilities
+        .filter(ha => ha.house_id == this.selectedHouse?.house_id)
+        .sort((a, b) => new Date(a.house_availability_end_date).getTime() - new Date(b.house_availability_end_date).getTime());
+
+      this.isSidebarVisible = true;
+    });
+  }
 
   getHouseCentroid(houseOrFeature: string | any): [number, number] | null {
     let feature: any;
@@ -886,14 +1339,6 @@ export class MapComponent {
           geometry: {
             type: 'Polygon',
             coordinates: [[[13.642607461437514,45.09518300775712],[13.642643737197828,45.095263984943095],[13.64258098993677,45.09527644296151],[13.642545694602434,45.095195465793225],[13.642607461437514,45.09518300775712]]],
-          },
-        },
-        {
-          type: 'Feature',
-          properties: { height: 3, house_name: '523' },
-          geometry: {
-            type: 'Polygon',
-            coordinates: [[[13.64263198116892,45.09535775896923],[13.642722505707779,45.095325096996795],[13.642742622290784,45.095353972074676],[13.642655450492677,45.09538663406308],[13.64263198116892,45.09535775896923]]],
           },
         },
         {

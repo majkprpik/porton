@@ -16,7 +16,14 @@ import { DragDropModule } from "primeng/dragdrop";
 @Component({
     selector: 'app-reservation-form',
     template: `
-        <p-dialog [(visible)]="visible" [modal]="true" [style]="{width: '700px'}" [draggable]="false" [resizable]="false">
+        <p-dialog 
+            [(visible)]="visible" 
+            [modal]="true" 
+            [style]="{width: '700px'}" 
+            [draggable]="false" 
+            [resizable]="false"
+            (onHide)="onDialogHide()"
+        >
             <ng-template pTemplate="header">
                 <h3>
                     {{ reservation.house_availability_id ? 
@@ -650,5 +657,9 @@ export class ReservationFormComponent implements OnInit {
  
     isFormValid(){
         return !this.dateConflictError && this.reservation.last_name?.trim() && this.reservation.reservation_number?.trim();
+    }
+
+    onDialogHide(): void {
+        this.onCancel();
     }
 }
