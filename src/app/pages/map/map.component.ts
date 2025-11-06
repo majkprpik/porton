@@ -514,6 +514,14 @@ export class MapComponent {
   isAvailableWithTasks: boolean = false;
   isAvailableWithArrival: boolean = false;
 
+  private iconPaths: Record<string, string> = {
+    venueIconHouse: 'assets/icons/3d-view/venueIconHouse.png',
+    venueIconDeck: 'assets/icons/3d-view/venueIconDeck.png',
+    venueIconSheet: 'assets/icons/3d-view/venueIconSheet.png',
+    venueIconTowel: 'assets/icons/3d-view/venueIconTowel.png',
+    venueIconRepair: 'assets/icons/3d-view/venueIconRepair.png',
+  };
+
   private taskIconsGeoJson: any;
   private streetGeoJson?: GeoJSON.FeatureCollection
   private map?: mapboxgl.Map;
@@ -535,6 +543,20 @@ export class MapComponent {
       this.seasons = seasons;
 
       this.updateHouseColors();
+    });
+  }
+
+  initMapIcons() {
+    Object.entries(this.iconPaths).forEach(([name, path]) => {
+      if (!this.map!.hasImage(name)) {
+        this.map!.loadImage(path, (error, image) => {
+          if (error) {
+            console.error('Error loading icon', name, error);
+            return;
+          }
+          this.map!.addImage(name, image!);
+        });
+      }
     });
   }
 
@@ -624,8 +646,8 @@ export class MapComponent {
       type: 'symbol',
       source: 'task-icons',
       layout: {
-        'icon-image': ['concat', ['get', 'icon']],
-        'icon-size': 1.6,
+        'icon-image': ['get', 'icon'],
+        'icon-size': 0.35,
         'icon-offset': [0, 0],
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
@@ -679,6 +701,12 @@ export class MapComponent {
     });
 
     this.map.on('click', 'street-extrusion', (e) => {
+
+      const iconFeatures = this.map!.queryRenderedFeatures(e.point, { layers: ['task-icons-layer'] });
+      if (iconFeatures.length > 0) {
+        return;
+      }
+      
       const feature = e.features?.[0] as GeoJSONFeature;
       if (!feature || !feature.properties) return;
 
@@ -693,6 +721,8 @@ export class MapComponent {
 
       this.isSidebarVisible = true;
     });
+
+    this.initMapIcons();
   }
 
   onHouseClick(feature: any){
@@ -992,17 +1022,23 @@ export class MapComponent {
   }
 
   getTaskMakiIcon(taskTypeId: number | undefined): string {
+    const houseCleaning = this.taskService.getTaskTypeByName(TaskTypeName.HouseCleaning)?.task_type_id;
+    const deckCleaning = this.taskService.getTaskTypeByName(TaskTypeName.DeckCleaning)?.task_type_id;
+    const sheetChange = this.taskService.getTaskTypeByName(TaskTypeName.SheetChange)?.task_type_id;
+    const towelChange = this.taskService.getTaskTypeByName(TaskTypeName.TowelChange)?.task_type_id;
+    const repair = this.taskService.getTaskTypeByName(TaskTypeName.Repair)?.task_type_id;
+
     switch (taskTypeId) {
-      case this.taskService.getTaskTypeByName(TaskTypeName.HouseCleaning)?.task_type_id:
-        return 'museum';
-      case this.taskService.getTaskTypeByName(TaskTypeName.DeckCleaning)?.task_type_id:
-        return 'beach';
-      case this.taskService.getTaskTypeByName(TaskTypeName.SheetChange)?.task_type_id:
-        return 'lodging';
-      case this.taskService.getTaskTypeByName(TaskTypeName.TowelChange)?.task_type_id:
-        return 'waterfall';
-      case this.taskService.getTaskTypeByName(TaskTypeName.Repair)?.task_type_id:
-        return 'hardware';
+      case houseCleaning:
+        return 'venueIconHouse';
+      case deckCleaning:
+        return 'venueIconDeck';
+      case sheetChange:
+        return 'venueIconSheet';
+      case towelChange:
+        return 'venueIconTowel';
+      case repair:
+        return 'venueIconRepair';
       default:
         return '';
     }
