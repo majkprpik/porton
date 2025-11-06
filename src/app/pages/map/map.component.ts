@@ -1,5 +1,8 @@
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Component } from '@angular/core';
 import { MapComponent as MglMap, provideMapboxGL } from 'ngx-mapbox-gl';
+import mapboxgl from 'mapbox-gl';
+import * as THREE from 'three';
 import { HouseService } from '../../core/services/house.service';
 import { House, HouseAvailability, Season, Task, TaskTypeName } from '../../core/models/data.models';
 import { DataService } from '../../core/services/data.service';
@@ -573,6 +576,7 @@ export class MapComponent {
 
     this.initHouses();
     this.initTaskIcons();
+    this.add3DHousesLayer();
 
     const layers = this.map.getStyle().layers!;
     const labelLayerId = layers.find(l => l.type === 'symbol' && l.layout && l.layout['text-field'])?.id;
@@ -587,7 +591,7 @@ export class MapComponent {
           'fill-extrusion-color': ['get', 'color'], 
           'fill-extrusion-height': ['get', 'height'],
           'fill-extrusion-base': 0.5,
-          'fill-extrusion-opacity': 0.7,
+          'fill-extrusion-opacity': 0,
         },
       },
       buildingLayerId ?? labelLayerId
@@ -689,6 +693,119 @@ export class MapComponent {
 
       this.isSidebarVisible = true;
     });
+  }
+
+  onHouseClick(feature: any){
+    if (!feature || !feature.properties) return;
+
+    this.selectedHouse = this.houses.find(h => h.house_name == feature.properties?.['house_name']);
+    this.selectedHouseTasks = this.tasks
+      .filter(t => t.house_id == this.selectedHouse?.house_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    this.selectedHouseAvailabilities = this.houseAvailabilities
+      .filter(ha => ha.house_id == this.selectedHouse?.house_id)
+      .sort((a, b) => new Date(a.house_availability_end_date).getTime() - new Date(b.house_availability_end_date).getTime());
+
+    this.isSidebarVisible = true;
+  }
+
+  add3DHousesLayer() {
+    const features = this.streetGeoJson?.features;
+    if (!features?.length) return;
+
+    const component = this;
+
+    const customLayer: ThreeLayer = {
+      id: '3d-houses',
+      type: 'custom',
+      renderingMode: '3d',
+
+      onAdd: function (map, gl) {
+        this.map = map;
+        this.camera = new THREE.Camera();
+        this.scene = new THREE.Scene();
+
+        const loader = new GLTFLoader();
+
+        loader.load('assets/models/house.glb', (gltf) => {
+          const baseModel = gltf.scene;
+
+          features.forEach((feature: any) => {
+            const modelOrigin: [number, number] = component.getHouseCentroid(feature)!;
+            const modelAltitude = 0;
+            const modelRotate = [Math.PI / 2, 0, 0];
+
+            const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(
+              modelOrigin,
+              modelAltitude
+            );
+
+            const modelTransform = {
+              translateX: modelAsMercatorCoordinate.x,
+              translateY: modelAsMercatorCoordinate.y,
+              translateZ: modelAsMercatorCoordinate.z,
+              rotateX: modelRotate[0],
+              rotateY: modelRotate[1],
+              rotateZ: modelRotate[2],
+              scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 4,
+            };
+
+            const house = baseModel.clone();
+            house.userData['modelTransform'] = modelTransform;
+            house.userData['feature'] = feature;
+
+            this.scene!.add(house);
+          });
+        });
+
+        this.renderer = new THREE.WebGLRenderer({
+          canvas: map.getCanvas(),
+          context: gl,
+        });
+        this.renderer.autoClear = false;
+      },
+
+      render: function (gl, matrix) {
+          const m = new THREE.Matrix4().fromArray(matrix);
+
+          this.scene!.children.forEach((child) => {
+            if (!child.userData['modelTransform']) return;
+            const mt = child.userData['modelTransform'];
+
+            const rotationX = new THREE.Matrix4().makeRotationAxis(
+              new THREE.Vector3(1, 0, 0),
+              mt.rotateX
+            );
+            const rotationY = new THREE.Matrix4().makeRotationAxis(
+              new THREE.Vector3(0, 1, 0),
+              mt.rotateY
+            );
+            const rotationZ = new THREE.Matrix4().makeRotationAxis(
+              new THREE.Vector3(0, 0, 1),
+              mt.rotateZ
+            );
+
+            const l = new THREE.Matrix4()
+              .makeTranslation(mt.translateX, mt.translateY, mt.translateZ)
+              .scale(new THREE.Vector3(mt.scale, -mt.scale, mt.scale))
+              .multiply(rotationX)
+              .multiply(rotationY)
+              .multiply(rotationZ);
+
+            child.matrix = m.clone().multiply(l);
+            child.matrixAutoUpdate = false;
+          });
+
+          this.camera!.projectionMatrix = new THREE.Matrix4().identity();
+          
+          this.renderer!.resetState();
+          this.renderer!.render(this.scene!, this.camera!);
+          this.map!.triggerRepaint();
+      }
+    };
+
+    this.map!.addLayer(customLayer);
   }
 
   getHouseCentroid(houseOrFeature: string | any): [number, number] | null {
@@ -1481,4 +1598,11 @@ export class MapComponent {
 export interface HouseLabelProps {
   name: string;
   icon: string;
+}
+
+interface ThreeLayer extends mapboxgl.CustomLayerInterface {
+  camera?: THREE.Camera;
+  scene?: THREE.Scene;
+  renderer?: THREE.WebGLRenderer;
+  map?: mapboxgl.Map;
 }
