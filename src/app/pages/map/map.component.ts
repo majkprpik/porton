@@ -1,4 +1,5 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { Component } from '@angular/core';
 import { MapComponent as MglMap, provideMapboxGL } from 'ngx-mapbox-gl';
 import mapboxgl from 'mapbox-gl';
@@ -7,7 +8,7 @@ import { HouseService } from '../../core/services/house.service';
 import { House, HouseAvailability, Season, Task, TaskTypeName } from '../../core/models/data.models';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
-import type { Feature, FeatureCollection, Polygon, Point } from 'geojson';
+import type { Feature, FeatureCollection, Polygon, Point, Geometry, GeoJsonProperties } from 'geojson';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
@@ -598,9 +599,120 @@ export class MapComponent {
 
     this.initHouses();
     this.initTaskIcons();
-    this.add3DHousesLayer();
 
-    const layers = this.map.getStyle().layers!;
+    this.add3DHousesLayer();
+    this.addStreetLayer();
+    this.add3dBuildingsLayer();
+    this.addTaskIconsLayer();
+    this.addHouseNumbersLayer();
+
+    this.addSpinningIconAnimation();
+
+    this.addTaskIconClick();
+    this.addHouseClick();
+
+    this.initMapIcons();
+    this.addInitMapAnimation();
+  }
+
+  addInitMapAnimation(){
+    if (!this.map) return;
+
+    this.map.easeTo({
+      pitch: 60, // tilt down 
+      bearing: 40, // rotate left °
+      duration: 1500, //animation in ms
+      easing: (t) => t, // linear easing (you can adjust)
+    });
+  }
+
+  addTaskIconClick(){
+    if (!this.map) return;
+
+    this.map.on('click', 'task-icons-layer', (e) => {
+      const feature = e.features?.[0] as GeoJSONFeature;
+      if (!feature || !feature.properties) return;
+
+      const task = this.tasks.find(t => t.task_id == feature.properties?.['task_id'])
+
+      this.taskService.$taskModalData.next(task);
+    });
+  }
+
+  addHouseClick(){
+    if (!this.map) return;
+
+    this.map.on('click', 'street-extrusion', (e) => {
+      const iconFeatures = this.map!.queryRenderedFeatures(e.point, { layers: ['task-icons-layer'] });
+      if (iconFeatures.length > 0) {
+        return;
+      }
+      
+      const feature = e.features?.[0] as GeoJSONFeature;
+      if (!feature || !feature.properties) return;
+
+      this.selectedHouse = this.houses.find(h => h.house_name == feature.properties?.['house_name']);
+      this.selectedHouseTasks = this.tasks
+        .filter(t => t.house_id == this.selectedHouse?.house_id)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      this.selectedHouseAvailabilities = this.houseAvailabilities
+        .filter(ha => ha.house_id == this.selectedHouse?.house_id)
+        .sort((a, b) => new Date(a.house_availability_end_date).getTime() - new Date(b.house_availability_end_date).getTime());
+
+      this.isSidebarVisible = true;
+    });
+  }
+
+  addSpinningIconAnimation(){
+    let rotation = 0;
+    const spinSpeed = 4;
+
+    const animateSpinningIcons = () => {
+      if (!this.map) return;
+
+      rotation = (rotation + spinSpeed) % 360;
+
+      const updatedGeoJson = {
+        ...this.taskIconsGeoJson,
+        features: this.taskIconsGeoJson.features.map((f: any) => ({
+
+          ...f,
+          properties: {
+            ...f.properties,
+            rotation: this.taskService.isTaskInProgress(this.tasks.find(t => t.task_id == f.properties.task_id)) ? rotation : 0,
+          },
+        })),
+      };
+
+      const source = this.map.getSource('task-icons') as mapboxgl.GeoJSONSource;
+      if (source) source.setData(updatedGeoJson);
+
+      requestAnimationFrame(animateSpinningIcons);
+    };
+
+    animateSpinningIcons();
+  }
+
+  onHouseClick(feature: any){
+    if (!feature || !feature.properties) return;
+
+    this.selectedHouse = this.houses.find(h => h.house_name == feature.properties?.['house_name']);
+    this.selectedHouseTasks = this.tasks
+      .filter(t => t.house_id == this.selectedHouse?.house_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    this.selectedHouseAvailabilities = this.houseAvailabilities
+      .filter(ha => ha.house_id == this.selectedHouse?.house_id)
+      .sort((a, b) => new Date(a.house_availability_end_date).getTime() - new Date(b.house_availability_end_date).getTime());
+
+    this.isSidebarVisible = true;
+  }
+  
+  addStreetLayer(){
+    if (!this.map) return;
+
+    const layers = this.map.getStyle().layers;
     const labelLayerId = layers.find(l => l.type === 'symbol' && l.layout && l.layout['text-field'])?.id;
     const buildingLayerId = layers.find(l => l.id === '3d-buildings')?.id;
 
@@ -618,6 +730,14 @@ export class MapComponent {
       },
       buildingLayerId ?? labelLayerId
     );
+  }
+
+  add3dBuildingsLayer(){
+    if (!this.map) return;
+
+    const layers = this.map.getStyle().layers;
+    const labelLayerId = layers.find(l => l.type === 'symbol' && l.layout && l.layout['text-field'])?.id;
+    const buildingLayerId = layers.find(l => l.id === '3d-buildings')?.id;
 
     if (!buildingLayerId) {
       this.map.addLayer(
@@ -638,10 +758,123 @@ export class MapComponent {
         labelLayerId
       );
     }
+  }
 
-    this.map!.addSource('task-icons', { type: 'geojson', data: this.taskIconsGeoJson });
+  add3DHousesLayer() {
+    if (!this.map) return;
+    this.map.addSource('street', { type: 'geojson', data: this.streetGeoJson });
 
-    this.map!.addLayer({
+    const features = this.streetGeoJson?.features;
+    if (!features?.length) return;
+    
+    const houses = features.filter(f => +f.properties?.['house_name'] != 157);
+    const mobileHouses = features.filter(f => +f.properties?.['house_name'] == 157);
+
+    const customLayer = this.create3dHouseLayer(houses, mobileHouses);
+    this.map.addLayer(customLayer);
+  }
+
+  private create3dHouseLayer(houses: any[], mobileHouses: any[]): ThreeLayer{
+    const component = this;
+
+    return {
+      id: '3d-houses',
+      type: 'custom',
+      renderingMode: '3d',
+
+      onAdd: function (map, gl) {
+        this.map = map;
+        this.camera = new THREE.Camera();
+        this.scene = new THREE.Scene();
+
+        component.addDefaultLights(this.scene);
+        const loader = component.createGltfLoader();
+
+        if(houses) {
+          component.loadHouses(loader, houses, this.scene, component, 'house.glb');
+        }
+
+        if(mobileHouses){
+          component.loadHouses(loader, mobileHouses, this.scene, component, 'mobile_house.glb');
+        }
+
+        this.renderer = new THREE.WebGLRenderer({
+          canvas: map.getCanvas(),
+          context: gl,
+        });
+        this.renderer.autoClear = false;
+      },
+
+      render: function (gl, matrix) {
+        component.render3dHouses(this, matrix);
+      }
+    };
+  }
+
+  private addDefaultLights(scene: THREE.Scene) {
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+    dirLight.position.set(10, 10, 10);
+    scene.add(dirLight);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambient);
+  }
+
+  private createGltfLoader(): GLTFLoader {
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+
+    dracoLoader.setDecoderPath('assets/draco/');
+    loader.setDRACOLoader(dracoLoader);
+
+    return loader;
+  }
+
+  private render3dHouses(layer: any, matrix: number[]){
+    const m = new THREE.Matrix4().fromArray(matrix);
+
+    layer.scene.children.forEach((child: any) => {
+      if (!child.userData['modelTransform']) return;
+      const mt = child.userData['modelTransform'];
+
+      const rotationX = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(1, 0, 0),
+        mt.rotateX
+      );
+      const rotationY = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(0, 1, 0),
+        mt.rotateY
+      );
+      const rotationZ = new THREE.Matrix4().makeRotationAxis(
+        new THREE.Vector3(0, 0, 1),
+        mt.rotateZ
+      );
+
+      const l = new THREE.Matrix4()
+        .makeTranslation(mt.translateX, mt.translateY, mt.translateZ)
+        .scale(new THREE.Vector3(mt.scale, -mt.scale, mt.scale))
+        .multiply(rotationX)
+        .multiply(rotationY)
+        .multiply(rotationZ);
+
+      child.matrix = m.clone().multiply(l);
+      child.matrixAutoUpdate = false;
+    });
+
+    if(!layer.camera || !layer.renderer || !layer.map || !layer.scene) return;
+
+    layer.camera.projectionMatrix = new THREE.Matrix4().identity();
+    layer.renderer.resetState();
+    layer.renderer.render(layer.scene, layer.camera);
+    layer.map.triggerRepaint();
+  }
+
+  addTaskIconsLayer(){
+    if (!this.map) return;
+
+    this.map.addSource('task-icons', { type: 'geojson', data: this.taskIconsGeoJson });
+
+    this.map.addLayer({
       id: 'task-icons-layer',
       type: 'symbol',
       source: 'task-icons',
@@ -655,187 +888,108 @@ export class MapComponent {
         'icon-anchor': 'center',
       },
     });
+  }
 
-    let rotation = 0;
-    const spinSpeed = 4;
+  addHouseNumbersLayer(){
+    if (!this.map || !this.streetGeoJson) return;
 
-    const animateSpinningIcons = () => {
-      rotation = (rotation + spinSpeed) % 360;
+    const streetLabelFeatures = this.streetGeoJson.features
+      .map((feature: any) => {
+        const centroid = this.getHouseCentroid(feature);
+        if (!centroid) return null;
 
-      const updatedGeoJson = {
-        ...this.taskIconsGeoJson,
-        features: this.taskIconsGeoJson.features.map((f: any) => ({
-
-          ...f,
+        return {
+          type: 'Feature' as const,
           properties: {
-            ...f.properties,
-            rotation: this.taskService.isTaskInProgress(this.tasks.find(t => t.task_id == f.properties.task_id)) ? rotation : 0,
+            name: feature.properties?.['house_name'] ?? '',
+            icon: feature.properties?.['icon'] ?? 'home',
           },
-        })),
-      };
+          geometry: {
+            type: 'Point' as const,
+            coordinates: centroid,
+          },
+        } as Feature<Point, HouseLabelProps>;
+      })
+      .filter((f): f is Feature<Point, HouseLabelProps> => f !== null);
 
-      const source = this.map!.getSource('task-icons') as mapboxgl.GeoJSONSource;
-      if (source) source.setData(updatedGeoJson);
-
-      requestAnimationFrame(animateSpinningIcons);
+    const streetLabelGeoJson: FeatureCollection<Point> = {
+      type: 'FeatureCollection',
+      features: streetLabelFeatures,
     };
 
-    animateSpinningIcons();
+    this.map.addSource('street-label', { type: 'geojson', data: streetLabelGeoJson });
 
-    this.getStreetLabelFeatures();
-
-    this.map.easeTo({
-      pitch: 60, // tilt down 
-      bearing: 40, // rotate left °
-      duration: 1500, //animation in s
-      easing: (t) => t, // linear easing (you can adjust)
-    });
-
-    this.map.on('click', 'task-icons-layer', (e) => {
-      const feature = e.features?.[0] as GeoJSONFeature;
-      if (!feature || !feature.properties) return;
-
-      const task = this.tasks.find(t => t.task_id == feature.properties?.['task_id'])
-
-      this.taskService.$taskModalData.next(task);
-    });
-
-    this.map.on('click', 'street-extrusion', (e) => {
-
-      const iconFeatures = this.map!.queryRenderedFeatures(e.point, { layers: ['task-icons-layer'] });
-      if (iconFeatures.length > 0) {
-        return;
-      }
-      
-      const feature = e.features?.[0] as GeoJSONFeature;
-      if (!feature || !feature.properties) return;
-
-      this.selectedHouse = this.houses.find(h => h.house_name == feature.properties?.['house_name']);
-      this.selectedHouseTasks = this.tasks
-        .filter(t => t.house_id == this.selectedHouse?.house_id)
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      this.selectedHouseAvailabilities = this.houseAvailabilities
-        .filter(ha => ha.house_id == this.selectedHouse?.house_id)
-        .sort((a, b) => new Date(a.house_availability_end_date).getTime() - new Date(b.house_availability_end_date).getTime());
-
-      this.isSidebarVisible = true;
-    });
-
-    this.initMapIcons();
-  }
-
-  onHouseClick(feature: any){
-    if (!feature || !feature.properties) return;
-
-    this.selectedHouse = this.houses.find(h => h.house_name == feature.properties?.['house_name']);
-    this.selectedHouseTasks = this.tasks
-      .filter(t => t.house_id == this.selectedHouse?.house_id)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    this.selectedHouseAvailabilities = this.houseAvailabilities
-      .filter(ha => ha.house_id == this.selectedHouse?.house_id)
-      .sort((a, b) => new Date(a.house_availability_end_date).getTime() - new Date(b.house_availability_end_date).getTime());
-
-    this.isSidebarVisible = true;
-  }
-
-  add3DHousesLayer() {
-    const features = this.streetGeoJson?.features;
-    if (!features?.length) return;
-
-    const component = this;
-
-    const customLayer: ThreeLayer = {
-      id: '3d-houses',
-      type: 'custom',
-      renderingMode: '3d',
-
-      onAdd: function (map, gl) {
-        this.map = map;
-        this.camera = new THREE.Camera();
-        this.scene = new THREE.Scene();
-
-        const loader = new GLTFLoader();
-
-        loader.load('assets/models/house.glb', (gltf) => {
-          const baseModel = gltf.scene;
-
-          features.forEach((feature: any) => {
-            const modelOrigin: [number, number] = component.getHouseCentroid(feature)!;
-            const modelAltitude = 0;
-            const modelRotate = [Math.PI / 2, 0, 0];
-
-            const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(
-              modelOrigin,
-              modelAltitude
-            );
-
-            const modelTransform = {
-              translateX: modelAsMercatorCoordinate.x,
-              translateY: modelAsMercatorCoordinate.y,
-              translateZ: modelAsMercatorCoordinate.z,
-              rotateX: modelRotate[0],
-              rotateY: modelRotate[1],
-              rotateZ: modelRotate[2],
-              scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 4,
-            };
-
-            const house = baseModel.clone();
-            house.userData['modelTransform'] = modelTransform;
-            house.userData['feature'] = feature;
-
-            this.scene!.add(house);
-          });
-        });
-
-        this.renderer = new THREE.WebGLRenderer({
-          canvas: map.getCanvas(),
-          context: gl,
-        });
-        this.renderer.autoClear = false;
+    this.map.addLayer({
+      id: 'street-text-layer',
+      type: 'symbol',
+      source: 'street-label',
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-size': 14,
+        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Regular'],
+        'text-anchor': 'center',
+        'text-offset': [0, -1],
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
       },
+      paint: {
+        'text-color': '#333333',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 1,
+        'text-halo-blur': 0.5,
+      },
+    });
 
-      render: function (gl, matrix) {
-          const m = new THREE.Matrix4().fromArray(matrix);
+    this.map.setLayoutProperty(
+      'street-text-layer',
+      'visibility',
+      this.areHouseNumbersVisible ? 'visible' : 'none'
+    );
+  }
 
-          this.scene!.children.forEach((child) => {
-            if (!child.userData['modelTransform']) return;
-            const mt = child.userData['modelTransform'];
+  loadHouses(
+    loader: GLTFLoader, 
+    houses: Feature<Geometry, GeoJsonProperties>[],
+    scene: THREE.Scene,
+    component: this, 
+    houseModelFileName: string,
+  ){
+    loader.load('assets/models/' + houseModelFileName, (gltf) => {
+      const baseModel = gltf.scene;
 
-            const rotationX = new THREE.Matrix4().makeRotationAxis(
-              new THREE.Vector3(1, 0, 0),
-              mt.rotateX
-            );
-            const rotationY = new THREE.Matrix4().makeRotationAxis(
-              new THREE.Vector3(0, 1, 0),
-              mt.rotateY
-            );
-            const rotationZ = new THREE.Matrix4().makeRotationAxis(
-              new THREE.Vector3(0, 0, 1),
-              mt.rotateZ
-            );
+       baseModel.traverse((child: any) => {
+        if (child.isMesh) {
+          child.material.side = THREE.DoubleSide;
+        }
+      });
 
-            const l = new THREE.Matrix4()
-              .makeTranslation(mt.translateX, mt.translateY, mt.translateZ)
-              .scale(new THREE.Vector3(mt.scale, -mt.scale, mt.scale))
-              .multiply(rotationX)
-              .multiply(rotationY)
-              .multiply(rotationZ);
+      houses.forEach((feature: any) => {
+        const modelOrigin: [number, number] = component.getHouseCentroid(feature)!;
+        const modelAltitude = 0;
+        const modelRotate = [Math.PI / 2, 0, 0];
 
-            child.matrix = m.clone().multiply(l);
-            child.matrixAutoUpdate = false;
-          });
+        const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(
+          modelOrigin,
+          modelAltitude
+        );
 
-          this.camera!.projectionMatrix = new THREE.Matrix4().identity();
-          
-          this.renderer!.resetState();
-          this.renderer!.render(this.scene!, this.camera!);
-          this.map!.triggerRepaint();
-      }
-    };
+        const modelTransform = {
+          translateX: modelAsMercatorCoordinate.x,
+          translateY: modelAsMercatorCoordinate.y,
+          translateZ: modelAsMercatorCoordinate.z,
+          rotateX: modelRotate[0],
+          rotateY: modelRotate[1],
+          rotateZ: modelRotate[2],
+          scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 4,
+        };
 
-    this.map!.addLayer(customLayer);
+        const house = baseModel.clone();
+        house.userData['modelTransform'] = modelTransform;
+        house.userData['feature'] = feature;
+
+        scene.add(house);
+      });
+    });
   }
 
   getHouseCentroid(houseOrFeature: string | any): [number, number] | null {
@@ -869,64 +1023,11 @@ export class MapComponent {
     return [x / len, y / len];
   }
 
-  getStreetLabelFeatures(){
-    const streetLabelFeatures = this.streetGeoJson!.features
-      .map((feature: any) => {
-        const centroid = this.getHouseCentroid(feature);
-        if (!centroid) return null;
-
-        return {
-          type: 'Feature' as const,
-          properties: {
-            name: feature.properties?.['house_name'] ?? '',
-            icon: feature.properties?.['icon'] ?? 'home',
-          },
-          geometry: {
-            type: 'Point' as const,
-            coordinates: centroid,
-          },
-        } as Feature<Point, HouseLabelProps>;
-      })
-      .filter((f): f is Feature<Point, HouseLabelProps> => f !== null);
-
-    const streetLabelGeoJson: FeatureCollection<Point> = {
-      type: 'FeatureCollection',
-      features: streetLabelFeatures,
-    };
-
-    this.map!.addSource('street-label', { type: 'geojson', data: streetLabelGeoJson });
-
-    this.map!.addLayer({
-      id: 'street-text-layer',
-      type: 'symbol',
-      source: 'street-label',
-      layout: {
-        'text-field': ['get', 'name'],
-        'text-size': 14,
-        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Regular'],
-        'text-anchor': 'center',
-        'text-offset': [0, -1],
-        'text-allow-overlap': true,
-        'text-ignore-placement': true,
-      },
-      paint: {
-        'text-color': '#333333',
-        'text-halo-color': '#ffffff',
-        'text-halo-width': 1,
-        'text-halo-blur': 0.5,
-      },
-    });
-
-    this.map!.setLayoutProperty(
-      'street-text-layer',
-      'visibility',
-      this.areHouseNumbersVisible ? 'visible' : 'none'
-    );
-  }
-
   toggleHouseIcons() {
-    if (this.map!.getLayer('task-icons-layer')) {
-      this.map!.setLayoutProperty(
+    if (!this.map) return;
+
+    if (this.map.getLayer('task-icons-layer')) {
+      this.map.setLayoutProperty(
         'task-icons-layer',
         'visibility',
         this.areHouseIconsVisible ? 'visible' : 'none'
@@ -935,8 +1036,10 @@ export class MapComponent {
   }
 
   toggleHouseNumbers() {
-    if (this.map!.getLayer('street-text-layer')) {
-      this.map!.setLayoutProperty(
+    if (!this.map) return;
+
+    if (this.map.getLayer('street-text-layer')) {
+      this.map.setLayoutProperty(
         'street-text-layer',
         'visibility',
         this.areHouseNumbersVisible ? 'visible' : 'none'
@@ -964,7 +1067,8 @@ export class MapComponent {
   }
 
   updateHouseColors() {
-    if (!this.streetGeoJson) return
+    if (!this.streetGeoJson) return;
+
     this.streetGeoJson.features.forEach((f: any) => {
       const house = this.houses.find(h => h.house_name === f.properties.house_name);
       if (house) {
@@ -979,8 +1083,10 @@ export class MapComponent {
   }
 
   updateTaskIcons() {
+    if (!this.map) return;
+
     this.initTaskIcons();
-    const src = this.map!.getSource('task-icons') as mapboxgl.GeoJSONSource;
+    const src = this.map.getSource('task-icons') as mapboxgl.GeoJSONSource;
     if (src) src.setData(this.taskIconsGeoJson);
   }
 
@@ -1619,15 +1725,13 @@ export class MapComponent {
       ],
     };
 
-    this.streetGeoJson!.features.forEach((f: any) => {
+    this.streetGeoJson.features.forEach((f: any) => {
       const house = this.houses.find(house => house.house_name == f.properties.house_name);
 
       if(house) {
         f.properties.color = this.getHouseColor(house);
       }
     });
-
-    this.map!.addSource('street', { type: 'geojson', data: this.streetGeoJson });
   }
 }
 
