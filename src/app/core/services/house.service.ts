@@ -255,6 +255,20 @@ export class HouseService {
     });
   } 
 
+  isHouseReservedForDate(houseId: number, date: any){
+    const convertedDate = new Date(date);
+    convertedDate.setHours(0, 0, 0, 0);
+
+    return this.houseAvailabilities.find(ha => {
+      const start = new Date(ha.house_availability_start_date);
+      const end = new Date(ha.house_availability_end_date);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      return ha.house_id == houseId && convertedDate >= start && convertedDate <= end;
+    });
+  }
+
   hasDepartureForToday(houseId: number){
     const today = new Date();
     const yesterday = new Date(today);

@@ -17,9 +17,11 @@ import { TaskService } from '../../core/services/task.service';
 import { GeoJSONFeature } from 'mapbox-gl';
 import { TabsModule } from 'primeng/tabs';
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { TaskCardComponent } from '../daily-sheet/task-card';
 import { CommonModule } from '@angular/common';
 import { ReservationFormComponent } from '../reservations/reservation-form/reservation-form.component';
+import { MatIconModule } from '@angular/material/icon'
+import { DatePicker } from 'primeng/datepicker';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-map',
@@ -30,9 +32,11 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
     CheckboxModule,
     FormsModule,
     TabsModule,
-    TaskCardComponent,
     CommonModule,
     ReservationFormComponent,
+    MatIconModule,
+    DatePicker,
+    TranslateModule,
   ], 
   providers: [
     provideMapboxGL({
@@ -71,7 +75,7 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
         <div class="close-icon-container" (click)="closeSidebar()">
           <i class="pi pi-angle-double-right"></i>
         </div>
-        <span class="house-name">Kućica {{ this.selectedHouse?.house_name }}</span>
+        <span class="house-name">Kućica {{ selectedHouse?.house_name }}</span>
         <div class="empty-box"></div>
       </div>
 
@@ -80,118 +84,95 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
       </div>
 
       <div class="house-info">
-        <p-tabs [(value)]="selectedTab">
-          <p-tablist>
-            <p-tab value="0">Zadaci</p-tab>
-            <p-tab value="1">Rezervacije</p-tab>
-            <p-tab value="2">Details</p-tab>
-          </p-tablist>
-          <p-tabpanels>
-            <p-tabpanel value="0">
-              <div class="selected-house-tasks">
-                @for(task of selectedHouseTasks; track task.task_id){
-                  <app-task-card [task]="task"></app-task-card>
-                }
+        <div class="selected-house-details">
+          <div class="first-row">
+            <div class="house-number">
+              <div class="top">
+                <span class="material-icons">home</span>
+                <span>{{ selectedHouse?.house_name }}</span>
               </div>
-            </p-tabpanel>
-            <p-tabpanel value="1">
-              <div class="selected-house-availabilities">
-                @for(ha of selectedHouseAvailabilities; track ha.house_availability_id){
-                  <div 
-                    class="house-availability-card-wrapper"
-                    [ngClass]="{'current-reservation': isCurrentHouseAvailability(ha)}"
-                  >
-                    <div 
-                      class="house-availability-card"
-                      [ngStyle]="{
-                        'background-color': houseService.getColorForReservation(ha),
-                      }"
-                      (click)="handleReservationSelect(ha)"
-                    >
-                      <span>{{ ha.last_name }}</span>
-  
-                      <div class="reservation-numbers">
-                        @if (ha.adults){
-                          <div class="adults-count">
-                            {{ ha.adults }} 
-                            <i class="fa-solid fa-person"></i>
-                          </div>
-                        }
-                        @if (ha.dogs_d) {
-                          <div class="pets-count">
-                            {{ ha.dogs_d }} 
-                            <i class="fa-solid fa-paw"></i>
-                          </div>
-                        } 
-                        @if (ha.babies) {
-                          <div class="babies-count">
-                            {{ ha.babies }}
-                            <i class="fa-solid fa-baby"></i>
-                          </div>
-                        }
-                        @if (ha.cribs) {
-                          <div class="cribs-count">
-                            {{ ha.cribs }}
-                            <i class="fa-solid fa-baby-carriage"></i>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  </div>
-                }
+              <div class="bottom">
+                <span>House number</span>
               </div>
-            </p-tabpanel>
-            <p-tabpanel value="2">
-              <div class="selected-house-details">
-                <div class="first-row">
-                  <div class="house-number">
-                    <div class="top">
-                      <span class="material-icons">home</span>
-                      <span>{{ selectedHouse?.house_name }}</span>
-                    </div>
-                    <div class="bottom">
-                      <span>House number</span>
-                    </div>
-                  </div>
+            </div>
     
-                  @if(selectedHouse?.has_pool){
-                    <div class="swimming-pool">
-                      <div class="top">
-                        <span class="material-icons">pool</span>
-                        <span>Swimming pool</span>
-                      </div>
-                      <div class="bottom">
-                      </div>
-                    </div>
-                  }
+            @if(selectedHouse?.has_pool){
+              <div class="swimming-pool">
+                <div class="top">
+                  <span class="material-icons">pool</span>
+                  <span>Swimming pool</span>
                 </div>
-
-                <div class="second-row">
-                  <div class="area">
-                    <div class="top">
-                      <span class="material-icons">square_foot</span>
-                      <span>34m<sup>2</sup></span>
-                    </div>
-                    <div class="bottom">
-                      <span>Accommodation</span>
-                    </div>
-                  </div>
-    
-                  <div class="deck">
-                    <div class="top">
-                      <span class="material-icons">deck</span>
-                      <span>50m<sup>2</sup></span>
-                    </div>
-                    <div class="bottom">
-                      <span>Terrace</span>
-                    </div>
-                  </div>
+                <div class="bottom">
                 </div>
-
               </div>
-            </p-tabpanel>
-          </p-tabpanels>
-        </p-tabs>
+            }
+          </div>
+
+          <div class="second-row">
+            <div class="area">
+              <div class="top">
+                <span class="material-icons">square_foot</span>
+                <span>34m<sup>2</sup></span>
+              </div>
+              <div class="bottom">
+                <span>Accommodation</span>
+              </div>
+            </div>
+    
+            <div class="deck">
+              <div class="top">
+                <span class="material-icons">deck</span>
+                <span>50m<sup>2</sup></span>
+              </div>
+              <div class="bottom">
+                <span>Terrace</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="horizontal-line"></div>
+
+        <div class="selected-house-description">
+          <span>
+            Contemporary designed interior provides plenty of room for a comfortable stay for a family of four.
+            <br>
+            En-suite room with a king-size bed
+            <br>
+            Room with two separate beds
+            <br>
+            2 bathrooms
+            <br>
+            Fully equipped kitchen
+            <br>
+            Terrace
+            <br>
+            Private swimming pool
+          </span>
+        </div>
+
+        <div class="horizontal-line"></div>
+
+        @if(selectedHouse){
+          <div class="ha-calendar">
+            <p-datepicker
+              [(ngModel)]="currentDate"
+              [inline]="true"
+            >
+              <ng-template pTemplate="date" let-date>
+                <div 
+                  [class.even-day]="isHouseReservedForDate(date)" 
+                > 
+                  {{ date.day }}
+                </div>
+              </ng-template>
+            </p-datepicker>
+          </div>                  
+        }
+
+        <div class="send-inquiry-button">
+          <p-button label="Send inquiry" severity="info" />
+        </div>
       </div>
     </div>
 
@@ -216,6 +197,53 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
     ></mgl-map>
   `,
   styles: `
+    .horizontal-line{
+      flex: 0 0 auto;
+      height: 1px; 
+      width: 100%;
+      background-color: white;
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker {
+      width: 400px !important;
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker-day:has(.even-day) {
+      background: red;
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker-day:has(.odd-day) {
+      background: blue !important;
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker-panel {
+      background-color: var(--p-cyan-950) !important;
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker-header {
+      background-color: var(--p-cyan-950) !important;
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker-select-month {
+      color: white;
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker-select-year {
+      color: white;
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker-day {
+      color: white;
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker-day-selected {
+      background: var(--p-cyan-400);
+    }
+
+    ::ng-deep .ha-calendar .p-datepicker-weekday {
+      color: white;
+    }
+
     ::ng-deep .house-info .p-tabs .p-tablist .p-tablist-content .p-tablist-tab-list {
       background-color: transparent !important;
       border: none !important;
@@ -337,6 +365,30 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
       }
 
       .house-info{
+        height: calc(100vh - 420px);
+        overflow-x: hidden;
+        overflow-y: scroll;
+        display: flex; 
+        flex-direction: column;
+        gap: 5px;
+        align-items: center;
+        box-sizing: border-box;
+        padding: 20px;
+        gap: 20px;
+
+        .selected-house-description{
+          color: white;
+          font-size: 18px;
+        }
+
+        .ha-calendar{
+          
+        }
+
+        .send-inquiry-button{
+          
+        }
+
         .selected-house-tasks{
           height: calc(100vh - 500px);
           overflow-y: auto;
@@ -345,6 +397,28 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
           align-content: flex-start;
           gap: 5px;
           flex-wrap: wrap;
+        }
+
+        .house-availabilities-calendar{
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          box-sizing: box;
+          padding: 0px 10px;
+          height: 50px;
+          width: 100%;
+        }
+
+        .house-availability-days{
+          width: 100%;
+          height: calc(100vh - 500px);
+          overflow-y: auto;
+
+          .house-availability-day{
+            height: 50px;
+            margin-bottom: 5px;
+          }
         }
 
         .selected-house-availabilities{
@@ -387,7 +461,6 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
                 gap: 5px;
               }
             }
-  
           }
 
           .current-reservation{
@@ -396,19 +469,18 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
         }
 
         .selected-house-details{
+          width: 100%;
           display: flex;
           flex-direction: column;
-          box-sizing: border-box;
-          padding: 20px;
           gap: 20px;
 
-          .first-row{
+          .first-row, .second-row{
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: space-between; 
 
-            .house-number, .swimming-pool{
+            .house-number, .swimming-pool, .area, .deck{
               display: flex;
               flex-direction: column; 
               gap: 5px;
@@ -425,39 +497,11 @@ import { ReservationFormComponent } from '../reservations/reservation-form/reser
               }
 
               span{
+                color: white;
                 font-size: 18px;
               }
             }
           }
-
-          .second-row{
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between; 
-
-            .area, .deck{
-              display: flex;
-              flex-direction: column; 
-              gap: 5px;
-  
-              .top, .bottom{
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 10px;
-              }
-  
-              .material-icons{
-                font-size: 24px;
-              }
-  
-              span{
-                font-size: 18px;
-              }
-            }
-          }
-
         }
       }
     }
@@ -523,6 +567,9 @@ export class MapComponent {
     venueIconRepair: 'assets/icons/3d-view/venueIconRepair.png',
   };
 
+  currentDate = new Date();
+  daysInMonth: Date[] = [];
+
   private taskIconsGeoJson: any;
   private streetGeoJson?: GeoJSON.FeatureCollection
   private map?: mapboxgl.Map;
@@ -545,6 +592,8 @@ export class MapComponent {
 
       this.updateHouseColors();
     });
+    
+    this.generateDaysForMonth();
   }
 
   initMapIcons() {
@@ -615,6 +664,79 @@ export class MapComponent {
     this.addInitMapAnimation();
   }
 
+  getCurrentMonthName() {
+    return this.currentDate.toLocaleString('en-US', { month: 'long' });
+  }
+
+  goToPreviousMonth() {
+    this.currentDate = new Date(
+      this.currentDate.getFullYear(),
+      this.currentDate.getMonth() - 1,
+      1
+    );
+    this.generateDaysForMonth();
+  }
+
+  goToNextMonth() {
+    this.currentDate = new Date(
+      this.currentDate.getFullYear(),
+      this.currentDate.getMonth() + 1,
+      1
+    );
+    this.generateDaysForMonth();
+  }
+
+  generateDaysForMonth() {
+    const year = this.currentDate.getFullYear();
+    const month = this.currentDate.getMonth();
+
+    const numberOfDays = new Date(year, month + 1, 0).getDate();
+
+    this.daysInMonth = Array.from(
+      { length: numberOfDays },
+      (_, i) => new Date(year, month, i + 1)
+    );
+  }
+
+  reservedDates = new Set<string>();
+
+  buildReservedDates(houseId: number) {
+    this.reservedDates.clear();
+
+    const items = this.houseAvailabilities.filter(a => a.house_id === houseId);
+
+    for (const ha of items) {
+      let d = new Date(ha.house_availability_start_date);
+      let end = new Date(ha.house_availability_end_date);
+
+      d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+      if (isNaN(d.getTime()) || isNaN(end.getTime())) {
+        continue;
+      }
+
+      while (d <= end) {
+        const key = d.toLocaleDateString("en-CA");
+        this.reservedDates.add(key);
+
+        d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+      }
+    }
+  }
+
+  isHouseReservedForDate(dateObj: any): boolean {
+    if (!dateObj || typeof dateObj.day !== "number") {
+      return false;
+    }
+
+    // Construct date safely
+    const d = new Date(dateObj.year, dateObj.month, dateObj.day);
+    const key = d.toLocaleDateString("en-CA"); // YYYY-MM-DD
+
+    return this.reservedDates.has(key);
+  }
+
   addInitMapAnimation(){
     if (!this.map) return;
 
@@ -652,6 +774,11 @@ export class MapComponent {
       if (!feature || !feature.properties) return;
 
       this.selectedHouse = this.houses.find(h => h.house_name == feature.properties?.['house_name']);
+
+      if(this.selectedHouse){
+        this.buildReservedDates(this.selectedHouse.house_id);
+      }
+
       this.selectedHouseTasks = this.tasks
         .filter(t => t.house_id == this.selectedHouse?.house_id)
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -692,21 +819,6 @@ export class MapComponent {
     };
 
     animateSpinningIcons();
-  }
-
-  onHouseClick(feature: any){
-    if (!feature || !feature.properties) return;
-
-    this.selectedHouse = this.houses.find(h => h.house_name == feature.properties?.['house_name']);
-    this.selectedHouseTasks = this.tasks
-      .filter(t => t.house_id == this.selectedHouse?.house_id)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    this.selectedHouseAvailabilities = this.houseAvailabilities
-      .filter(ha => ha.house_id == this.selectedHouse?.house_id)
-      .sort((a, b) => new Date(a.house_availability_end_date).getTime() - new Date(b.house_availability_end_date).getTime());
-
-    this.isSidebarVisible = true;
   }
   
   addStreetLayer(){
