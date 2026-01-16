@@ -405,7 +405,6 @@ export class Home implements OnInit, OnDestroy {
     houseAvailabilities = signal<HouseAvailability[]>([]);
     houseTypes = signal<HouseType[]>([]);
     expandedHouseId: number | null = null;
-    currentReservationIndex = new Map<number, number>();
     
     searchTerm: string = '';
     sortType: 'number' | 'type' | 'status' | null = 'number';
@@ -527,21 +526,6 @@ export class Home implements OnInit, OnDestroy {
         event.stopPropagation();
     }
 
-    handleExpandedContentClick(event: Event) {
-        // Prevent the click from bubbling up to the house card
-        event.stopPropagation();
-    }
-
-    toggleExpand(event: Event, houseId: number) {
-        event.stopPropagation();
-        // If clicking the same card, toggle it. If clicking a different card, switch to it.
-        this.expandedHouseId = this.expandedHouseId === houseId ? null : houseId;
-        if (this.expandedHouseId === houseId) {
-            // Initialize or reset the current reservation index when expanding
-            this.currentReservationIndex.set(houseId, this.getCurrentReservationIndex(houseId));
-        }
-    }
-
     // Handle location change in fault report dialog
     onLocationChange(event: any) {
         const selection = event.value;
@@ -570,310 +554,6 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
-    getCurrentReservationIndex(houseId: number): number {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const allSlots = this.getSortedReservationsWithGaps(houseId);
-        const index = allSlots.findIndex((slot) => {
-            if (slot.isGap) return false;
-
-            const startDate = new Date(slot.startDate);
-            const endDate = new Date(slot.endDate!);
-            startDate.setHours(0, 0, 0, 0);
-            endDate.setHours(23, 59, 59, 999);
-
-            // If today is the start date or within the reservation period
-            return (startDate.getTime() === today.getTime() || today > startDate) && today <= endDate;
-        });
-
-        return index;
-    }
-
-    getSortedReservations(houseId: number): HouseAvailability[] {
-        return this.houseAvailabilities()
-            .filter((availability) => availability.house_id === houseId)
-            .sort((a, b) => new Date(a.house_availability_start_date).getTime() - new Date(b.house_availability_start_date).getTime());
-    }
-
-    getSortedReservationsWithGaps(houseId: number): { isGap: boolean; startDate: Date; endDate: Date | null; nextStartDate: Date | null }[] {
-        const reservations = this.getSortedReservations(houseId);
-        const result: { isGap: boolean; startDate: Date; endDate: Date | null; nextStartDate: Date | null }[] = [];
-
-        // If we have no reservations, return empty array
-        if (reservations.length === 0) {
-            return result;
-        }
-
-        // Add initial gap if first reservation is in the future
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const firstReservation = reservations[0];
-        const firstStart = new Date(firstReservation.house_availability_start_date);
-        firstStart.setHours(0, 0, 0, 0);
-
-        // Only add initial gap if first reservation starts after today
-        if (firstStart.getTime() > today.getTime()) {
-            result.push({
-                isGap: true,
-                startDate: today,
-                endDate: new Date(firstStart),
-                nextStartDate: firstStart
-            });
-        }
-
-        for (let i = 0; i < reservations.length; i++) {
-            const current = reservations[i];
-            const next = reservations[i + 1];
-
-            // Add current reservation
-            result.push({
-                isGap: false,
-                startDate: new Date(current.house_availability_start_date),
-                endDate: new Date(current.house_availability_end_date),
-                nextStartDate: null
-            });
-
-            // Check for gap between current and next reservation
-            if (next) {
-                const currentEnd = new Date(current.house_availability_end_date);
-                const nextStart = new Date(next.house_availability_start_date);
-
-                // Add one day to currentEnd to check for immediate consecutive dates
-                currentEnd.setDate(currentEnd.getDate() + 1);
-
-                if (currentEnd.getTime() < nextStart.getTime()) {
-                    // There's a gap
-                    result.push({
-                        isGap: true,
-                        startDate: currentEnd,
-                        endDate: new Date(nextStart),
-                        nextStartDate: nextStart
-                    });
-                }
-            }
-        }
-
-        return result;
-    }
-
-    getCurrentReservationDates(houseId: number): string {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const allSlots = this.getSortedReservationsWithGaps(houseId);
-        const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-
-        if (allSlots.length === 0) {
-            return '----- - -----';
-        }
-
-        // If showing initial empty state (index is -1)
-        if (currentIndex === -1) {
-            // Find the next upcoming reservation or gap
-            const nextSlot = allSlots.find((slot) => {
-                if (slot.isGap) {
-                    return slot.startDate > today;
-                }
-                return slot.startDate > today;
-            });
-
-            const prevSlot = allSlots
-                .filter(slot => slot.endDate && slot.endDate < today) // slots that ended before today
-                .reduce((prev, curr) => {
-                    if (!prev) return curr; // first candidate
-                    // pick the one with the latest endDate before today
-                    return curr.endDate! > prev.endDate! ? curr : prev;
-                }, undefined as typeof allSlots[0] | undefined);
-
-            if (nextSlot) {
-                const formatDate = (date: Date) => `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.`;
-                if (nextSlot.isGap) {
-                    // For gaps, also add one day to end date
-                    const endDatePlusOne = new Date(nextSlot.endDate!);
-                    endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
-                    return `${formatDate(nextSlot.startDate)} - ${formatDate(endDatePlusOne)}`;
-                } else {
-                    if(prevSlot?.endDate){
-                        prevSlot.endDate.setDate(prevSlot.endDate.getDate() + 1);
-                        
-                        return `${formatDate(prevSlot.endDate)} - ${formatDate(nextSlot.startDate)}`;
-                    } else {
-                        return `----- - ${formatDate(nextSlot.startDate)}`;
-                    }
-                }
-            }
-            return '----- - -----';
-        }
-
-        const slot = allSlots[currentIndex];
-        const formatDate = (date: Date) => `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.`;
-
-        if(!slot.endDate){
-            return `${formatDate(slot.startDate)} - ----- - -----`;
-        }
-
-        if (slot.isGap) {
-            return `${formatDate(slot.startDate)} - ${formatDate(slot.endDate)}`;
-        } else {
-            const nextDay = new Date(slot.endDate);
-            nextDay.setDate(nextDay.getDate() + 1);
-            return `${formatDate(slot.startDate)} - ${formatDate(nextDay)}`;
-        }
-    }
-
-    navigateReservation(houseId: number, direction: 'prev' | 'next') {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const allSlots = this.getSortedReservationsWithGaps(houseId);
-        let currentIndex = this.currentReservationIndex.get(houseId);
-
-        // If we don't have a current index, initialize based on current state
-        if (currentIndex === undefined) {
-            currentIndex = this.getCurrentReservationIndex(houseId);
-        }
-
-        // If we're showing empty state (-1) and going next, start from the first upcoming slot
-        if (currentIndex === -1 && direction === 'next') {
-            const nextIndex = allSlots.findIndex((slot) => {
-                if (slot.isGap) {
-                    return slot.startDate > today;
-                }
-                return slot.startDate > today;
-            });
-            if (nextIndex !== -1) {
-                this.currentReservationIndex.set(houseId, nextIndex);
-            }
-            return;
-        } else if (currentIndex === -1 && direction == 'prev'){
-            const prevIndex = allSlots
-                .map((slot, index) => ({ slot, index }))        
-                .filter(({ slot }) => slot.endDate && slot.endDate < today) 
-                .reduce((prev, curr) => {
-                    if (!prev) return curr;
-                    return curr.slot.endDate! > prev.slot.endDate! ? curr : prev;
-                }, undefined as { slot: typeof allSlots[0]; index: number } | undefined)?.index;
-
-            if(prevIndex !== -1 && prevIndex){
-                this.currentReservationIndex.set(houseId, prevIndex);
-            }
-            return;
-        }
-
-        if (direction === 'prev' && currentIndex > -1) {
-            this.currentReservationIndex.set(houseId, currentIndex - 1);
-        } else if (direction === 'next' && currentIndex < allSlots.length - 1) {
-            this.currentReservationIndex.set(houseId, currentIndex + 1);
-        }
-    }
-
-    getAdultsCount(houseId: number): number {
-        const allSlots = this.getSortedReservationsWithGaps(houseId);
-        const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-
-        if (currentIndex === -1 || currentIndex >= allSlots.length) {
-            return 0;
-        }
-
-        const slot = allSlots[currentIndex];
-        if (slot.isGap) {
-            return 0;
-        }
-
-        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter((s) => !s.isGap).length - 1];
-        return reservation?.adults || 0;
-    }
-
-    getBabiesCount(houseId: number): number {
-        const allSlots = this.getSortedReservationsWithGaps(houseId);
-        const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-
-        if (currentIndex === -1 || currentIndex >= allSlots.length) {
-            return 0;
-        }
-
-        const slot = allSlots[currentIndex];
-        if (slot.isGap) {
-            return 0;
-        }
-
-        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter((s) => !s.isGap).length - 1];
-        return reservation?.babies || 0;
-    }
-
-    getDogsCount(houseId: number): number {
-        const allSlots = this.getSortedReservationsWithGaps(houseId);
-        const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-
-        if (currentIndex === -1 || currentIndex >= allSlots.length) {
-            return 0;
-        }
-
-        const slot = allSlots[currentIndex];
-        if (slot.isGap) {
-            return 0;
-        }
-
-        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter((s) => !s.isGap).length - 1];
-        if (!reservation) return 0;
-        return (reservation.dogs_d || 0) + (reservation.dogs_s || 0) + (reservation.dogs_b || 0);
-    }
-
-    getBabyCribsCount(houseId: number): number {
-        const allSlots = this.getSortedReservationsWithGaps(houseId);
-        const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-
-        if (currentIndex === -1 || currentIndex >= allSlots.length) {
-            return 0;
-        }
-
-        const slot = allSlots[currentIndex];
-        if (slot.isGap) {
-            return 0;
-        }
-
-        const reservation = this.getSortedReservations(houseId)[allSlots.slice(0, currentIndex + 1).filter((s) => !s.isGap).length - 1];
-        if (!reservation) return 0;
-        return reservation.cribs || 0;
-    }
-
-    isCurrentSlotGap(houseId: number): boolean {
-        const allSlots = this.getSortedReservationsWithGaps(houseId);
-        const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-
-        if (currentIndex === -1 || currentIndex >= allSlots.length) {
-            return true;
-        }
-
-        const slot = allSlots[currentIndex];
-        if (!slot.isGap && slot.endDate) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const endDate = new Date(slot.endDate);
-            endDate.setHours(23, 59, 59, 999); 
-
-            if (today <= endDate) {
-                return false;
-            }
-        }
-
-        return slot.isGap;
-    }
-
-    isCurrentSlotOccupied(houseId: number): boolean {
-        const allSlots = this.getSortedReservationsWithGaps(houseId);
-        const currentIndex = this.currentReservationIndex.get(houseId) ?? this.getCurrentReservationIndex(houseId);
-
-        // If we don't have a valid index or we're looking at a gap, the slot is not occupied
-        if (currentIndex === -1 || currentIndex >= allSlots.length || allSlots[currentIndex].isGap) {
-            return false;
-        }
-
-        // If we're looking at a reservation slot, it's occupied
-        return true;
-    }
-
     updateLocationOptions() {
         this.locationOptions = [...this.specialLocations, ...this.houses()];
     }
@@ -884,11 +564,6 @@ export class Home implements OnInit, OnDestroy {
 
     isTaskFormValid(): boolean {
         return !!this.selectedLocationForTask && !!this.selectedTaskType;
-    }
-
-    openTaskDetails(event: Event, task: any) {
-        event.stopPropagation();
-        this.taskService.$taskModalData.next(task);
     }
 
     applyFilters() {
@@ -924,23 +599,25 @@ export class Home implements OnInit, OnDestroy {
             
             this.groupedHouses.set(grouped);
             this.filteredHouses.set(result);
-        } else if (this.sortType == 'status'){
+        } else if (this.sortType == 'status') {
             const statusOrder = ['OCCUPIED', 'ARRIVAL-DAY', 'NOT-CLEANED', 'FREE'];
-            
+            const statusCache = new Map<number, string>();
+            result.forEach(house => {
+                statusCache.set(house.house_id, this.houseService.getHouseStatus(house));
+            });
+
             result.sort((a, b) => {
-                const statusA = this.houseService.getHouseStatus(a);
-                const statusB = this.houseService.getHouseStatus(b);
+                const statusA = statusCache.get(a.house_id)!;
+                const statusB = statusCache.get(b.house_id)!;
                 const orderDiff = statusOrder.indexOf(statusA) - statusOrder.indexOf(statusB);
                 if (orderDiff !== 0) return orderDiff;
                 return a.house_number - b.house_number;
             });
 
-            const grouped = statusOrder.map(status => {
-                return {
-                    status,
-                    houses: result.filter(h => this.houseService.getHouseStatus(h) === status)
-                };
-            }).filter(group => group.houses.length > 0);
+            const grouped = statusOrder.map(status => ({
+                status,
+                houses: result.filter(h => statusCache.get(h.house_id) === status)
+            })).filter(group => group.houses.length > 0);
 
             this.groupedHousesByStatus.set(grouped);
             this.filteredHouses.set(result);
@@ -952,19 +629,11 @@ export class Home implements OnInit, OnDestroy {
     
     sortBy(type: 'number' | 'type' | 'status') {
         this.sortType = this.sortType === type ? null : type;
-        
+
         if (this.sortType !== 'type') {
             this.groupedHouses.set([]);
         }
-        
+
         this.applyFilters();
-    }
-
-    getTaskIcon(task: Task): string {
-        if (this.isUrgentIconVisibleMap[task.task_id]) {
-            return 'fa fa-exclamation-triangle';
-        }
-
-        return this.taskService.getTaskIcon(task.task_type_id);
     }
 }
