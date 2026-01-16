@@ -1,19 +1,18 @@
 
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ChartComponent } from './chart.component';
 import { StatisticsService } from '../../core/services/statistics.service';
+import { Chart } from '../../core/models/data.models';
 
 @Component({
   selector: 'app-statistics',
   imports: [
     ChartComponent,
-    FormsModule,
   ],
   template: `
     <div class="statistics-container">
       <div class="chart-row">
-        @for(chart of statisticsService.charts; track $index){
+        @for(chart of charts; track trackByChartId($index, chart)){
           <div class="chart-container">
             <app-chart
               [title]="chart.title"
@@ -69,6 +68,14 @@ import { StatisticsService } from '../../core/services/statistics.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatisticsComponent {
+  
+  get charts(): Chart[] {
+    return this.statisticsService.charts;
+  }
 
-  constructor(public statisticsService: StatisticsService) {}
+  constructor(private statisticsService: StatisticsService) {}
+
+  trackByChartId(index: number, chart: Chart): string {
+    return chart.dataType;
+  }
 }
