@@ -403,31 +403,68 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
         }
 
         .task-card {
-            background: var(--surface-ground);
-            border: 1px solid var(--surface-border);
+            background: var(--surface-card);
             border-radius: 6px;
             padding: 1rem;
-            transition: transform 0.15s ease;
             height: 155px;
             width: 400px;
 
-            &.completed{
-                background: var(--p-red-400);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow:
+                var(--glass-shadow),
+                inset 0 1px 1px rgba(255, 255, 255, 0.15);
+
+            &:hover {
+                transform: translateY(-4px);
+                box-shadow:
+                    var(--glass-shadow-elevated),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.25);
+                border-color: rgba(255, 255, 255, 0.35);
+            }
+
+            &.completed {
+                background: linear-gradient(
+                    135deg,
+                    rgba(248, 113, 113, 0.85),
+                    rgba(239, 68, 68, 0.75)
+                );
+                border-color: rgba(248, 113, 113, 0.4);
                 color: var(--p-surface-0);
             }
 
             &.in-progress {
-                background: var(--p-yellow-400);
+                background: linear-gradient(
+                    135deg,
+                    rgba(250, 204, 21, 0.85),
+                    rgba(234, 179, 8, 0.75)
+                );
+                border-color: rgba(250, 204, 21, 0.4);
                 color: var(--p-surface-0);
             }
 
             &.assigned {
-                background: var(--p-blue-500);
+                background: linear-gradient(
+                    135deg,
+                    rgba(59, 130, 246, 0.85),
+                    rgba(37, 99, 235, 0.75)
+                );
+                border-color: rgba(59, 130, 246, 0.4);
                 color: var(--p-surface-0);
             }
 
             &.not-assigned {
-                background: var(--p-green-500);
+                background: linear-gradient(
+                    135deg,
+                    rgba(34, 197, 94, 0.85),
+                    rgba(22, 163, 74, 0.75)
+                );
+                border-color: rgba(34, 197, 94, 0.4);
                 color: var(--p-surface-0);
             }
 
@@ -445,28 +482,25 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
                 width: 30%;
                 flex-grow: 1;
 
-                .house-number-and-icon{
+                .house-number-and-icon {
                     display: flex;
-                    flex-direction: row;
                     gap: 5px;
 
                     .house-number {
                         font-size: 1.2rem;
                         font-weight: 600;
                     }
-    
+
                     .task-icon {
                         font-size: 1.1rem;
                     }
                 }
 
-                .next-reservation-date{
-                    display: flex;
-                    flex-direction: column;
+                .next-reservation-date {
                     height: 20px;
                 }
 
-                .description{
+                .description {
                     width: 95%;
                     height: 20px;
                     white-space: nowrap;
@@ -491,28 +525,24 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
                 justify-content: space-between;
                 height: 33px;
 
-                .buttons{
+                .buttons {
                     display: flex;
                     gap: 10px;
                 }
 
-                .reservation-numbers{
+                .reservation-numbers {
                     display: flex;
-                    flex-direction: row;
                     align-items: center;
                     gap: 5px;
 
-                    .adults-count, .pets-count, .babies-count, .cribs-count{
+                    .adults-count,
+                    .pets-count,
+                    .babies-count,
+                    .cribs-count {
                         display: flex;
-                        flex-direction: row;
                         gap: 5px;
                     }
                 }
-            }
-
-            &:hover{
-                cursor: pointer;
-                transform: translateY(-4px);
             }
         }
 
