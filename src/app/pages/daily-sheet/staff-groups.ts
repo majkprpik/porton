@@ -80,7 +80,11 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
     .staff-groups-container {
       height: 100%;
       padding: 1rem;
-      background-color: var(--surface-card);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
       border-radius: 8px;
       overflow-y: auto;
 

@@ -1,4 +1,5 @@
-/* Utils */
+@use 'mixins' as *;
+
 .clearfix:after {
     content: ' ';
     display: block;
@@ -6,7 +7,7 @@
 }
 
 .card {
-    background: var(--surface-card);
+    @include glass-panel();
     padding: 2rem;
     margin-bottom: 2rem;
     border-radius: var(--content-border-radius);
@@ -14,6 +15,16 @@
     &:last-child {
         margin-bottom: 0;
     }
+}
+
+.glass-panel {
+    @include glass-panel();
+    border-radius: var(--content-border-radius);
+}
+
+.glass-panel-elevated {
+    @include glass-panel-elevated();
+    border-radius: var(--content-border-radius);
 }
 
 .p-toast {

@@ -288,15 +288,19 @@ import { TranslateModule } from '@ngx-translate/core';
       z-index: 10;
       display: flex;
       gap: 10px;
-      border-radius: 5px;
+      border-radius: 8px;
       padding: 5px 10px 5px 10px;
-      background-color: var(--p-cyan-950);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
 
       .house-numbers-toggle, .house-icons-toggle{
         display: flex;
         gap: 10px;
         box-sizing: border-box;
-        color: white;
+        color: var(--text-color);
         user-select: none;
       }
     }
@@ -307,7 +311,11 @@ import { TranslateModule } from '@ngx-translate/core';
       right: 0;
       width: 442px;
       height: 100vh;
-      background-color: var(--p-cyan-950);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+      border-left: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow-elevated);
       z-index: 10;
       box-sizing: border-box;
       padding-top: 90px;

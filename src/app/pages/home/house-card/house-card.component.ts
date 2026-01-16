@@ -89,6 +89,12 @@ import { CommonModule } from '@angular/common';
         z-index: 1;
         max-width: 400px;
         height: 100%;
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow:
+            var(--glass-shadow),
+            inset 0 1px 1px rgba(255, 255, 255, 0.15);
 
         &.expanded {
             z-index: 2;
@@ -245,61 +251,71 @@ import { CommonModule } from '@angular/common';
         }
 
         &.available {
-            background: var(--p-green-600);
+            background: linear-gradient(
+                135deg,
+                rgba(34, 197, 94, 0.85),
+                rgba(22, 163, 74, 0.75)
+            );
+            border-color: rgba(34, 197, 94, 0.4);
 
             .house-number,
             .house-icons i {
                 color: white;
-            }
-            
-            @media (prefers-color-scheme: dark) {
-                background: var(--p-green-600);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             }
         }
 
         &.occupied {
-            background: var(--p-red-600);
+            background: linear-gradient(
+                135deg,
+                rgba(220, 38, 38, 0.85),
+                rgba(185, 28, 28, 0.75)
+            );
+            border-color: rgba(220, 38, 38, 0.4);
 
             .house-number,
             .house-icons i {
                 color: white;
-
-            }
-
-            @media (prefers-color-scheme: dark) {
-                background: var(--p-red-600);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             }
         }
 
-        &.available-with-arrival{
-            background: var(--p-red-400);
+        &.available-with-arrival {
+            background: linear-gradient(
+                135deg,
+                rgba(248, 113, 113, 0.85),
+                rgba(239, 68, 68, 0.75)
+            );
+            border-color: rgba(248, 113, 113, 0.4);
 
             .house-number,
             .house-icons i {
                 color: white;
-            }
-
-            @media (prefers-color-scheme: dark) {
-                background: var(--p-red-400);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             }
         }
 
         &.available-with-tasks {
-            background: var(--p-yellow-400);
+            background: linear-gradient(
+                135deg,
+                rgba(250, 204, 21, 0.85),
+                rgba(234, 179, 8, 0.75)
+            );
+            border-color: rgba(250, 204, 21, 0.4);
 
             .house-number,
             .house-icons i {
                 color: white;
-            }
-
-            @media (prefers-color-scheme: dark) {
-                background: var(--p-yellow-400);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             }
         }
 
         &:hover {
-            box-shadow: var(--p-shadow-2);
+            box-shadow:
+                var(--glass-shadow-elevated),
+                inset 0 1px 2px rgba(255, 255, 255, 0.25);
             transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.35);
         }
 
         .house-number {

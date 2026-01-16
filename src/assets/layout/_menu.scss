@@ -11,8 +11,10 @@
     left: 2rem;
     transition:
         transform var(--layout-section-transition-duration),
-        left var(--layout-section-transition-duration);
-    background-color: var(--surface-overlay);
+        left var(--layout-section-transition-duration),
+        var(--glass-transition);
+
+    @include glass-panel();
     border-radius: var(--content-border-radius);
     padding: 0.5rem 1.5rem;
 }
@@ -27,8 +29,9 @@
             font-size: 0.857rem;
             text-transform: uppercase;
             font-weight: 700;
-            color: var(--text-color);
+            color: var(--glass-text-secondary);
             margin: 0.75rem 0;
+            letter-spacing: 0.05em;
         }
 
         > a {
@@ -64,16 +67,16 @@
             align-items: center;
             position: relative;
             outline: 0 none;
-            color: var(--text-color);
+            color: var(--glass-text-primary);
             cursor: pointer;
             padding: 0.75rem 1rem;
             border-radius: var(--content-border-radius);
-            transition:
-                background-color var(--element-transition-duration),
-                box-shadow var(--element-transition-duration);
+            border: 1px solid transparent;
+            transition: var(--glass-transition);
 
             .layout-menuitem-icon {
                 margin-right: 0.5rem;
+                color: var(--glass-text-secondary);
             }
 
             .layout-submenu-toggler {
@@ -85,10 +88,21 @@
             &.active-route {
                 font-weight: 700;
                 color: var(--primary-color);
+                background: linear-gradient(
+                    135deg,
+                    rgba(99, 102, 241, 0.15),
+                    rgba(59, 130, 246, 0.1)
+                );
+                border-color: var(--glass-border-accent);
+
+                .layout-menuitem-icon {
+                    color: var(--primary-color);
+                }
             }
 
             &:hover {
-                background-color: var(--surface-hover);
+                background: var(--glass-bg-hover);
+                border-color: var(--glass-border-accent);
             }
 
             &:focus {

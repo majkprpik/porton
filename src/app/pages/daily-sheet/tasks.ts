@@ -74,7 +74,11 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
     }
 
     .tasks-container {
-      background: var(--surface-card);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
       height: 100%;
       overflow-y: auto;
       border-radius: 6px;

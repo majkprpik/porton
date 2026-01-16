@@ -116,7 +116,11 @@ import { AuthService } from '../../core/services/auth.service';
   .notes-container{
     height: 80vh;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
     display: flex;
     flex-direction: column;
     justify-content: space-between;

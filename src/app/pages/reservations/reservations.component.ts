@@ -235,7 +235,11 @@ interface CellData {
         .reservations-container{
             height: 88vh;
             width: 100%;
-            background-color: var(--surface-card);
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
             border-radius: 10px;
             box-sizing: border-box;
             padding: 20px;
@@ -679,6 +683,12 @@ interface CellData {
             100% {
                 border-color: rgba(0, 123, 255, 1);
                 background-color: rgba(0, 123, 255, 0.05);
+            }
+        }
+
+        ::ng-deep .p-tooltip {
+            .p-tooltip-text {
+                color: var(--text-color);
             }
         }
     `

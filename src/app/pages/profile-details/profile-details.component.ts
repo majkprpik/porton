@@ -53,7 +53,11 @@ import { ConfirmationService, MessageService } from 'primeng/api';
   styles: `
     .profile-details-container{
       height: 90vh;
-      background-color: var(--surface-card);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
       border-radius: 10px;
       box-sizing: border-box;
       padding: 20px;

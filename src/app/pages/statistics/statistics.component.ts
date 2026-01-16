@@ -46,17 +46,27 @@ import { StatisticsService } from '../../core/services/statistics.service';
         gap: 10px;
 
         .chart-container {
-          flex: 1 1 45%; 
-          height: 900px;
-          background-color: var(--surface-card);
+          flex: 1 1 45%;
+          min-height: 600px;
+          background: var(--glass-bg);
+          backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+          -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+          border: 1px solid var(--glass-border);
+          box-shadow: var(--glass-shadow);
           border-radius: 10px;
           padding: 20px;
           box-sizing: border-box;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
       }
     }
-  `
+
+    @media (max-width: 768px) {
+      .statistics-container .chart-row .chart-container {
+        flex: 1 1 100%;
+      }
+    }
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatisticsComponent {
 

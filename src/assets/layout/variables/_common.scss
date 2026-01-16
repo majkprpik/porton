@@ -17,4 +17,31 @@
     --focus-ring-color: var(--p-focus-ring-color);
     --focus-ring-offset: var(--p-focus-ring-offset);
     --focus-ring-shadow: var(--p-focus-ring-shadow);
+
+    --glass-blur: 12px;
+    --glass-blur-heavy: 20px;
+    --glass-saturate: 180%;
+
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-bg-hover: rgba(255, 255, 255, 0.85);
+    --glass-bg-active: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-border-accent: rgba(16, 185, 129, 0.25);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.12);
+    --glass-shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.05);
+    --glass-text-primary: #1f2937;
+    --glass-text-secondary: #059669;
+
+    --app-bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+    --app-bg-pattern: radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, rgba(5, 150, 105, 0.05) 0%, transparent 50%);
+
+    --glass-transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --glass-transition: none;
+    }
 }

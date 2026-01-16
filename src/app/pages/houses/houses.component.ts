@@ -279,9 +279,12 @@ interface ExtendedHouse extends House{
     `
     .card {
       padding: 2rem;
-      background-color: var(--surface-card);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
       border-radius: 8px;
-      box-shadow: var(--card-shadow);
 
       .title{
         display: flex;

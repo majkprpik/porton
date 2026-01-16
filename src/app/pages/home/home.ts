@@ -12,7 +12,6 @@ import { TaskService } from '../../core/services/task.service';
 import { HouseService } from '../../core/services/house.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { TranslateModule } from '@ngx-translate/core';
-import { LayoutService } from '../../layout/services/layout.service';
 import { ChartComponent } from '../statistics/chart.component';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
@@ -169,9 +168,12 @@ interface SpecialLocation {
 
                 .legend-container {
                     padding: 0.8rem 1rem;
-                    background-color: var(--surface-card);
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+                    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+                    border: 1px solid var(--glass-border);
                     border-radius: 6px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    box-shadow: var(--glass-shadow);
     
                     .legend-wrapper {
                         display: flex;
@@ -231,9 +233,12 @@ interface SpecialLocation {
                 }
                 
                 .houses-container {
-                    background-color: var(--surface-card);
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+                    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+                    border: 1px solid var(--glass-border);
                     border-radius: 6px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    box-shadow: var(--glass-shadow);
                     width: 100%;
                     box-sizing: border-box;
                     padding: 15px;
@@ -288,11 +293,14 @@ interface SpecialLocation {
     
                         .pinned-container {
                             height: 900px;
-                            background-color: var(--surface-card);
+                            background: var(--glass-bg);
+                            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+                            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+                            border: 1px solid var(--glass-border);
                             border-radius: 10px;
                             padding: 20px;
                             box-sizing: border-box;
-                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                            box-shadow: var(--glass-shadow);
                             overflow: hidden;
                         }
                     }
