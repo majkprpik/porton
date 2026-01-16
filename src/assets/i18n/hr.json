@@ -357,7 +357,8 @@
                 "MONTH": "Mjesec",
                 "LOCATION": "Lokacija",
                 "METRIC": "Metrika",
-                "CHART-TYPE": "Tip dijagrama"
+                "CHART-TYPE": "Tip dijagrama",
+                "YEAR": "Godina"
             },
             "DATA": {
                 "SELECT-MONTH": "Odaberi mjesec",

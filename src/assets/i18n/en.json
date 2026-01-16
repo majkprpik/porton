@@ -357,7 +357,8 @@
                 "MONTH": "Month",
                 "LOCATION": "Location",
                 "METRIC": "Metrics",
-                "CHART-TYPE": "Chart type"
+                "CHART-TYPE": "Chart type",
+                "YEAR": "Year"
             },
             "DATA": {
                 "SELECT-MONTH": "Select a month",
