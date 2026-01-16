@@ -684,18 +684,38 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     .camera-icon-container {
                         margin: 20px;
                         flex: 0 0 auto;
-                        width: 70px;
-                        height: 70px;
+                        width: 80px;
+                        height: 80px;
                         display: flex;
                         flex-direction: column;
                         align-items: center;
                         justify-content: center;
-                        color: gray;
+                        color: var(--primary-color);
                         border-radius: 50%;
-                        border: 3px solid var(--surface-border);
+                        border: 2px dashed color-mix(in srgb, var(--primary-color) 60%, transparent);
+                        background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+                        .camera-icon {
+                            transition: transform 0.3s ease;
+                        }
 
                         &:hover {
                             cursor: pointer;
+                            transform: scale(1.08);
+                            border-style: solid;
+                            border-color: var(--primary-color);
+                            background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+                            box-shadow: 0 6px 20px color-mix(in srgb, var(--primary-color) 30%, transparent);
+
+                            .camera-icon {
+                                transform: scale(1.1);
+                            }
+                        }
+
+                        &:active {
+                            transform: scale(0.98);
                         }
                     }
                 }
