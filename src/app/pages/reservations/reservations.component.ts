@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, HostListener, effect } from '@angular/core';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { House, HouseAvailability, HouseType, Season } from '../../core/models/data.models';
-import { Subject, takeUntil, combineLatest, pipe, take, Subscription } from 'rxjs';
+import { Subject, takeUntil, combineLatest, take, debounceTime } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
@@ -14,6 +14,16 @@ import { HouseService } from '../../core/services/house.service';
 import { ExportReservationsService } from '../../core/services/export-reservations.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
+interface DayMetadata {
+    date: Date;
+    timestamp: number;
+    isToday: boolean;
+    isSaturday: boolean;
+    isSunday: boolean;
+    isPast: boolean;
+    dayOfWeek: number;
+}
+
 interface CellData {
     isReserved: boolean;
     color: string;
@@ -23,9 +33,17 @@ interface CellData {
     isToday: boolean;
     isSaturday: boolean;
     isSunday: boolean;
+    isPast: boolean;
     isReservationStart: boolean;
     isReservationMiddle: boolean;
     isReservationEnd: boolean;
+    cssClasses: string;
+    headerCssClasses: string;
+    adultsCount: number;
+    petsCount: number;
+    babiesCount: number;
+    cribsCount: number;
+    reservationId: number | null;
 }
 
 @Component({
@@ -87,7 +105,7 @@ interface CellData {
                 </div>
             </div>
 
-            @if(displayOverlay){
+            @if(displayOverlay()){
                 <div class="loading-overlay">
                     <div class="loading-message">
                         <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
@@ -103,19 +121,17 @@ interface CellData {
                     <thead>
                         <tr>
                             <th class="house-header">{{ 'RESERVATIONS.HOUSE' | translate }}</th>
-                            @for (day of days(); track day.getTime()) {
-                                <th class="day-header" 
-                                    [ngClass]="{
-                                        'today-column': isToday(day),
-                                        'saturday-column-day': isSaturday(day) && !isNightMode,
-                                        'saturday-column-night': isSaturday(day) && isNightMode,
-                                        'sunday-column-day': isSunday(day) && !isNightMode,
-                                        'sunday-column-night': isSunday(day) && isNightMode,
-                                    }"
-                                    [title]="day.toLocaleDateString()"
-                                    [ngStyle]="{'height': '30px'}"
+                            @for (dayMeta of dayMetadata(); track dayMeta.timestamp) {
+                                <th class="day-header"
+                                    [class.today-column]="dayMeta.isToday"
+                                    [class.saturday-column-day]="dayMeta.isSaturday && !isNightMode"
+                                    [class.saturday-column-night]="dayMeta.isSaturday && isNightMode"
+                                    [class.sunday-column-day]="dayMeta.isSunday && !isNightMode"
+                                    [class.sunday-column-night]="dayMeta.isSunday && isNightMode"
+                                    [title]="dayMeta.date.toLocaleDateString()"
+                                    style="height: 30px"
                                 >
-                                    <div>{{ day | date: 'EEE' }} {{ day | date: 'dd.M.' }}</div>
+                                    <div>{{ dayMeta.date | date: 'EEE' }} {{ dayMeta.date | date: 'dd.M.' }}</div>
                                 </th>
                             }
                         </tr>
@@ -123,91 +139,62 @@ interface CellData {
                     <tbody>
                         @for (house of filteredHouses(); track house.house_id; let i = $index) {
                             <tr>
-                                <th 
-                                    class="row-header" 
-                                    [ngClass]="{
-                                        'has-pool': handleHasPoolDisplay(house),
-                                        'is-active-header': handleIsActiveDisplay(house),
-                                        'active-row': selectedCellRowIndex() === i,
-                                    }"
+                                <th
+                                    [class]="rowHeaderClasses().get(house.house_id)"
+                                    [class.active-row]="selectedCellRowIndex() === i"
                                     [pTooltip]="house.description"
                                 >
                                     {{ house.house_name || house.house_number }}
                                 </th>
-                                @for (day of days(); track day.getTime(); let j = $index) {
-                                    @if (gridMatrix()[i] && gridMatrix()[i][j]){
-                                        <td 
-                                            (dblclick)="onCellDoubleClick($event, i, j)"
-                                            (mousedown)="onCellMouseDown($event, i, j)"
-                                            (mousemove)="onCellMouseMove($event, i, j)"
-                                            (click)="gridMatrix()[i][j].isReserved ? onReservationCellClick($event, i, j) : onCellClick($event, i, j)"
-                                            [ngClass]="{
-                                                'reserved-cell': gridMatrix()[i][j].isReserved,
-                                                'selected-cell': isCellSelected(i, j),
-                                                'selection-start': i === selectedCellRowIndex() && j === getStartColIndex(),
-                                                'selection-end': i === selectedCellRowIndex() && j === getEndColIndex(),
-                                                'past-date': isCellInPast(j),
-                                                'today-column': isToday(days()[j]),
-                                                'saturday-column-day': isSaturday(days()[j]) && !isNightMode,
-                                                'saturday-column-night': isSaturday(days()[j]) && isNightMode,
-                                                'sunday-column-day': isSunday(days()[j]) && !isNightMode,
-                                                'sunday-column-night': isSunday(days()[j]) && isNightMode,
-                                                'reservation-start': gridMatrix()[i][j].isReservationStart,
-                                                'reservation-middle': gridMatrix()[i][j].isReservationMiddle,
-                                                'reservation-end': gridMatrix()[i][j].isReservationEnd,
-                                                'border-left-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationStart,
-                                                'border-right-important': isToday(days()[j]) ? false : gridMatrix()[i][j].isReservationEnd,
-                                                'border-top-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
-                                                'border-bottom-important': gridMatrix()[i][j].isReservationStart || gridMatrix()[i][j].isReservationMiddle || gridMatrix()[i][j].isReservationEnd,
-                                                'border-top-important-has-pool': handleHasPoolDisplay(house),
-                                                'border-bottom-important-has-pool': handleHasPoolDisplay(house),
-                                                'free-column': isSpotAvailable(i, j),
-                                                'height-25-important': cellHeightInPx == 25,
-                                                'height-30-important': cellHeightInPx == 30,
-                                                'height-40-important': cellHeightInPx == 40,
-                                                'is-active': handleIsActiveDisplay(house),
-                                            }"
-                                            [style.background-color]="gridMatrix()[i][j].color"
-                                            [pTooltip]="gridMatrix()[i][j].isReserved ? getReservationNoteForCell(i, j) : ''"
-                                            tooltipPosition="top"
-                                        >
-                                            @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j].isReservationStart) {
-                                                <div class="reservation-item">
-                                                    <i class="pi pi-arrows-alt handle-icon" (click)="getDroppableSpotsForReservation($event, i, j)"></i>
-                                                    {{ gridMatrix()[i][j].displayText }}
-                                                </div>
-                                            } @else {
-                                                @if (gridMatrix()[i][j].isReserved && gridMatrix()[i][j - 1].isReservationStart) {
-                                                    <div class="reservation-numbers">
-                                                        @if (getNumberOfAdults(gridMatrix()[i][j])){
-                                                            <div class="adults-count">
-                                                                {{ getNumberOfAdults(gridMatrix()[i][j]) }} 
-                                                                <i class="fa-solid fa-person"></i>
-                                                            </div>
-                                                        }
-                                                        @if (getNumberOfPets(gridMatrix()[i][j])) {
-                                                            <div class="pets-count">
-                                                                {{ getNumberOfPets(gridMatrix()[i][j]) }} 
-                                                                <i class="fa-solid fa-paw"></i>
-                                                            </div>
-                                                        } 
-                                                        @if (getNumberOfBabies(gridMatrix()[i][j])) {
-                                                            <div class="babies-count">
-                                                                {{ getNumberOfBabies(gridMatrix()[i][j]) }}
-                                                                <i class="fa-solid fa-baby"></i>
-                                                            </div>
-                                                        }
-                                                        @if (getNumberOfCribs(gridMatrix()[i][j])) {
-                                                            <div class="cribs-count">
-                                                                {{ getNumberOfCribs(gridMatrix()[i][j]) }}
-                                                                <i class="fa-solid fa-baby-carriage"></i>
-                                                            </div>
-                                                        }
+                                @for (cell of gridMatrix()[i]; track $index; let j = $index) {
+                                    <td
+                                        [class]="cell.cssClasses"
+                                        [class.selected-cell]="selectedCellRowIndex() === i && j >= getStartColIndex() && j <= getEndColIndex() && getStartColIndex() >= 0"
+                                        [class.selection-start]="i === selectedCellRowIndex() && j === getStartColIndex()"
+                                        [class.selection-end]="i === selectedCellRowIndex() && j === getEndColIndex()"
+                                        [class.free-column]="droppableSpots.length && isSpotAvailable(i, j)"
+                                        [style.background-color]="cell.color"
+                                        [pTooltip]="cell.isReserved ? getReservationNoteForCell(i, j) : ''"
+                                        tooltipPosition="top"
+                                        (dblclick)="onCellDoubleClick($event, i, j)"
+                                        (mousedown)="onCellMouseDown($event, i, j)"
+                                        (mousemove)="onCellMouseMove($event, i, j)"
+                                        (click)="cell.isReserved ? onReservationCellClick($event, i, j) : onCellClick($event, i, j)"
+                                    >
+                                        @if (cell.isReserved && cell.isReservationStart) {
+                                            <div class="reservation-item">
+                                                <i class="pi pi-arrows-alt handle-icon" (click)="getDroppableSpotsForReservation($event, i, j)"></i>
+                                                {{ cell.displayText }}
+                                            </div>
+                                        } @else if (cell.isReserved && j > 0 && gridMatrix()[i][j - 1].isReservationStart) {
+                                            <div class="reservation-numbers">
+                                                @if (cell.adultsCount) {
+                                                    <div class="adults-count">
+                                                        {{ cell.adultsCount }}
+                                                        <i class="fa-solid fa-person"></i>
                                                     </div>
                                                 }
-                                            }
-                                        </td>
-                                    }
+                                                @if (cell.petsCount) {
+                                                    <div class="pets-count">
+                                                        {{ cell.petsCount }}
+                                                        <i class="fa-solid fa-paw"></i>
+                                                    </div>
+                                                }
+                                                @if (cell.babiesCount) {
+                                                    <div class="babies-count">
+                                                        {{ cell.babiesCount }}
+                                                        <i class="fa-solid fa-baby"></i>
+                                                    </div>
+                                                }
+                                                @if (cell.cribsCount) {
+                                                    <div class="cribs-count">
+                                                        {{ cell.cribsCount }}
+                                                        <i class="fa-solid fa-baby-carriage"></i>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </td>
                                 }
                             </tr>
                         }
@@ -337,6 +324,9 @@ interface CellData {
                 width: 100%;
                 border-radius: 4px;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                /* Performance optimizations for scrolling */
+                will-change: scroll-position;
+                -webkit-overflow-scrolling: touch;
 
                 .reservation-table {
                     border-collapse: separate;
@@ -359,6 +349,8 @@ interface CellData {
                         width: 120px !important;
                         min-width: 120px;
                         max-width: 120px;
+                        /* Performance optimizations */
+                        contain: layout style paint;
                     }
 
                     .height-25-important{
@@ -373,6 +365,12 @@ interface CellData {
                         height: 40px !important;
                     }
                     
+                    tbody tr {
+                        /* Enable content-visibility for off-screen rows */
+                        content-visibility: auto;
+                        contain-intrinsic-size: auto 30px;
+                    }
+
                     tbody tr:nth-child(even) {
                         background-color: rgba(0, 0, 0, 0.01);
                     }
@@ -714,18 +712,22 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     houseAvailabilities = signal<HouseAvailability[]>([]);
     days = signal<Date[]>([]);
-    
+    dayMetadata = signal<DayMetadata[]>([]);
+
     houseTypes = signal<HouseType[]>([]);
     selectedHouseTypeId = signal<number>(0);
-    
+
     gridMatrix = signal<CellData[][]>([]);
+
+    rowHeaderClasses = signal<Map<number, string>>(new Map());
 
     private reservationMap = new Map<string, HouseAvailability>();
     private houseIndexMap = new Map<number, number>();
     private dayIndexMap = new Map<number, number>();
-    
+
     private destroy$ = new Subject<void>();
-    
+    private gridUpdateSubject$ = new Subject<void>();
+
     private _previousHouseTypeId: number = 0;
 
     showReservationForm = signal<boolean>(false);
@@ -772,7 +774,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         updated_at: new Date().toString(),
     };
 
-    displayOverlay: boolean = false;
+    displayOverlay = signal<boolean>(true);
 
     constructor(
         private dataService: DataService,
@@ -785,11 +787,28 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         public exportReservationsService: ExportReservationsService,
     ) {
         effect(() => {
-            this.isNightMode = this.layoutService.layoutConfig().darkTheme;
+            const newNightMode = this.layoutService.layoutConfig().darkTheme;
+            if (this.isNightMode !== undefined && this.isNightMode !== newNightMode) {
+                this.isNightMode = newNightMode;
+                this.requestGridUpdate();
+            } else {
+                this.isNightMode = newNightMode;
+            }
         });
     }
 
     ngOnInit(): void {
+        this.cacheTodayTimestamp();
+
+        this.gridUpdateSubject$
+            .pipe(
+                debounceTime(16), // ~1 frame at 60fps
+                takeUntil(this.destroy$)
+            )
+            .subscribe(() => {
+                this.performGridUpdate();
+            });
+
         this.dataService.seasons$.pipe(nonNull())
         .pipe(takeUntil(this.destroy$))
         .subscribe(seasons => {
@@ -811,7 +830,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
                 this.combinedHouses = [...this.houses(), ...this.tempHouses];
 
                 if(houses.length && tempHouses.length){
-                    this.updateGridMatrix();
+                    this.requestGridUpdate();
                 }
             },
             error: (error) => {
@@ -837,14 +856,14 @@ export class ReservationsComponent implements OnInit, OnDestroy {
                 if(houseAvailabilities && tempHouseAvailabilities){
                     const combined = [...houseAvailabilities, ...tempHouseAvailabilities];
                     this.houseAvailabilities.set(combined);
-                    this.updateGridMatrix();
+                    this.requestGridUpdate();
                 }
             },
             error: (error) => {
                 console.error(error);
             }
         });
-            
+
         this.loadCellHeight();
 
         setTimeout(() => {
@@ -853,6 +872,15 @@ export class ReservationsComponent implements OnInit, OnDestroy {
                 this.isFirstLoad = false;
             }
         }, 300);
+    }
+
+    private cacheTodayTimestamp(): void {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+    }
+
+    private requestGridUpdate(): void {
+        this.gridUpdateSubject$.next();
     }
     
     ngOnDestroy(): void {
@@ -869,10 +897,15 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         this.dayIndexMap.clear();
     }
     
-    private updateGridMatrix(): void {
+    private performGridUpdate(): void {
         const houses = this.filteredHouses();
         const days = this.days();
         const availabilities = this.houseAvailabilities();
+        const isNightMode = this.isNightMode;
+        const cellHeight = this.cellHeightInPx;
+        const metadata = this.buildDayMetadata(days);
+
+        this.dayMetadata.set(metadata);
 
         this.reservationMap.clear();
         this.houseIndexMap.clear();
@@ -882,68 +915,127 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             this.houseIndexMap.set(house.house_id, index);
         });
 
-        days.forEach((day, index) => {
-            this.dayIndexMap.set(day.getTime(), index);
+        metadata.forEach((dayMeta, index) => {
+            this.dayIndexMap.set(dayMeta.timestamp, index);
         });
 
         availabilities.forEach(availability => {
             const startDate = new Date(availability.house_availability_start_date);
             const endDate = new Date(availability.house_availability_end_date);
-            
+
             for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                 const key = this.getReservationKey(availability.house_id, d);
                 this.reservationMap.set(key, availability);
             }
         });
 
+        const headerClassMap = new Map<number, string>();
+        houses.forEach((house, index) => {
+            headerClassMap.set(house.house_id, this.buildRowHeaderClasses(house, index));
+        });
+        this.rowHeaderClasses.set(headerClassMap);
+
         const grid: CellData[][] = [];
-        for (const house of houses) {
+        for (let i = 0; i < houses.length; i++) {
+            const house = houses[i];
             const row: CellData[] = [];
-            
-            for (const day of days) {
-                const key = this.getReservationKey(house.house_id, day);
+            const hasPool = this.handleHasPoolDisplay(house);
+            const isActive = this.handleIsActiveDisplay(house);
+
+            for (let j = 0; j < metadata.length; j++) {
+                const dayMeta = metadata[j];
+                const key = `${house.house_id}-${dayMeta.timestamp}`;
                 const reservation = this.reservationMap.get(key);
-                
-                row.push(this.createCellData(day, reservation));
+
+                row.push(this.createCellData(dayMeta, reservation, i, j, hasPool, isActive, isNightMode, cellHeight));
             }
-            
+
             grid.push(row);
         }
 
         this.gridMatrix.set(grid);
 
-        let reservedCellCount = 0;
-        grid.forEach(row => {
-            row.forEach(cell => {
-                if (cell.isReserved) reservedCellCount++;
-            });
+        if (this.displayOverlay()) {
+            this.displayOverlay.set(false);
+        }
+    }
+
+    private buildDayMetadata(days: Date[]): DayMetadata[] {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayTime = today.getTime();
+
+        return days.map(day => {
+            const timestamp = day.getTime();
+            const dayOfWeek = day.getDay();
+            return {
+                date: day,
+                timestamp,
+                isToday: timestamp === todayTime,
+                isSaturday: dayOfWeek === 6,
+                isSunday: dayOfWeek === 0,
+                isPast: timestamp < todayTime,
+                dayOfWeek
+            };
         });
+    }
+
+    private buildRowHeaderClasses(house: House, rowIndex: number): string {
+        const classes: string[] = ['row-header'];
+        if (this.handleHasPoolDisplay(house)) {
+            classes.push('has-pool');
+        }
+        if (this.handleIsActiveDisplay(house)) {
+            classes.push('is-active-header');
+        }
+        return classes.join(' ');
+    }
+
+    private updateGridMatrix(): void {
+        this.requestGridUpdate();
     }
 
     private getReservationKey(houseId: number, date: Date): string {
         return `${houseId}-${date.getTime()}`;
     }
 
-    private createCellData(day: Date, reservation?: HouseAvailability): CellData {
+    private createCellData(
+        dayMeta: DayMetadata,
+        reservation: HouseAvailability | undefined,
+        rowIndex: number,
+        colIndex: number,
+        hasPool: boolean,
+        isActive: boolean,
+        isNightMode: boolean | undefined,
+        cellHeight: number
+    ): CellData {
         const cellData: CellData = {
             isReserved: false,
             color: '',
             displayText: '',
             tooltip: '',
             identifier: '',
-            isToday: this.isToday(day),
-            isSaturday: this.isSaturday(day),
-            isSunday: this.isSunday(day),
+            isToday: dayMeta.isToday,
+            isSaturday: dayMeta.isSaturday,
+            isSunday: dayMeta.isSunday,
+            isPast: dayMeta.isPast,
             isReservationStart: false,
             isReservationMiddle: false,
-            isReservationEnd: false
+            isReservationEnd: false,
+            cssClasses: '',
+            headerCssClasses: '',
+            adultsCount: 0,
+            petsCount: 0,
+            babiesCount: 0,
+            cribsCount: 0,
+            reservationId: null
         };
 
         if (reservation) {
             const baseColor = this.colors[reservation.color_theme % this.colors.length];
             const opacity = 0.7 + (reservation.color_tint * 0.3);
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor);
-            
+
             if (result) {
                 const r = parseInt(result[1], 16);
                 const g = parseInt(result[2], 16);
@@ -957,25 +1049,24 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             startDate.setHours(0, 0, 0, 0);
             const endDate = new Date(reservation.house_availability_end_date);
             endDate.setHours(0, 0, 0, 0);
-            const checkDate = new Date(day);
-            checkDate.setHours(0, 0, 0, 0);
-            
-            cellData.isReservationStart = checkDate.getTime() === startDate.getTime();
-            cellData.isReservationEnd = checkDate.getTime() === endDate.getTime();
-            cellData.isReservationMiddle = checkDate > startDate && checkDate < endDate;
-            
+            const checkTimestamp = dayMeta.timestamp;
+
+            cellData.isReservationStart = checkTimestamp === startDate.getTime();
+            cellData.isReservationEnd = checkTimestamp === endDate.getTime();
+            cellData.isReservationMiddle = checkTimestamp > startDate.getTime() && checkTimestamp < endDate.getTime();
+
             if (reservation.house_availability_start_date === reservation.house_availability_end_date) {
                 cellData.displayText = `${reservation.last_name}`;
                 cellData.isReservationStart = true;
                 cellData.isReservationEnd = true;
                 cellData.isReservationMiddle = false;
-            } else if (startDate.getTime() === checkDate.getTime()) {
+            } else if (startDate.getTime() === checkTimestamp) {
                 cellData.displayText = reservation.last_name || '';
             } else {
                 const secondDay = new Date(startDate);
                 secondDay.setDate(secondDay.getDate() + 1);
                 secondDay.setHours(0, 0, 0, 0);
-                if (checkDate.getTime() === secondDay.getTime()) {
+                if (checkTimestamp === secondDay.getTime()) {
                     cellData.displayText = reservation.reservation_number || '';
                 }
             }
@@ -995,11 +1086,61 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             if (reservation.dogs_s > 0) cellData.tooltip += `\nSmall pets: ${reservation.dogs_s}`;
             if (reservation.cribs > 0) cellData.tooltip += `\nCribs: ${reservation.cribs}`;
 
-            cellData.identifier = `res-${reservation.house_id}-${new Date(reservation.house_availability_start_date).getTime()}`;
+            cellData.identifier = `res-${reservation.house_id}-${startDate.getTime()}`;
             cellData.isReserved = true;
+            cellData.reservationId = reservation.house_availability_id;
+            cellData.adultsCount = reservation.adults || 0;
+            cellData.babiesCount = reservation.babies || 0;
+            cellData.cribsCount = reservation.cribs || 0;
+            cellData.petsCount = (reservation.dogs_d || 0) + (reservation.dogs_s || 0) + (reservation.dogs_b || 0);
         }
 
+        cellData.cssClasses = this.buildCellClasses(cellData, rowIndex, colIndex, hasPool, isActive, isNightMode, cellHeight);
+
         return cellData;
+    }
+
+    private buildCellClasses(
+        cell: CellData,
+        rowIndex: number,
+        colIndex: number,
+        hasPool: boolean,
+        isActive: boolean,
+        isNightMode: boolean | undefined,
+        cellHeight: number
+    ): string {
+        const classes: string[] = [];
+
+        if (cell.isReserved) classes.push('reserved-cell');
+        if (cell.isPast) classes.push('past-date');
+        if (cell.isToday) classes.push('today-column');
+
+        if (cell.isSaturday) {
+            classes.push(isNightMode ? 'saturday-column-night' : 'saturday-column-day');
+        }
+        if (cell.isSunday) {
+            classes.push(isNightMode ? 'sunday-column-night' : 'sunday-column-day');
+        }
+
+        if (cell.isReservationStart) classes.push('reservation-start');
+        if (cell.isReservationMiddle) classes.push('reservation-middle');
+        if (cell.isReservationEnd) classes.push('reservation-end');
+        if (!cell.isToday && cell.isReservationStart) classes.push('border-left-important');
+        if (!cell.isToday && cell.isReservationEnd) classes.push('border-right-important');
+        if (cell.isReservationStart || cell.isReservationMiddle || cell.isReservationEnd) {
+            classes.push('border-top-important', 'border-bottom-important');
+        }
+        if (hasPool && (cell.isReservationStart || cell.isReservationMiddle || cell.isReservationEnd)) {
+            classes.push('border-top-important-has-pool', 'border-bottom-important-has-pool');
+        }
+
+        if (isActive) classes.push('is-active');
+
+        if (cellHeight === 25) classes.push('height-25-important');
+        else if (cellHeight === 30) classes.push('height-30-important');
+        else if (cellHeight === 40) classes.push('height-40-important');
+
+        return classes.join(' ');
     }
 
     clearAvailableSpaces(){
@@ -1009,24 +1150,33 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     getReservationByRowAndColumn(row: number, col: number){
         const houses = this.filteredHouses();
-        const days = this.days();
+        const metadata = this.dayMetadata();
+
+        if (row < 0 || row >= houses.length || col < 0 || col >= metadata.length) {
+            return undefined;
+        }
 
         const house = houses[row];
-        const day = days[col];
-        
-        const key = this.getReservationKey(house.house_id, day);
-        const reservation = this.reservationMap.get(key);
+        const dayMeta = metadata[col];
 
-        return reservation;
+        const key = `${house.house_id}-${dayMeta.timestamp}`;
+        return this.reservationMap.get(key);
     }
 
     isSpotAvailable(row: number, col: number){
-        if(!this.droppableSpots.length) return;
+        if(!this.droppableSpots.length) return false;
 
-        const house = this.filteredHouses()[row];
-        const day = this.days()[col];
+        const houses = this.filteredHouses();
+        const metadata = this.dayMetadata();
 
-        return this.droppableSpots.some((ds: any) => ds.house_id == house.house_id && ds.date.getTime() == day.getTime());
+        if (row < 0 || row >= houses.length || col < 0 || col >= metadata.length) {
+            return false;
+        }
+
+        const house = houses[row];
+        const dayMeta = metadata[col];
+
+        return this.droppableSpots.some((ds: any) => ds.house_id === house.house_id && ds.timestamp === dayMeta.timestamp);
     }
 
     getDroppableSpotsForReservation(event: any, row: any, col: any){
@@ -1043,25 +1193,22 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
         this.reservationToMove = reservation;
         const houses = this.filteredHouses();
-        const days = this.days();
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const metadata = this.dayMetadata();
 
         const reservationLength = this.getSelectedReservationLength(this.reservationToMove);
 
         houses.forEach(house => {
-            days.forEach(day => {
-                if(day < today) return;
+            metadata.forEach(dayMeta => {
+                if(dayMeta.isPast) return;
 
-                const k = this.getReservationKey(house.house_id, day);
-                const res = this.reservationMap.get(k);
+                const key = `${house.house_id}-${dayMeta.timestamp}`;
+                const res = this.reservationMap.get(key);
                 let isDroppable = false;
 
                 if(!res){
-                    isDroppable = this.isNumberOfDaysAvailableInTheFuture(day, house.house_id, reservationLength);
+                    isDroppable = this.isNumberOfDaysAvailableInTheFuture(dayMeta, house.house_id, reservationLength);
                 } else if(res && res.house_availability_id == this.reservationToMove.house_availability_id){
-                    isDroppable = this.isNumberOfDaysAvailableInTheFuture(day, house.house_id, reservationLength);
+                    isDroppable = this.isNumberOfDaysAvailableInTheFuture(dayMeta, house.house_id, reservationLength);
                 } else if(res && res.house_availability_id != this.reservationToMove.house_availability_id){
                     return;
                 }
@@ -1069,30 +1216,31 @@ export class ReservationsComponent implements OnInit, OnDestroy {
                 if(isDroppable){
                     this.droppableSpots.push({
                         house_id: house.house_id,
-                        date: day,
+                        timestamp: dayMeta.timestamp,
+                        date: dayMeta.date,
                     });
                 }
             });
         });
     }
 
-    isNumberOfDaysAvailableInTheFuture(startDay: Date, houseId: number, numberOfDays: number): boolean{
+    isNumberOfDaysAvailableInTheFuture(startDayMeta: DayMetadata, houseId: number, numberOfDays: number): boolean{
         const house = this.filteredHouses().find(house => house.house_id == houseId);
         if(!house) return false;
 
-        const days = this.days();
+        const metadata = this.dayMetadata();
         let daysCount = 0;
 
-        for(let day of days){
-            if(day < startDay) continue;
-    
-            const k = this.getReservationKey(house.house_id, day);
-            const res = this.reservationMap.get(k);
-    
+        for(const dayMeta of metadata){
+            if(dayMeta.timestamp < startDayMeta.timestamp) continue;
+
+            const key = `${house.house_id}-${dayMeta.timestamp}`;
+            const res = this.reservationMap.get(key);
+
             if(res && res.house_availability_id != this.reservationToMove.house_availability_id) return false;
-    
+
             daysCount++;
-            
+
             if(daysCount >= numberOfDays) {
                 return true;
             }
@@ -1125,111 +1273,33 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         return days;
     }
 
-    isToday(date: Date): boolean {
-        const today = new Date();
-        return date.getDate() === today.getDate() &&
-               date.getMonth() === today.getMonth() &&
-               date.getFullYear() === today.getFullYear();
-    }
-
-    isSaturday(date: Date): boolean {
-        return date.getDay() === 6;
-    }
-
-    isSunday(date: Date): boolean {
-        return date.getDay() === 0;
-    }
-    
-    getNumberOfAdults(grid: any){
-        if(grid.tooltip){
-            const match = grid.tooltip.match(/Adults:\s*(\d+)/);
-            const adults = match ? parseInt(match[1], 10) : null;
-
-            return adults;
-        }
-
-        return '';
-    }
-
-    getNumberOfCribs(grid: any){
-        if(grid.tooltip){
-            const cribs = grid.tooltip.match(/Cribs:\s*(\d+)/);
-
-            if(!cribs){
-                return '';
-            }
-
-            const cribsCount = cribs ? parseInt(cribs[1], 10) : 0;
-
-            return cribsCount;
-        }
-
-        return '';
-    }
-
-    getNumberOfPets(grid: any){
-        if(grid.tooltip){
-            const pets = grid.tooltip.match(/Pets:\s*(\d+)/);
-            const smallPets = grid.tooltip.match(/Small pets:\s*(\d+)/);
-            const bigPets = grid.tooltip.match(/Big pets:\s*(\d+)/);
-
-            if (!pets && !smallPets && !bigPets) {
-                return '';
-            }
-
-            const petsCount = pets ? parseInt(pets[1], 10) : 0;
-            const smallPetsCount = smallPets ? parseInt(smallPets[1], 10) : 0;
-            const bigPetsCount = bigPets ? parseInt(bigPets[1], 10) : 0;
-
-            return petsCount + smallPetsCount + bigPetsCount;
-        }
-
-        return '';
-    }
-
-    getNumberOfBabies(grid: any){
-        if(grid.tooltip){ 
-            const babies = grid.tooltip.match(/Babies:\s*(\d+)/);
-
-            if(!babies){
-                return '';
-            }
-
-            const babiesCount = babies ? parseInt(babies[1], 10) : 0;
-
-            return babiesCount;
-        }
-
-        return '';
-    }
-
     handleEditReservation(row: number, col: number): void {
         this.showReservationForm.set(false);
-        
+
         const houses = this.filteredHouses();
-        const days = this.days();
-        
-        if (houses.length > row && days.length > col) {
+        const metadata = this.dayMetadata();
+
+        if (houses.length > row && metadata.length > col) {
             const reservation = this.getReservationByRowAndColumn(row, col);
-            
+
             if (!reservation) {
                 return;
             }
-            
+
             this.selectedHouseId.set(reservation.house_id);
-            
+
             const startDate = new Date(reservation.house_availability_start_date);
             const endDate = new Date(reservation.house_availability_end_date);
-            
+
             this.selectedStartDate.set(startDate);
             this.selectedEndDate.set(endDate);
-            
+
             this.editingReservation.set({
                 ...reservation
             });
-            
+
             this.updateNextReservationDate();
-            
+
             setTimeout(() => {
                 if (this.showReservationForm()) {
                     this.showReservationForm.set(false);
@@ -1256,30 +1326,30 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     handleAddReservation(row: number, col: number): void {
         this.showReservationForm.set(false);
-        
+
         const houses = this.filteredHouses();
-        const days = this.days();
-        
-        if (houses.length > row && days.length > col) {
+        const metadata = this.dayMetadata();
+
+        if (houses.length > row && metadata.length > col) {
             const house = houses[row];
-            
+
             let startDate: Date;
             let endDate: Date;
-            
-            if (this.selectedCellRowIndex() === row && 
-                this.selectedStartColIndex() >= 0 && 
-                this.selectedEndColIndex() >= 0 && 
+
+            if (this.selectedCellRowIndex() === row &&
+                this.selectedStartColIndex() >= 0 &&
+                this.selectedEndColIndex() >= 0 &&
                 this.selectedStartColIndex() !== this.selectedEndColIndex()) {
                 const startCol = Math.min(this.selectedStartColIndex(), this.selectedEndColIndex());
                 const endCol = Math.max(this.selectedStartColIndex(), this.selectedEndColIndex());
-                
-                startDate = new Date(days[startCol]);
-                endDate = new Date(days[endCol]);
+
+                startDate = new Date(metadata[startCol].date);
+                endDate = new Date(metadata[endCol].date);
             } else {
-                startDate = new Date(days[col]);
-                endDate = new Date(days[col]);
+                startDate = new Date(metadata[col].date);
+                endDate = new Date(metadata[col].date);
             }
-            
+
             this.openReservationForm(house, startDate, endDate);
         }
     }
@@ -1463,26 +1533,20 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     scrollToToday(): void {
         setTimeout(() => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const todayIndex = this.days().findIndex(day => {
-                const d = new Date(day);
-                d.setHours(0, 0, 0, 0);
-                return d.getTime() === today.getTime();
-            });
-            
+            const metadata = this.dayMetadata();
+            const todayIndex = metadata.findIndex(dayMeta => dayMeta.isToday);
+
             if (todayIndex >= 0) {
                 const dayHeaders = document.querySelectorAll('.day-header');
                 if (dayHeaders.length > todayIndex) {
                     const todayHeader = dayHeaders[todayIndex] as HTMLElement;
-                    
+
                     const tableContainer = document.querySelector('.table-container');
                     if (tableContainer) {
                         const containerWidth = tableContainer.clientWidth;
                         const columnPosition = todayHeader.offsetLeft;
                         const columnWidth = todayHeader.offsetWidth;
-                        
+
                         const scrollLeft = columnPosition - (containerWidth / 2) + (columnWidth / 2);
                         tableContainer.scrollLeft = scrollLeft > 0 ? scrollLeft : 0;
                     }
@@ -1494,9 +1558,14 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     setSelectedHouseType(typeId: number): void {
         if (this._previousHouseTypeId !== typeId && typeId !== null) {
             this._previousHouseTypeId = typeId;
+            this.displayOverlay.set(true);
             this.selectedHouseTypeId.set(typeId);
-            
-            this.updateGridMatrix();
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    this.updateGridMatrix();
+                });
+            });
         }
     }
 
@@ -1504,11 +1573,11 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         if(this.isCellInPast(col)) return;
 
         const houses = this.filteredHouses();
-        const days = this.days();
-        
-        if (houses.length > row && days.length > col) {
+        const metadata = this.dayMetadata();
+
+        if (houses.length > row && metadata.length > col) {
             const isReserved = this.hasCellReservation(row, col);
-            
+
             if (isReserved) {
                 this.handleEditReservation(row, col);
             } else {
@@ -1528,10 +1597,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     isCellInPast(col: number): boolean {
-        const days = this.days();
-        if (col < 0 || col >= days.length) return false;
-        
-        return this.isDateInPast(days[col]);
+        const metadata = this.dayMetadata();
+        if (col < 0 || col >= metadata.length) return false;
+        return metadata[col].isPast;
     }
 
     moveReservation(row: number, col: number){
@@ -1539,7 +1607,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
         const reservationLength = this.getSelectedReservationLength(this.reservationToMove);
         const selectedHouse = this.filteredHouses()[row];
-        const selectedDay = this.days()[col];
+        const metadata = this.dayMetadata();
+        const selectedDay = metadata[col].date;
 
         const endDate = new Date(selectedDay);
         endDate.setDate(endDate.getDate() + reservationLength - 1)
@@ -1799,18 +1868,18 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     getSelectedDateRange(): { startDate: Date, endDate: Date } | null {
         const row = this.selectedCellRowIndex();
         if (row < 0) return null;
-        
+
         const startCol = Math.min(this.selectedStartColIndex(), this.selectedEndColIndex());
         const endCol = Math.max(this.selectedStartColIndex(), this.selectedEndColIndex());
-        
+
         if (startCol < 0 || endCol < 0) return null;
-        
-        const days = this.days();
-        if (startCol >= days.length || endCol >= days.length) return null;
-        
+
+        const metadata = this.dayMetadata();
+        if (startCol >= metadata.length || endCol >= metadata.length) return null;
+
         return {
-            startDate: new Date(days[startCol]),
-            endDate: new Date(days[endCol])
+            startDate: new Date(metadata[startCol].date),
+            endDate: new Date(metadata[endCol].date)
         };
     }
 
@@ -1832,30 +1901,30 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     onReservationCellClick(event: MouseEvent, row: number, col: number): void {
         event.stopPropagation();
-        
+
         const grid = this.gridMatrix();
         if (!grid || grid.length <= row || !grid[row] || grid[row].length <= col) {
             return;
         }
-        
+
         const cellData = grid[row][col];
         if (!cellData || !cellData.isReserved) {
             return;
         }
-        
+
         const houses = this.filteredHouses();
-        const days = this.days();
-        
-        if (houses.length > row && days.length > col) {
+        const metadata = this.dayMetadata();
+
+        if (houses.length > row && metadata.length > col) {
             const reservation = this.getReservationByRowAndColumn(row, col);
-            
+
             if (reservation) {
                 if (this.selectedReservationId() === reservation.house_availability_id) {
                     this.selectedReservationId.set(null);
                 } else {
                     this.selectedReservationId.set(reservation.house_availability_id);
                 }
-                
+
                 this.handleEditReservation(row, col);
             }
         }
@@ -1864,6 +1933,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     changeCellHeight(cellHeightInPx: number){
         this.cellHeightInPx = cellHeightInPx;
         localStorage.setItem('portonReservationsCellHeight', JSON.stringify(cellHeightInPx));
+        this.requestGridUpdate();
     }
 
     loadCellHeight(){
@@ -1888,32 +1958,34 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     generateNextSeasonsTable(){
-        this.displayOverlay = true;
+        this.displayOverlay.set(true);
 
-        setTimeout(() => {
-            const index = this.seasons.findIndex(s => s.id == this.selectedSeason?.id);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const index = this.seasons.findIndex(s => s.id == this.selectedSeason?.id);
 
-            if(index != -1 || index >= this.seasons.length - 1){
-                this.selectedSeason = this.seasons[index + 1];
-                this.days.set(this.generateDaysForSeason(this.selectedSeason));
-                this.updateGridMatrix();
-            }
-            this.displayOverlay = false;
-        }, 0);
+                if(index != -1 || index >= this.seasons.length - 1){
+                    this.selectedSeason = this.seasons[index + 1];
+                    this.days.set(this.generateDaysForSeason(this.selectedSeason));
+                    this.updateGridMatrix();
+                }
+            });
+        });
     }
 
     generatePreviousSeasonsTable(){
-        this.displayOverlay = true;
+        this.displayOverlay.set(true);
 
-        setTimeout(() => {
-            const index = this.seasons.findIndex(s => s.id == this.selectedSeason?.id);
-            if(index != -1 || index >= 0){
-                this.selectedSeason = this.seasons[index - 1];
-                this.days.set(this.generateDaysForSeason(this.selectedSeason));
-                this.updateGridMatrix();
-            }
-            this.displayOverlay = false;
-        }, 0);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const index = this.seasons.findIndex(s => s.id == this.selectedSeason?.id);
+                if(index != -1 || index >= 0){
+                    this.selectedSeason = this.seasons[index - 1];
+                    this.days.set(this.generateDaysForSeason(this.selectedSeason));
+                    this.updateGridMatrix();
+                }
+            });
+        });
     }
 
     isFirstSeason(season: Season){
