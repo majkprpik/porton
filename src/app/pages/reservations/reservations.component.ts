@@ -295,7 +295,7 @@ interface CellData {
             .loading-overlay{
                 position: absolute;
                 inset: 0;
-                background-color: white;
+                background-color: var(--surface-ground);
                 opacity: 0.8;
                 z-index: 20;
                 pointer-events: all;
@@ -318,7 +318,7 @@ interface CellData {
                 overflow-x: auto;
                 overflow-y: auto;
                 height: 94%;
-                border: 1px solid #ddd;
+                border: 1px solid var(--surface-border);
                 scroll-behavior: smooth;
                 position: relative;
                 width: 100%;
@@ -341,7 +341,7 @@ interface CellData {
                     }
                     
                     th, td {
-                        border: 1px solid #ddd;
+                        border: 1px solid var(--surface-border);
                         text-align: center;
                         white-space: nowrap;
                         overflow: hidden;
@@ -391,7 +391,7 @@ interface CellData {
                         width: 80px !important;
                         min-width: 80px;
                         max-width: 80px;
-                        border: 1px solid #ddd;
+                        border: 1px solid var(--surface-border);
                         box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
                     }
                     
@@ -401,7 +401,7 @@ interface CellData {
                         position: sticky;
                         top: 0;
                         z-index: 5;
-                        border: 1px solid #ddd;
+                        border: 1px solid var(--surface-border);
                         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
                         
                         &.today-column {
@@ -436,7 +436,7 @@ interface CellData {
                         position: sticky;
                         left: 0;
                         z-index: 5;
-                        border: 1px solid #ddd;
+                        border: 1px solid var(--surface-border);
                         box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
                         
                         &.active-row {
@@ -645,12 +645,30 @@ interface CellData {
                         border-bottom: 1px solid black !important;
                     }
 
-                    .border-top-important-has-pool {
-                        border-top: 3px solid var(--p-orange-400) !important;
-                    }
+                    .no-pool-row {
+                        position: relative;
 
-                    .border-bottom-important-has-pool {
-                        border-bottom: 3px solid var(--p-orange-400) !important;
+                        &::after {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            height: 3px;
+                            background: linear-gradient(90deg, var(--p-orange-300), var(--p-orange-400));
+                            opacity: 0.7;
+                        }
+
+                        &::before {
+                            content: '';
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            right: 0;
+                            height: 3px;
+                            background: linear-gradient(90deg, var(--p-orange-300), var(--p-orange-400));
+                            opacity: 0.7;
+                        }
                     }
 
                     .is-active {
@@ -1130,8 +1148,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         if (cell.isReservationStart || cell.isReservationMiddle || cell.isReservationEnd) {
             classes.push('border-top-important', 'border-bottom-important');
         }
-        if (hasPool && (cell.isReservationStart || cell.isReservationMiddle || cell.isReservationEnd)) {
-            classes.push('border-top-important-has-pool', 'border-bottom-important-has-pool');
+        if (hasPool) {
+            classes.push('no-pool-row');
         }
 
         if (isActive) classes.push('is-active');

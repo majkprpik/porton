@@ -311,7 +311,7 @@ import { AuthService } from '../../core/services/auth.service';
 
           .vertical-line {
             width: 1px;
-            background-color: lightgray;
+            background-color: var(--surface-border);
           }
 
           .density-buttons{
@@ -335,7 +335,7 @@ import { AuthService } from '../../core/services/auth.service';
       .loading-overlay{
         position: absolute;
         inset: 0;
-        background-color: white;
+        background-color: var(--surface-ground);
         opacity: 0.8;
         z-index: 20;
         pointer-events: all;
@@ -357,7 +357,7 @@ import { AuthService } from '../../core/services/auth.service';
         overflow-x: auto;
         overflow-y: auto;
         height: 94%;
-        border: 1px solid #ddd;
+        border: 1px solid var(--surface-border);
         scroll-behavior: smooth;
         position: relative;
         width: 100%;
@@ -377,7 +377,7 @@ import { AuthService } from '../../core/services/auth.service';
           }
 
           th,td {
-            border: 1px solid #ddd;
+            border: 1px solid var(--surface-border);
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
@@ -409,8 +409,8 @@ import { AuthService } from '../../core/services/auth.service';
           }
 
           .corner-header {
-            background-color: #f0f0f0 !important;
-            border: 1px solid #ccc !important;
+            background-color: var(--surface-card) !important;
+            border: 1px solid var(--surface-border) !important;
             position: sticky !important;
             top: 0;
             left: 0;
@@ -428,7 +428,7 @@ import { AuthService } from '../../core/services/auth.service';
             width: 80px !important;
             min-width: 80px;
             max-width: 80px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--surface-border);
             box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
           }
 
@@ -438,7 +438,7 @@ import { AuthService } from '../../core/services/auth.service';
             position: sticky;
             top: 0;
             z-index: 5;
-            border: 1px solid #ddd;
+            border: 1px solid var(--surface-border);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
             &.today-column {
@@ -530,7 +530,7 @@ import { AuthService } from '../../core/services/auth.service';
             position: sticky;
             left: 0;
             z-index: 5;
-            border: 1px solid #ddd;
+            border: 1px solid var(--surface-border);
             box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
 
             &.active-row {
@@ -671,6 +671,12 @@ import { AuthService } from '../../core/services/auth.service';
     }
     .border-bottom-important {
       border-bottom: 1px solid black !important;
+    }
+
+    ::ng-deep .p-tooltip {
+        .p-tooltip-text {
+            color: var(--text-color);
+        }
     }
     `
 })
