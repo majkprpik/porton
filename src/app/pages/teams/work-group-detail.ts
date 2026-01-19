@@ -594,6 +594,7 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
             i {
               color: red;
               font-size: 1rem;
+              filter: drop-shadow(0 0 2px white);
             }
         }
     `

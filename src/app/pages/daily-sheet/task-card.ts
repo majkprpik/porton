@@ -165,6 +165,7 @@ import { DataService } from '../../core/services/data.service';
       i {
         color: red;
         font-size: 0.875rem;
+        filter: drop-shadow(0 0 2px white);
       }
     }
   `
