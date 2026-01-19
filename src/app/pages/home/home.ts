@@ -409,34 +409,8 @@ export class Home implements OnInit, OnDestroy {
     groupedHouses = signal<{ type: HouseType; houses: House[] }[]>([]);
     groupedHousesByStatus = signal<{ status: string; houses: House[] }[]>([]);
 
-    specialLocations: SpecialLocation[] = [
-        { name: 'Zgrada', type: 'building' },
-        { name: 'Parcela', type: 'parcel' }
-    ];
-
-    locationOptions: (House | SpecialLocation)[] = [];
-
-    isOccupancyChartVisible: boolean = false; 
-    occupancyMetrics = [
-        { name: 'Occupancy', value: 'occupancy' },
-    ]
-
-    // Form fields
-    selectedLocation: House | SpecialLocation | null = null;
-    selectedHouse: House | null = null;
-    faultDescription: string = '';
-    locationType: string = 'house';
-
-    // Form fields for Unscheduled task
-    selectedLocationForTask: House | SpecialLocation | null = null;
-    selectedHouseForTask: House | null = null;
-    locationTypeForTask: string = 'house';
-    selectedTaskType: TaskType | null = null;
-    taskDescription: string = '';
     tasks: Task[] = [];
-
     isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
-
     pinnedCharts: any[] = [];
 
     private destroy$ = new Subject<void>();
@@ -495,7 +469,6 @@ export class Home implements OnInit, OnDestroy {
             this.houses.set(filteredHouses);
             this.filteredHouses.set(filteredHouses);
 
-            this.updateLocationOptions();
             this.applyFilters();
         });
     }
@@ -508,58 +481,9 @@ export class Home implements OnInit, OnDestroy {
         });
     }
 
-    @HostListener('document:click', ['$event'])
-    handleDocumentClick(event: MouseEvent) {
-        // Check if click is outside any house card and expanded content
-        const clickedElement = event.target as HTMLElement;
-        if (!clickedElement.closest('.house-card') && !clickedElement.closest('.expanded-content')) {
-            this.expandedHouseId = null;
-        }
-    }
-
     handleContainerClick(event: Event) {
         // Prevent document click listener from handling container clicks
         event.stopPropagation();
-    }
-
-    // Handle location change in fault report dialog
-    onLocationChange(event: any) {
-        const selection = event.value;
-        if (selection && 'type' in selection) {
-            // This is a special location
-            this.locationType = selection.type;
-            this.selectedHouse = null;
-        } else {
-            // This is a house
-            this.locationType = 'house';
-            this.selectedHouse = selection;
-        }
-    }
-
-    // Handle location change in Unscheduled task dialog
-    onLocationChangeForTask(event: any) {
-        const selection = event.value;
-        if (selection && 'type' in selection) {
-            // This is a special location
-            this.locationTypeForTask = selection.type;
-            this.selectedHouseForTask = null;
-        } else {
-            // This is a house
-            this.locationTypeForTask = 'house';
-            this.selectedHouseForTask = selection;
-        }
-    }
-
-    updateLocationOptions() {
-        this.locationOptions = [...this.specialLocations, ...this.houses()];
-    }
-
-    isFormValid(): boolean {
-        return !!this.selectedLocation;
-    }
-
-    isTaskFormValid(): boolean {
-        return !!this.selectedLocationForTask && !!this.selectedTaskType;
     }
 
     applyFilters() {
