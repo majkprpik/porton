@@ -498,6 +498,8 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
 
                 .next-reservation-date {
                     height: 20px;
+                    display: flex;
+                    flex-direction: column;
                 }
 
                 .description {
