@@ -305,12 +305,8 @@ interface SpecialLocation {
                         }
                     }
                                         
-                    .chart-row:has(.pinned-container:only-child) {
-                        grid-template-columns: 1fr;
-                    }
-
-                    .chart-row .pinned-container:nth-last-child(1):nth-child(odd):not(:only-child) {
-                        grid-column: span 2;
+                    .chart-row .pinned-container:last-child:nth-child(odd) {
+                        grid-column: 1;
                     }
                 }
 

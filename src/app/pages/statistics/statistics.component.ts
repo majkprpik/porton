@@ -40,12 +40,12 @@ import { Chart } from '../../core/models/data.models';
       margin-bottom: 20px;
 
       .chart-row {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 10px;
+        width: 100%;
 
         .chart-container {
-          flex: 1 1 45%;
           min-height: 600px;
           background: var(--glass-bg);
           backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -55,13 +55,17 @@ import { Chart } from '../../core/models/data.models';
           border-radius: 10px;
           padding: 20px;
           box-sizing: border-box;
+
+          &:last-child:nth-child(odd) {
+            grid-column: 1;
+          }
         }
       }
     }
 
     @media (max-width: 768px) {
-      .statistics-container .chart-row .chart-container {
-        flex: 1 1 100%;
+      .statistics-container .chart-row {
+        grid-template-columns: 1fr;
       }
     }
   `,
