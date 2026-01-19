@@ -2,7 +2,7 @@ import { LockedTeam, Profile, Task, TaskProgressTypeName, WorkGroup as WorkGroup
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { WorkGroup } from './work-group';
+import { WorkGroup } from './work-group.component';
 import { combineLatest, from, of, Subject } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { catchError, switchMap, takeUntil } from 'rxjs/operators';

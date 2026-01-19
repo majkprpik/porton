@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { TaskGroupComponent } from './task-group';
+import { TaskGroupComponent } from './task-group.component';
 import { Task, House, WorkGroupTask, TaskProgressTypeName } from '../../core/models/data.models';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';

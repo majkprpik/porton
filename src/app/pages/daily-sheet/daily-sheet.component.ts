@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { TasksComponent } from './tasks';
-import { WorkGroups } from './work-groups';
-import { StaffComponent } from './staff';
+import { TasksComponent } from './tasks.component';
+import { WorkGroups } from './work-groups.component';
+import { StaffComponent } from './staff.component';
 import { CommonModule } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
 @Component({

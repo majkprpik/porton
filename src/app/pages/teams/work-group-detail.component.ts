@@ -11,7 +11,7 @@ import { TaskService } from '../../core/services/task.service';
 import { TasksIndexSortPipe } from '../../shared/pipes/tasks-index-sort.pipe';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProfileService } from '../../core/services/profile.service';
-import { StaffCardComponent } from '../daily-sheet/staff-card';
+import { StaffCardComponent } from '../daily-sheet/staff-card.component';
 import { AuthService } from '../../core/services/auth.service';
 import { WorkGroupService } from '../../core/services/work-group.service';
 import { DataService } from '../../core/services/data.service';

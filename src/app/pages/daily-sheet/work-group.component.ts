@@ -2,9 +2,9 @@ import { Component, Input, Output, EventEmitter, OnInit, ViewChild } from '@angu
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { Task, Profile, WorkGroup as WorkGroupObject, WorkGroupTask, WorkGroupProfile, TaskProgressTypeName } from '../../core/models/data.models';
-import { TaskCardComponent } from './task-card';
+import { TaskCardComponent } from './task-card.component';
 import { TagModule } from 'primeng/tag';
-import { StaffCardComponent } from './staff-card';
+import { StaffCardComponent } from './staff-card.component';
 import { MenuItem } from 'primeng/api';
 import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
 import { combineLatest, Subject, takeUntil } from 'rxjs';

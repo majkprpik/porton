@@ -3,8 +3,8 @@ import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { combineLatest, filter, fromEvent, Subscription } from 'rxjs';
-import { AppTopbar } from './app.topbar';
-import { AppSidebar } from './app.sidebar';
+import { AppTopbar } from './app-topbar.component';
+import { AppSidebar } from './app-sidebar.component';
 import { LayoutService } from '../services/layout.service';
 import { SpeedDialModule } from 'primeng/speeddial';
 import { DialogModule } from 'primeng/dialog';

@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { StyleClassModule } from 'primeng/styleclass';
-import { AppConfigurator } from './app.configurator';
+import { AppConfigurator } from './app-configurator.component';
 import { LayoutService } from '../services/layout.service';
 
 @Component({

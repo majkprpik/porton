@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { StaffGroups } from './staff-groups';
+import { StaffGroups } from './staff-groups.component';
 
 @Component({
   selector: 'app-staff',

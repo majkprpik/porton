@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { AppLayout } from './app/layout/components/app.layout';
-import { Documentation } from './app/pages/documentation/documentation';
-import { DailySheetComponent } from './app/pages/daily-sheet/daily-sheet';
-import { Home } from './app/pages/home/home';
-import { Teams } from './app/pages/teams/teams';
-import { WorkGroupDetail } from './app/pages/teams/work-group-detail';
+import { AppLayout } from './app/layout/components/app-layout.component';
+import { Documentation } from './app/pages/documentation/documentation.component';
+import { DailySheetComponent } from './app/pages/daily-sheet/daily-sheet.component';
+import { Home } from './app/pages/home/home.component';
+import { Teams } from './app/pages/teams/teams.component';
+import { WorkGroupDetail } from './app/pages/teams/work-group-detail.component';
 import { ReservationsComponent } from './app/pages/reservations/reservations.component';
 import { AuthGuard } from './app/core/guards/auth.guard';
 import { RoleGuard } from './app/core/guards/role.guard';
@@ -17,7 +17,7 @@ import { TaskArchiveComponent } from './app/pages/task-archive/task-archive.comp
 import { WorkScheduleComponent } from './app/pages/work-schedule/work-schedule.component';
 import { ConsoleMessagesComponent } from './app/pages/console-messages/console-messages.component';
 import { ProfileRoles } from './app/core/models/data.models';
-import { Login } from './app/pages/auth/login';
+import { Login } from './app/pages/auth/login.component';
 import { LoginGuard } from './app/core/guards/login.guard';
 import { ContentManagementComponent } from './app/pages/content-management/content-management.component';
 import { PrivacyPolicyComponent } from './app/pages/privacy-policy/privacy-policy.component';

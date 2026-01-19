@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { StaffGroup } from './staff-group';
+import { StaffGroup } from './staff-group.component';
 import { ChipModule } from 'primeng/chip';
 import { Profile, ProfileRole, ProfileRoles } from '../../core/models/data.models';
 import { CommonModule } from '@angular/common';

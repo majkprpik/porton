@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TaskCardComponent } from './task-card';
+import { TaskCardComponent } from './task-card.component';
 import { Task, TaskProgressTypeName, TaskType, WorkGroupTask } from '../../core/models/data.models';
 import { PanelModule } from 'primeng/panel';
 import { BadgeModule } from 'primeng/badge';

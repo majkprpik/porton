@@ -1,7 +1,7 @@
 import { TaskService } from '../../core/services/task.service';
 import { Component } from '@angular/core';
 import { House, Task, TaskType } from '../../core/models/data.models';
-import { TaskCardComponent } from '../daily-sheet/task-card';
+import { TaskCardComponent } from '../daily-sheet/task-card.component';
 import { DatePipe } from '@angular/common';
 import { MultiSelect } from 'primeng/multiselect';
 import { TranslateModule } from '@ngx-translate/core';

@@ -3,7 +3,7 @@ import { ConfirmationService, MenuItem } from 'primeng/api';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { StyleClassModule } from 'primeng/styleclass';
-import { AppConfigurator } from './app.configurator';
+import { AppConfigurator } from './app-configurator.component';
 import { LayoutService } from '../services/layout.service';
 import { MenuModule } from 'primeng/menu';
 import { Menu } from 'primeng/menu';

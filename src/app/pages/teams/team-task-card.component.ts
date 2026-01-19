@@ -7,8 +7,8 @@ import { Router } from '@angular/router';
 import { ChipModule } from 'primeng/chip';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { StaffCardComponent } from '../daily-sheet/staff-card';
-import { TaskCardComponent } from '../daily-sheet/task-card';
+import { StaffCardComponent } from '../daily-sheet/staff-card.component';
+import { TaskCardComponent } from '../daily-sheet/task-card.component';
 import { TasksIndexSortPipe } from '../../shared/pipes/tasks-index-sort.pipe';
 
 @Component({

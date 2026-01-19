@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
-import { AppMenuitem } from './app.menuitem';
+import { AppMenuitem } from './app-menuitem.component';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { Profile, ProfileRole, ProfileRoles } from '../../core/models/data.models';
 import { ProfileService } from '../../core/services/profile.service';

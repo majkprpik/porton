@@ -4,7 +4,7 @@ import { PanelModule } from 'primeng/panel';
 import { ChipModule } from 'primeng/chip';
 import { Profile, WorkGroup, WorkGroupProfile, ProfileRole, ProfileRoles } from '../../core/models/data.models';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
-import { StaffCardComponent } from './staff-card';
+import { StaffCardComponent } from './staff-card.component';
 import { WorkGroupService } from '../../core/services/work-group.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
