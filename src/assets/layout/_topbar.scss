@@ -142,11 +142,43 @@
     .layout-config-menu {
         display: flex;
         gap: 1rem;
+        align-items: center;
 
         .relative {
             display: flex;
             flex-direction: row;
             gap: 15px;
+        }
+
+        .language-switcher {
+            .p-togglebutton {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.8rem;
+                font-weight: 600;
+                background: transparent;
+                border: 1px solid var(--glass-border);
+                color: var(--glass-text-secondary);
+                transition: var(--glass-transition);
+
+                &:first-child {
+                    border-radius: 1rem 0 0 1rem;
+                }
+
+                &:last-child {
+                    border-radius: 0 1rem 1rem 0;
+                }
+
+                &:hover:not(.p-togglebutton-checked) {
+                    background: var(--glass-bg-hover);
+                    color: var(--glass-text-primary);
+                }
+
+                &.p-togglebutton-checked {
+                    background: var(--primary-color);
+                    border-color: var(--primary-color);
+                    color: var(--primary-contrast-color);
+                }
+            }
         }
     }
 }

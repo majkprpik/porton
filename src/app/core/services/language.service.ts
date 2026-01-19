@@ -10,8 +10,8 @@ export class LanguageService {
   $selectedLanguage = new BehaviorSubject<Language>({ code: 'en', name: 'en' });
   
   languages = [
-    { code: 'en', name: 'en' },
-    { code: 'hr', name: 'hr' }
+    { code: 'en', name: 'EN' },
+    { code: 'hr', name: 'HR' }
   ];
 
   constructor(private translateService: TranslateService) { 

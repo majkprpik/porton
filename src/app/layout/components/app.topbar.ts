@@ -9,10 +9,10 @@ import { MenuModule } from 'primeng/menu';
 import { Menu } from 'primeng/menu';
 import { AuthService } from '../../core/services/auth.service';
 import { ButtonModule } from 'primeng/button';
-import { Language, Profile, ProfileRole } from '../../core/models/data.models';
+import { Profile, ProfileRole } from '../../core/models/data.models';
 import { LanguageService } from '../../core/services/language.service';
 import { FormsModule } from '@angular/forms';
-import { SelectModule } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { ProfileService } from '../../core/services/profile.service';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
@@ -29,7 +29,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         MenuModule,
         ButtonModule,
         FormsModule,
-        SelectModule,
+        SelectButtonModule,
     ],
     template: ` <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
@@ -40,11 +40,14 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
 
         <div class="layout-topbar-actions">
             <div class="layout-config-menu">
-                <p-select 
-                    [options]="languageService.languages" 
-                    [(ngModel)]="selectedLanguage" 
+                <p-selectbutton
+                    [options]="languageService.languages"
+                    [(ngModel)]="selectedLanguageCode"
                     optionLabel="name"
+                    optionValue="code"
                     (onChange)="changeLanguage()"
+                    [allowEmpty]="false"
+                    styleClass="language-switcher"
                 />
             
                 <button type="button" class="layout-topbar-action" (click)="toggleDarkMode()">
@@ -94,7 +97,7 @@ export class AppTopbar {
     profileRoles: ProfileRole[] = [];
     storedUserId: string | null = '';
 
-    selectedLanguage: Language = { code: '', name: ''};
+    selectedLanguageCode: string = '';
     
     private destroy$ = new Subject<void>();
 
@@ -121,7 +124,7 @@ export class AppTopbar {
         .subscribe({
             next: ([selectedLanguage, profiles, profileRoles]) => {
                 this.storedUserId = this.authService.getStoredUserId();
-                this.selectedLanguage = selectedLanguage;
+                this.selectedLanguageCode = selectedLanguage.code;
                 this.profiles = profiles.filter(p => !p.is_deleted);
                 this.profileRoles = profileRoles;
             },
@@ -137,7 +140,8 @@ export class AppTopbar {
     }
 
     changeLanguage(){
-        this.languageService.setLanguage(this.selectedLanguage, true);
+        const language = this.languageService.languages.find(l => l.code === this.selectedLanguageCode);
+        this.languageService.setLanguage(language, true);
     }
 
     toggleDarkMode() {
