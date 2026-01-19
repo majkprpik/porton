@@ -114,7 +114,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       width: 23px;
       height: 23px;
       background: var(--primary-color);
-      color: var(--primary-color-text);
+      color: #000000;
       border-radius: 1rem;
       font-size: 0.75rem;
       font-weight: 700;

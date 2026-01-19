@@ -164,7 +164,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     height: 1.75rem;
                     padding: 0 0.5rem;
                     background: var(--primary-color);
-                    color: var(--primary-color-text);
+                    color: #000000;
                     border-radius: 1rem;
                     font-size: 0.9rem;
                     font-weight: 700;

@@ -39,7 +39,8 @@ import { ProfileService } from '../../core/services/profile.service';
       &:hover {
         transform: scale(1.03);
         cursor: pointer;
-        background-color: var(--p-gray-200);
+        background-color: var(--surface-hover);
+        color: var(--text-color);
         box-shadow: var(--card-shadow);
       }
 
