@@ -570,8 +570,8 @@ interface CellData {
                         &.dark-mode {
                             color: #fff;
                         }
-                        
-                        font-weight: bold;
+
+                        font-weight: 500;
                         cursor: pointer;
                         width: 120px;
                         max-width: 120px;
