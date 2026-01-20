@@ -252,6 +252,16 @@
             "ROLE": "Role",
             "ACCESS-TOKEN": "Access token",
             "FCM-TOKEN": "FCM token"
+        },
+        "SETTINGS": {
+            "TITLE": "Settings",
+            "PROFILE": "Profile",
+            "APPEARANCE": "Appearance",
+            "THEME": "Theme",
+            "DARK": "Dark",
+            "LIGHT": "Light",
+            "LANGUAGE": "Language",
+            "CUSTOMIZE": "Customize"
         }
     },
     "TEAMS": {

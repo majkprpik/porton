@@ -1,22 +1,7 @@
 @use 'mixins' as *;
 
 .layout-sidebar {
-    position: fixed;
-    width: 20rem;
-    height: calc(100vh - 8rem);
-    z-index: 999;
-    overflow-y: auto;
-    user-select: none;
-    top: 6rem;
-    left: 2rem;
-    transition:
-        transform var(--layout-section-transition-duration),
-        left var(--layout-section-transition-duration),
-        var(--glass-transition);
-
     @include glass-panel();
-    border-radius: var(--content-border-radius);
-    padding: 0.5rem 1.5rem;
 }
 
 .layout-menu {
@@ -73,16 +58,22 @@
             border-radius: var(--content-border-radius);
             border: 1px solid transparent;
             transition: var(--glass-transition);
+            white-space: nowrap;
+            overflow: hidden;
 
             .layout-menuitem-icon {
-                margin-right: 0.5rem;
+                font-size: 1.35rem;
+                min-width: 1.35rem;
+                margin-right: 0;
                 color: var(--glass-text-secondary);
+                transition: font-size 0.3s ease, margin 0.3s ease;
             }
 
             .layout-submenu-toggler {
                 font-size: 75%;
                 margin-left: auto;
                 transition: transform var(--element-transition-duration);
+                opacity: 0;
             }
 
             &.active-route {
@@ -151,24 +142,4 @@
             }
         }
     }
-}
-
-.layout-submenu-enter-from,
-.layout-submenu-leave-to {
-    max-height: 0;
-}
-
-.layout-submenu-enter-to,
-.layout-submenu-leave-from {
-    max-height: 1000px;
-}
-
-.layout-submenu-leave-active {
-    overflow: hidden;
-    transition: max-height 0.45s cubic-bezier(0, 1, 0, 1);
-}
-
-.layout-submenu-enter-active {
-    overflow: hidden;
-    transition: max-height 1s ease-in-out;
 }

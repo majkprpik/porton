@@ -39,18 +39,12 @@
 
         &.layout-static {
             .layout-main-container {
-                margin-left: 22rem;
+                margin-left: 5rem;
             }
 
             &.layout-static-inactive {
-                .layout-sidebar {
-                    transform: translateX(-100%);
-                    left: 0;
-                }
-
                 .layout-main-container {
-                    margin-left: 0;
-                    padding-left: 2rem;
+                    margin-left: 5rem;
                 }
             }
         }

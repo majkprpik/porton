@@ -3,8 +3,8 @@ import { Component, ElementRef, Renderer2, signal, ViewChild } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { combineLatest, filter, fromEvent, Subscription } from 'rxjs';
-import { AppTopbar } from './app-topbar.component';
 import { AppSidebar } from './app-sidebar.component';
+import { AppConfigurator } from './app-configurator.component';
 import { LayoutService } from '../services/layout.service';
 import { SpeedDialModule } from 'primeng/speeddial';
 import { DialogModule } from 'primeng/dialog';
@@ -26,6 +26,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { WorkGroupService } from '../../core/services/work-group.service';
 import { TabsModule } from 'primeng/tabs';
 import { SelectModule } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { LanguageService } from '../../core/services/language.service';
 import { PushNotificationsService } from '../../core/services/push-notifications.service';
 import { MultiSelect } from 'primeng/multiselect';
@@ -39,8 +40,8 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
     standalone: true,
     imports: [
         CommonModule,
-        AppTopbar,
         AppSidebar,
+        AppConfigurator,
         RouterModule,
         SpeedDialModule,
         DialogModule,
@@ -56,12 +57,12 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         TranslateModule,
         TabsModule,
         SelectModule,
+        SelectButtonModule,
         MultiSelect,
     ],
     providers: [MessageService, ConfirmationService],
-    template: ` 
+    template: `
     <div class="layout-wrapper" [ngClass]="containerClass" #dragBoundary>
-        <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">
             <div class="layout-main">
@@ -456,34 +457,70 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         </p-dialog>
 
         <p-dialog
-            [header]="'APP-LAYOUT.LOGGED-USER-DETAILS.TITLE' | translate"
-            [(visible)]="isLoggedUserDetailsVisible"  
+            [header]="'APP-LAYOUT.SETTINGS.TITLE' | translate"
+            [(visible)]="isLoggedUserDetailsVisible"
             [modal]="true"
-            [style]="{ wdith: '30rem' }"
+            [style]="{ width: '400px' }"
+            styleClass="settings-dialog"
         >
-            <div style="max-width: 400px;">
-                <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.NAME' | translate }}:</b> {{ loggedUser?.first_name }}</div>
-                <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.EMAIL' | translate }}:</b> {{ authService.getStoredUsername() || '' }}</div>
-                <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.PHONE' | translate }}:</b> {{ loggedUser?.phone_number }}</div>
-                <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.ROLE' | translate }}:</b> {{ profileService.getProfileRoleNameById(loggedUser?.role_id ?? 0) }}</div>
-                @if(profileService.getProfileById(storedUserId)?.is_test_user){
-                    <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.ACCESS-TOKEN' | translate }}:</b> </div>
-                    <div class="new-profile-row"><b>{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.FCM-TOKEN' | translate }}:</b> </div> 
-                }
+            <div class="settings-content">
+                <!-- User Profile Section -->
+                <div class="settings-section">
+                    <h4>{{ 'APP-LAYOUT.SETTINGS.PROFILE' | translate }}</h4>
+                    <div class="profile-info">
+                        <div class="profile-row"><span class="label">{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.NAME' | translate }}:</span> <span>{{ loggedUser?.first_name }}</span></div>
+                        <div class="profile-row"><span class="label">{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.EMAIL' | translate }}:</span> <span>{{ authService.getStoredUsername() || '' }}</span></div>
+                        <div class="profile-row"><span class="label">{{ 'APP-LAYOUT.LOGGED-USER-DETAILS.ROLE' | translate }}:</span> <span>{{ profileService.getProfileRoleNameById(loggedUser?.role_id ?? 0) }}</span></div>
+                    </div>
+                </div>
+
+                <!-- Appearance Section -->
+                <div class="settings-section">
+                    <h4>{{ 'APP-LAYOUT.SETTINGS.APPEARANCE' | translate }}</h4>
+
+                    <div class="setting-row">
+                        <span class="setting-label">{{ 'APP-LAYOUT.SETTINGS.THEME' | translate }}</span>
+                        <button type="button" class="theme-toggle-btn" (click)="toggleDarkMode()">
+                            <i [ngClass]="{ 'pi': true, 'pi-moon': layoutService.isDarkTheme(), 'pi-sun': !layoutService.isDarkTheme() }"></i>
+                            <span>{{ layoutService.isDarkTheme() ? ('APP-LAYOUT.SETTINGS.DARK' | translate) : ('APP-LAYOUT.SETTINGS.LIGHT' | translate) }}</span>
+                        </button>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="setting-label">{{ 'APP-LAYOUT.SETTINGS.LANGUAGE' | translate }}</span>
+                        <p-selectbutton
+                            [options]="languageService.languages"
+                            [(ngModel)]="selectedLanguageCode"
+                            optionLabel="name"
+                            optionValue="code"
+                            (onChange)="changeLanguage()"
+                            [allowEmpty]="false"
+                            styleClass="language-switcher-compact"
+                        />
+                    </div>
+                </div>
+
+                <!-- Theme Customization Section -->
+                <div class="settings-section">
+                    <h4>{{ 'APP-LAYOUT.SETTINGS.CUSTOMIZE' | translate }}</h4>
+                    <app-configurator />
+                </div>
             </div>
 
             <ng-template pTemplate="footer">
-                <div class="w-full flex justify-evenly">
-                    <button 
-                        pButton 
-                        [severity]="'primary'"
-                        [label]="'BUTTONS.DETAILS' | translate" 
+                <div class="settings-footer">
+                    <button
+                        pButton
+                        [severity]="'secondary'"
+                        [label]="'BUTTONS.DETAILS' | translate"
+                        icon="pi pi-user"
                         (click)="navigateToProfileDetails()">
                     </button>
-                    <button 
-                        pButton 
+                    <button
+                        pButton
                         [severity]="'danger'"
-                        [label]="'BUTTONS.LOG-OUT' | translate" 
+                        [label]="'BUTTONS.LOG-OUT' | translate"
+                        icon="pi pi-sign-out"
                         (click)="logout()">
                     </button>
                 </div>
@@ -961,16 +998,114 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     padding-bottom: 100px;
                 }
             }
+
+            .settings-content {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .settings-section {
+                h4 {
+                    margin: 0 0 0.75rem 0;
+                    color: var(--text-color);
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    border-bottom: 1px solid var(--surface-border);
+                    padding-bottom: 0.5rem;
+                }
+            }
+
+            .profile-info {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .profile-row {
+                display: flex;
+                gap: 0.5rem;
+                font-size: 0.9rem;
+
+                .label {
+                    color: var(--text-color-secondary);
+                    font-weight: 500;
+                }
+            }
+
+            .setting-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+            }
+
+            .setting-label {
+                color: var(--text-color);
+                font-size: 0.9rem;
+            }
+
+            .theme-toggle-btn {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                border: 1px solid var(--surface-border);
+                border-radius: var(--content-border-radius);
+                background: var(--surface-card);
+                color: var(--text-color);
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                i {
+                    font-size: 1rem;
+                }
+
+                &:hover {
+                    background: var(--surface-hover);
+                    border-color: var(--primary-color);
+                }
+            }
+
+            .settings-footer {
+                display: flex;
+                justify-content: space-between;
+                gap: 1rem;
+                width: 100%;
+            }
+
+            ::ng-deep .settings-dialog {
+                .p-dialog-content {
+                    padding: 1.5rem;
+                }
+
+                app-configurator {
+                    position: static;
+                    display: block;
+                    width: 100%;
+                    padding: 0;
+                    background: transparent;
+                    border: none;
+                    box-shadow: none;
+                }
+
+                .language-switcher-compact {
+                    .p-button {
+                        padding: 0.4rem 0.75rem;
+                        font-size: 0.85rem;
+                    }
+                }
+            }
         `
     ]
 })
 export class AppLayout {
-    overlayMenuOpenSubscription: Subscription;
     menuOutsideClickListener: any;
 
     @ViewChild('fileInput') fileInput!: ElementRef;
     @ViewChild(AppSidebar) appSidebar!: AppSidebar;
-    @ViewChild(AppTopbar) appTopBar!: AppTopbar;
 
     faultReportVisible: boolean = false;
     isUnscheduledTaskVisible: boolean = false;
@@ -1029,6 +1164,7 @@ export class AppLayout {
 
     loggedUser: Profile | undefined = undefined;
     isLoggingOut = false;
+    selectedLanguageCode: string = '';
 
     private visibilityChangeSub!: Subscription;
 
@@ -1044,27 +1180,13 @@ export class AppLayout {
         public authService: AuthService,
         private translateService: TranslateService,
         private workGroupService: WorkGroupService,
-        private languageService: LanguageService,
+        public languageService: LanguageService,
         private pushNotificationsService: PushNotificationsService,
         public houseService: HouseService,
         private errorLogger: ErrorLoggingService,
     ) {
         this.captureConsoleMessages();
         this.onAppVisibilityChange();
-
-        this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
-            if (!this.menuOutsideClickListener) {
-                this.menuOutsideClickListener = this.renderer.listen('document', 'click', (event) => {
-                    if (this.isOutsideClicked(event)) {
-                        this.hideMenu();
-                    }
-                });
-            }
-
-            if (this.layoutService.layoutState().staticMenuMobileActive) {
-                this.blockBodyScroll();
-            }
-        });
 
         this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
             this.hideMenu();
@@ -1120,9 +1242,10 @@ export class AppLayout {
     }
 
     ngOnInit() {
+        this.selectedLanguageCode = this.languageService.getSelectedLanguageCode();
         this.dataService.loadInitialData().subscribe();
         this.pushNotificationsService.requestFirebaseMessaging();
-        this.dataService.listenToDatabaseChanges(); 
+        this.dataService.listenToDatabaseChanges();
 
         this.authService.setupAuthStateListener();
         this.handleNavigationChange();
@@ -1313,14 +1436,6 @@ export class AppLayout {
         }
     }
 
-    isOutsideClicked(event: MouseEvent) {
-        const sidebarEl = document.querySelector('.layout-sidebar');
-        const topbarEl = document.querySelector('.layout-menu-button');
-        const eventTarget = event.target as Node;
-
-        return !(sidebarEl?.isSameNode(eventTarget) || sidebarEl?.contains(eventTarget) || topbarEl?.isSameNode(eventTarget) || topbarEl?.contains(eventTarget));
-    }
-
     hideMenu() {
         this.layoutService.layoutState.update((prev) => ({ ...prev, overlayMenuActive: false, staticMenuMobileActive: false, menuHoverActive: false }));
         if (this.menuOutsideClickListener) {
@@ -1358,10 +1473,6 @@ export class AppLayout {
 
     ngOnDestroy() {
         this.visibilityChangeSub.unsubscribe();
-
-        if (this.overlayMenuOpenSubscription) {
-            this.overlayMenuOpenSubscription.unsubscribe();
-        }
 
         if (this.menuOutsideClickListener) {
             this.menuOutsideClickListener();
@@ -1708,6 +1819,15 @@ export class AppLayout {
     logout(){
         this.resetAllForms();
         this.authService.logout();
+    }
+
+    toggleDarkMode() {
+        this.layoutService.layoutConfig.update((state) => ({ ...state, darkTheme: !state.darkTheme }));
+    }
+
+    changeLanguage() {
+        const language = this.languageService.languages.find(l => l.code === this.selectedLanguageCode);
+        this.languageService.setLanguage(language, true);
     }
 
     resetAllForms(){
