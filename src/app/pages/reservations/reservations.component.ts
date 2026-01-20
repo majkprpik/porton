@@ -566,6 +566,11 @@ interface CellData {
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
+
+                        &.dark-mode {
+                            color: #fff;
+                        }
+                        
                         font-weight: bold;
                         cursor: pointer;
                         width: 120px;
@@ -1055,10 +1060,20 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor);
 
             if (result) {
-                const r = parseInt(result[1], 16);
-                const g = parseInt(result[2], 16);
-                const b = parseInt(result[3], 16);
-                cellData.color = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                let r = parseInt(result[1], 16);
+                let g = parseInt(result[2], 16);
+                let b = parseInt(result[3], 16);
+
+                // Darken colors in dark mode
+                if (this.isNightMode) {
+                    const darkenFactor = 0.6;
+                    r = Math.round(r * darkenFactor);
+                    g = Math.round(g * darkenFactor);
+                    b = Math.round(b * darkenFactor);
+                    cellData.color = `rgb(${r}, ${g}, ${b})`;
+                } else {
+                    cellData.color = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                }
             } else {
                 cellData.color = baseColor;
             }
@@ -1129,7 +1144,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     ): string {
         const classes: string[] = [];
 
-        if (cell.isReserved) classes.push('reserved-cell');
+        if (cell.isReserved) {
+            classes.push('reserved-cell');
+            if (isNightMode) classes.push('dark-mode');
+        }
         if (cell.isPast) classes.push('past-date');
         if (cell.isToday) classes.push('today-column');
 
