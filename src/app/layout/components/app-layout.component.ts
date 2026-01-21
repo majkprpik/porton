@@ -831,45 +831,44 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 height: 350px;
                 padding: 10px;
                 box-sizing: border-box;
-                border: solid 1px #ccc;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 text-align: center;
-                background: #fff;
-                border-radius: 10px;
                 position: relative;
-                transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
-                box-shadow:
-                    0 3px 1px -2px rgba(0, 0, 0, 0.2),
-                    0 2px 2px 0 rgba(0, 0, 0, 0.14),
-                    0 1px 5px 0 rgba(0, 0, 0, 0.12);
+                transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1), var(--glass-transition);
 
                 .example-handle {
                     position: absolute;
                     top: 17px;
                     left: 15px;
-                    color: #ccc;
+                    color: var(--text-color-secondary);
                     cursor: move;
                     width: 24px;
                     height: 24px;
+                    transition: color 0.2s ease;
+
+                    &:hover {
+                        color: var(--text-color);
+                    }
                 }
 
                 .close-notes-window {
                     position: absolute;
                     top: 13px;
                     right: 12px;
-                    color: #ccc;
+                    color: var(--text-color-secondary);
                     cursor: pointer;
                     width: 32px;
                     height: 32px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border-radius: 5px;
+                    border-radius: var(--content-border-radius);
+                    transition: background-color 0.2s ease, color 0.2s ease;
 
                     &:hover {
-                        background-color: red;
+                        background-color: var(--red-500);
                         cursor: pointer;
 
                         i {
@@ -887,46 +886,45 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 width: 424px;
                 height: 340px;
                 box-sizing: border-box;
-                border: solid 1px #ccc;
-                color: rgba(0, 0, 0, 0.87);
+                color: var(--text-color);
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 text-align: center;
-                background: #fff;
-                border-radius: 10px;
                 position: relative;
-                transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
-                box-shadow:
-                    0 3px 1px -2px rgba(0, 0, 0, 0.2),
-                    0 2px 2px 0 rgba(0, 0, 0, 0.14),
-                    0 1px 5px 0 rgba(0, 0, 0, 0.12);
+                transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1), var(--glass-transition);
 
                 .example-handle {
                     position: absolute;
                     top: 12px;
                     left: 12px;
-                    color: #ccc;
+                    color: var(--text-color-secondary);
                     cursor: move;
                     width: 24px;
                     height: 24px;
+                    transition: color 0.2s ease;
+
+                    &:hover {
+                        color: var(--text-color);
+                    }
                 }
 
                 .close-arrivals-and-departures-window {
                     position: absolute;
                     top: 8px;
                     right: 8px;
-                    color: #ccc;
+                    color: var(--text-color-secondary);
                     cursor: pointer;
                     width: 32px;
                     height: 32px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border-radius: 5px;
+                    border-radius: var(--content-border-radius);
+                    transition: background-color 0.2s ease, color 0.2s ease;
 
                     &:hover {
-                        background-color: red;
+                        background-color: var(--red-500);
                         cursor: pointer;
 
                         i {
