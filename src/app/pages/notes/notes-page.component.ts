@@ -33,9 +33,9 @@ import { AuthService } from '../../core/services/auth.service';
             @if(isToday(selectedDate)){
               <span [ngStyle]="{'height': '20px'}">{{ 'APP-LAYOUT.NOTES.TODAY' | translate }}</span>
             } @else {
-              <p-datePicker 
-                [(ngModel)]="selectedDate" 
-                [showIcon]="true" 
+              <p-datePicker
+                [(ngModel)]="selectedDate"
+                [showIcon]="true"
                 dateFormat="dd/mm/yy"
                 [inputStyle]="{
                   height: '20px',
@@ -59,10 +59,16 @@ import { AuthService } from '../../core/services/auth.service';
 
       <div class="notes-content" #messagesContainer>
         @if(!notes.length && !areNotesLoaded){
-          <span>{{ 'APP-LAYOUT.NOTES.LOADING-NOTES' | translate }}</span>
+          <div class="empty-state">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>{{ 'APP-LAYOUT.NOTES.LOADING-NOTES' | translate }}</span>
+          </div>
         }
         @if(areNotesLoaded && notesForSelectedDate.length == 0){
-          <span>{{ 'APP-LAYOUT.NOTES.NO-NOTES' | translate }}</span>
+          <div class="empty-state">
+            <i class="pi pi-comments"></i>
+            <span>{{ 'APP-LAYOUT.NOTES.NO-NOTES' | translate }}</span>
+          </div>
         }
         @if(notesForSelectedDate.length > 0){
           @for(note of notesForSelectedDate; track note?.id || i; let i = $index) {
@@ -101,7 +107,7 @@ import { AuthService } from '../../core/services/auth.service';
       </div>
 
       <div class="notes-footer">
-        <textarea 
+        <textarea
           [placeholder]="'APP-LAYOUT.NOTES.ADD-NOTE' | translate"
           [(ngModel)]="note"
           (keydown.enter)="addNote($event)"
@@ -109,47 +115,46 @@ import { AuthService } from '../../core/services/auth.service';
           [mention]="profileNames"
           [mentionConfig]="{ dropUp: true }"
         ></textarea>
+        <p-button
+          icon="pi pi-send"
+          [rounded]="true"
+          [text]="true"
+          [disabled]="!note.trim() || daysIndex < 0"
+          (onClick)="addNote($event)"
+        ></p-button>
       </div>
     </div>
   `,
   styles: `
-  .notes-container{
-    height: 80vh;
-    border-radius: 10px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    .notes-container {
+      height: calc(100vh - 120px);
+      display: flex;
+      flex-direction: column;
+    }
 
-    .header-container{
+    .header-container {
       width: 100%;
       height: 60px;
       display: flex;
-      flex-direction: row;
       align-items: center;
       justify-content: center;
-      border-radius: 10px 10px 0 0;
-      border-bottom: 1px solid #e5e7eb;
-      background-color: var(--surface-ground);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border-bottom: 1px solid var(--glass-border);
 
-      .notes-header{
-        width: 80%;
+      .notes-header {
+        width: 300px;
         display: flex;
-        flex-direction: row;
         align-items: center;
         justify-content: space-between;
-        padding: 0 10px 0 10px;
 
-        .notes-title{
+        .notes-title {
           display: flex;
           flex-direction: column;
           align-items: center;
 
-          #notes{
+          #notes {
             font-size: 21px;
             font-weight: bold;
           }
@@ -157,31 +162,47 @@ import { AuthService } from '../../core/services/auth.service';
       }
     }
 
-    .notes-content{
-      height: calc(100% - 100px);
+    .notes-content {
+      flex: 1;
       box-sizing: border-box;
-      padding: 10px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
       overflow-x: hidden;
       word-wrap: break-word;
       align-items: flex-start;
-      background-color: var(--surface-card);
       scrollbar-gutter: stable;
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 
-      .date-sent{
+      .empty-state {
+        width: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        color: var(--text-color-secondary);
+
+        i {
+          font-size: 3rem;
+          opacity: 0.4;
+        }
+      }
+
+      .date-sent {
         width: 100%;
         display: flex;
-        flex-direction: row;
         align-items: center;
         justify-content: center;
 
-        span{
+        span {
           width: 200px;
           color: var(--text-color-secondary);
           display: flex;
-          flex-direction: row;
           align-items: center;
           justify-content: center;
         }
@@ -198,39 +219,50 @@ import { AuthService } from '../../core/services/auth.service';
       }
     }
 
-    .notes-footer{
-      height: 50px;
+    .left-half-line, .right-half-line {
+      height: 1px;
+      background-color: var(--glass-border);
       width: 100%;
-      border-radius: 0 0 10px 10px;
-      border-top: 1px solid #e5e7eb;
+    }
 
-      textarea{
-        width: 100%;
-        height: 100%;
-        border-radius: 0 0 10px 10px;
+    .notes-footer {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0 1rem;
+      border-top: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+
+      textarea {
+        flex: 1;
+        height: 40px;
+        border: none;
+        border-radius: 8px;
         resize: none;
-        box-sizing: border-box; 
-        padding: 10px;
+        box-sizing: border-box;
+        padding: 10px 14px;
         outline: none;
+        background: transparent;
+        color: var(--text-color);
+        font-family: inherit;
+        font-size: 14px;
+
+        &::placeholder {
+          color: var(--text-color-secondary);
+          opacity: 0.7;
+        }
 
         &:disabled {
-          background-color: var(--surface-ground);
+          opacity: 0.5;
+          cursor: not-allowed;
         }
       }
     }
-  }
-
-  .left-half-line{
-    height: 1px;
-    background-color: var(--surface-ground); 
-    width: 100%;
-  }
-
-  .right-half-line{
-    height: 1px;
-    background-color: var(--surface-ground); 
-    width: 100%;
-  }`
+  `
 })
 export class NotesPageComponent {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;

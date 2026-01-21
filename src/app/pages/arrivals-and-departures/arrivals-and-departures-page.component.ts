@@ -117,7 +117,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         <i class="pi pi-sign-in mr-2"></i>
         <h3>{{ 'APP-LAYOUT.ARRIVALS-AND-DEPARTURES.ARRIVALS' | translate }}</h3>
       </div>
-      <div class="section-content" [ngStyle]="{'border-left': '1px solid var(--surface-border)'}">
+      <div class="section-content">
         @if(!arrivals.length){
           <div class="empty-message">
             <i class="pi pi-info-circle"></i>
@@ -176,82 +176,122 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
   `,
   styles: `
   ::ng-deep .p-checkbox.p-disabled.p-checkbox-checked .p-checkbox-box {
-    background-color: var(--primary-color) !important;  /* Light gray background */
+    background-color: var(--primary-color) !important;
   }
 
   ::ng-deep .p-checkbox.p-disabled.p-checkbox-checked .p-checkbox-icon {
     color: white !important;
   }
 
-  .arrivals-and-departures{
-    margin-top: 20px;
+  .arrivals-and-departures {
+    min-height: calc(100vh - 120px);
     display: flex;
-    flex-direction: column; 
-    align-items: center;
+    flex-direction: column;
     width: 100%;
-    gap: 50px;
-    padding-bottom: 100px;
 
-    .header{
-      width: 100%;
+    .header {
       display: flex;
-      flex-direction: row;
       justify-content: center;
       align-items: center;
       gap: 50px;
+      padding: 1rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border-bottom: 1px solid var(--glass-border);
 
-      .selected-date{
+      .selected-date {
         width: 150px;
         display: flex;
-        flex-direction: row;
         justify-content: center;
         align-items: center;
       }
     }
 
-    .departures-side, .arrivals-side{
-      width: 100%;
+    .departures-side, .arrivals-side {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 
-      .name-with-icon{
+      .name-with-icon {
         display: flex;
-        flex-direction: row;
         align-items: center;
+        justify-content: center;
         gap: 10px;
-        margin-bottom: 20px;
+        padding: 1rem;
+        border-bottom: 1px solid var(--glass-border);
 
-        h3{
+        i {
+          font-size: 1.25rem;
+          color: var(--p-primary-color);
+        }
+
+        h3 {
           margin: 0;
+          font-size: 1.1rem;
+          font-weight: 600;
         }
       }
 
-      .section-content{
-        width: 100%;
+      .section-content {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
 
-        .empty-message{
-          width: 100%;
+        .empty-message {
+          height: 100%;
+          min-height: 150px;
           display: flex;
-          flex-direction: row;
+          flex-direction: column;
           justify-content: center;
           align-items: center;
-          gap: 10px;
+          gap: 0.75rem;
+          color: var(--text-color-secondary);
+
+          i {
+            font-size: 2rem;
+            opacity: 0.4;
+          }
         }
 
-        .p-field-row{
-          width: 100%;
+        .p-field-row {
           display: flex;
-          flex-direction: row;
           justify-content: center;
           align-items: center;
-          gap: 10px;
+          gap: 1rem;
+          padding: 0.5rem 0;
         }
 
-        .house-container{
-          .house-number{
-            font-weight: bold;
-            color: var(--primary-color);
+        .house-container {
+          min-width: 100px;
+
+          .house-number {
+            font-weight: 600;
+            color: var(--p-primary-color);
+          }
+        }
+
+        .time-container {
+          width: 80px;
+        }
+      }
+    }
+
+    .departures-side {
+      border-bottom: 1px solid var(--glass-border);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .arrivals-and-departures {
+      .departures-side, .arrivals-side {
+        .section-content {
+          .p-field-row {
+            max-width: 400px;
+            margin: 0 auto;
           }
         }
       }

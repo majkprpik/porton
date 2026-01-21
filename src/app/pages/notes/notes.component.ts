@@ -60,10 +60,16 @@ import { AuthService } from '../../core/services/auth.service';
 
       <div class="notes-content" #messagesContainer>
         @if(!notes.length && !areNotesLoaded){
-          <span>{{ 'APP-LAYOUT.NOTES.LOADING-NOTES' | translate }}</span>
+          <div class="empty-state">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>{{ 'APP-LAYOUT.NOTES.LOADING-NOTES' | translate }}</span>
+          </div>
         }
         @if(areNotesLoaded && notesForSelectedDate.length == 0){
-          <span>{{ 'APP-LAYOUT.NOTES.NO-NOTES' | translate }}</span>
+          <div class="empty-state">
+            <i class="pi pi-comments"></i>
+            <span>{{ 'APP-LAYOUT.NOTES.NO-NOTES' | translate }}</span>
+          </div>
         }
         @if(notesForSelectedDate.length > 0){
           @for(note of notesForSelectedDate; track note?.id || i; let i = $index) {
@@ -102,13 +108,20 @@ import { AuthService } from '../../core/services/auth.service';
       </div>
 
       <div class="notes-footer">
-        <textarea 
+        <textarea
           [placeholder]="'APP-LAYOUT.NOTES.ADD-NOTE' | translate"
           [(ngModel)]="note"
           (keydown.enter)="addNote($event)"
           [disabled]="daysIndex < 0"
           [mention]="profileNames"
         ></textarea>
+        <p-button
+          icon="pi pi-send"
+          [rounded]="true"
+          [text]="true"
+          [disabled]="!note.trim() || daysIndex < 0"
+          (onClick)="addNote($event)"
+        ></p-button>
       </div>
     </div>
   `,
@@ -162,12 +175,28 @@ import { AuthService } from '../../core/services/auth.service';
         overflow-x: hidden;
         word-wrap: break-word;
         align-items: flex-start;
-        scrollbar-gutter: stable;   
+        scrollbar-gutter: stable;
         background: var(--glass-bg);
         backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
         -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
         border: 1px solid var(--glass-border);
         box-shadow: var(--glass-shadow-elevated);
+
+        .empty-state {
+          width: 100%;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.75rem;
+          color: var(--text-color-secondary);
+
+          i {
+            font-size: 2rem;
+            opacity: 0.4;
+          }
+        }
 
         .date-sent{
           width: 100%;
@@ -201,12 +230,16 @@ import { AuthService } from '../../core/services/auth.service';
         backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
         -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
         box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding-right: 0.5rem;
 
         textarea{
-          width: 100%;
+          flex: 1;
           height: 100%;
           border: none;
-          border-radius: 0 0 10px 10px;
+          border-radius: 0 0 0 10px;
           resize: none;
           box-sizing: border-box;
           padding: 12px 14px;
