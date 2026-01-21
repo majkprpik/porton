@@ -27,13 +27,32 @@ interface MenuChangeEvent {
     providedIn: 'root'
 })
 export class LayoutService {
+    private readonly STORAGE_KEY = 'porton-theme-config';
+
     _config: layoutConfig = {
         preset: 'Aura',
         primary: 'emerald',
         surface: null,
-        darkTheme: false,
+        darkTheme: this.loadDarkThemePreference(),
         menuMode: 'static'
     };
+
+    private loadDarkThemePreference(): boolean {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (stored) {
+            try {
+                const config = JSON.parse(stored);
+                return config.darkTheme ?? false;
+            } catch {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private saveDarkThemePreference(darkTheme: boolean): void {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify({ darkTheme }));
+    }
 
     _state: LayoutState = {
         staticMenuDesktopInactive: false,
@@ -62,6 +81,8 @@ export class LayoutService {
     $showLoggedUserDetailsWindow: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     constructor() {
+        this.toggleDarkMode(this._config);
+
         effect(() => {
             const config = this.layoutConfig();
             if (config) {
@@ -129,6 +150,7 @@ export class LayoutService {
     onConfigUpdate() {
         this._config = { ...this.layoutConfig() };
         this.configUpdate.next(this.layoutConfig());
+        this.saveDarkThemePreference(this._config.darkTheme ?? false);
     }
 
     onMenuStateChange(event: MenuChangeEvent) {
