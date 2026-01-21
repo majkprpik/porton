@@ -1236,13 +1236,19 @@ export class AppLayout {
         console.log('App is now visible — refresh or reconnect!');
         await this.authService.checkSession();
         this.dataService.loadInitialData().subscribe();
-        this.pushNotificationsService.requestFirebaseMessaging();
+        const profileId = this.authService.getStoredUserId();
+        if (profileId) {
+            this.pushNotificationsService.requestPermissionAndGetToken(profileId);
+        }
     }
 
     ngOnInit() {
         this.selectedLanguageCode = this.languageService.getSelectedLanguageCode();
         this.dataService.loadInitialData().subscribe();
-        this.pushNotificationsService.requestFirebaseMessaging();
+        const profileId = this.authService.getStoredUserId();
+        if (profileId) {
+            this.pushNotificationsService.requestPermissionAndGetToken(profileId);
+        }
         this.dataService.listenToDatabaseChanges();
 
         this.authService.setupAuthStateListener();

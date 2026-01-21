@@ -4,6 +4,7 @@ import { SupabaseService } from './supabase.service';
 import { ProfileService } from './profile.service';
 import { ProfileRole, ProfileRoles } from '../models/data.models';
 import { PushNotificationsService } from './push-notifications.service';
+import { DeviceService } from './device.service';
 import { DataService } from './data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
@@ -20,6 +21,7 @@ export class AuthService {
     private profileService: ProfileService,
     private dataService: DataService,
     private pushNotificationsService: PushNotificationsService,
+    private deviceService: DeviceService,
   ) {
     this.dataService.profileRoles$
       .pipe(nonNull())
@@ -107,16 +109,12 @@ export class AuthService {
 
     try {
       const storedUserID = this.getStoredUserId();
-      const deviceId = this.pushNotificationsService.getDeviceId();
-      
-      console.log("User: " + storedUserID);
-      console.log("Device: " + deviceId);
 
       await this.dataService.unsubscribeFromRealtime();
-      this.pushNotificationsService.deleteFCMToken();
+      await this.pushNotificationsService.clearToken();
 
-      if(storedUserID && deviceId){
-        await this.pushNotificationsService.deleteUserDeviceData(storedUserID, deviceId);
+      if (storedUserID) {
+        await this.deviceService.unregisterDevice(storedUserID);
       }
 
       await this.supabaseService.getClient().auth.signOut();
@@ -125,7 +123,6 @@ export class AuthService {
       await this.router.navigate(['/login']);
     } catch (error) {
       console.error('Logout error:', error);
-      // Force navigation to login even if signOut fails
       await this.router.navigate(['/login']);
     } finally {
       this.isLoggingOut = false;
@@ -133,7 +130,11 @@ export class AuthService {
   }
 
   clearLocalStorage(){
-    const keysToKeep = ['portonSelectedLanguage'];
+    const keysToKeep = [
+      'portonSelectedLanguage',
+      'porton_device_id',
+      'porton-theme-config',
+    ];
     const allKeys = Object.keys(localStorage);
 
     allKeys.forEach(key => {
