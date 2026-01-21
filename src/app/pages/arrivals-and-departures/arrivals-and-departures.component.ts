@@ -182,7 +182,6 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       flex-direction: column;
       border-radius: 8px;
       overflow: hidden;
-      background-color: var(--surface-card);
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       height: 340px;
       width: 100%;
@@ -229,6 +228,11 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         justify-content: space-between;
         border-top: 1px solid var(--surface-border);
         height: 290px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow-elevated);
 
         .departures-side, .arrivals-side {
           flex: 1;
@@ -288,8 +292,6 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
     .time-container {
       flex: 0 0 80px;
     }
-
-    
 
     .empty-message {
       display: flex;

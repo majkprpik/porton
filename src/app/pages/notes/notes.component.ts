@@ -162,8 +162,12 @@ import { AuthService } from '../../core/services/auth.service';
         overflow-x: hidden;
         word-wrap: break-word;
         align-items: flex-start;
-        background-color: var(--surface-card);
-        scrollbar-gutter: stable;
+        scrollbar-gutter: stable;   
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow-elevated);
 
         .date-sent{
           width: 100%;
@@ -192,19 +196,35 @@ import { AuthService } from '../../core/services/auth.service';
         height: 50px;
         width: 100%;
         border-radius: 0 0 10px 10px;
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
 
         textarea{
           width: 100%;
           height: 100%;
+          border: none;
           border-radius: 0 0 10px 10px;
           resize: none;
-          box-sizing: border-box; 
-          padding: 10px;
+          box-sizing: border-box;
+          padding: 12px 14px;
           outline: none;
+          background: transparent;
+          color: var(--text-color);
+          font-family: inherit;
+          font-size: 14px;
+
+          &::placeholder {
+            color: var(--text-color-secondary);
+            opacity: 0.7;
+          }
 
           &:disabled {
-            background-color: var(--surface-ground);
+            background: var(--glass-bg);
+            opacity: 0.6;
+            cursor: not-allowed;
           }
         }
       }
@@ -212,13 +232,13 @@ import { AuthService } from '../../core/services/auth.service';
 
     .left-half-line{
       height: 1px;
-      background-color: #e5e7eb; 
+      background-color: var(--glass-border);
       width: 100%;
     }
 
     .right-half-line{
       height: 1px;
-      background-color: #e5e7eb; 
+      background-color: var(--glass-border);
       width: 92%;
     }
   `
