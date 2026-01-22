@@ -15,6 +15,7 @@ import { ProfileService } from '../../core/services/profile.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { isToday } from '../../shared/utils/date-utils';
 
 @Component({
   selector: 'app-arrivals-and-departures-page',
@@ -309,6 +310,8 @@ export class ArrivalsAndDeparturesPageComponent {
   selectedDate: Date = new Date();
   storedUserId: string | null = '';
 
+  isToday = isToday;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -447,13 +450,6 @@ export class ArrivalsAndDeparturesPageComponent {
     this.selectedDate = new Date(this.selectedDate);
     this.getTodaysArrivals();
     this.getTodaysDepartures();
-  }
-
-  isToday(date: Date): boolean {
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
   }
 
   getTimeObjFromTimeString(timeString: string): Date {

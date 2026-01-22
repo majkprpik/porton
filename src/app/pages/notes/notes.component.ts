@@ -12,6 +12,7 @@ import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { MentionModule } from 'angular-mentions';
 import { AuthService } from '../../core/services/auth.service';
+import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
 
 @Component({
   selector: 'app-notes',
@@ -288,6 +289,9 @@ export class NotesComponent {
   activeProfiles: Profile[] = [];
   profileNames: string[] = [];
 
+  isToday = isToday;
+  areDaysEqual = areDaysEqual;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -442,12 +446,6 @@ export class NotesComponent {
     container.scrollTop = container.scrollHeight;
   }
 
-  areDaysEqual(date1: string | undefined, date2: string | undefined){
-    return (date1 && date2) 
-      ? date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2] 
-      : false;
-  }
-
   hasMoreThan5MinutesPassedBetweenMessages(note1: Note, note2: Note){
     if (!note1.time_sent || !note2.time_sent) return false;
 
@@ -458,15 +456,6 @@ export class NotesComponent {
     const fiveMinutesMs = 5 * 60 * 1000; // 5 minutes in ms
 
     return diffMs > fiveMinutesMs;
-  }
-
-  isToday(time_sent: string | Date): boolean {
-    const date = new Date(time_sent);
-    const today = new Date();
-
-    return date.getFullYear() === today.getFullYear() &&
-           date.getMonth() === today.getMonth() &&
-           date.getDate() === today.getDate();
   }
 
   isCalendarDateSelected(date: any): boolean {

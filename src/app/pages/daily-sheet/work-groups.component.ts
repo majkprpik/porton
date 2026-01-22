@@ -15,6 +15,7 @@ import { PushNotificationsService } from '../../core/services/push-notifications
 import { ProfileService } from '../../core/services/profile.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
 
 @Component({
   selector: 'app-work-groups',
@@ -375,6 +376,9 @@ export class WorkGroups implements OnInit {
   tasksToRemove: Task[] = [];
   profiles: Profile[] = [];
   tasksToAdd: Task[] = [];
+
+  isToday = isToday;
+  areDaysEqual = areDaysEqual;
   
   private destroy$ = new Subject<void>();
 
@@ -693,10 +697,6 @@ export class WorkGroups implements OnInit {
     await Promise.all(workGroupPromises);
   }
 
-  areDaysEqual(date1: string, date2: string){
-    return (date1 && date2) ? date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2] : false;
-  }
-
   is2DaysOld(workGroup: WorkGroupObject): boolean {
     const createdAt = new Date(workGroup.created_at);
     const twoDaysAgo = new Date();
@@ -704,14 +704,5 @@ export class WorkGroups implements OnInit {
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
     return createdAt < twoDaysAgo;
-  }
-  
-  isToday(time_sent: string | Date): boolean {
-    const date = new Date(time_sent);
-    const today = new Date();
-
-    return date.getFullYear() === today.getFullYear() &&
-           date.getMonth() === today.getMonth() &&
-           date.getDate() === today.getDate();
   }
 } 
