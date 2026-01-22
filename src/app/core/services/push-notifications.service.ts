@@ -146,27 +146,36 @@ export class PushNotificationsService {
       return;
     }
 
-    for (const device of devices) {
-      this.http.post(
-        'https://portonnotifications-l3crl2uwyq-uc.a.run.app/fcm-notifications',
-        {
-          fcmToken: device.fcm_token,
-          notification: {
-            title: notification.title,
-            body: notification.body,
-            icon: '/assets/icons/porton-icon-72x72.png'
+    //problem je sto u pola loopa mozes zatvorit aplikaciju i pola notifikacija se nece poslat
+    //bolje je poslat listu uredaja i nek se na backendu radi ovo
+    const requests = devices.map(device =>
+      firstValueFrom(
+        this.http.post(
+          'https://portonnotifications-l3crl2uwyq-uc.a.run.app/fcm-notifications',
+          {
+            fcmToken: device.fcm_token,
+            notification: {
+              title: notification.title,
+              body: notification.body,
+              icon: '/assets/icons/porton-icon-72x72.png'
+            },
           },
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      ).subscribe({
-        next: () => console.log('FCM notification sent!'),
-        error: err => console.error('Failed to send FCM notification', err),
-      });
-    }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+      )
+    );
+
+    const results = await Promise.allSettled(requests);
+
+    results.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        console.error(`Failed for device ${devices[i].fcm_token}`, result.reason);
+      }
+    });
   }
 }
