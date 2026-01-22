@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { StorageService, STORAGE_KEYS } from './storage.service';
 
 export interface DeviceInfo {
   deviceId: string;
@@ -11,14 +12,15 @@ export interface DeviceInfo {
   providedIn: 'root'
 })
 export class DeviceService {
-  private readonly DEVICE_ID_KEY = 'porton_device_id';
-
-  constructor(private supabaseService: SupabaseService) {
+  constructor(
+    private supabaseService: SupabaseService,
+    private storageService: StorageService,
+  ) {
     this.ensureDeviceId();
   }
 
   getDeviceId(): string {
-    let deviceId = localStorage.getItem(this.DEVICE_ID_KEY);
+    let deviceId = this.storageService.getString(STORAGE_KEYS.DEVICE_ID);
     if (!deviceId) {
       deviceId = this.createDeviceId();
     }
@@ -27,12 +29,12 @@ export class DeviceService {
 
   private createDeviceId(): string {
     const deviceId = crypto.randomUUID();
-    localStorage.setItem(this.DEVICE_ID_KEY, deviceId);
+    this.storageService.set(STORAGE_KEYS.DEVICE_ID, deviceId);
     return deviceId;
   }
 
   private ensureDeviceId(): void {
-    if (!localStorage.getItem(this.DEVICE_ID_KEY)) {
+    if (!this.storageService.getString(STORAGE_KEYS.DEVICE_ID)) {
       this.createDeviceId();
     }
   }

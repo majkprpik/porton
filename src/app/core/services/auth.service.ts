@@ -6,6 +6,7 @@ import { ProfileRole, ProfileRoles } from '../models/data.models';
 import { PushNotificationsService } from './push-notifications.service';
 import { DeviceService } from './device.service';
 import { DataService } from './data.service';
+import { StorageService, STORAGE_KEYS } from './storage.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
@@ -22,6 +23,7 @@ export class AuthService {
     private dataService: DataService,
     private pushNotificationsService: PushNotificationsService,
     private deviceService: DeviceService,
+    private storageService: StorageService,
   ) {
     this.dataService.profileRoles$
       .pipe(nonNull())
@@ -92,7 +94,7 @@ export class AuthService {
       if (error) throw error;
       if (!data.user) return false;
 
-      this.setUserName('username', email);
+      this.setUserName(email);
       this.setUserId(data.user.id);
 
       return data;
@@ -129,19 +131,8 @@ export class AuthService {
     }
   }
 
-  clearLocalStorage(){
-    const keysToKeep = [
-      'portonSelectedLanguage',
-      'porton_device_id',
-      'porton-theme-config',
-    ];
-    const allKeys = Object.keys(localStorage);
-
-    allKeys.forEach(key => {
-      if (!keysToKeep.includes(key)) {
-        localStorage.removeItem(key);
-      }
-    });
+  clearLocalStorage(): void {
+    this.storageService.clearExceptPersistent();
   }
   
   setupAuthStateListener(){
@@ -173,19 +164,19 @@ export class AuthService {
   }
 
   getStoredUsername(): string | null {
-    return localStorage.getItem('username');
+    return this.storageService.getString(STORAGE_KEYS.USERNAME);
   }
 
-  setUserName(userName: string, email: string){
-    localStorage.setItem(userName, email);
+  setUserName(email: string): void {
+    this.storageService.set(STORAGE_KEYS.USERNAME, email);
   }
 
-  getStoredUserId(){
-    return localStorage.getItem('profileId');
+  getStoredUserId(): string | null {
+    return this.storageService.getString(STORAGE_KEYS.PROFILE_ID);
   }
 
-  setUserId(userId: string){
-    localStorage.setItem('profileId', userId);
+  setUserId(userId: string): void {
+    this.storageService.set(STORAGE_KEYS.PROFILE_ID, userId);
   }
 
   /**

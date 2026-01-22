@@ -1,6 +1,6 @@
-import { Injectable, effect, signal, computed } from '@angular/core';
+import { Injectable, effect, signal, computed, inject } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { DataService } from '../../core/services/data.service';
+import { StorageService, STORAGE_KEYS } from '../../core/services/storage.service';
 
 export interface layoutConfig {
     preset?: string;
@@ -27,7 +27,7 @@ interface MenuChangeEvent {
     providedIn: 'root'
 })
 export class LayoutService {
-    private readonly STORAGE_KEY = 'porton-theme-config';
+    private storageService = inject(StorageService);
 
     _config: layoutConfig = {
         preset: 'Aura',
@@ -38,20 +38,12 @@ export class LayoutService {
     };
 
     private loadDarkThemePreference(): boolean {
-        const stored = localStorage.getItem(this.STORAGE_KEY);
-        if (stored) {
-            try {
-                const config = JSON.parse(stored);
-                return config.darkTheme ?? false;
-            } catch {
-                return false;
-            }
-        }
-        return false;
+        const config = this.storageService.get<{ darkTheme?: boolean }>(STORAGE_KEYS.THEME_CONFIG);
+        return config?.darkTheme ?? false;
     }
 
     private saveDarkThemePreference(darkTheme: boolean): void {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify({ darkTheme }));
+        this.storageService.set(STORAGE_KEYS.THEME_CONFIG, { darkTheme });
     }
 
     _state: LayoutState = {

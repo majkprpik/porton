@@ -4,6 +4,7 @@ import { LayoutService } from '../services/layout.service';
 import { ButtonModule } from 'primeng/button';
 import { DataService } from '../../core/services/data.service';
 import { ProfileService } from '../../core/services/profile.service';
+import { StorageService, STORAGE_KEYS } from '../../core/services/storage.service';
 import { TranslateService } from '@ngx-translate/core';
 import { Profile, ProfileRole, ProfileRoles } from '../../core/models/data.models';
 import { combineLatest, filter, Subject, takeUntil } from 'rxjs';
@@ -198,6 +199,7 @@ export class AppSidebar {
         private layoutService: LayoutService,
         private dataService: DataService,
         private profileService: ProfileService,
+        private storageService: StorageService,
         private translateService: TranslateService,
         private router: Router,
     ) {}
@@ -380,7 +382,7 @@ export class AppSidebar {
     }
 
     private buildMenu() {
-        const userId = localStorage.getItem('profileId');
+        const userId = this.storageService.getString(STORAGE_KEYS.PROFILE_ID);
         if (!userId) {
             return;
         }

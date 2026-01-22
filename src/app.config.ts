@@ -9,6 +9,7 @@ import { MessageService } from 'primeng/api';
 import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
 import { HttpLoaderFactory } from './app/shared/debug-overlay/translate-loader';
 import { provideServiceWorker } from '@angular/service-worker';
+import { STORAGE_KEYS } from './app/core/services/storage.service';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -26,12 +27,12 @@ export const appConfig: ApplicationConfig = {
             }
         }),
         {
-        	provide: LOCALE_ID,
-        	useFactory: () => {
-        	    const saved = localStorage.getItem('portonSelectedLanguage');
-        	    const lang = saved ? JSON.parse(saved).code : 'en';
-        	    return lang === 'hr' ? 'hr' : 'en';
-        	},
+            provide: LOCALE_ID,
+            useFactory: () => {
+                const saved = localStorage.getItem(STORAGE_KEYS.SELECTED_LANGUAGE);
+                const lang = saved ? JSON.parse(saved).code : 'en';
+                return lang === 'hr' ? 'hr' : 'en';
+            },
         }, provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),
             registrationStrategy: 'registerWhenStable:30000'

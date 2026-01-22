@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivateChild } from '@angular/router';
 import { ProfileRole } from '../models/data.models';
 import { combineLatest, Observable, of } from 'rxjs';
-import { filter, map, take, tap } from 'rxjs/operators';
+import { map, take, tap } from 'rxjs/operators';
 import { DataService } from '../services/data.service';
+import { StorageService, STORAGE_KEYS } from '../services/storage.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
@@ -16,10 +17,11 @@ export class RoleGuard implements CanActivateChild {
     constructor(
         private router: Router,
         private dataService: DataService,
+        private storageService: StorageService,
     ) {}
 
     canActivateChild(childRoute: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
-        const userId = localStorage.getItem('profileId');
+        const userId = this.storageService.getString(STORAGE_KEYS.PROFILE_ID);
         this.targetUrl = state.url;
 
         if (!userId) {

@@ -33,6 +33,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { HouseService } from '../../core/services/house.service';
 import { ErrorLoggingService } from '../../core/services/error-logging.service';
 import { DataService } from '../../core/services/data.service';
+import { StorageService, STORAGE_KEYS } from '../../core/services/storage.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
@@ -1162,7 +1163,7 @@ export class AppLayout {
 
     loggedUser: Profile | undefined = undefined;
     isLoggingOut = false;
-    selectedLanguageCode: string = '';
+    selectedLanguageCode: string | undefined = '';
 
     private visibilityChangeSub!: Subscription;
 
@@ -1182,6 +1183,7 @@ export class AppLayout {
         private pushNotificationsService: PushNotificationsService,
         public houseService: HouseService,
         private errorLogger: ErrorLoggingService,
+        private storageService: StorageService,
     ) {
         this.captureConsoleMessages();
         this.onAppVisibilityChange();
@@ -1376,7 +1378,7 @@ export class AppLayout {
                         command: () => {
                             this.isNotesWindowVisible = true;
                             this.positions['notes'] = { x: 0, y: 0 };
-                            localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+                            this.storageService.set(STORAGE_KEYS.WINDOW_POSITIONS, this.positions);
                         }
                     },
                     {
@@ -1384,7 +1386,7 @@ export class AppLayout {
                         command: () => {
                             this.isArrivalsAndDeparturesWindowVisible = true;
                             this.positions['arrivals'] = { x: 0, y: 0 };
-                            localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+                            this.storageService.set(STORAGE_KEYS.WINDOW_POSITIONS, this.positions);
                         }
                     }
                 );
@@ -1393,11 +1395,11 @@ export class AppLayout {
     }
 
     loadStoredWindowPositions(){
-        const saved = localStorage.getItem('windowPositions');
+        const saved = this.storageService.get<Record<string, any>>(STORAGE_KEYS.WINDOW_POSITIONS);
 
         if(!saved) return;
 
-        this.positions = JSON.parse(saved);
+        this.positions = saved;
 
         if (this.positions['notes']) {
             this.isNotesWindowVisible = true;
@@ -1698,28 +1700,20 @@ export class AppLayout {
 
     closeNotesWindow() {
         this.isNotesWindowVisible = false;
-        const stored = localStorage.getItem('windowPositions');
-
-        if (stored) {
-            delete this.positions['notes'];
-            localStorage.setItem('windowPositions', JSON.stringify(this.positions));
-        }
+        delete this.positions['notes'];
+        this.storageService.set(STORAGE_KEYS.WINDOW_POSITIONS, this.positions);
     }
 
     closeArrivalsAndDeparturesWindow() {
         this.isArrivalsAndDeparturesWindowVisible = false;
-        const stored = localStorage.getItem('windowPositions');
-
-        if (stored) {
-            delete this.positions['arrivals'];
-            localStorage.setItem('windowPositions', JSON.stringify(this.positions));
-        }
+        delete this.positions['arrivals'];
+        this.storageService.set(STORAGE_KEYS.WINDOW_POSITIONS, this.positions);
     }
 
     onDragEnd(windowKey: string, event: CdkDragEnd) {
         const pos = event.source.getFreeDragPosition();
         this.positions[windowKey] = { x: pos.x, y: pos.y };
-        localStorage.setItem('windowPositions', JSON.stringify(this.positions));
+        this.storageService.set(STORAGE_KEYS.WINDOW_POSITIONS, this.positions);
     }
 
     getWindowPosition(windowKey: string): { [key: string]: string } {

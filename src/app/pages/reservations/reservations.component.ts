@@ -12,6 +12,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ReservationFormComponent } from './reservation-form/reservation-form.component';
 import { HouseService } from '../../core/services/house.service';
 import { ExportReservationsService } from '../../core/services/export-reservations.service';
+import { StorageService, STORAGE_KEYS } from '../../core/services/storage.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 interface DayMetadata {
@@ -808,6 +809,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         private datePipe: DatePipe,
         private layoutService: LayoutService,
         public exportReservationsService: ExportReservationsService,
+        private storageService: StorageService,
     ) {
         effect(() => {
             const newNightMode = this.layoutService.layoutConfig().darkTheme;
@@ -1968,18 +1970,13 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     changeCellHeight(cellHeightInPx: number){
         this.cellHeightInPx = cellHeightInPx;
-        localStorage.setItem('portonReservationsCellHeight', JSON.stringify(cellHeightInPx));
+        this.storageService.set(STORAGE_KEYS.RESERVATIONS_CELL_HEIGHT, cellHeightInPx);
         this.requestGridUpdate();
     }
 
     loadCellHeight(){
-        let cellHeight = localStorage.getItem('portonReservationsCellHeight');
-
-        if(!cellHeight) {
-            this.cellHeightInPx = 30;
-        } else {
-            this.cellHeightInPx = parseInt(cellHeight);
-        }
+        const cellHeight = this.storageService.get<number>(STORAGE_KEYS.RESERVATIONS_CELL_HEIGHT);
+        this.cellHeightInPx = cellHeight ?? 30;
     }
 
     generateInitDays(){

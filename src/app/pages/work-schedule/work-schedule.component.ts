@@ -14,6 +14,7 @@ import { WorkScheduleService } from '../../core/services/work-schedule.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { ProfileService } from '../../core/services/profile.service';
 import { AuthService } from '../../core/services/auth.service';
+import { StorageService, STORAGE_KEYS } from '../../core/services/storage.service';
 
 @Component({
   selector: 'app-work-schedule',
@@ -767,6 +768,7 @@ export class WorkScheduleComponent {
     private workScheduleService: WorkScheduleService,
     private profileService: ProfileService,
     private authService: AuthService,
+    private storageService: StorageService,
   ) {
     effect(() => {
       this.isNightMode = this.layoutService.layoutConfig().darkTheme;
@@ -1554,17 +1556,12 @@ export class WorkScheduleComponent {
 
   changeCellHeight(heightInPx: number){
     this.cellHeightInPx = heightInPx;
-    localStorage.setItem('portonScheduleCellHeight', JSON.stringify(heightInPx));
+    this.storageService.set(STORAGE_KEYS.SCHEDULE_CELL_HEIGHT, heightInPx);
   }
 
   loadCellHeight(){
-    let cellHeight = localStorage.getItem('portonScheduleCellHeight');
-
-    if(!cellHeight) {
-      this.cellHeightInPx = 30;
-    } else {
-      this.cellHeightInPx = parseInt(cellHeight);
-    }
+    const cellHeight = this.storageService.get<number>(STORAGE_KEYS.SCHEDULE_CELL_HEIGHT);
+    this.cellHeightInPx = cellHeight ?? 30;
   }
 
   openExportSchedule(){

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { PushNotification, Profile } from '../models/data.models';
 import { Messaging as AngularMessaging } from '@angular/fire/messaging';
 import { deleteToken, getToken, onMessage } from 'firebase/messaging';
@@ -8,13 +8,14 @@ import { environment } from '../../../environments/environment';
 import { SupabaseService } from './supabase.service';
 import { DataService } from './data.service';
 import { DeviceService } from './device.service';
+import { StorageService, STORAGE_KEYS } from './storage.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PushNotificationsService {
-  private readonly FCM_TOKEN_KEY = 'porton_fcm_token';
+  private storageService = inject(StorageService);
   private fcmTokenSource = new BehaviorSubject<string | null>(this.getStoredFcmToken());
   fcmToken$ = this.fcmTokenSource.asObservable();
 
@@ -117,16 +118,16 @@ export class PushNotificationsService {
   }
 
   private setFcmToken(token: string): void {
-    localStorage.setItem(this.FCM_TOKEN_KEY, token);
+    this.storageService.set(STORAGE_KEYS.FCM_TOKEN, token);
     this.fcmTokenSource.next(token);
   }
 
   private getStoredFcmToken(): string | null {
-    return localStorage.getItem(this.FCM_TOKEN_KEY);
+    return this.storageService.getString(STORAGE_KEYS.FCM_TOKEN);
   }
 
   private clearStoredFcmToken(): void {
-    localStorage.removeItem(this.FCM_TOKEN_KEY);
+    this.storageService.remove(STORAGE_KEYS.FCM_TOKEN);
     this.fcmTokenSource.next(null);
   }
 
