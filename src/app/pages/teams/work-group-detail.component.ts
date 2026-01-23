@@ -16,7 +16,6 @@ import { AuthService } from '../../core/services/auth.service';
 import { WorkGroupService } from '../../core/services/work-group.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
-import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
 import { DetailedTaskCardComponent } from './detailed-task-card.component';
 
 @Component({
@@ -30,7 +29,6 @@ import { DetailedTaskCardComponent } from './detailed-task-card.component';
         TasksIndexSortPipe,
         TranslateModule,
         StaffCardComponent,
-        AddDaysPipe,
         DetailedTaskCardComponent,
     ],
     template: `
@@ -377,6 +375,8 @@ export class WorkGroupDetail implements OnInit {
         
         if (this.taskService.isTaskInProgress(task)) {
             newProgressTypeName = TaskProgressTypeName.Completed;
+        } else if (this.taskService.isTaskCompleted(task)) {
+            newProgressTypeName = TaskProgressTypeName.Confirmed;
         } else {
             newProgressTypeName = TaskProgressTypeName.InProgress;
         }
