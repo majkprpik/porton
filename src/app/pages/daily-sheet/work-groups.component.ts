@@ -654,7 +654,8 @@ export class WorkGroups implements OnInit {
         .filter(task => 
           task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Completed)!.task_progress_type_id && 
           task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.InProgress)!.task_progress_type_id &&
-          task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Paused)!.task_progress_type_id)
+          task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Paused)!.task_progress_type_id &&
+          task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Confirmed)!.task_progress_type_id)
         .map(task => 
           this.taskService.updateTaskProgressType(task, this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Assigned)!.task_progress_type_id)
         );

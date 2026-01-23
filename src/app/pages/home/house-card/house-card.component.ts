@@ -422,7 +422,7 @@ export class HouseCardComponent {
         this.isAvailableWithArrival = !this.isOccupied && !!isReservedToday;
 
         this.notCompletedTasks = this.houseService.getTasksForHouse(houseId)
-            .filter(t => !this.taskService.isTaskCompleted(t));
+            .filter(t => !this.taskService.isTaskCompleted(t) && !this.taskService.isTaskConfirmed(t));
 
         this.cachedSlots = this.buildSortedReservationsWithGaps(houseId);
         this.updateReservationData();

@@ -138,6 +138,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
               [class.not-assigned]="taskService.isTaskNotAssigned(task)"
               [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
               [class.completed]="taskService.isTaskCompleted(task)"
+              [class.confirmed]="taskService.isTaskConfirmed(task)"
             >
               <div class="house-number">
                 {{houseService.getHouseName(task.house_id)}}
@@ -154,6 +155,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                   [class.not-assigned]="taskService.isTaskNotAssigned(task)"
                   [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
                   [class.completed]="taskService.isTaskCompleted(task)"
+                  [class.confirmed]="taskService.isTaskConfirmed(task)"
                 >
                   <div class="house-number">
                     {{houseService.getHouseName(task.house_id)}}
@@ -363,6 +365,11 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         }
 
         &.completed {
+          background: var(--p-red-400);
+          color: var(--p-surface-0);
+        }
+
+        &.confirmed {
           background: var(--p-red-400);
           color: var(--p-surface-0);
         }
@@ -776,6 +783,7 @@ export class WorkGroup implements OnInit {
   onRemoveTask(taskToRemove: Task) {
     if(
       this.taskService.isTaskCompleted(taskToRemove) || 
+      this.taskService.isTaskConfirmed(taskToRemove) || 
       this.taskService.isTaskInProgress(taskToRemove) ||
       this.taskService.isTaskPaused(taskToRemove)
     ) return;
@@ -844,7 +852,7 @@ export class WorkGroup implements OnInit {
     
     const tasksToDelete = this.tasks
       .filter(task => workGroupTasks.some(wgt => wgt.task_id === task.task_id))
-      .filter(task => this.taskService.isTaskCompleted(task) && this.isTaskOlderThan2Days(task));
+      .filter(task => (this.taskService.isTaskCompleted(task) || this.taskService.isTaskConfirmed(task)) && this.isTaskCompleted2Days(task));
 
      if (tasksToDelete.length > 0) {
       const taskIds = tasksToDelete.map(task => task.task_id);
@@ -852,7 +860,7 @@ export class WorkGroup implements OnInit {
     }
   }
 
-  isTaskOlderThan2Days(task: Task){
+  isTaskCompleted2Days(task: Task){
     if(!task.end_time) return;
 
     const taskEndDate = new Date(task.end_time);

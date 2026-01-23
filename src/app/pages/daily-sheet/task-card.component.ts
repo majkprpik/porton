@@ -16,6 +16,7 @@ import { DataService } from '../../core/services/data.service';
     <div 
       class="task-card" 
       [class.assigned]="taskService.isTaskAssigned(task)"
+      [class.confirmed]="taskService.isTaskConfirmed(task)"
       [class.not-assigned]="taskService.isTaskNotAssigned(task)"
       [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
       [class.completed]="taskService.isTaskCompleted(task)"
@@ -103,6 +104,16 @@ import { DataService } from '../../core/services/data.service';
         );
         border-color: rgba(59, 130, 246, 0.4);
         color: var(--p-surface-0);
+      }
+      
+      &.confirmed {
+          background: linear-gradient(
+              135deg,
+              rgba(248, 113, 113, 0.85),
+              rgba(239, 68, 68, 0.75)
+          );
+          border-color: rgba(248, 113, 113, 0.4);
+          color: var(--p-surface-0);
       }
 
       &.not-assigned {

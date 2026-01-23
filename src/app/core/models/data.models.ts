@@ -222,6 +222,7 @@ export enum TaskProgressTypeName {
   InProgress = 'U tijeku',
   NotAssigned = 'Nije dodijeljeno',
   Assigned = 'Dodijeljeno',
+  Confirmed = 'Potvrđeno'
 }
 
 export enum TaskTypeName {

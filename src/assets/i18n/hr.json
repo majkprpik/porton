@@ -45,7 +45,8 @@
         "Nije dodijeljeno": "Nije dodijeljeno",
         "U tijeku": "U tijeku",
         "Pauzirano": "Pauzirano",
-        "Završeno": "Završeno"
+        "Završeno": "Završeno",
+        "Potvrđeno": "Potvrđeno"
     },
     "TASK-TYPES": { 
         "Čišćenje kućice": "Čišćenje kućice",
@@ -285,6 +286,7 @@
         },
         "TEAM-DETAILS": {
             "TASK-FINISHED": "Zadatak završen",
+            "TASK-CONFIRMED": "Zadatak potvrđen",
             "HOUSE-OCCUPIED": "Kućica zauzeta"
         }
     },

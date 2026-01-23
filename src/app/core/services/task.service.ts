@@ -346,6 +346,10 @@ export class TaskService {
     return this.getTaskProgressTypeByName(TaskProgressTypeName.Paused)?.task_progress_type_id == task?.task_progress_type_id;
   }
 
+  isTaskConfirmed(task: Task | undefined){
+    return this.getTaskProgressTypeByName(TaskProgressTypeName.Confirmed)?.task_progress_type_id == task?.task_progress_type_id;
+  }
+
   isRepairTask(task: Task | undefined){
     return this.getTaskTypeByName(TaskTypeName.Repair)?.task_type_id == task?.task_type_id;
   }
@@ -396,6 +400,8 @@ export class TaskService {
       return 'fa fa-pause-circle';
     } else if (this.isTaskAssigned(task)) {
       return 'fa fa-user-check';
+    } else if (this.isTaskConfirmed(task)) {
+      return 'fa fa-solid fa-lock';
     } else {
       return 'fa fa-clock';
     }

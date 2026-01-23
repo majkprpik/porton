@@ -1216,7 +1216,7 @@ export class MapComponent {
     this.houses.forEach((house) => {
       const tasks = this.houseService.getTasksForHouse(house.house_id);
       const centroid = this.getHouseCentroid(house.house_name);
-      const visibleTasks = tasks.filter(task => !this.taskService.isTaskCompleted(task));
+      const visibleTasks = tasks.filter(task => !this.taskService.isTaskCompleted(task) && !this.taskService.isTaskConfirmed(task));
 
       if (!centroid) return;
 

@@ -6,6 +6,8 @@ import { Task } from '../../core/models/data.models';
 import { HouseService } from '../../core/services/house.service';
 import { TaskService } from '../../core/services/task.service';
 import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
+import { ProfileService } from '../../core/services/profile.service';
+import { StorageService, STORAGE_KEYS } from '../../core/services/storage.service';
 
 @Component({
     selector: 'app-detailed-task-card',
@@ -19,6 +21,7 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
     template: `
         <div class="task-card"
             [class.completed]="taskService.isTaskCompleted(task)"
+            [class.confirmed]="taskService.isTaskConfirmed(task)"
             [class.assigned]="taskService.isTaskAssigned(task)"
             [class.not-assigned]="taskService.isTaskNotAssigned(task)"
             [class.in-progress]="taskService.isTaskInProgress(task) || taskService.isTaskPaused(task)"
@@ -139,7 +142,7 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
                         </div>
                     }
                 </div>
-                @if (!taskService.isTaskCompleted(task)) {
+                @if (!taskService.isTaskCompleted(task) && !taskService.isTaskConfirmed(task)) {
                     @if(
                         task.is_unscheduled ||
                         taskService.isRepairTask(task) ||
@@ -180,6 +183,14 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
                             ></p-button>
                         </div>
                     }
+                } @else if(isTaskCompletedForHouseholdManager()) {
+                    <p-button
+                        [label]="'BUTTONS.' + getActionButtonLabel() | translate"
+                        [severity]="getActionButtonSeverity()"
+                        (onClick)="onTaskAction($event)"
+                    ></p-button>
+                } @else if(taskService.isTaskConfirmed(task)) {
+                    <span>{{ 'TEAMS.TEAM-DETAILS.TASK-CONFIRMED' | translate }}</span>
                 } @else {
                     <span>{{ 'TEAMS.TEAM-DETAILS.TASK-FINISHED' | translate }}</span>
                 }
@@ -220,6 +231,16 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
             }
 
             &.completed {
+                background: linear-gradient(
+                    135deg,
+                    rgba(248, 113, 113, 0.85),
+                    rgba(239, 68, 68, 0.75)
+                );
+                border-color: rgba(248, 113, 113, 0.4);
+                color: var(--p-surface-0);
+            }
+
+            &.confirmed {
                 background: linear-gradient(
                     135deg,
                     rgba(248, 113, 113, 0.85),
@@ -373,6 +394,8 @@ import { AddDaysPipe } from '../../shared/pipes/add-days.pipe';
     `
 })
 export class DetailedTaskCardComponent {
+    STORAGE_KEYS = STORAGE_KEYS;
+
     @Input({ required: true }) task!: Task;
     @Input() isUrgentIconVisible = false;
 
@@ -383,6 +406,8 @@ export class DetailedTaskCardComponent {
     constructor(
         public houseService: HouseService,
         public taskService: TaskService,
+        public profileService: ProfileService,
+        public storageService: StorageService,
     ) {}
 
     onCardClick(): void {
@@ -404,6 +429,8 @@ export class DetailedTaskCardComponent {
             return 'FINISH';
         } else if (this.taskService.isTaskPaused(this.task)) {
             return 'CONTINUE';
+        } else if (this.isTaskCompletedForHouseholdManager()) {
+            return 'CONFIRM';
         }
 
         return 'START';
@@ -413,5 +440,9 @@ export class DetailedTaskCardComponent {
         if (this.taskService.isTaskInProgress(this.task)) return 'success';
         if (this.taskService.isTaskPaused(this.task)) return 'warn';
         return 'primary';
+    }
+
+    isTaskCompletedForHouseholdManager(){
+        return this.profileService.isHouseholdManager(this.storageService.getString(STORAGE_KEYS.PROFILE_ID)) && this.taskService.isTaskCompleted(this.task);
     }
 }
