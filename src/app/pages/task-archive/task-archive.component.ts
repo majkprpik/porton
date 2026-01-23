@@ -1,5 +1,5 @@
 import { TaskService } from '../../core/services/task.service';
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { House, Task, TaskType } from '../../core/models/data.models';
 import { TaskCardComponent } from '../daily-sheet/task-card.component';
 import { DatePipe } from '@angular/common';
@@ -65,9 +65,9 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         </div>
       </div>
       
-      <div class="completed-tasks-container">
-        @for(task of filteredTasks; track task.task_id; let i = $index){
-          @if(i == 0 || !areDatesEqual(filteredTasks[i].created_at, filteredTasks[i-1].created_at)){
+      <div class="completed-tasks-container" #scrollContainer (scroll)="onScroll()">
+        @for(task of displayedTasks; track task.task_id; let i = $index){
+          @if(i == 0 || !areDatesEqual(displayedTasks[i].created_at, displayedTasks[i-1].created_at)){
             <div class="date-separator">
               <div class="left-half-line"></div>
                 <span>{{ task.created_at | date: 'dd MMM YYYY' }}</span>
@@ -80,6 +80,11 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
           >
           </app-task-card>
         }
+        @if (displayedTasks.length < filteredTasks.length) {
+          <div class="load-more-indicator">
+            <span>{{ 'TASK-ARCHIVE.LOADING-MORE' | translate }}</span>
+          </div>
+        }
       </div>
     </div>
   `,
@@ -90,27 +95,30 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       border-radius: 10px;
       box-sizing: border-box;
       padding: 20px;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
 
-      .fields{
+      .fields {
         display: flex;
         flex-direction: row;
         width: 100%;
         gap: 20px;
 
-        .field{
+        .field {
           width: 100%;
           padding-bottom: 20px;
         }
       }
 
-      .completed-tasks-container{
+      .completed-tasks-container {
         display: flex;
         flex-direction: row;
         gap: 5px;
         flex-wrap: wrap;
+        overflow-y: auto;
+        flex: 1;
 
-        .date-separator{
+        .date-separator {
           width: 100%;
           display: flex;
           flex-direction: row;
@@ -118,13 +126,13 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
           justify-content: center;
           padding-bottom: 10px;
 
-          .left-half-line{
+          .left-half-line {
             height: 1px;
-            background-color: var(--surface-ground); 
+            background-color: var(--surface-ground);
             width: 100%;
           }
 
-          span{
+          span {
             width: 210px;
             display: flex;
             flex-direction: row;
@@ -135,25 +143,40 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
             color: var(--text-color-secondary);
           }
 
-          .right-half-line{
+          .right-half-line {
             height: 1px;
-            background-color: var(--surface-ground); 
+            background-color: var(--surface-ground);
             width: 100%;
           }
+        }
+
+        .load-more-indicator {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          padding: 1rem;
+          color: var(--text-color-secondary);
         }
       }
     }
   `
 })
 export class TaskArchiveComponent {
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
+
   tasks: Task[] = [];
   completedTasks: Task[] = [];
   filteredTasks: Task[] = [];
+  displayedTasks: Task[] = [];
 
   selectedTaskTypes: TaskType[] = [];
   searchTerm: string = '';
 
   houses: House[] = [];
+
+  private readonly INITIAL_LOAD = 100;
+  private readonly LOAD_MORE_COUNT = 50;
+  private readonly SCROLL_THRESHOLD = 200; // pixels from bottom
 
   private destroy$ = new Subject<void>();
 
@@ -224,5 +247,30 @@ export class TaskArchiveComponent {
     }
 
     this.filteredTasks = result;
+    this.displayedTasks = this.filteredTasks.slice(0, this.INITIAL_LOAD);
+  }
+
+  onScroll(): void {
+    const container = this.scrollContainer?.nativeElement;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+    if (distanceFromBottom < this.SCROLL_THRESHOLD) {
+      this.loadMore();
+    }
+  }
+
+  private loadMore(): void {
+    if (this.displayedTasks.length >= this.filteredTasks.length) return;
+
+    const currentLength = this.displayedTasks.length;
+    const nextBatch = this.filteredTasks.slice(
+      currentLength,
+      currentLength + this.LOAD_MORE_COUNT
+    );
+
+    this.displayedTasks = [...this.displayedTasks, ...nextBatch];
   }
 }
