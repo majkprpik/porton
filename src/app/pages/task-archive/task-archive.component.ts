@@ -248,6 +248,8 @@ export class TaskArchiveComponent {
 
     this.filteredTasks = result;
     this.displayedTasks = this.filteredTasks.slice(0, this.INITIAL_LOAD);
+    
+    setTimeout(() => this.ensureScrollable());
   }
 
   onScroll(): void {
@@ -272,5 +274,17 @@ export class TaskArchiveComponent {
     );
 
     this.displayedTasks = [...this.displayedTasks, ...nextBatch];
+  }
+
+  private ensureScrollable(): void {
+    const container = this.scrollContainer?.nativeElement;
+    if (!container) return;
+
+    while (
+      container.scrollHeight <= container.clientHeight &&
+      this.displayedTasks.length < this.filteredTasks.length
+    ) {
+      this.loadMore();
+    }
   }
 }
