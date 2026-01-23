@@ -1,5 +1,5 @@
 import { TaskService } from '../../core/services/task.service';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { House, Task, TaskType } from '../../core/models/data.models';
 import { TaskCardComponent } from '../daily-sheet/task-card.component';
 import { DatePipe } from '@angular/common';
@@ -161,7 +161,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
     }
   `
 })
-export class TaskArchiveComponent {
+export class TaskArchiveComponent implements AfterViewChecked {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
   tasks: Task[] = [];
@@ -189,6 +189,22 @@ export class TaskArchiveComponent {
     this.subscribeToDataStreams();
   }
 
+  ngAfterViewChecked(): void {
+    this.loadMoreIfNeeded();
+  }
+
+  private loadMoreIfNeeded(): void {
+    const container = this.scrollContainer?.nativeElement;
+    if (!container) return;
+
+    const isScrollable = container.scrollHeight > container.clientHeight;
+    const hasMoreTasks = this.displayedTasks.length < this.filteredTasks.length;
+
+    if (!isScrollable && hasMoreTasks) {
+      this.loadMore();
+    }
+  }
+
   private subscribeToDataStreams() {
     combineLatest([
       this.dataService.tasks$.pipe(nonNull()),
@@ -212,7 +228,7 @@ export class TaskArchiveComponent {
 
   private getCompletedTasks(tasks: any[]): any[] {
     return tasks
-      .filter(task => this.taskService.isTaskCompleted(task))
+      .filter(task => this.taskService.isTaskCompleted(task) || this.taskService.isTaskConfirmed(task))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
@@ -248,8 +264,6 @@ export class TaskArchiveComponent {
 
     this.filteredTasks = result;
     this.displayedTasks = this.filteredTasks.slice(0, this.INITIAL_LOAD);
-    
-    setTimeout(() => this.ensureScrollable());
   }
 
   onScroll(): void {
@@ -274,17 +288,5 @@ export class TaskArchiveComponent {
     );
 
     this.displayedTasks = [...this.displayedTasks, ...nextBatch];
-  }
-
-  private ensureScrollable(): void {
-    const container = this.scrollContainer?.nativeElement;
-    if (!container) return;
-
-    while (
-      container.scrollHeight <= container.clientHeight &&
-      this.displayedTasks.length < this.filteredTasks.length
-    ) {
-      this.loadMore();
-    }
   }
 }
