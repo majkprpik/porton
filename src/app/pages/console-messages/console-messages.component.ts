@@ -189,14 +189,13 @@ export class ConsoleMessagesComponent {
   }
 
   sendTestNotification(){
-    this.selectedProfiles.forEach(user => {
-      this.pushNotificationsService.sendNotification(
-        user.id, 
-        { 
-          title: this.notificationTitle, 
-          body: this.notificationBody,
-        });
-    })
+    this.pushNotificationsService.sendNotification(
+      this.selectedProfiles.map(user => user.id),
+      {
+        title: this.notificationTitle,
+        body: this.notificationBody,
+      }
+    );
   }
 
   logError(){

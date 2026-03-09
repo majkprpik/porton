@@ -682,14 +682,13 @@ export class WorkGroups implements OnInit {
 
         const houseTechnicians = lockedWorkGroup.members.filter(member => this.profileService.isHouseTechnician(member.id));
 
-        houseTechnicians.forEach(member => {
-          this.pushNotificationsService.sendNotification(
-            member.id, 
-            { 
-              title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'), 
-              body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
-            });
-        });
+        this.pushNotificationsService.sendNotification(
+          houseTechnicians.map(member => member.id),
+          {
+            title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'),
+            body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
+          }
+        );
       });
 
       this.tasksToAdd = [];

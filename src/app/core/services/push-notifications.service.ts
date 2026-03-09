@@ -1,15 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
-import { PushNotification, Profile } from '../models/data.models';
+import { PushNotification } from '../models/data.models';
 import { Messaging as AngularMessaging } from '@angular/fire/messaging';
 import { deleteToken, getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from './supabase.service';
-import { DataService } from './data.service';
 import { DeviceService } from './device.service';
 import { StorageService, STORAGE_KEYS } from './storage.service';
-import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
   providedIn: 'root'
@@ -19,21 +17,13 @@ export class PushNotificationsService {
   private fcmTokenSource = new BehaviorSubject<string | null>(this.getStoredFcmToken());
   fcmToken$ = this.fcmTokenSource.asObservable();
 
-  private profiles: Profile[] = [];
   private messaging = inject(AngularMessaging);
 
   constructor(
     private http: HttpClient,
     private supabaseService: SupabaseService,
-    private dataService: DataService,
     private deviceService: DeviceService,
   ) {
-    this.dataService.profiles$
-      .pipe(nonNull())
-      .subscribe(profiles => {
-        this.profiles = profiles.filter(p => !p.is_deleted);
-      });
-
     this.setupForegroundMessageHandler();
   }
 
@@ -131,7 +121,7 @@ export class PushNotificationsService {
     this.fcmTokenSource.next(null);
   }
 
-  async sendNotification(profileId: string, notification: PushNotification): Promise<void> {
+  async sendNotification(profileIds: string | string[], notification: PushNotification): Promise<void> {
     const token = await this.supabaseService.getAccessToken();
 
     if (!token) {
@@ -139,43 +129,25 @@ export class PushNotificationsService {
       return;
     }
 
-    const devices = await this.deviceService.getDevicesForProfile(profileId);
-    if (!devices.length) {
-      const profile = this.profiles.find(p => p.id === profileId);
-      console.error('User ' + (profile?.first_name ?? profileId) + ' has no registered devices');
-      return;
-    }
+    const ids = Array.isArray(profileIds) ? profileIds : [profileIds];
+    if (!ids.length) return;
 
-    //problem je sto u pola loopa mozes zatvorit aplikaciju i pola notifikacija se nece poslat
-    //bolje je poslat listu uredaja i nek se na backendu radi ovo
-    const requests = devices.map(device =>
-      firstValueFrom(
+    try {
+      await firstValueFrom(
         this.http.post(
-          'https://portonnotifications-l3crl2uwyq-uc.a.run.app/fcm-notifications',
-          {
-            fcmToken: device.fcm_token,
-            notification: {
-              title: notification.title,
-              body: notification.body,
-              icon: '/assets/icons/porton-icon-72x72.png'
-            },
-          },
+          `${environment.supabaseUrl}/functions/v1/send-notification`,
+          { profileIds: ids, notification },
           {
             headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
+              apikey: environment.supabaseAnonKey,
             },
           }
         )
-      )
-    );
-
-    const results = await Promise.allSettled(requests);
-
-    results.forEach((result, i) => {
-      if (result.status === 'rejected') {
-        console.error(`Failed for device ${devices[i].fcm_token}`, result.reason);
-      }
-    });
+      );
+    } catch (error) {
+      console.error('Failed to send notification:', error);
+    }
   }
 }

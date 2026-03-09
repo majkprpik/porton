@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
-import { Note, Profile, PushNotification } from '../models/data.models';
+import { Note, Profile } from '../models/data.models';
 import { DataService } from './data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { PushNotificationsService } from './push-notifications.service';
@@ -68,15 +68,12 @@ export class NotesService {
   }
 
   async sendNotificationToMentionedUsers(sendingProfileFirstName: string, mentionedProfiles: Profile[], note: string){
-    const notification: PushNotification = {
-      title: sendingProfileFirstName + ' mentioned you in a note',
-      body: note,
-    }
-
-    const sendPromises = mentionedProfiles.map(profile => 
-      this.pushNotificationsService.sendNotification(profile.id, notification)
+    await this.pushNotificationsService.sendNotification(
+      mentionedProfiles.map(p => p.id),
+      {
+        title: sendingProfileFirstName + ' mentioned you in a note',
+        body: note,
+      }
     );
-
-    await Promise.all(sendPromises);
   }
 }

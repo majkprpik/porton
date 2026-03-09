@@ -297,12 +297,13 @@ export class TaskService {
       let houseNumber = this.houses.find(house => house.house_id == updatedTask.house_id)?.house_name;
       if(!houseNumber) houseNumber = '0';
 
-      profilesToReceiveNotification.forEach(profile => {
-        this.pushNotificationsService.sendNotification(profile.id, {
+      this.pushNotificationsService.sendNotification(
+        profilesToReceiveNotification.map(p => p.id),
+        {
           title: 'Task completed',
           body: completedBy + ' completed a repair task on house ' + houseNumber,
-        });
-      });
+        }
+      );
     }
   }
 
