@@ -101,6 +101,7 @@ export class DataService {
   $areRepairTaskCommentsLoaded = new BehaviorSubject<boolean>(false);
 
   private realtimeChannel: RealtimeChannel | null = null;
+  private isLoadingInitialData = false;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -221,6 +222,12 @@ export class DataService {
   }
 
   loadInitialData() {
+    if (this.isLoadingInitialData) {
+      return new Observable(subscriber => subscriber.complete());
+    }
+
+    this.isLoadingInitialData = true;
+
     return forkJoin([
       this.loadAllEnumTypes(),
       this.loadHouseAvailabilities(),
@@ -241,7 +248,13 @@ export class DataService {
       this.loadSeasons(),
       this.loadPinnedCharts(),
       // this.loadAuthUsers()
-    ]);
+    ]).pipe(
+      tap(() => this.isLoadingInitialData = false),
+      catchError((error) => {
+        this.isLoadingInitialData = false;
+        return throwError(() => error);
+      })
+    );
   }
 
   private loadAllEnumTypes() {
