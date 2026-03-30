@@ -131,6 +131,7 @@ import { CommonModule } from '@angular/common';
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
+            overflow: visible;
         }
 
         .expanded-content {
@@ -328,7 +329,7 @@ import { CommonModule } from '@angular/common';
             flex-wrap: wrap;
             align-items: center;
             gap: 6px;
-            overflow: hidden;
+            overflow: visible;
 
             i {
                 font-size: 1.25rem;
