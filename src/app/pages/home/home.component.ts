@@ -61,29 +61,29 @@ interface SpecialLocation {
                                 (input)="applyFilters()">
                         </div>
                         <div class="sort-buttons">
-                            <p-button 
+                            <p-button
                                 [outlined]="sortType !== 'number'"
                                 [raised]="sortType === 'number'"
-                                icon="pi pi-sort-numeric-up" 
+                                icon="pi pi-sort-numeric-up"
                                 [label]="'HOME.SEARCH.BY-NUMBER' | translate"
                                 (onClick)="sortBy('number')"
-                                styleClass="p-button-sm">
+                                styleClass="p-button-sm sort-btn">
                             </p-button>
-                            <p-button 
+                            <p-button
                                 [outlined]="sortType !== 'type'"
                                 [raised]="sortType === 'type'"
-                                icon="pi pi-sort-alpha-up" 
+                                icon="pi pi-sort-alpha-up"
                                 [label]="'HOME.SEARCH.BY-TYPE' | translate"
                                 (onClick)="sortBy('type')"
-                                styleClass="p-button-sm">
+                                styleClass="p-button-sm sort-btn">
                             </p-button>
-                            <p-button 
+                            <p-button
                                 [outlined]="sortType !== 'status'"
                                 [raised]="sortType === 'status'"
                                 icon="pi pi-filter"
                                 [label]="'HOME.SEARCH.BY-STATUS' | translate"
                                 (onClick)="sortBy('status')"
-                                styleClass="p-button-sm">
+                                styleClass="p-button-sm sort-btn">
                             </p-button>
                         </div>
                     </div>
@@ -158,6 +158,71 @@ interface SpecialLocation {
         `
             :host ::ng-deep .sort-buttons .p-button {
                 height: 30px !important;
+            }
+
+            @media screen and (max-width: 991px) {
+                :host ::ng-deep .sort-btn .p-button-label {
+                    display: none !important;
+                }
+                :host ::ng-deep .sort-btn .p-button {
+                    padding: 0.4rem !important;
+                }
+
+                .home-container {
+                    gap: 6px !important;
+                    padding: 6px !important;
+                    box-sizing: border-box;
+                }
+
+                .home-container .legend-container {
+                    padding: 0.5rem 0.6rem;
+                }
+
+                .home-container .legend-wrapper {
+                    flex-direction: column !important;
+                    gap: 0.5rem !important;
+                }
+
+                .home-container .legend-items {
+                    display: grid !important;
+                    grid-template-columns: 1fr 1fr !important;
+                    gap: 0.25rem 0.5rem !important;
+                }
+
+                .home-container .legend-item {
+                    font-size: 0.8em !important;
+                }
+
+                .home-container .house-controls {
+                    flex-direction: row !important;
+                    flex-wrap: nowrap !important;
+                    gap: 0.4rem !important;
+                    align-items: center !important;
+                }
+
+                .home-container .search-container {
+                    flex: 1 !important;
+                    min-width: 0 !important;
+                    max-width: none !important;
+                }
+
+                .home-container .sort-buttons {
+                    flex-shrink: 0 !important;
+                    gap: 0.25rem !important;
+                }
+
+                .home-container .houses-container {
+                    padding: 8px !important;
+                }
+
+                .home-container .house-grid {
+                    grid-template-columns: repeat(2, 1fr) !important;
+                    gap: 0.35rem !important;
+                }
+
+                .home-container .statistics-container .chart-row {
+                    grid-template-columns: 1fr !important;
+                }
             }
 
             .home-container {
@@ -342,36 +407,6 @@ interface SpecialLocation {
                     
                 }
                 
-                @media screen and (max-width: 767px) {
-                    .legend-container {
-                        padding: 0.6rem;
-
-                        .legend-wrapper{
-                            .legend-items {
-                                flex-direction: column;
-                                align-items: flex-start;
-                                gap: 0.4rem;
-        
-                                .legend-item {
-                                    font-size: 0.85em;
-                                }
-                            }
-                        }
-                    }
-
-                    .house-controls {
-                        align-items: stretch;
-
-                        .search-container {
-                            max-width: none;
-                        }
-                        
-                        .sort-buttons {
-                            justify-content: center;
-                        }
-                    }
-                }
-    
                 :host ::ng-deep .p-button.p-button-sm {
                     font-size: 0.875rem;
                     padding: 0.4rem 0.75rem;

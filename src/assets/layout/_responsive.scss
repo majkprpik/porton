@@ -56,6 +56,19 @@
 }
 
 @media (max-width: 991px) {
+    .layout-main-container {
+        padding: 0 !important;
+        padding-bottom: 56px !important;
+    }
+
+    .layout-main {
+        overflow-x: hidden;
+        overflow-y: auto;
+        height: 100%;
+    }
+}
+
+@media (max-width: 991px) {
     .blocked-scroll {
         overflow: hidden;
     }

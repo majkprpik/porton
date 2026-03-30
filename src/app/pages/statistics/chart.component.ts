@@ -213,6 +213,10 @@ import {
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
+    ::ng-deep p-chart canvas {
+      max-width: 100% !important;
+    }
+
     ::ng-deep .pie-card p-chart canvas {
       width: 100% !important;
       height: 100% !important;
@@ -231,6 +235,9 @@ import {
       align-items: center;
       justify-content: center;
       width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
 
       .header{
         display: flex;
@@ -296,6 +303,76 @@ import {
         span{
           font-size: 22px;
         }
+      }
+    }
+
+    @media (max-width: 991px) {
+      .chart-container {
+        .header {
+          flex-direction: row;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 0 4px;
+
+          h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            flex: 1;
+          }
+
+          .right-side {
+            width: auto;
+            flex-wrap: wrap;
+            gap: 6px;
+          }
+        }
+
+        .buttons {
+          gap: 6px;
+          flex-wrap: wrap;
+          justify-content: flex-start;
+          padding: 6px 4px;
+        }
+
+        .fields {
+          display: flex !important;
+          flex-direction: column !important;
+          width: 100%;
+          box-sizing: border-box;
+          overflow: hidden;
+
+          .field {
+            padding: 6px 4px;
+            box-sizing: border-box;
+            width: 100%;
+            overflow: hidden;
+
+            label {
+              font-size: 0.75rem;
+              margin-bottom: 4px !important;
+            }
+          }
+        }
+
+        ::ng-deep .fields .p-select,
+        ::ng-deep .fields .p-multiselect {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        .total-monthly-data {
+          flex-wrap: wrap;
+          height: auto;
+          gap: 6px;
+          padding: 4px;
+
+          span {
+            font-size: 14px;
+          }
+        }
+
       }
     }
   `

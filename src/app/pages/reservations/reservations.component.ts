@@ -9,6 +9,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { LayoutService } from '../../layout/services/layout.service';
 import { DataService } from '../../core/services/data.service';
 import { TooltipModule } from 'primeng/tooltip';
+import { DialogModule } from 'primeng/dialog';
 import { ReservationFormComponent } from './reservation-form/reservation-form.component';
 import { HouseService } from '../../core/services/house.service';
 import { ExportReservationsService } from '../../core/services/export-reservations.service';
@@ -64,9 +65,13 @@ interface CellData {
                     </div>
 
                     <div class="year-switcher">
-                        <p-button [disabled]="isFirstSeason(selectedSeason)" (onClick)="generatePreviousSeasonsTable()" icon="pi pi-angle-left"></p-button>
-                        <span>{{ selectedSeason.year }}</span>
-                        <p-button [disabled]="isLastSeason(selectedSeason)" (onClick)="generateNextSeasonsTable()" icon="pi pi-angle-right"></p-button>
+                        <p-button class="mobile-picker-btn" icon="pi pi-home" (click)="showHouseTypeModal = true"></p-button>
+                        <div class="year-nav">
+                            <p-button [disabled]="isFirstSeason(selectedSeason)" (onClick)="generatePreviousSeasonsTable()" icon="pi pi-angle-left"></p-button>
+                            <span>{{ selectedSeason.year }}</span>
+                            <p-button [disabled]="isLastSeason(selectedSeason)" (onClick)="generateNextSeasonsTable()" icon="pi pi-angle-right"></p-button>
+                        </div>
+                        <p-button class="mobile-picker-btn" icon="pi pi-bars" (click)="showDensityModal = true"></p-button>
                     </div>
 
                     <div class="density-buttons">
@@ -203,6 +208,42 @@ interface CellData {
                 </table>
             </div>
 
+            <p-dialog
+                [(visible)]="showHouseTypeModal"
+                [modal]="true"
+                [style]="{width: '300px'}"
+                header="Vrsta kućice"
+            >
+                <div class="house-type-modal-list">
+                    @for (type of houseTypes(); track type.house_type_id) {
+                        <p-button
+                            [label]="type.house_type_name | titlecase"
+                            [severity]="selectedHouseTypeId() == type.house_type_id ? 'primary' : 'secondary'"
+                            styleClass="w-full"
+                            (click)="setSelectedHouseType(type.house_type_id); showHouseTypeModal = false"
+                        ></p-button>
+                    }
+                </div>
+            </p-dialog>
+
+            <p-dialog
+                [(visible)]="showDensityModal"
+                [modal]="true"
+                [style]="{width: '300px'}"
+                header="Visina reda"
+            >
+                <div class="house-type-modal-list">
+                    @for (btn of densityButtons; track btn.name) {
+                        <p-button
+                            [label]="'RESERVATIONS.HEADER.TOOLTIPS.ROW-HEIGHT-' + (btn.name | uppercase) | translate"
+                            [severity]="cellHeightInPx == btn.cellHeightPx ? 'primary' : 'secondary'"
+                            styleClass="w-full"
+                            (click)="changeCellHeight(btn.cellHeightPx); showDensityModal = false"
+                        ></p-button>
+                    }
+                </div>
+            </p-dialog>
+
             @if(showReservationForm()){
                 <app-reservation-form 
                     [reservation]="editingReservation()"
@@ -252,12 +293,20 @@ interface CellData {
                         width: 500px;
                     }
 
+                    .mobile-picker-btn {
+                        display: none;
+                    }
+
                     .year-switcher {
                         display: flex;
                         flex-direction: row;
                         align-items: center;
                         justify-content: space-between;
                         width: 200px;
+
+                        .year-nav {
+                            display: contents;
+                        }
 
                         span{
                             font-weight: bold;
@@ -695,6 +744,101 @@ interface CellData {
             }
         }
 
+        @media screen and (max-width: 991px) {
+            ::ng-deep .year-nav .p-button {
+                padding: 6px 2px !important;
+                min-width: unset !important;
+            }
+
+            .mobile-picker-btn {
+                display: inline-flex !important;
+            }
+
+            .reservations-container {
+                padding: 8px !important;
+                border-radius: 0 !important;
+                height: 100dvh !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+
+                .row {
+                    height: auto !important;
+                    margin-bottom: 6px !important;
+                }
+
+                .tabs {
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                    gap: 6px !important;
+                    height: auto !important;
+                    justify-content: flex-start !important;
+
+                    .house-type-tabs {
+                        display: none !important;
+                    }
+
+                    .year-switcher {
+                        width: 100% !important;
+                        justify-content: space-between !important;
+                        align-items: center !important;
+                        gap: 0 !important;
+                        padding-top: 12px !important;
+
+                        .year-nav {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            align-items: center !important;
+                            gap: 20px !important;
+
+                            span {
+                                font-size: 20px !important;
+                                padding: 0 6px;
+                            }
+
+                        }
+                    }
+
+                    .density-buttons {
+                        display: none !important;
+                    }
+                }
+
+                .table-container {
+                    flex: 1 !important;
+                    height: 0 !important;
+
+                    .reservation-table {
+                        th, td {
+                            width: 80px !important;
+                            min-width: 80px !important;
+                            max-width: 80px !important;
+                        }
+
+                        .house-header, .row-header {
+                            width: 45px !important;
+                            min-width: 45px !important;
+                            max-width: 45px !important;
+                        }
+
+                        .reserved-cell {
+                            width: 80px !important;
+                            max-width: 80px !important;
+                        }
+
+                        .reservation-numbers {
+                            gap: 2px !important;
+                            padding: 0 2px !important;
+                        }
+
+                        .handle-icon {
+                            display: none !important;
+                        }
+                    }
+                }
+            }
+        }
+
         @keyframes cell-selected-pulse {
             0% {
                 border-color: rgba(0, 123, 255, 1);
@@ -710,6 +854,12 @@ interface CellData {
             }
         }
 
+        .house-type-modal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
         ::ng-deep .p-tooltip {
             .p-tooltip-text {
                 color: var(--text-color);
@@ -719,13 +869,14 @@ interface CellData {
     ,
     standalone: true,
     imports: [
-        CommonModule, 
+        CommonModule,
         ProgressSpinnerModule,
         ReservationFormComponent,
         TranslateModule,
         ButtonModule,
         TitleCasePipe,
         TooltipModule,
+        DialogModule,
     ],
     providers: [DatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -757,6 +908,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     private _previousHouseTypeId: number = 0;
 
     showReservationForm = signal<boolean>(false);
+    showHouseTypeModal = false;
+    showDensityModal = false;
     selectedHouseId = signal<number>(0);
     selectedStartDate = signal<Date>(new Date());
     selectedEndDate = signal<Date>(new Date());
@@ -809,7 +962,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         private translateService: TranslateService,
         private confirmationService: ConfirmationService,
         private datePipe: DatePipe,
-        private layoutService: LayoutService,
+        public layoutService: LayoutService,
         public exportReservationsService: ExportReservationsService,
         private storageService: StorageService,
     ) {
@@ -821,6 +974,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             } else {
                 this.isNightMode = newNightMode;
             }
+        });
+
+        effect(() => {
+            document.body.classList.toggle('reservation-form-open', this.showReservationForm());
         });
     }
 

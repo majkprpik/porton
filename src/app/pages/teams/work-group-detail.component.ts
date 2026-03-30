@@ -165,6 +165,8 @@ import { DetailedTaskCardComponent } from './detailed-task-card.component';
             background-color: var(--surface-card);
             border-radius: 8px;
             padding-bottom: 80px;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         .work-group-header {
@@ -231,7 +233,14 @@ import { DetailedTaskCardComponent } from './detailed-task-card.component';
             flex-direction: row;
             flex-wrap: wrap;
             gap: 0.5rem;
-            width: 100%
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        @media screen and (max-width: 991px) {
+            .tasks-list {
+                flex-direction: column;
+            }
         }
 
         .empty-section {

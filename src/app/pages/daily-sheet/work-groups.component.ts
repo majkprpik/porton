@@ -179,7 +179,6 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
     .work-groups-container {
       height: 100%;
       padding: 1rem;
-      padding-left: 30px;
       background: var(--glass-bg);
       backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -254,7 +253,19 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
           height: 45px;
 
           .add-new-group-button{
-            margin-right: 70px;
+            margin-right: 40px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .p-panel-header {
+            height: auto;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+
+            .add-new-group-button {
+              margin-right: 0 !important;
+            }
           }
         }
 

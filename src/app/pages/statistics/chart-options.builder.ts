@@ -190,7 +190,8 @@ export class ChartOptionsBuilder {
         } : {
           ticks: {
             color: chartConfig.textColor,
-            autoSkip: false,
+            autoSkip: true,
+            maxTicksLimit: 16,
             callback: (_value: any, index: number) => xLabels[index]
           },
           grid: {

@@ -63,9 +63,22 @@ import { Chart } from '../../core/models/data.models';
       }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 991px) {
+      .statistics-container {
+        overflow-x: hidden;
+        max-width: 100%;
+      }
+
       .statistics-container .chart-row {
         grid-template-columns: 1fr;
+      }
+
+      .statistics-container .chart-container {
+        padding: 8px !important;
+        min-height: unset !important;
+        overflow: hidden;
+        max-width: 100%;
+        box-sizing: border-box;
       }
     }
   `,

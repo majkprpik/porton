@@ -240,3 +240,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
         }
     }
 }
+
+body.reservation-form-open .p-speeddial {
+    display: none !important;
+}

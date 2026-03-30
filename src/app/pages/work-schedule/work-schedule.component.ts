@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { WorkScheduleFormComponent } from './work-schedule-form/work-schedule-form.component';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { DataService } from '../../core/services/data.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { LayoutService } from '../../layout/services/layout.service';
@@ -19,16 +20,60 @@ import { StorageService, STORAGE_KEYS } from '../../core/services/storage.servic
 @Component({
   selector: 'app-work-schedule',
   imports: [
-    CommonModule, 
-    FormsModule, 
-    TranslateModule, 
-    WorkScheduleFormComponent, 
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    WorkScheduleFormComponent,
     ButtonModule,
+    DialogModule,
     WorkScheduleExportFormComponent,
     TooltipModule,
   ],
   template: `
       <div class="work-schedule-container">
+
+        <!-- Mobile compact header -->
+        <div class="mobile-top">
+          @if(!isRestrictedUser){
+            <p-button icon="pi pi-users" (click)="showDeptModal = true"></p-button>
+          } @else {
+            <div class="spacer"></div>
+          }
+          <div class="year-nav">
+            <p-button [disabled]="isFirstSeason(selectedSeason)" (onClick)="generatePreviousSeasonsTable()" icon="pi pi-angle-left"></p-button>
+            <span>{{ selectedSeason.year }}</span>
+            <p-button [disabled]="isLastSeason(selectedSeason)" (onClick)="generateNextSeasonsTable()" icon="pi pi-angle-right"></p-button>
+          </div>
+          <p-button icon="pi pi-bars" (click)="showDensityModal = true"></p-button>
+        </div>
+
+        <p-dialog [(visible)]="showDeptModal" [modal]="true" [style]="{width: '300px'}" header="Odjel">
+          <div class="picker-modal-list">
+            @for(department of departments; track $index){
+              <p-button
+                [label]="'WORK-SCHEDULE.HEADER.TABS.' + (department | uppercase) | translate"
+                [severity]="selectedDepartment == department ? 'primary' : 'secondary'"
+                styleClass="w-full"
+                (click)="filterProfilesByDepartment(department); showDeptModal = false">
+              </p-button>
+            }
+          </div>
+        </p-dialog>
+
+        <p-dialog [(visible)]="showDensityModal" [modal]="true" [style]="{width: '300px'}" header="Gustoća redaka">
+          <div class="picker-modal-list">
+            @for(densityButton of densityButtons; track $index){
+              <p-button
+                [icon]="densityButton.icon"
+                [label]="'WORK-SCHEDULE.HEADER.TOOLTIPS.ROW-HEIGHT-' + (densityButton.name | uppercase) | translate"
+                [severity]="cellHeightInPx == densityButton.cellHeightPx ? 'primary' : 'secondary'"
+                styleClass="w-full"
+                (click)="changeCellHeight(densityButton.cellHeightPx); showDensityModal = false">
+              </p-button>
+            }
+          </div>
+        </p-dialog>
+
         <div class="top">
           <div class="profile-buttons">
             @if(!isRestrictedUser){
@@ -679,6 +724,78 @@ import { StorageService, STORAGE_KEYS } from '../../core/services/storage.servic
             color: var(--text-color);
         }
     }
+
+    .mobile-top {
+      display: none;
+    }
+
+    .picker-modal-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    @media (max-width: 991px) {
+      .work-schedule-container {
+        height: calc(100dvh - 56px) !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        display: flex;
+        flex-direction: column;
+
+        .top {
+          display: none !important;
+        }
+
+        .table-container {
+          flex: 1 !important;
+          height: 0 !important;
+        }
+      }
+
+      .mobile-top {
+        display: flex !important;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        gap: 8px;
+        border-bottom: 1px solid var(--glass-border);
+        flex-shrink: 0;
+
+        .spacer {
+          width: 40px;
+        }
+
+        .year-nav {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 20px;
+
+          span {
+            font-weight: bold;
+            font-size: 20px;
+          }
+        }
+      }
+
+      .schedule-table th,
+      .schedule-table td {
+        width: 100px !important;
+        min-width: 100px !important;
+        max-width: 100px !important;
+      }
+
+      .schedule-table .house-header,
+      .schedule-table .row-header {
+        width: 90px !important;
+        min-width: 90px !important;
+        max-width: 90px !important;
+      }
+    }
     `
 })
 export class WorkScheduleComponent {
@@ -695,6 +812,8 @@ export class WorkScheduleComponent {
 
   showScheduleForm = false;
   showExportScheduleForm = false;
+  showDeptModal = false;
+  showDensityModal = false;
   selectedProfileId = '';
   selectedProfile: Profile | undefined = undefined;
   selectedStartDate: Date = new Date();

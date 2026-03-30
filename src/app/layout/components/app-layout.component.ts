@@ -601,6 +601,12 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 }
             }
 
+            @media (max-width: 991px) {
+                ::ng-deep .p-speeddial {
+                    bottom: calc(56px + 1rem) !important;
+                }
+            }
+
             .upload-a-photo{
                 .task-images-container{
                     min-height: 150px;
@@ -1371,7 +1377,7 @@ export class AppLayout {
                 command: () => this.isUnscheduledTaskVisible = true
             });
 
-            if (!this.profileService.isHouseTechnician(this.storedUserId)) {
+            if (!this.profileService.isHouseTechnician(this.storedUserId) && !this.layoutService.isMobile()) {
                 this.speedDialItems.push(
                     {
                         icon: 'pi pi-clipboard',

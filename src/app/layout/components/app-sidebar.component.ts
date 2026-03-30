@@ -18,9 +18,9 @@ import { NavigationEnd, Router } from '@angular/router';
     template: `
         <div class="layout-sidebar">
             <div class="sidebar-content">
-                <div 
-                    class="menu-item" 
-                    *ngFor="let item of model; let i = index" 
+                <div
+                    class="menu-item"
+                    *ngFor="let item of model; let i = index"
                     [class.active]="selectedItem === i"
                     (click)="selectItem(i); navigateTo(item.routerLink[0])"
                 >
@@ -35,6 +35,20 @@ import { NavigationEnd, Router } from '@angular/router';
                 </div>
             </div>
         </div>
+
+        <nav class="bottom-nav">
+            <div
+                class="bottom-nav-item"
+                *ngFor="let item of model; let i = index"
+                [class.active]="selectedItem === i"
+                (click)="selectItem(i); navigateTo(item.routerLink[0])"
+            >
+                <i [ngClass]="item.icon"></i>
+            </div>
+            <div class="bottom-nav-item" (click)="openSettings()">
+                <i class="pi pi-cog"></i>
+            </div>
+        </nav>
     `,
     styles: [`
         .layout-sidebar {
@@ -161,6 +175,12 @@ import { NavigationEnd, Router } from '@angular/router';
             }
         }
 
+        @media (max-width: 991px) {
+            .layout-sidebar {
+                display: none;
+            }
+        }
+
         .layout-sidebar:hover,
         .layout-sidebar:focus-within {
             width: 250px;
@@ -182,6 +202,50 @@ import { NavigationEnd, Router } from '@angular/router';
             .sidebar-footer .layout-menuitem-text {
                 opacity: 1;
                 width: auto;
+            }
+        }
+        .bottom-nav {
+            display: none;
+        }
+
+        @media (max-width: 991px) {
+            .bottom-nav {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-around;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 56px;
+                z-index: 999;
+                background: var(--glass-bg);
+                backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+                -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+                border-top: 1px solid var(--glass-border);
+                box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+                padding-bottom: env(safe-area-inset-bottom);
+
+                .bottom-nav-item {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100%;
+                    cursor: pointer;
+                    color: var(--glass-text-secondary);
+                    font-size: 1.25rem;
+                    transition: color 0.2s;
+
+                    &.active {
+                        color: var(--primary-color);
+                    }
+
+                    &:active {
+                        opacity: 0.7;
+                    }
+                }
             }
         }
     `]

@@ -198,9 +198,20 @@ import { StorageService, STORAGE_KEYS } from '../../core/services/storage.servic
         </div>
     `,
     styles: `
-        @media screen and (max-width: 800px){
+        :host {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        @media screen and (max-width: 991px){
+            :host {
+                width: 100%;
+            }
             .task-card{
                 width: 100% !important;
+                max-width: 100%;
             }
         }
 

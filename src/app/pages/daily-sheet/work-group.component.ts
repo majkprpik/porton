@@ -445,6 +445,32 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
     }
 
+    @media (max-width: 768px) {
+      .work-group-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+
+        .work-group-title-area {
+          flex: 1;
+          order: 1;
+          min-width: 0;
+        }
+
+        .header-actions {
+          order: 2;
+        }
+
+        .activate-button {
+          order: 3;
+          width: 100%;
+        }
+      }
+
+      .work-group-content {
+        flex-direction: column;
+      }
+    }
+
     :host ::ng-deep {
       .activate-button {
         .p-button {
@@ -453,6 +479,15 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
           font-weight: 600;
           padding: 0.75rem 2rem;
           text-transform: uppercase;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .activate-button .p-button {
+          min-width: unset !important;
+          width: 100% !important;
+          font-size: 0.9rem !important;
+          padding: 0.5rem 1rem !important;
         }
       }
     }

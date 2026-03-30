@@ -241,6 +241,12 @@ import { DragDropModule } from "primeng/dragdrop";
                     padding: 1rem;
                     border-radius: 0 0 10px 10px;
                 }
+
+                @media (max-width: 991px) {
+                    width: calc(100vw - 2rem) !important;
+                    max-height: calc(100dvh - 56px - 5rem) !important;
+                    margin-bottom: calc(56px + 1rem) !important;
+                }
             }
             
             .form-grid {
@@ -317,26 +323,6 @@ import { DragDropModule } from "primeng/dragdrop";
                     gap: 0.5rem;
                 }
                 
-                @media (max-width: 576px) {
-                    flex-direction: column;
-                    gap: 1rem;
-                    
-                    .left-buttons {
-                        justify-content: center;
-                        
-                        .p-button {
-                            width: 100%;
-                        }
-                    }
-                    
-                    .right-buttons {
-                        justify-content: space-between;
-                        
-                        .p-button {
-                            flex: 1;
-                        }
-                    }
-                }
             }
 
             .babies-cribs-row, .pets-row {

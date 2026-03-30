@@ -325,8 +325,10 @@ import { CommonModule } from '@angular/common';
             padding-right: 0;
             display: flex;
             flex-direction: row;
+            flex-wrap: wrap;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
+            overflow: hidden;
 
             i {
                 font-size: 1.25rem;
