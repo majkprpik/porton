@@ -319,11 +319,6 @@ interface SpecialLocation {
                 }
 
                 @media screen and (max-width: 1200px) {
-                    .houses-container{
-                        .house-grid {
-                            grid-template-columns: repeat(4, 1fr);
-                        }
-                    }
                 }
 
                 @media screen and (min-width: 992px) {
@@ -364,12 +359,6 @@ interface SpecialLocation {
                         }
                     }
 
-                    .houses-container{
-                        .house-grid {
-                            grid-template-columns: repeat(2, 1fr);
-                        }
-                    }
-                    
                     .house-controls {
                         align-items: stretch;
 
@@ -451,25 +440,32 @@ export class Home implements OnInit, OnDestroy {
             this.dataService.houseAvailabilities$.pipe(nonNull()),
             this.dataService.houseTypes$.pipe(nonNull()),
             this.dataService.houses$.pipe(nonNull()),
-            this.dataService.pinnedCharts$.pipe(nonNull())
+            this.dataService.tasks$.pipe(nonNull()),
+            this.dataService.workGroupTasks$.pipe(nonNull()),
+            this.dataService.workGroupProfiles$.pipe(nonNull()),
+            this.dataService.workGroups$.pipe(nonNull()),
+            this.dataService.tempHouseAvailabilities$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
-        .subscribe(([availabilities, houseTypes, houses, pinnedCharts]) => {
+        .subscribe(([availabilities, houseTypes, houses]) => {
             this.houseAvailabilities.set(availabilities);
             this.houseTypes.set(houseTypes);
-            
-            this.pinnedCharts = this.statisticsService.charts.filter(c =>
-                pinnedCharts.some(pc =>
-                    pc.chart_name === c.dataType &&
-                    pc.profile_id === this.authService.getStoredUserId()
-                )
-            );
 
             const filteredHouses = houses.filter(h => h.house_number > 0);
             this.houses.set(filteredHouses);
             this.filteredHouses.set(filteredHouses);
 
             this.applyFilters();
+        });
+
+        this.dataService.pinnedCharts$.pipe(nonNull(), takeUntil(this.destroy$))
+        .subscribe(pinnedCharts => {
+            this.pinnedCharts = this.statisticsService.charts.filter(c =>
+                pinnedCharts.some(pc =>
+                    pc.chart_name === c.dataType &&
+                    pc.profile_id === this.authService.getStoredUserId()
+                )
+            );
         });
     }
 

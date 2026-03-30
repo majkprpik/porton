@@ -165,20 +165,20 @@ interface ExtendedHouse extends House{
           <div class="p-error">{{existingHouseErrorMessage}}</div>
         </div>
       }
-      <div class="p-dialog-footer">
+      <ng-template pTemplate="footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialogs()" styleClass="p-button-text"></p-button>
         <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="saveHouse(selectedHouse!)" [disabled]="!selectedHouse"></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
 
     <p-dialog [(visible)]="isDeleteHouseModuleVisible" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.HOUSES.DELETE.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
       <label>
         {{ 'CONTENT-MANAGEMENT.HOUSES.DELETE.TEXT' | translate }} <b>{{ selectedHouse?.house_name }}</b>?
       </label>
-      <div class="p-dialog-footer">
+      <ng-template pTemplate="footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialogs()" styleClass="p-button-text"></p-button>
         <p-button [label]="'BUTTONS.DELETE' | translate" icon="pi pi-trash" (click)="deleteHouse(selectedHouse!.house_id)" styleClass="p-button-danger" [disabled]="!selectedHouse"></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
 
     <p-dialog 
@@ -258,20 +258,20 @@ interface ExtendedHouse extends House{
           <div class="p-error">{{existingHouseErrorMessage}}</div>
         </div>
       }
-      <div class="p-dialog-footer">
-        <p-button 
-          [label]="'BUTTONS.CANCEL' | translate" 
-          icon="pi pi-times" 
-          (click)="hideDialogs()" 
+      <ng-template pTemplate="footer">
+        <p-button
+          [label]="'BUTTONS.CANCEL' | translate"
+          icon="pi pi-times"
+          (click)="hideDialogs()"
           styleClass="p-button-text">
         </p-button>
-        <p-button 
-          [label]="'BUTTONS.SAVE' | translate" 
-          icon="pi pi-check" 
-          (click)="createHouse(houseToCreate!)" 
+        <p-button
+          [label]="'BUTTONS.SAVE' | translate"
+          icon="pi pi-check"
+          (click)="createHouse(houseToCreate!)"
           [disabled]="!isCreateHouseFormValid()">
         </p-button>
-      </div>
+      </ng-template>
     </p-dialog>
     <p-toast></p-toast>
   `,

@@ -115,6 +115,7 @@ export class Login {
 
                 if(!userAccessData || userAccessData.is_deleted) {
                     this.authService.logout();
+                    return;
                 }
                 
                 this.dataService.loadInitialData().subscribe({

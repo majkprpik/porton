@@ -112,14 +112,12 @@ export class AuthService {
     try {
       const storedUserID = this.getStoredUserId();
 
-      await this.dataService.unsubscribeFromRealtime();
-      await this.pushNotificationsService.clearToken();
-
-      if (storedUserID) {
-        await this.deviceService.unregisterDevice(storedUserID);
-      }
-
-      await this.supabaseService.getClient().auth.signOut();
+      await Promise.all([
+        this.dataService.unsubscribeFromRealtime(),
+        this.pushNotificationsService.clearToken(),
+        storedUserID ? this.deviceService.unregisterDevice(storedUserID) : Promise.resolve(),
+        this.supabaseService.getClient().auth.signOut(),
+      ]);
       this.clearLocalStorage();
 
       await this.router.navigate(['/login']);

@@ -84,7 +84,6 @@ import { CommonModule } from '@angular/common';
         min-width: unset;
         position: relative;
         z-index: 1;
-        max-width: 400px;
         height: 100%;
         backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
         -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));

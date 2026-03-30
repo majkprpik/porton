@@ -35,10 +35,11 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
             @if(isToday(selectedDate)){
               <span [ngStyle]="{'height': '20px'}">{{ 'APP-LAYOUT.NOTES.TODAY' | translate }}</span>
             } @else {
-              <p-datePicker 
-                [(ngModel)]="selectedDate" 
-                [showIcon]="true" 
+              <p-datePicker
+                [(ngModel)]="selectedDate"
+                [showIcon]="true"
                 dateFormat="dd/mm/yy"
+                appendTo="body"
                 [inputStyle]="{
                   height: '20px',
                   width: '100px',

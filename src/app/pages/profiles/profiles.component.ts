@@ -135,20 +135,20 @@ interface ExtendedProfile {
           </div>
         }
       }
-      <div class="p-dialog-footer">
+      <ng-template pTemplate="footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
         <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="saveProfile()" [disabled]="!selectedProfile"></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
 
     <p-dialog [(visible)]="showDeleteProfileDialog" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.PROFILES.DELETE.HEADER' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
       <label>
         {{ 'CONTENT-MANAGEMENT.PROFILES.DELETE.MESSAGE' | translate }} <b>{{ selectedProfile.first_name }}</b>?
       </label>
-      <div class="p-dialog-footer">
+      <ng-template pTemplate="footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
         <p-button [label]="'BUTTONS.DELETE' | translate" icon="pi pi-trash" (click)="deleteProfile(selectedProfile.id)" styleClass="p-button-danger" [disabled]="!selectedProfile"></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
 
     <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.PROFILES.ADD.ADD-NEW-PROFILE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
@@ -190,10 +190,10 @@ interface ExtendedProfile {
           </p-select>
         </div>
       }
-      <div class="p-dialog-footer">
+      <ng-template pTemplate="footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialog()" styleClass="p-button-text"></p-button>
         <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="createProfile()" [disabled]="!isNewProfileValid()"></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
     <p-toast></p-toast>
   `,
@@ -240,11 +240,24 @@ interface ExtendedProfile {
       margin-bottom: 0.5rem;
     }
     
+    ::ng-deep .p-dialog {
+      border-radius: 10px;
+      overflow: hidden;
+
+      .p-dialog-header {
+        border-radius: 10px 10px 0 0;
+      }
+
+      .p-dialog-footer {
+        border-radius: 0 0 10px 10px;
+      }
+    }
+
     .p-dialog-footer {
       display: flex;
       justify-content: flex-end;
       gap: 0.5rem;
-      padding-top: 1.5rem;
+      padding: 1.5rem 0 0 0;
     }
     
     .divider-row {

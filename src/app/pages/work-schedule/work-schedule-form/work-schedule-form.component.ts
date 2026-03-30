@@ -194,7 +194,7 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
               [label]="'BUTTONS.DELETE' | translate"
               icon="pi pi-trash" 
               (click)="onDelete()" 
-              styleClass="p-button-danger p-button-text">
+              severity="danger">
             </p-button>
           }
         </div>
@@ -243,7 +243,7 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
       }
       
       .p-dialog-footer {
-        padding: 1rem;
+        padding: 1rem !important;
       }
 
       .schedule{

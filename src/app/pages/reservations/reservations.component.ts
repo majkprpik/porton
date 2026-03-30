@@ -164,7 +164,7 @@ interface CellData {
                                     >
                                         @if (cell.isReserved && cell.isReservationStart) {
                                             <div class="reservation-item">
-                                                <i class="pi pi-arrows-alt handle-icon" (click)="getDroppableSpotsForReservation($event, i, j)"></i>
+                                                <i class="pi pi-arrows-alt handle-icon" (mousedown)="$event.stopPropagation()" (click)="getDroppableSpotsForReservation($event, i, j)"></i>
                                                 {{ cell.displayText }}
                                             </div>
                                         } @else if (cell.isReserved && j > 0 && gridMatrix()[i][j - 1].isReservationStart) {
@@ -236,12 +236,14 @@ interface CellData {
 
             .row{
                 height: 45px;
+                margin-bottom: 10px;
 
                 .tabs{
                     display: flex;
                     flex-direction: row;
-                    align-items: top;
+                    align-items: center;
                     justify-content: space-between;
+                    height: 100%;
 
                     .house-type-tabs {
                         display: flex;
@@ -265,14 +267,15 @@ interface CellData {
 
                     .density-buttons{
                         width: 500px;
+                        height: 45px;
                         display: flex;
                         flex-direction: row;
-                        align-items: top;
+                        align-items: center;
                         justify-content: flex-end;
                         gap: 10px;
 
                         .vertical-line {
-                            height: 100%;
+                            height: 33px;
                             width: 1px;
                             background-color: lightgray;
                         }
@@ -287,8 +290,7 @@ interface CellData {
                     }
 
                     .cancel-selection-button{
-                        margin-bottom: 8px;
-                        padding-bottom: 5px;
+                        align-self: center;
                     }
                 }
             }
@@ -1288,10 +1290,13 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     private getSelectedReservationLength(reservation: HouseAvailability){
-        const start = new Date(reservation.house_availability_start_date);
-        const end = new Date(reservation.house_availability_end_date);
-        const timeDiff = end.getTime() - start.getTime();
-        return Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+        const parseUtcDate = (dateStr: string) => {
+            const [year, month, day] = dateStr.substring(0, 10).split('-').map(Number);
+            return Date.UTC(year, month - 1, day);
+        };
+        const startMs = parseUtcDate(reservation.house_availability_start_date);
+        const endMs = parseUtcDate(reservation.house_availability_end_date);
+        return Math.round((endMs - startMs) / (1000 * 60 * 60 * 24)) + 1;
     }
 
     private generateDaysForSeason(season: Season): Date[] {

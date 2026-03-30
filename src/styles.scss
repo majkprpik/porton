@@ -125,10 +125,19 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
         -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
     }
 
+    .p-dialog-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .p-dialog-footer {
+        border-radius: 0 0 10px 10px !important;
+    }
+
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow-elevated);
-    border-radius: var(--content-border-radius);
-    overflow: hidden;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    clip-path: inset(0 round 10px);
 }
 
 .p-select-overlay,

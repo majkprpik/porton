@@ -333,13 +333,12 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
 
                 <div class="field mt-4">
                     <label for="description" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.DESCRIPTION' | translate }}</label>
-                    <textarea 
-                        id="description" 
-                        class="p-inputtext"
-                        pTextarea  
-                        [(ngModel)]="faultDescription" 
-                        [rows]="5" 
-                        [style]="{ width: '100%' }" 
+                    <textarea
+                        id="description"
+                        pTextarea
+                        [(ngModel)]="faultDescription"
+                        [rows]="5"
+                        [style]="{ width: '100%' }"
                         [placeholder]="'APP-LAYOUT.REPAIR-TASK-REPORT.ADD-DESCRIPTION' | translate"
                     ></textarea>
                 </div>
@@ -619,14 +618,15 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 word-break: break-word;
                 white-space: normal;
                 align-items: flex-start;
-                background-color: white;
+                background-color: var(--surface-ground);
+                color: var(--text-color);
             }
 
             .comments-footer {
                 height: 30px;
                 width: 100%;
                 border-radius: 0 0 10px 10px;
-                border-top: 1px solid #e5e7eb;
+                border-top: 1px solid var(--surface-border);
 
                 textarea {
                     width: 100%;
@@ -1840,6 +1840,7 @@ export class AppLayout {
 
         this.resetFaultReportForm();
         this.resetUnscheduledTaskForm();
+        this.profileService.$profileModalData.next(null);
     }
 
     subscribeToDataUpdates(){

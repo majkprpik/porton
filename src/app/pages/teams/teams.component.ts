@@ -140,6 +140,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         :host ::ng-deep {
             .no-groups-assigned{
                 width: 100%;
+                height: 50vh;
                 display: flex;
                 flex-direction: row;
                 align-items: center;

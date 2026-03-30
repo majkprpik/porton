@@ -179,7 +179,7 @@ import { DragDropModule } from "primeng/dragdrop";
                                 [label]="'BUTTONS.DELETE' | translate"
                                 icon="pi pi-trash" 
                                 (click)="onDelete()" 
-                                styleClass="p-button-danger p-button-text">
+                                severity="danger">
                             </p-button>
                         }
                     </div>
@@ -239,6 +239,7 @@ import { DragDropModule } from "primeng/dragdrop";
                 
                 .p-dialog-footer {
                     padding: 1rem;
+                    border-radius: 0 0 10px 10px;
                 }
             }
             
@@ -483,15 +484,18 @@ export class ReservationFormComponent implements OnInit {
 
     setMinStartDate(){
         const prevHouseAvailability = this.houseService.getPreviousHouseAvailabilityFromHouseAvailability(this.reservation);
-        
-        if(prevHouseAvailability){
-            this.minStartDate = new Date(prevHouseAvailability.house_availability_end_date);
-            this.minStartDate.setDate(this.minStartDate.getDate() + 1);
-        } else {
-            this.minStartDate = new Date();
-        }
 
-        this.minStartDate.setHours(0, 0, 0, 0);
+        const seasonStart = new Date(this.season.season_start_date);
+        seasonStart.setHours(0, 0, 0, 0);
+
+        if(prevHouseAvailability){
+            const prevEnd = new Date(prevHouseAvailability.house_availability_end_date);
+            prevEnd.setDate(prevEnd.getDate() + 1);
+            prevEnd.setHours(0, 0, 0, 0);
+            this.minStartDate = prevEnd > seasonStart ? prevEnd : seasonStart;
+        } else {
+            this.minStartDate = seasonStart;
+        }
     }
 
     setMaxStartDate(){
