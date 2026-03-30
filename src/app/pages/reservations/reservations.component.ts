@@ -500,6 +500,11 @@ interface CellData {
                             background-color: var(--p-orange-400);
                             color: white;
                         }
+
+                        &.has-jacuzzi {
+                            background-color: #00bcd4;
+                            color: white;
+                        }
                     }
 
                     .selected-cell {
@@ -586,6 +591,14 @@ interface CellData {
                         box-shadow: inset 0 0 0 1000px rgba(33, 150, 243, 0.07) !important;
                         border-top: 1px solid rgba(33, 150, 243, 0.4) !important;
                         border-bottom: 1px solid rgba(33, 150, 243, 0.4) !important;
+
+                        &.no-pool-row {
+                            box-shadow: inset 0 0 0 1000px rgba(33, 150, 243, 0.07), inset 0 3px 0 rgba(251, 146, 60, 0.7), inset 0 -3px 0 rgba(251, 146, 60, 0.7) !important;
+                        }
+
+                        &.has-jacuzzi-row {
+                            box-shadow: inset 0 0 0 1000px rgba(33, 150, 243, 0.07), inset 0 3px 0 rgba(0, 188, 212, 0.7), inset 0 -3px 0 rgba(0, 188, 212, 0.7) !important;
+                        }
                     }
 
                     .free-column {
@@ -703,29 +716,11 @@ interface CellData {
                     }
 
                     .no-pool-row {
-                        position: relative;
+                        box-shadow: inset 0 3px 0 rgba(251, 146, 60, 0.7), inset 0 -3px 0 rgba(251, 146, 60, 0.7) !important;
+                    }
 
-                        &::after {
-                            content: '';
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                            right: 0;
-                            height: 3px;
-                            background: linear-gradient(90deg, var(--p-orange-300), var(--p-orange-400));
-                            opacity: 0.7;
-                        }
-
-                        &::before {
-                            content: '';
-                            position: absolute;
-                            bottom: 0;
-                            left: 0;
-                            right: 0;
-                            height: 3px;
-                            background: linear-gradient(90deg, var(--p-orange-300), var(--p-orange-400));
-                            opacity: 0.7;
-                        }
+                    .has-jacuzzi-row {
+                        box-shadow: inset 0 3px 0 rgba(0, 188, 212, 0.7), inset 0 -3px 0 rgba(0, 188, 212, 0.7) !important;
                     }
 
                     .is-active {
@@ -1124,6 +1119,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             const house = houses[i];
             const row: CellData[] = [];
             const hasPool = this.handleHasPoolDisplay(house);
+            const hasJacuzzi = this.handleHasJacuzziDisplay(house);
             const isActive = this.handleIsActiveDisplay(house);
 
             for (let j = 0; j < metadata.length; j++) {
@@ -1131,7 +1127,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
                 const key = `${house.house_id}-${dayMeta.timestamp}`;
                 const reservation = this.reservationMap.get(key);
 
-                row.push(this.createCellData(dayMeta, reservation, i, j, hasPool, isActive, isNightMode, cellHeight));
+                row.push(this.createCellData(dayMeta, reservation, i, j, hasPool, hasJacuzzi, isActive, isNightMode, cellHeight));
             }
 
             grid.push(row);
@@ -1169,6 +1165,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         if (this.handleHasPoolDisplay(house)) {
             classes.push('has-pool');
         }
+        if (this.handleHasJacuzziDisplay(house)) {
+            classes.push('has-jacuzzi');
+        }
         if (this.handleIsActiveDisplay(house)) {
             classes.push('is-active-header');
         }
@@ -1189,6 +1188,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         rowIndex: number,
         colIndex: number,
         hasPool: boolean,
+        hasJacuzzi: boolean,
         isActive: boolean,
         isNightMode: boolean | undefined,
         cellHeight: number
@@ -1289,7 +1289,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             cellData.petsCount = (reservation.dogs_d || 0) + (reservation.dogs_s || 0) + (reservation.dogs_b || 0);
         }
 
-        cellData.cssClasses = this.buildCellClasses(cellData, rowIndex, colIndex, hasPool, isActive, isNightMode, cellHeight);
+        cellData.cssClasses = this.buildCellClasses(cellData, rowIndex, colIndex, hasPool, hasJacuzzi, isActive, isNightMode, cellHeight);
 
         return cellData;
     }
@@ -1299,6 +1299,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         rowIndex: number,
         colIndex: number,
         hasPool: boolean,
+        hasJacuzzi: boolean,
         isActive: boolean,
         isNightMode: boolean | undefined,
         cellHeight: number
@@ -1329,6 +1330,9 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         }
         if (hasPool) {
             classes.push('no-pool-row');
+        }
+        if (hasJacuzzi) {
+            classes.push('has-jacuzzi-row');
         }
 
         if (isActive) classes.push('is-active');
@@ -2199,7 +2203,11 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     handleHasPoolDisplay(house: House){
-        return !house.has_pool && house.house_id > 0 && house.house_number > 0;
+        return !house.has_pool && !house.has_jacuzzi && house.house_id > 0 && house.house_number > 0;
+    }
+
+    handleHasJacuzziDisplay(house: House){
+        return house.has_jacuzzi && house.house_id > 0 && house.house_number > 0;
     }
 
     handleIsActiveDisplay(house: House){

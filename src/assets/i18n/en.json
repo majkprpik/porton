@@ -544,6 +544,7 @@
                 "HOUSE-NAME": "House name",
                 "HOUSE-TYPE": "House type",
                 "HAS-POOL": "Has pool",
+                "HAS-JACUZZI": "Has jacuzzi",
                 "IS-ACTIVE": "Is active",
                 "DESCRIPTION": "Description",
                 "ACTIONS": "Actions"
@@ -554,6 +555,7 @@
                 "HOUSE-NAME": "House name",
                 "HOUSE-TYPE": "House type",
                 "HAS-POOL": "Has pool",
+                "HAS-JACUZZI": "Has jacuzzi",
                 "DESCRIPTION": "Description",
                 "DESCRIPTION-PLACEHOLDER": "Add any notes or details about this house",
                 "IS-ACTIVE": "Is active"
@@ -564,6 +566,7 @@
                 "HOUSE-NAME": "House name",
                 "HOUSE-TYPE": "House type",
                 "HAS-POOL": "Has pool",
+                "HAS-JACUZZI": "Has jacuzzi",
                 "DESCRIPTION": "Description",
                 "DESCRIPTION-PLACEHOLDER": "Add any notes or details about this house",
                 "IS-ACTIVE": "Is active"

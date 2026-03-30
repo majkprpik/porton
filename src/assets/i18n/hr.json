@@ -544,6 +544,7 @@
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
                 "HAS-POOL": "Bazen",
+                "HAS-JACUZZI": "Jacuzzi",
                 "IS-ACTIVE": "Aktivna",
                 "DESCRIPTION": "Opis",
                 "ACTIONS": "Akcije"
@@ -554,6 +555,7 @@
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
                 "HAS-POOL": "Bazen",
+                "HAS-JACUZZI": "Jacuzzi",
                 "DESCRIPTION": "Opis",
                 "DESCRIPTION-PLACEHOLDER": "Unesi dodatne informacije o ovoj kućici",
                 "IS-ACTIVE": "Aktivna"
@@ -564,6 +566,7 @@
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
                 "HAS-POOL": "Bazen",
+                "HAS-JACUZZI": "Jacuzzi",
                 "DESCRIPTION": "Opis",
                 "DESCRIPTION-PLACEHOLDER": "Unesi dodatne informacije o ovoj kućici",
                 "IS-ACTIVE": "Aktivna"
