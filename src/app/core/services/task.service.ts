@@ -262,8 +262,8 @@ export class TaskService {
         .from('tasks')
         .update({ 
           task_progress_type_id: taskProgressTypeId,
-          completed_by: isCompleted ? this.authService.getStoredUserId() : null,
-          end_time: isCompleted ? this.supabaseService.formatDateTimeForSupabase(new Date()) : null,
+          completed_by: isCompleted ? this.authService.getStoredUserId() : task?.completed_by ?? null,
+          end_time: isCompleted ? this.supabaseService.formatDateTimeForSupabase(new Date()) : task?.end_time ?? null,
           start_time: isInProgress ? (task?.start_time ?? this.supabaseService.formatDateTimeForSupabase(new Date())) : task?.start_time,
         })
         .eq('task_id', task.task_id)
