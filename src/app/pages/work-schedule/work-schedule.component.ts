@@ -878,6 +878,7 @@ export class WorkScheduleComponent {
     ProfileRoles.VoditeljDomacinstva,
     ProfileRoles.Prodaja,
     ProfileRoles.VoditeljRecepcije,
+    ProfileRoles.SavjetnikUprave,
   ];
   isRestrictedUser = false;
 

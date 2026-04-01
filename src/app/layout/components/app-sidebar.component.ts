@@ -357,16 +357,17 @@ export class AppSidebar {
     private isRoleAllowedForRezervacije(role?: string): boolean {
         if (!role) return false;
 
-        const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == ProfileRoles.VoditeljRecepcije || 
-            profileRole.name == ProfileRoles.Prodaja || 
+        const allowedRoles = this.profileRoles.filter(profileRole =>
+            profileRole.name == ProfileRoles.VoditeljRecepcije ||
+            profileRole.name == ProfileRoles.Prodaja ||
             profileRole.name == ProfileRoles.Recepcija ||
+            profileRole.name == ProfileRoles.NocnaRecepcija ||
             profileRole.name == ProfileRoles.Uprava ||
-            profileRole.name == ProfileRoles.VoditeljDomacinstva || 
-            profileRole.name == ProfileRoles.VoditeljKampa || 
+            profileRole.name == ProfileRoles.VoditeljDomacinstva ||
+            profileRole.name == ProfileRoles.VoditeljKampa ||
             profileRole.name == ProfileRoles.SavjetnikUprave
         );
-        
+
         return allowedRoles.some(allowedRole => allowedRole.name == role);
     }
 
@@ -377,16 +378,18 @@ export class AppSidebar {
     private canViewTimovi(role?: string): boolean {
         if (!role) return false;
 
-        const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == ProfileRoles.KucniMajstor || 
-            profileRole.name == ProfileRoles.Odrzavanje || 
-            profileRole.name == ProfileRoles.SavjetnikUprave || 
+        const allowedRoles = this.profileRoles.filter(profileRole =>
+            profileRole.name == ProfileRoles.KucniMajstor ||
+            profileRole.name == ProfileRoles.Odrzavanje ||
+            profileRole.name == ProfileRoles.SavjetnikUprave ||
             profileRole.name == ProfileRoles.Uprava ||
-            profileRole.name == ProfileRoles.VoditeljKampa || 
+            profileRole.name == ProfileRoles.VoditeljKampa ||
             profileRole.name == ProfileRoles.VoditeljDomacinstva ||
             profileRole.name == ProfileRoles.Terasar ||
             profileRole.name == ProfileRoles.KorisnickaSluzba ||
-            profileRole.name == ProfileRoles.Sobarica
+            profileRole.name == ProfileRoles.Sobarica ||
+            profileRole.name == ProfileRoles.Recepcija ||
+            profileRole.name == ProfileRoles.NocnaRecepcija
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
@@ -395,12 +398,15 @@ export class AppSidebar {
     private canViewArrivalsAndDepartures(role?: string): boolean {
         if (!role) return false;
 
-        const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == ProfileRoles.KucniMajstor || 
-            profileRole.name == ProfileRoles.Odrzavanje || 
+        const allowedRoles = this.profileRoles.filter(profileRole =>
+            profileRole.name == ProfileRoles.KucniMajstor ||
+            profileRole.name == ProfileRoles.Odrzavanje ||
             profileRole.name == ProfileRoles.VoditeljKampa ||
             profileRole.name == ProfileRoles.KorisnickaSluzba ||
-            profileRole.name == ProfileRoles.Uprava
+            profileRole.name == ProfileRoles.Uprava ||
+            profileRole.name == ProfileRoles.Recepcija ||
+            profileRole.name == ProfileRoles.NocnaRecepcija ||
+            profileRole.name == ProfileRoles.VoditeljDomacinstva
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
@@ -409,39 +415,37 @@ export class AppSidebar {
     private canViewNotes(role?: string): boolean {
         if (!role) return false;
 
-        const allowedRoles = this.profileRoles.filter(profileRole => 
+        const allowedRoles = this.profileRoles.filter(profileRole =>
             profileRole.name == ProfileRoles.VoditeljKampa ||
             profileRole.name == ProfileRoles.KorisnickaSluzba ||
-            profileRole.name == ProfileRoles.Uprava
+            profileRole.name == ProfileRoles.Uprava ||
+            profileRole.name == ProfileRoles.Recepcija ||
+            profileRole.name == ProfileRoles.NocnaRecepcija ||
+            profileRole.name == ProfileRoles.VoditeljDomacinstva
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
     }
 
     private canViewSchedule(role?: string): boolean {
-        if(!role) return false;
+        if (!role) return false;
 
-        const allowedRoles = this.profileRoles.filter(profileRole => 
-            profileRole.name == ProfileRoles.VoditeljKampa ||
-            profileRole.name == ProfileRoles.Uprava || 
-            profileRole.name == ProfileRoles.VoditeljDomacinstva || 
-            profileRole.name == ProfileRoles.VoditeljRecepcije || 
-            profileRole.name == ProfileRoles.Prodaja
-        );
-
-        return allowedRoles.some(allowedRole => allowedRole.name == role);
+        // All roles can access work-schedule (restricted users see only their own row)
+        return !!this.profileRoles.find(pr => pr.name == role);
     }
 
     private canViewDnevniList(role?: string): boolean {
         if (!role) return false;
 
-        const allowedRoles = this.profileRoles.filter(profileRole => 
+        const allowedRoles = this.profileRoles.filter(profileRole =>
             profileRole.name == ProfileRoles.SavjetnikUprave ||
             profileRole.name == ProfileRoles.VoditeljKampa ||
             profileRole.name == ProfileRoles.Uprava ||
-            profileRole.name == ProfileRoles.VoditeljDomacinstva
+            profileRole.name == ProfileRoles.VoditeljDomacinstva ||
+            profileRole.name == ProfileRoles.VoditeljRecepcije ||
+            profileRole.name == ProfileRoles.Prodaja
         );
-        
+
         return allowedRoles.some(allowedRole => allowedRole.name == role);
     }
 

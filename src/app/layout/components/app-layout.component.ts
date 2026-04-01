@@ -1241,12 +1241,14 @@ export class AppLayout {
     }
 
     private async onAppVisible() {
-        console.log('App is now visible — refresh or reconnect!');
         await this.authService.checkSession();
-        this.dataService.loadInitialData().subscribe();
-        const profileId = this.authService.getStoredUserId();
-        if (profileId) {
-            this.pushNotificationsService.requestPermissionAndGetToken(profileId);
+
+        const channel = this.dataService.getRealtimeChannel();
+        const isConnected = channel?.state === 'joined';
+
+        if (!isConnected) {
+            console.log('Realtime channel dropped — refetching data and reconnecting');
+            this.dataService.loadInitialData().subscribe();
         }
     }
 
@@ -1377,7 +1379,7 @@ export class AppLayout {
                 command: () => this.isUnscheduledTaskVisible = true
             });
 
-            if (!this.profileService.isHouseTechnician(this.storedUserId) && !this.layoutService.isMobile()) {
+            if (!this.profileService.isHouseTechnician(this.storedUserId) && !this.profileService.isSavjetnikUprave(this.storedUserId) && !this.layoutService.isMobile()) {
                 this.speedDialItems.push(
                     {
                         icon: 'pi pi-clipboard',

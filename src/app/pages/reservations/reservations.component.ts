@@ -15,6 +15,8 @@ import { HouseService } from '../../core/services/house.service';
 import { ExportReservationsService } from '../../core/services/export-reservations.service';
 import { StorageService, STORAGE_KEYS } from '../../core/services/storage.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { ProfileService } from '../../core/services/profile.service';
+import { AuthService } from '../../core/services/auth.service';
 
 interface DayMetadata {
     date: Date;
@@ -960,6 +962,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         public layoutService: LayoutService,
         public exportReservationsService: ExportReservationsService,
         private storageService: StorageService,
+        private profileService: ProfileService,
+        private authService: AuthService,
     ) {
         effect(() => {
             const newNightMode = this.layoutService.layoutConfig().darkTheme;
@@ -1382,6 +1386,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     getDroppableSpotsForReservation(event: any, row: any, col: any){
         event.stopPropagation();
+        if(this.isReadOnly) return;
         this.droppableSpots = [];
 
         const reservation = this.getReservationByRowAndColumn(row, col);
@@ -1773,7 +1778,13 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         }
     }
 
+    get isReadOnly(): boolean {
+        const userId = this.authService.getStoredUserId();
+        return this.profileService.isHouseholdManager(userId) || this.profileService.isSavjetnikUprave(userId);
+    }
+
     onCellDoubleClick(event: MouseEvent, row: number, col: number): void {
+        if(this.isReadOnly) return;
         if(this.isCellInPast(col)) return;
 
         const houses = this.filteredHouses();
@@ -1875,6 +1886,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     onCellMouseDown(event: MouseEvent, row: number, col: number): void {
+        if(this.isReadOnly) return;
         if(this.isSpotAvailable(row, col)){
             this.moveReservation(row, col);
             return;
@@ -1940,6 +1952,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     onCellClick(event: MouseEvent, row: number, col: number): void {
+        if (this.isReadOnly) return;
         if (this.hasCellReservation(row, col)) {
             return;
         }
@@ -2105,6 +2118,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     onReservationCellClick(event: MouseEvent, row: number, col: number): void {
         event.stopPropagation();
+        if(this.isReadOnly) return;
 
         const grid = this.gridMatrix();
         if (!grid || grid.length <= row || !grid[row] || grid[row].length <= col) {

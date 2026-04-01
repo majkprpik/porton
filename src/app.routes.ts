@@ -42,6 +42,7 @@ const MANAGEMENT_AND_SALES_ROLES = [
     ProfileRoles.VoditeljRecepcije,
     ProfileRoles.Prodaja,
     ProfileRoles.Recepcija,
+    ProfileRoles.NocnaRecepcija,
     ProfileRoles.Uprava,
     ProfileRoles.VoditeljDomacinstva,
     ProfileRoles.VoditeljKampa,
@@ -52,7 +53,9 @@ const DAILY_SHEET_ROLES = [
     ProfileRoles.SavjetnikUprave,
     ProfileRoles.VoditeljKampa,
     ProfileRoles.Uprava,
-    ProfileRoles.VoditeljDomacinstva
+    ProfileRoles.VoditeljDomacinstva,
+    ProfileRoles.VoditeljRecepcije,
+    ProfileRoles.Prodaja
 ];
 
 const TEAMS_ROLES = [
@@ -64,7 +67,9 @@ const TEAMS_ROLES = [
     ProfileRoles.Sobarica,
     ProfileRoles.Terasar,
     ProfileRoles.Odrzavanje,
-    ProfileRoles.KorisnickaSluzba
+    ProfileRoles.KorisnickaSluzba,
+    ProfileRoles.Recepcija,
+    ProfileRoles.NocnaRecepcija
 ];
 
 const ARRIVALS_AND_DEPARTURES_ROLES = [
@@ -72,13 +77,19 @@ const ARRIVALS_AND_DEPARTURES_ROLES = [
     ProfileRoles.VoditeljKampa,
     ProfileRoles.Uprava,
     ProfileRoles.Odrzavanje,
-    ProfileRoles.KorisnickaSluzba
+    ProfileRoles.KorisnickaSluzba,
+    ProfileRoles.Recepcija,
+    ProfileRoles.NocnaRecepcija,
+    ProfileRoles.VoditeljDomacinstva
 ];
 
 const NOTES_ROLES = [
     ProfileRoles.VoditeljKampa,
     ProfileRoles.Uprava,
-    ProfileRoles.KorisnickaSluzba
+    ProfileRoles.KorisnickaSluzba,
+    ProfileRoles.Recepcija,
+    ProfileRoles.NocnaRecepcija,
+    ProfileRoles.VoditeljDomacinstva
 ];
 
 const WORK_SCHEDULE_ROLES = [
@@ -92,6 +103,10 @@ const WORK_SCHEDULE_ROLES = [
 const ADMIN_ROLES = [
     ProfileRoles.VoditeljKampa,
     ProfileRoles.Uprava
+];
+
+const STATISTICS_ROLES = [
+    ProfileRoles.VoditeljKampa
 ];
 
 export const appRoutes: Routes = [
@@ -146,7 +161,7 @@ export const appRoutes: Routes = [
             {
                 path: 'statistics',
                 component: StatisticsComponent,
-                data: { roles: ADMIN_ROLES }
+                data: { roles: STATISTICS_ROLES }
             },
             {
                 path: 'archive',

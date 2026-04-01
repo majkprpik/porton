@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { combineLatest, Subject, Subscription, takeUntil } from 'rxjs';
 import { HouseService } from '../../core/services/house.service';
-import { House, HouseAvailability } from '../../core/models/data.models';
+import { House, HouseAvailability, ProfileRoles } from '../../core/models/data.models';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -17,6 +17,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { isToday } from '../../shared/utils/date-utils';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-arrivals-and-departures',
@@ -90,11 +91,12 @@ import { isToday } from '../../shared/utils/date-utils';
               @for(departure of departures; track departure.house_availability_id){
                 <div class="p-field-row">
                   <div class="status-container">
-                    <p-checkbox 
-                      inputId="departure-checkbox-{{ departure.house_number }}" 
-                      (click)="submitDepartures($event, departure)"
+                    <p-checkbox
+                      inputId="departure-checkbox-{{ departure.house_number }}"
+                      (click)="!isReadOnly && submitDepartures($event, departure)"
                       binary="true"
                       [(ngModel)]="departure.has_departed"
+                      [disabled]="isReadOnly"
                     ></p-checkbox>
                   </div>
                   <div class="house-container">
@@ -104,12 +106,13 @@ import { isToday } from '../../shared/utils/date-utils';
                     </label>
                   </div>
                   <div class="time-container">
-                    <p-datepicker 
-                      [(ngModel)]="departure.departureTimeObj" 
-                      [timeOnly]="true" 
+                    <p-datepicker
+                      [(ngModel)]="departure.departureTimeObj"
+                      [timeOnly]="true"
                       hourFormat="24"
                       [showSeconds]="false"
-                      (onBlur)="updateDepartureTime(departure)"
+                      (onBlur)="!isReadOnly && updateDepartureTime(departure)"
+                      [disabled]="isReadOnly"
                       appendTo="body"
                       placeholder="10:00"
                       styleClass="w-full"
@@ -139,11 +142,12 @@ import { isToday } from '../../shared/utils/date-utils';
               @for(arrival of arrivals; track arrival.house_availability_id){
                 <div class="p-field-row">
                   <div class="status-container">
-                    <p-checkbox 
-                      inputId="arrival-checkbox-{{ arrival.house_number }}" 
-                      (click)="submitArrivals($event, arrival)"
+                    <p-checkbox
+                      inputId="arrival-checkbox-{{ arrival.house_number }}"
+                      (click)="!isReadOnly && submitArrivals($event, arrival)"
                       binary="true"
                       [(ngModel)]="arrival.has_arrived"
+                      [disabled]="isReadOnly"
                     ></p-checkbox>
                   </div>
                   <div class="house-container">
@@ -153,12 +157,13 @@ import { isToday } from '../../shared/utils/date-utils';
                     </label>
                   </div>
                   <div class="time-container">
-                    <p-datepicker 
-                      [(ngModel)]="arrival.arrivalTimeObj" 
-                      [timeOnly]="true" 
+                    <p-datepicker
+                      [(ngModel)]="arrival.arrivalTimeObj"
+                      [timeOnly]="true"
                       hourFormat="24"
                       [showSeconds]="false"
-                      (onBlur)="updateArrivalTime(arrival)"
+                      (onBlur)="!isReadOnly && updateArrivalTime(arrival)"
+                      [disabled]="isReadOnly"
                       appendTo="body"
                       placeholder="16:00"
                       styleClass="w-full"
@@ -341,7 +346,8 @@ export class ArrivalsAndDeparturesComponent {
   houseAvailabilities: HouseAvailability[] = [];
   houses: House[] = [];
   selectedDate: Date = new Date();
-  
+  isReadOnly: boolean = false;
+
   isToday = isToday;
 
   private destroy$ = new Subject<void>();
@@ -352,18 +358,26 @@ export class ArrivalsAndDeparturesComponent {
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private translateService: TranslateService,
+    private authService: AuthService,
   ) {}
   
   async ngOnInit(){
     combineLatest([
       this.dataService.houses$.pipe(nonNull()),
       this.dataService.houseAvailabilities$.pipe(nonNull()),
+      this.dataService.profiles$.pipe(nonNull()),
+      this.dataService.profileRoles$.pipe(nonNull()),
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe({
-      next: ([houses, houseAvailabilities]) => {
+      next: ([houses, houseAvailabilities, profiles, profileRoles]) => {
         this.houses = houses;
         this.houseAvailabilities = houseAvailabilities;
+
+        const userId = this.authService.getStoredUserId();
+        const profile = profiles.find(p => p.id == userId);
+        const profileRole = profileRoles.find(pr => pr.id == profile?.role_id);
+        this.isReadOnly = profileRole?.name === ProfileRoles.VoditeljDomacinstva;
 
         if(houses && houses.length > 0 && houseAvailabilities && houseAvailabilities.length > 0){
           this.getTodaysArrivals();

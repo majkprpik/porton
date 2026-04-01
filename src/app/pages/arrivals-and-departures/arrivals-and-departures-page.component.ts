@@ -72,7 +72,7 @@ import { isToday } from '../../shared/utils/date-utils';
             <div class="p-field-row">
               <div class="status-container">
                 <p-checkbox 
-                  [disabled]="profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId)"
+                  [disabled]="profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId) || profileService.isHouseholdManager(storedUserId)"
                   inputId="departure-checkbox-{{ departure.house_number }}" 
                   binary="true"
                   [(ngModel)]="departure.has_departed"
@@ -85,7 +85,7 @@ import { isToday } from '../../shared/utils/date-utils';
                 </label>
               </div>
               <div class="time-container">
-                @if(profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId)){
+                @if(profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId) || profileService.isHouseholdManager(storedUserId)){
                   <input 
                     pInputText
                     [value]="departure.departureTimeObj | date:'HH:mm'" 
@@ -133,7 +133,7 @@ import { isToday } from '../../shared/utils/date-utils';
             <div class="p-field-row">
               <div class="status-container">
                 <p-checkbox 
-                  [disabled]="profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId)"
+                  [disabled]="profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId) || profileService.isHouseholdManager(storedUserId)"
                   inputId="arrival-checkbox-{{ arrival.house_number }}" 
                   binary="true"
                   [(ngModel)]="arrival.has_arrived"
@@ -146,7 +146,7 @@ import { isToday } from '../../shared/utils/date-utils';
                 </label>
               </div>
               <div class="time-container">
-                @if(profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId)){
+                @if(profileService.isHousekeeper(storedUserId) || profileService.isHouseTechnician(storedUserId) || profileService.isHouseholdManager(storedUserId)){
                   <input 
                     pInputText 
                     [value]="arrival.arrivalTimeObj | date:'HH:mm'" 
@@ -539,7 +539,7 @@ export class ArrivalsAndDeparturesPageComponent {
   }
 
   async submitDepartures(event: any, departure: any) {
-    if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId)){
+    if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId) || this.profileService.isHouseholdManager(this.storedUserId)){
       event.preventDefault();
       event.stopPropagation();
       return;
@@ -619,7 +619,7 @@ export class ArrivalsAndDeparturesPageComponent {
   }
 
   async submitArrivals(event: any, arrival: any) {
-    if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId)){
+    if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isHouseTechnician(this.storedUserId) || this.profileService.isHouseholdManager(this.storedUserId)){
       event.preventDefault();
       event.stopPropagation();
       return;
