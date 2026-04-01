@@ -200,8 +200,7 @@ import { StorageService, STORAGE_KEYS } from '../../core/services/storage.servic
     styles: `
         :host {
             display: block;
-            width: 100%;
-            max-width: 100%;
+            width: auto;
             box-sizing: border-box;
         }
 
@@ -454,6 +453,6 @@ export class DetailedTaskCardComponent {
     }
 
     isTaskCompletedForHouseholdManager(){
-        return this.profileService.isHouseholdManager(this.storageService.getString(STORAGE_KEYS.PROFILE_ID)) && this.taskService.isTaskCompleted(this.task);
+        return this.profileService.isHouseholdManager(this.storageService.getString(STORAGE_KEYS.PROFILE_ID)) && this.taskService.isTaskCompleted(this.task) && this.taskService.isHouseCleaningTask(this.task);
     }
 }

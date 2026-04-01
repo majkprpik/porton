@@ -19,6 +19,9 @@ import { ProfileService } from '../../core/services/profile.service';
       </div>
       <div class="staff-info">
         <span class="staff-name">{{ profileService.getProfileById(profile?.id)?.first_name }}</span>
+        @if (groupCount > 0) {
+          <span class="group-count">{{ groupCount }}</span>
+        }
       </div>
     </div>
   `,
@@ -65,8 +68,27 @@ import { ProfileService } from '../../core/services/profile.service';
         }
       }
 
-      .staff-name {
-        font-weight: 500;
+      .staff-info {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+
+        .staff-name {
+          font-weight: 500;
+        }
+
+        .group-count {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--text-color-secondary);
+          background: var(--surface-ground);
+          border-radius: 50%;
+          width: 1.25rem;
+          height: 1.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
       }
     }
   `
@@ -76,6 +98,7 @@ export class StaffCardComponent {
   @Input() canBeAssigned: boolean = false;
   @Input() isInActiveGroup: boolean = false;
   @Input() isClickedFromTeamDetails: boolean = false;
+  @Input() groupCount: number = 0;
   
   @Output() staffClicked = new EventEmitter<void>();
   @Output() removeFromGroup = new EventEmitter<void>();
