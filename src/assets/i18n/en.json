@@ -348,7 +348,8 @@
             "SEARCH-HOUSES": "Search houses",
             "BY-NUMBER": "By number",
             "BY-TYPE": "By type",
-            "BY-STATUS": "By status"
+            "BY-STATUS": "By status",
+            "NEEDS-CONFIRMATION": "Needs confirmation"
         },
         "HOUSE-STATUS": {
             "FREE": "Free",

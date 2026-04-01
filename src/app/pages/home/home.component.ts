@@ -85,6 +85,15 @@ interface SpecialLocation {
                                 (onClick)="sortBy('status')"
                                 styleClass="p-button-sm sort-btn">
                             </p-button>
+                            <p-button
+                                [outlined]="!showNeedsConfirmation"
+                                [raised]="showNeedsConfirmation"
+                                severity="warn"
+                                icon="pi pi-check-circle"
+                                [label]="'HOME.SEARCH.NEEDS-CONFIRMATION' | translate"
+                                (onClick)="toggleNeedsConfirmation()"
+                                styleClass="p-button-sm sort-btn">
+                            </p-button>
                         </div>
                     </div>
                 </div>
@@ -97,6 +106,7 @@ interface SpecialLocation {
                             <app-house-card
                                 [house]="house"
                                 [houseAvailabilities]="houseAvailabilities"
+                                [tasks]="tasks"
                                 [expandedHouseId]="expandedHouseId"
                                 [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
                             ></app-house-card>
@@ -108,6 +118,7 @@ interface SpecialLocation {
                                 <app-house-card
                                     [house]="house"
                                     [houseAvailabilities]="houseAvailabilities"
+                                    [tasks]="tasks"
                                     [expandedHouseId]="expandedHouseId"
                                     [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
                                 ></app-house-card>
@@ -120,11 +131,12 @@ interface SpecialLocation {
                                 <span class="houses-count">
                                     {{group.houses.length}}
                                 </span>
-                            </div> 
+                            </div>
                             @for (house of group.houses; track house.house_id) {
                                 <app-house-card
                                     [house]="house"
                                     [houseAvailabilities]="houseAvailabilities"
+                                    [tasks]="tasks"
                                     [expandedHouseId]="expandedHouseId"
                                     [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
                                 ></app-house-card>
@@ -424,16 +436,18 @@ export class Home implements OnInit, OnDestroy {
     filteredHouses = signal<House[]>([]);
     houseAvailabilities = signal<HouseAvailability[]>([]);
     houseTypes = signal<HouseType[]>([]);
+    tasks = signal<Task[]>([]);
     expandedHouseId: number | null = null;
-    
+
     searchTerm: string = '';
     sortType: 'number' | 'type' | 'status' | null = 'number';
-    
+    showNeedsConfirmation: boolean = false;
+
     // Group houses by type for divider display
     groupedHouses = signal<{ type: HouseType; houses: House[] }[]>([]);
     groupedHousesByStatus = signal<{ status: string; houses: House[] }[]>([]);
 
-    tasks: Task[] = [];
+    urgentIconTasks: Task[] = [];
     isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
     pinnedCharts: any[] = [];
 
@@ -464,7 +478,7 @@ export class Home implements OnInit, OnDestroy {
         ])
         .pipe(takeUntil(this.destroy$))
         .subscribe(([tasks, visible]) => {
-            this.tasks = tasks;
+            this.urgentIconTasks = tasks;
             this.isUrgentIconVisibleMap = {};
             this.setUrgentIconsMap(visible);
         });
@@ -482,9 +496,10 @@ export class Home implements OnInit, OnDestroy {
             this.dataService.tempHouseAvailabilities$.pipe(nonNull()),
         ])
         .pipe(takeUntil(this.destroy$))
-        .subscribe(([availabilities, houseTypes, houses]) => {
+        .subscribe(([availabilities, houseTypes, houses, tasks]) => {
             this.houseAvailabilities.set(availabilities);
             this.houseTypes.set(houseTypes);
+            this.tasks.set(tasks);
 
             const filteredHouses = houses.filter(h => h.house_number > 0);
             this.houses.set(filteredHouses);
@@ -505,7 +520,7 @@ export class Home implements OnInit, OnDestroy {
     }
 
     setUrgentIconsMap(visible: boolean){
-        this.tasks.forEach(task => {
+        this.urgentIconTasks.forEach(task => {
             if (task.is_unscheduled) {
                 this.isUrgentIconVisibleMap[task.task_id] = visible;
             }
@@ -519,13 +534,17 @@ export class Home implements OnInit, OnDestroy {
 
     applyFilters() {
         let result = [...this.houses()];
-        
+
         if (this.searchTerm && this.searchTerm.trim() !== '') {
             const searchLower = this.searchTerm.toLowerCase();
-            result = result.filter(house => 
-                house.house_name.toString().toLowerCase().includes(searchLower) || 
+            result = result.filter(house =>
+                house.house_name.toString().toLowerCase().includes(searchLower) ||
                 house.house_number.toString().toLowerCase().includes(searchLower)
             );
+        }
+
+        if (this.showNeedsConfirmation) {
+            result = result.filter(house => this.houseService.hasUnconfirmedCleaningTask(house.house_id));
         }
         
         if (this.sortType == 'number') {
@@ -578,6 +597,11 @@ export class Home implements OnInit, OnDestroy {
         }
     }
     
+    toggleNeedsConfirmation() {
+        this.showNeedsConfirmation = !this.showNeedsConfirmation;
+        this.applyFilters();
+    }
+
     sortBy(type: 'number' | 'type' | 'status') {
         this.sortType = this.sortType === type ? null : type;
 

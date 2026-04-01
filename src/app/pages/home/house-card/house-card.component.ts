@@ -1,4 +1,4 @@
-import { Component, effect, Input, Signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, effect, Input, Signal, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { House, HouseAvailability, Task } from '../../../core/models/data.models';
 import { HouseService } from '../../../core/services/house.service';
 import { TaskService } from '../../../core/services/task.service';
@@ -21,7 +21,12 @@ import { CommonModule } from '@angular/common';
         (click)="toggleExpand($event, house!.house_id)"
     >
         <div class="house-content">
-            <div class="house-number">{{ house!.house_name }}</div>
+            <div class="house-number">
+                {{ house!.house_name }}
+                @if (hasCompletedHouseCleaningTask) {
+                    <i class="fa-regular fa-circle-check confirm-icon"></i>
+                }
+            </div>
             <div class="house-icons">
                 @for (task of notCompletedTasks; track task.task_id) {
                     <i
@@ -320,6 +325,12 @@ import { CommonModule } from '@angular/common';
             font-weight: 700;
             padding-left: 0;
             padding-right: 10px;
+
+            .confirm-icon {
+                font-size: 1.4rem;
+                vertical-align: middle;
+                margin-left: 0.15rem;
+            }
         }
 
         .house-icons {
@@ -375,6 +386,7 @@ import { CommonModule } from '@angular/common';
 export class HouseCardComponent {
     @Input() house?: House;
     @Input() houseAvailabilities!: Signal<HouseAvailability[]>;
+    @Input() tasks: Signal<Task[]> = signal([]);
     @Input() expandedHouseId: number | null = null;
     @Input() isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
 
@@ -395,6 +407,7 @@ export class HouseCardComponent {
     selectedReservationDate = '';
 
     notCompletedTasks: Task[] = [];
+    hasCompletedHouseCleaningTask = false;
 
     private cachedSlots: { isGap: boolean; startDate: Date; endDate: Date | null; nextStartDate: Date | null }[] = [];
 
@@ -405,6 +418,7 @@ export class HouseCardComponent {
     ) {
         effect(() => {
             const _ = this.houseAvailabilities();
+            const __ = this.tasks();
             this.updateAllData();
             this.cd.markForCheck();
         });
@@ -419,8 +433,11 @@ export class HouseCardComponent {
         const hasScheduledTasks = this.houseService.hasScheduledNotCompletedTasks(houseId);
         const isReservedToday = this.houseService.isHouseReservedToday(houseId);
 
-        this.isAvailable = !this.isOccupied && !hasScheduledTasks && !isReservedToday;
-        this.isAvailableWithTasks = !this.isOccupied && hasScheduledTasks && !isReservedToday;
+        this.hasCompletedHouseCleaningTask = this.houseService.getTasksForHouse(houseId)
+            .some(t => this.taskService.isTaskCompleted(t) && this.taskService.isHouseCleaningTask(t));
+
+        this.isAvailable = !this.isOccupied && !hasScheduledTasks && !isReservedToday && !this.hasCompletedHouseCleaningTask;
+        this.isAvailableWithTasks = !this.isOccupied && (hasScheduledTasks || this.hasCompletedHouseCleaningTask) && !isReservedToday;
         this.isAvailableWithArrival = !this.isOccupied && !!isReservedToday;
 
         this.notCompletedTasks = this.houseService.getTasksForHouse(houseId)

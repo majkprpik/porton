@@ -348,7 +348,8 @@
             "SEARCH-HOUSES": "Pretraži kućice",
             "BY-NUMBER": "Po broju",
             "BY-TYPE": "Po tipu",
-            "BY-STATUS": "Po statusu"
+            "BY-STATUS": "Po statusu",
+            "NEEDS-CONFIRMATION": "Za potvrdu"
         },
         "HOUSE-STATUS": {
             "FREE": "Slobodna",

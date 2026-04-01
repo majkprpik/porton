@@ -126,13 +126,22 @@ export class HouseService {
 
   hasScheduledNotCompletedTasks(houseId: number): boolean {
     const notCompletedTasksForHouse = this.tasks
-      .filter(task => 
+      .filter(task =>
         task.house_id == houseId &&
         task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Completed)?.task_progress_type_id &&
+        task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Confirmed)?.task_progress_type_id &&
         !task.is_unscheduled
       );
 
     return !!notCompletedTasksForHouse.length;
+  }
+
+  hasUnconfirmedCleaningTask(houseId: number): boolean {
+    return this.tasks.some(task =>
+      task.house_id == houseId &&
+      this.taskService.isTaskCompleted(task) &&
+      this.taskService.isHouseCleaningTask(task)
+    );
   }
 
   getTasksForHouse(houseId: number): Task[] {
@@ -341,9 +350,8 @@ export class HouseService {
 
   getHouseStatus(house: House): 'OCCUPIED' | 'ARRIVAL-DAY' | 'NOT-CLEANED' | 'FREE' {
     if (this.isHouseOccupied(house.house_id)) return 'OCCUPIED';
-    if (!this.isHouseOccupied(house.house_id) && this.hasScheduledNotCompletedTasks(house.house_id)) return 'NOT-CLEANED';
     if (!this.isHouseOccupied(house.house_id) && this.isHouseReservedToday(house.house_id)) return 'ARRIVAL-DAY';
-    if (!this.isHouseOccupied(house.house_id) && !this.hasScheduledNotCompletedTasks(house.house_id)) return 'FREE';
+    if (!this.isHouseOccupied(house.house_id) && (this.hasScheduledNotCompletedTasks(house.house_id) || this.hasUnconfirmedCleaningTask(house.house_id))) return 'NOT-CLEANED';
     return 'FREE';
   }
 

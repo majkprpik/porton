@@ -32,9 +32,10 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       </ng-template>
       <div class="staff-list">
         @for (profile of availableProfiles; track profile.id) {
-          <app-staff-card 
+          <app-staff-card
             [profile]="profile"
             [canBeAssigned]="hasActiveWorkGroup"
+            [groupCount]="groupCountMap[profile.id] || 0"
             (staffClicked)="onStaffClicked(profile)"
           ></app-staff-card>
         }
@@ -111,6 +112,7 @@ export class StaffGroup implements OnInit, OnChanges {
   selectedProfile?: Profile;
   hasActiveWorkGroup: boolean = false;
   availableProfiles: Profile[] = [];
+  groupCountMap: { [profileId: string]: number } = {};
   workGroups: WorkGroup[] = [];
   workGroupProfiles: WorkGroupProfile[] = [];
 
@@ -143,6 +145,7 @@ export class StaffGroup implements OnInit, OnChanges {
           this.updateAvailableStaff(groupId);
         } else {
           this.availableProfiles = this.staffMembers;
+          this.computeGroupCountMap(this.staffMembers);
         }
       });
   }
@@ -170,6 +173,21 @@ export class StaffGroup implements OnInit, OnChanges {
         pr.name === ProfileRoles.Sobarica ||
         pr.name === ProfileRoles.Terasar
       );
+
+      this.computeGroupCountMap(this.staffMembers);
+    });
+  }
+
+  private computeGroupCountMap(profiles: Profile[]) {
+    const today = new Date().toISOString().split('T')[0];
+    const todaysWorkGroups = this.workGroups.filter(wg => wg.created_at.startsWith(today));
+
+    this.groupCountMap = {};
+    profiles.forEach(staff => {
+      this.groupCountMap[staff.id] = this.workGroupProfiles.filter(wgp =>
+        todaysWorkGroups.some(wg => wg.work_group_id === wgp.work_group_id) &&
+        wgp.profile_id === staff.id
+      ).length;
     });
   }
 
@@ -209,11 +227,12 @@ export class StaffGroup implements OnInit, OnChanges {
       this.staffMembers = this.staffMembers.filter(profile => this.repairProfileRoles.every(pr => pr.id != profile.role_id));
     }
 
-    this.availableProfiles = this.staffMembers.filter(staff => 
-      staff.id && 
-      !assignedProfiles.some(ap => ap.id == staff.id) && 
-      !workGroupProfilesForSelectedDayIds.includes(staff.id)
+    this.availableProfiles = this.staffMembers.filter(staff =>
+      staff.id &&
+      !assignedProfiles.some(ap => ap.id == staff.id)
     );
+
+    this.computeGroupCountMap(this.availableProfiles);
   }
 
   handleCollapsedChange(collapsed: boolean) {
