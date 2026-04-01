@@ -3,6 +3,7 @@ console.info("user-role function started");
 
 const allowedOrigins = [
   "http://localhost:4200",
+  "https://kompa-front.vercel.app",
   "https://kompa-front-env-staging-majkprpiks-projects.vercel.app",
 ];
 
