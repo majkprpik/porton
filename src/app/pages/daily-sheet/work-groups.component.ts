@@ -545,9 +545,13 @@ export class WorkGroups implements OnInit {
       if (!workGroup.is_repair && this.is2DaysOld(workGroup)){
         const workGroupTasks = this.workGroupTasks.filter(wgt => wgt.work_group_id == workGroup.work_group_id);
         const filteredTasks = this.tasks.filter(task => workGroupTasks.some(wgt => wgt.task_id == task.task_id));
-        const hasTasksInprogress = filteredTasks.some(task => this.taskService.isTaskInProgress(task) || this.taskService.isTaskPaused(task));
+        const allTasksDone = filteredTasks.every(task =>
+          this.taskService.isHouseCleaningTask(task)
+            ? this.taskService.isTaskConfirmed(task)
+            : this.taskService.isTaskCompleted(task)
+        );
 
-        if(!hasTasksInprogress){
+        if(allTasksDone){
           this.deleteWorkGroup(workGroup.work_group_id);
         }
       } else {
