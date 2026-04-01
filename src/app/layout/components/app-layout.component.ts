@@ -1427,7 +1427,7 @@ export class AppLayout {
 
             this.taskImages = await Promise.all(
                 fetchedImages.map(async (image: any) => {
-                    const url = await this.dataService.getPublicUrlForImage(`task-${task.task_id}/${image.name}`);
+                    const url = await this.dataService.getSignedUrlForImage(`task-${task.task_id}/${image.name}`);
                     return { name: image.name, url };
                 })
             );

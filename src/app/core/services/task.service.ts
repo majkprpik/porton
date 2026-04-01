@@ -135,12 +135,12 @@ export class TaskService {
   
         if (storeImageError) throw storeImageError;
   
-        const publicUrl = this.supabaseService.getClient()
+        const { data: signedData } = await this.supabaseService.getClient()
           .storage
           .from('damage-reports-images')
-          .getPublicUrl(data.path).data.publicUrl;
-  
-        return { path: data.path, url: publicUrl };
+          .createSignedUrl(data.path, 3600);
+
+        return { path: data.path, url: signedData?.signedUrl ?? null };
       });
   
       const uploadResults = await Promise.all(uploadPromises);

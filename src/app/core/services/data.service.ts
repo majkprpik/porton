@@ -615,28 +615,22 @@ export class DataService {
     }
   }
 
-  async getPublicUrlForImage(filePath: string) {
+  async getSignedUrlForImage(filePath: string) {
     try {
-      const response: any = await this.supabaseService
+      const { data, error } = await this.supabaseService
         .getClient()
         .storage
         .from('damage-reports-images')
-        .getPublicUrl(filePath);
-  
-      if (response && response.data && response.data.publicUrl) {
-        return response.data.publicUrl;
-      }
-  
-      if (response && response.error) {
-        console.error('Error getting public URL:', response.error);
+        .createSignedUrl(filePath, 3600);
+
+      if (error) {
+        console.error('Error getting signed URL:', error);
         return null;
       }
-  
-      console.error('Public URL not found or unknown error');
-      return null;
-  
+
+      return data?.signedUrl ?? null;
     } catch (error) {
-      console.error('Error getting public URL:', error);
+      console.error('Error getting signed URL:', error);
       return null;
     }
   }
