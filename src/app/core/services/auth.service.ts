@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { ProfileService } from './profile.service';
 import { ProfileRole, ProfileRoles } from '../models/data.models';
-import { LayoutService } from '../../layout/services/layout.service';
 import { PushNotificationsService } from './push-notifications.service';
+import { DeviceService } from './device.service';
 import { DataService } from './data.service';
+import { StorageService, STORAGE_KEYS } from './storage.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
@@ -21,18 +21,14 @@ export class AuthService {
     private supabaseService: SupabaseService,
     private profileService: ProfileService,
     private dataService: DataService,
-    private layoutService: LayoutService,
     private pushNotificationsService: PushNotificationsService,
+    private deviceService: DeviceService,
+    private storageService: StorageService,
   ) {
     this.dataService.profileRoles$
       .pipe(nonNull())
       .subscribe(profileRoles => {
         this.profileRoles = profileRoles;
-
-        if(this.profileRoles.length){
-          // this.initializeTestUsers();
-          // this.createRealUsers();
-        }
     });
   }
 
@@ -98,7 +94,7 @@ export class AuthService {
       if (error) throw error;
       if (!data.user) return false;
 
-      this.setUserName('username', email);
+      this.setUserName(email);
       this.setUserId(data.user.id);
 
       return data;
@@ -115,40 +111,26 @@ export class AuthService {
 
     try {
       const storedUserID = this.getStoredUserId();
-      const deviceId = this.pushNotificationsService.getDeviceId();
-      
-      console.log("User: " + storedUserID);
-      console.log("Device: " + deviceId);
 
-      await this.dataService.unsubscribeFromRealtime();
-      this.pushNotificationsService.deleteFCMToken();
-
-      if(storedUserID && deviceId){
-        await this.pushNotificationsService.deleteUserDeviceData(storedUserID, deviceId);
-      }
-
-      await this.supabaseService.getClient().auth.signOut();
+      await Promise.all([
+        this.dataService.unsubscribeFromRealtime(),
+        this.pushNotificationsService.clearToken(),
+        storedUserID ? this.deviceService.unregisterDevice(storedUserID) : Promise.resolve(),
+        this.supabaseService.getClient().auth.signOut(),
+      ]);
       this.clearLocalStorage();
 
       await this.router.navigate(['/login']);
     } catch (error) {
       console.error('Logout error:', error);
-      // Force navigation to login even if signOut fails
       await this.router.navigate(['/login']);
     } finally {
       this.isLoggingOut = false;
     }
   }
 
-  clearLocalStorage(){
-    const keysToKeep = ['portonSelectedLanguage'];
-    const allKeys = Object.keys(localStorage);
-
-    allKeys.forEach(key => {
-      if (!keysToKeep.includes(key)) {
-        localStorage.removeItem(key);
-      }
-    });
+  clearLocalStorage(): void {
+    this.storageService.clearExceptPersistent();
   }
   
   setupAuthStateListener(){
@@ -166,25 +148,33 @@ export class AuthService {
     });
   }
 
-  async isLoggedIn() {
-    const { data, error } = await this.supabaseService.getSession();
-    return !!data.session?.user;
+  async getUserAccessData() {
+    try {
+      const { data, error } = await this.supabaseService.getClient().functions.invoke("user-role");
+
+      if(error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
   }
 
   getStoredUsername(): string | null {
-    return localStorage.getItem('username');
+    return this.storageService.getString(STORAGE_KEYS.USERNAME);
   }
 
-  setUserName(userName: string, email: string){
-    localStorage.setItem(userName, email);
+  setUserName(email: string): void {
+    this.storageService.set(STORAGE_KEYS.USERNAME, email);
   }
 
-  getStoredUserId(){
-    return localStorage.getItem('profileId');
+  getStoredUserId(): string | null {
+    return this.storageService.getString(STORAGE_KEYS.PROFILE_ID);
   }
 
-  setUserId(userId: string){
-    localStorage.setItem('profileId', userId);
+  setUserId(userId: string): void {
+    this.storageService.set(STORAGE_KEYS.PROFILE_ID, userId);
   }
 
   /**
@@ -233,8 +223,8 @@ export class AuthService {
   // za majstora zadaci
   // odlasci/dolasci - vide svi? ureduje Recepcija, matej, customer service
   // pregled - svi mogu videti
-  //testuser3 VeyD0z
-  //testuser2 URBx0m
+  // testuser3 VeyD0z
+  // testuser2 URBx0m
 
   async createRealUsers() {
     const users = [
@@ -307,7 +297,7 @@ export class AuthService {
     }
   }
 
-  normalizeEmail (name: string) {
+  normalizeEmail(name: string) {
     return name.toLowerCase().replace(/[^a-z0-9]/g, '').concat('@porton.com');
   }
 

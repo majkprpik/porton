@@ -183,7 +183,7 @@ export class WorkGroupService {
 
       if(createWorkGroupTaskError) throw createWorkGroupTaskError;
 
-      if(createdWorkGroupTask && !this.workGroupTasks.find(wgt => wgt.task_id == createdWorkGroupTask.task_id)){
+      if(createdWorkGroupTask && !this.workGroupTasks.find(wgt => wgt.task_id == createdWorkGroupTask.task_id && wgt.work_group_id == createdWorkGroupTask.work_group_id)){
         this.dataService.setWorkGroupTasks([...this.workGroupTasks, createdWorkGroupTask]);
       }
 
@@ -206,7 +206,7 @@ export class WorkGroupService {
       if(deleteWorkGroupTasksError) throw deleteWorkGroupTasksError;
 
       if(deletedWorkGroupTasks && deletedWorkGroupTasks.length) {
-        const filteredWorkGroupTasks = this.workGroupTasks.filter(wgt => !deletedWorkGroupTasks.some(t => t.task_id == wgt.task_id));
+        const filteredWorkGroupTasks = this.workGroupTasks.filter(wgt => wgt.work_group_id !== workGroupId);
         this.dataService.setWorkGroupTasks(filteredWorkGroupTasks);
       }
 
@@ -276,7 +276,7 @@ export class WorkGroupService {
       if(deleteWorkGroupProfilesError) throw deleteWorkGroupProfilesError;
 
       if(deletedWorkGroupProfiles && deletedWorkGroupProfiles.length){
-        const filteredWorkGroupProfiles = this.workGroupProfiles.filter(wgp => !deletedWorkGroupProfiles.some(p => p.profile_id == wgp.profile_id));
+        const filteredWorkGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.work_group_id !== workGroupId);
         this.dataService.setWorkGroupProfiles(filteredWorkGroupProfiles);
       }
 
@@ -301,7 +301,7 @@ export class WorkGroupService {
 
       if(createWorkGroupProfileError) throw createWorkGroupProfileError;
 
-      if(createdWorkGroupProfile && !this.workGroupProfiles.find(wgp => wgp.profile_id == createdWorkGroupProfile.profile_id)) {
+      if(createdWorkGroupProfile && !this.workGroupProfiles.find(wgp => wgp.profile_id == createdWorkGroupProfile.profile_id && wgp.work_group_id == createdWorkGroupProfile.work_group_id)) {
         this.dataService.setWorkGroupProfiles([...this.workGroupProfiles, createdWorkGroupProfile]);
       }
 

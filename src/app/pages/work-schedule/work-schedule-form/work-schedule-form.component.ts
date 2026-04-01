@@ -194,7 +194,7 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
               [label]="'BUTTONS.DELETE' | translate"
               icon="pi pi-trash" 
               (click)="onDelete()" 
-              styleClass="p-button-danger p-button-text">
+              severity="danger">
             </p-button>
           }
         </div>
@@ -237,13 +237,35 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
         justify-content: space-between;
         width: 100%;
       }
-      
+
+      @media (max-width: 991px) {
+        .top {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .top .field p-multiselect,
+        .top .field .p-multiselect,
+        .top .field p-select,
+        .top .field .p-select {
+          width: 100% !important;
+        }
+      }
+
       .p-dialog-content {
         padding: 1.5rem;
       }
       
       .p-dialog-footer {
-        padding: 1rem;
+        padding: 1rem !important;
+      }
+
+      @media (max-width: 991px) {
+        .p-dialog {
+          width: calc(100vw - 2rem) !important;
+          max-height: calc(100dvh - 56px - 5rem) !important;
+          margin-bottom: calc(56px + 1rem) !important;
+        }
       }
 
       .schedule{
@@ -425,26 +447,6 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
         gap: 0.5rem;
       }
       
-      @media (max-width: 576px) {
-        flex-direction: column;
-        gap: 1rem;
-        
-        .left-buttons {
-          justify-content: center;
-          
-          .p-button {
-            width: 100%;
-          }
-        }
-        
-        .right-buttons {
-          justify-content: space-between;
-          
-          .p-button {
-            flex: 1;
-          }
-        }
-      }
     }
   }
 `

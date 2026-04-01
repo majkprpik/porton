@@ -1,117 +1,127 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { PushNotification, Profile } from '../models/data.models';
-import { Messaging as AngularMessaging  } from '@angular/fire/messaging';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { PushNotification } from '../models/data.models';
+import { Messaging as AngularMessaging } from '@angular/fire/messaging';
 import { deleteToken, getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from './supabase.service';
-import { DataService } from './data.service';
-import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { DeviceService } from './device.service';
+import { StorageService, STORAGE_KEYS } from './storage.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PushNotificationsService {
-  private fcmTokenSource = new BehaviorSubject<string | null>(null);
+  private storageService = inject(StorageService);
+  private fcmTokenSource = new BehaviorSubject<string | null>(this.getStoredFcmToken());
   fcmToken$ = this.fcmTokenSource.asObservable();
-  profiles: Profile[] = [];
-  
+
   private messaging = inject(AngularMessaging);
-  
+
   constructor(
     private http: HttpClient,
     private supabaseService: SupabaseService,
-    private dataService: DataService,
-  ) { 
-    this.dataService.profiles$
-      .pipe(nonNull())
-      .subscribe(profiles => {
-        this.profiles = profiles.filter(p => !p.is_deleted);
-      });
+    private deviceService: DeviceService,
+  ) {
+    this.setupForegroundMessageHandler();
+  }
 
+  private setupForegroundMessageHandler(): void {
     onMessage(this.messaging, (payload) => {
-      console.log('💬 FCM message received in foreground:', payload);
-      
+      console.log('FCM message received in foreground:', payload);
+
       if (
-        document.visibilityState === 'visible' && 
-        'Notification' in window && 
+        document.visibilityState === 'visible' &&
+        'Notification' in window &&
         Notification.permission === 'granted'
       ) {
-        const notificationTitle = payload.notification?.title ?? 'Notification';
-        const notificationOptions = {
+        const title = payload.notification?.title ?? 'Notification';
+        const options = {
           body: payload.notification?.body,
           icon: payload.notification?.icon || '/assets/icons/porton-icon-72x72.png',
         };
 
         navigator.serviceWorker.getRegistration().then(registration => {
           if (registration) {
-            registration.showNotification(notificationTitle, notificationOptions);
-          } else {
-            console.warn('No service worker registration available');
+            registration.showNotification(title, options);
           }
         });
       }
     });
   }
 
-  async requestFirebaseMessaging(): Promise<void> {
-    if(this.getFirebaseMessagingSubscription()) return;
+  async requestPermissionAndGetToken(profileId: string): Promise<string | null> {
+    if (this.getFcmToken()) {
+      await this.deviceService.registerDevice(profileId, this.getFcmToken()!);
+      return this.getFcmToken();
+    }
 
     const permission = Notification.permission;
     if (permission === 'denied') {
-      console.warn('🚫 Notifications have been blocked by the user.');
-      return;
+      console.warn('Notifications have been blocked by the user.');
+      return null;
     }
 
     if (permission === 'default') {
       const result = await Notification.requestPermission();
       if (result !== 'granted') {
-        console.warn('🚫 User did not grant notification permission.');
-        return;
+        console.warn('User did not grant notification permission.');
+        return null;
       }
     }
 
     try {
       const token = await getToken(this.messaging, {
-        vapidKey: environment.vapidPublicKey, 
+        vapidKey: environment.vapidPublicKey,
       });
 
       if (token) {
-        console.log('✅ FCM Token:', token);
-        this.setFirebaseMessaingSubscription(token);
-        this.storeUserDeviceData();
+        console.log('FCM Token obtained');
+        this.setFcmToken(token);
+        await this.deviceService.registerDevice(profileId, token);
+        return token;
       } else {
-        console.warn('⚠️ No FCM token received. Permission denied?');
+        console.warn('No FCM token received.');
+        return null;
       }
     } catch (error) {
-      console.error('🚫 Error getting FCM token', error);
+      console.error('Error getting FCM token:', error);
+      return null;
     }
   }
 
-  async deleteFCMToken(){
-    try{
+  async clearToken(): Promise<void> {
+    try {
       const deleted = await deleteToken(this.messaging);
       if (deleted) {
-        this.setFirebaseMessaingSubscription(null);
-        console.log('✅ FCM token deleted from Firebase SDK');
-      } else {
-        console.warn('⚠️ No FCM token to delete or token already deleted');
+        this.clearStoredFcmToken();
+        console.log('FCM token deleted');
       }
-    } catch (error){
+    } catch (error) {
       console.error('Error deleting FCM token:', error);
     }
   }
 
-  setFirebaseMessaingSubscription(token: any){
-    this.fcmTokenSource.next(token);
-  }
-
-  getFirebaseMessagingSubscription(){
+  getFcmToken(): string | null {
     return this.fcmTokenSource.getValue();
   }
 
-  async sendNotification(profileId: string, notification: PushNotification){
+  private setFcmToken(token: string): void {
+    this.storageService.set(STORAGE_KEYS.FCM_TOKEN, token);
+    this.fcmTokenSource.next(token);
+  }
+
+  private getStoredFcmToken(): string | null {
+    return this.storageService.getString(STORAGE_KEYS.FCM_TOKEN);
+  }
+
+  private clearStoredFcmToken(): void {
+    this.storageService.remove(STORAGE_KEYS.FCM_TOKEN);
+    this.fcmTokenSource.next(null);
+  }
+
+  async sendNotification(profileIds: string | string[], notification: PushNotification): Promise<void> {
     const token = await this.supabaseService.getAccessToken();
 
     if (!token) {
@@ -119,131 +129,25 @@ export class PushNotificationsService {
       return;
     }
 
-    const userDeviceData = await this.getUserDeviceData(profileId);
-    if(!userDeviceData || userDeviceData.length == 0) {
-      const profile = this.profiles.find(profile => profile.id == profileId);
-      console.error('User ' + (profile?.first_name ?? profileId) + ' has no registered devices');
-      return;
+    const ids = Array.isArray(profileIds) ? profileIds : [profileIds];
+    if (!ids.length) return;
+
+    try {
+      await firstValueFrom(
+        this.http.post(
+          `${environment.supabaseUrl}/functions/v1/send-notification`,
+          { profileIds: ids, notification },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              apikey: environment.supabaseAnonKey,
+            },
+          }
+        )
+      );
+    } catch (error) {
+      console.error('Failed to send notification:', error);
     }
-
-    userDeviceData.forEach((device: any) => {
-      this.http.post('https://portonnotifications-l3crl2uwyq-uc.a.run.app/fcm-notifications', 
-      {
-        fcmToken: device.fcm_token,
-        notification: {
-          title: notification.title,
-          body: notification.body,
-          icon: '/assets/icons/porton-icon-72x72.png'
-        },
-      }, 
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }).subscribe({
-        next: () => console.log('FCM notification sent!'),
-        error: err => console.error('Failed to send FCM notification', err),
-      });
-    });
-  }
-
-  async getUserDeviceData(profileId: string){
-    try{
-      const { data: userDeviceData, error: userDeviceDataError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('user_devices')
-        .select('*')
-        .eq('profile_id', profileId);
-      
-      if (userDeviceDataError) throw userDeviceDataError;
-  
-      return userDeviceData;
-    } catch (error){
-      console.error('Error fetching user device data:', error);
-      return null;
-    }
-  }
-
-  async storeUserDeviceData(){
-    const storedUserId = localStorage.getItem('profileId');
-    if(!storedUserId) {
-      console.error('User ID not found!');
-      return;
-    }
-
-    const fcmToken = this.getFirebaseMessagingSubscription();
-    if(!fcmToken){
-      console.error('FCM token not found while storing user data!');
-      return;
-    }
-
-    let deviceId = this.getDeviceId();
-    if(!deviceId){
-      this.createDeviceId();
-      deviceId = this.getDeviceId();
-    }
-
-    try{
-      const { data: createdUserDeviceData, error: createUserDeviceDataError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('user_devices')
-        .upsert({
-          profile_id: storedUserId,
-          device_id: deviceId,
-          fcm_token: fcmToken,
-          device_info: this.getDeviceInfo(),
-          last_updated: this.supabaseService.formatDateTimeForSupabase(new Date()),
-          created_at: this.supabaseService.formatDateTimeForSupabase(new Date()),
-        }, {
-          onConflict: 'profile_id,device_id'
-        })
-        .select()
-        .single();
-
-      if(createUserDeviceDataError) throw createUserDeviceDataError
-
-      return createdUserDeviceData;
-    } catch (error){
-      console.error('Error storing user device data:', error);
-      return null;
-    }
-  }
-
-  async deleteUserDeviceData(profileId: string, deviceId: string){
-    try{
-      const { data: deletedUserDeviceData, error: deleteUserDeviceDataError } = await this.supabaseService.getClient()
-        .schema('porton')
-        .from('user_devices')
-        .delete()
-        .match({ profile_id: profileId, device_id: deviceId });
-  
-      if(deleteUserDeviceDataError) throw deleteUserDeviceDataError;
-  
-      return deletedUserDeviceData;
-    } catch(error){
-      console.error('Error deleting user device data:', error);
-      return null;
-    }
-  }
-
-  getDeviceId(){
-    return localStorage.getItem('porton_device_id');
-  }
-
-  createDeviceId(){
-    localStorage.setItem('porton_device_id', crypto.randomUUID());
-  }
-
-  getDeviceInfo(): string {
-    const uaData = (navigator as any).userAgentData;
-
-    if (uaData && uaData.brands) {
-      const brands = uaData.brands.map((b: any) => `${b.brand} ${b.version}`).join(', ');
-      const platform = uaData.platform || 'unknown';
-      return `Brands: ${brands}, Platform: ${platform}`;
-    }
-
-    return `UA: ${navigator.userAgent}`;
   }
 }

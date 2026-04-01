@@ -135,12 +135,12 @@ export class TaskService {
   
         if (storeImageError) throw storeImageError;
   
-        const publicUrl = this.supabaseService.getClient()
+        const { data: signedData } = await this.supabaseService.getClient()
           .storage
           .from('damage-reports-images')
-          .getPublicUrl(data.path).data.publicUrl;
-  
-        return { path: data.path, url: publicUrl };
+          .createSignedUrl(data.path, 3600);
+
+        return { path: data.path, url: signedData?.signedUrl ?? null };
       });
   
       const uploadResults = await Promise.all(uploadPromises);
@@ -262,8 +262,8 @@ export class TaskService {
         .from('tasks')
         .update({ 
           task_progress_type_id: taskProgressTypeId,
-          completed_by: isCompleted ? this.authService.getStoredUserId() : null,
-          end_time: isCompleted ? this.supabaseService.formatDateTimeForSupabase(new Date()) : null,
+          completed_by: isCompleted ? this.authService.getStoredUserId() : task?.completed_by ?? null,
+          end_time: isCompleted ? this.supabaseService.formatDateTimeForSupabase(new Date()) : task?.end_time ?? null,
           start_time: isInProgress ? (task?.start_time ?? this.supabaseService.formatDateTimeForSupabase(new Date())) : task?.start_time,
         })
         .eq('task_id', task.task_id)
@@ -297,12 +297,13 @@ export class TaskService {
       let houseNumber = this.houses.find(house => house.house_id == updatedTask.house_id)?.house_name;
       if(!houseNumber) houseNumber = '0';
 
-      profilesToReceiveNotification.forEach(profile => {
-        this.pushNotificationsService.sendNotification(profile.id, {
+      this.pushNotificationsService.sendNotification(
+        profilesToReceiveNotification.map(p => p.id),
+        {
           title: 'Task completed',
           body: completedBy + ' completed a repair task on house ' + houseNumber,
-        });
-      });
+        }
+      );
     }
   }
 
@@ -344,6 +345,10 @@ export class TaskService {
 
   isTaskPaused(task: Task | undefined){
     return this.getTaskProgressTypeByName(TaskProgressTypeName.Paused)?.task_progress_type_id == task?.task_progress_type_id;
+  }
+
+  isTaskConfirmed(task: Task | undefined){
+    return this.getTaskProgressTypeByName(TaskProgressTypeName.Confirmed)?.task_progress_type_id == task?.task_progress_type_id;
   }
 
   isRepairTask(task: Task | undefined){
@@ -396,6 +401,8 @@ export class TaskService {
       return 'fa fa-pause-circle';
     } else if (this.isTaskAssigned(task)) {
       return 'fa fa-user-check';
+    } else if (this.isTaskConfirmed(task)) {
+      return 'fa fa-solid fa-lock';
     } else {
       return 'fa fa-clock';
     }

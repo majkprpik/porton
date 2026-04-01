@@ -85,3 +85,162 @@ html {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+// ========================================
+// PrimeNG Glassmorphism Overrides
+// ========================================
+
+.p-card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+
+    .p-card-header,
+    .p-card-body,
+    .p-card-footer {
+        background: transparent;
+    }
+}
+
+.p-panel {
+    .p-panel-header,
+    .p-panel-content {
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+    }
+
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-soft);
+}
+
+.p-dialog {
+    .p-dialog-header,
+    .p-dialog-content,
+    .p-dialog-footer {
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+        -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+    }
+
+    .p-dialog-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .p-dialog-footer {
+        border-radius: 0 0 10px 10px !important;
+    }
+
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-elevated);
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    clip-path: inset(0 round 10px);
+}
+
+.p-select-overlay,
+.p-multiselect-overlay,
+.p-autocomplete-overlay,
+.p-cascadeselect-overlay {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+}
+
+.p-menu-overlay,
+.p-tieredmenu-overlay,
+.p-contextmenu,
+.p-megamenu-overlay {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+}
+
+.p-tooltip {
+    .p-tooltip-text {
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow-soft);
+    }
+}
+
+.p-toast-message {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border) !important;
+}
+
+.p-button-secondary,
+.p-button-outlined {
+    &:not(:disabled):hover {
+        background: var(--glass-bg-hover) !important;
+        border-color: var(--glass-border-accent) !important;
+    }
+}
+
+.p-sidebar {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+}
+
+.p-tabview-panels {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.p-accordion-content {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.p-datatable {
+    .p-datatable-header,
+    .p-datatable-footer {
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+    }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+    .layout-topbar,
+    .layout-sidebar,
+    .card,
+    .glass-panel,
+    .p-card,
+    .p-dialog .p-dialog-header,
+    .p-dialog .p-dialog-content,
+    .p-dialog .p-dialog-footer {
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    :root[class*='app-dark'] {
+        .layout-topbar,
+        .layout-sidebar,
+        .card,
+        .glass-panel,
+        .p-card,
+        .p-dialog .p-dialog-header,
+        .p-dialog .p-dialog-content,
+        .p-dialog .p-dialog-footer {
+            background: rgba(30, 27, 75, 0.95) !important;
+        }
+    }
+}
+
+body.reservation-form-open .p-speeddial {
+    display: none !important;
+}

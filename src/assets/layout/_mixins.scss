@@ -13,3 +13,32 @@
     outline-offset: -1px;
     box-shadow: inset var(--focus-ring-shadow);
 }
+
+@mixin glass-panel($blur: var(--glass-blur)) {
+    background: var(--glass-bg);
+    backdrop-filter: blur($blur) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur($blur) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: var(--glass-transition);
+}
+
+@mixin glass-panel-hover {
+    background: var(--glass-bg-hover);
+    box-shadow: var(--glass-shadow-elevated);
+    border-color: var(--glass-border-accent);
+}
+
+@mixin glass-panel-elevated {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border-accent);
+    box-shadow: var(--glass-shadow-elevated);
+}
+
+@mixin glass-inset-highlight {
+    box-shadow:
+        var(--glass-shadow),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}

@@ -27,6 +27,11 @@ export class SupabaseService {
     );
   }
 
+  async isUserLoggedIn() {
+    const { data, error } = await this.getSession();
+    return !!data.session?.user;
+  }
+
   async getSession(){
     return await this.supabase.auth.getSession();
   }

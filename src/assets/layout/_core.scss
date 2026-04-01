@@ -6,13 +6,24 @@ html {
 body {
     font-family: 'Lato', sans-serif;
     color: var(--text-color);
-    background-color: var(--surface-ground);
     margin: 0;
     padding: 0;
     min-height: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.2;
+
+    background: var(--app-bg-gradient);
+    background-attachment: fixed;
+    
+    &::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: var(--app-bg-pattern);
+        pointer-events: none;
+        z-index: -1;
+    }
 }
 
 a {

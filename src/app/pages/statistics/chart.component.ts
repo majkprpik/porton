@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, effect, inject, Input, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectorRef, ChangeDetectionStrategy, Component, effect, inject, Input, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
@@ -6,13 +6,27 @@ import { ChartModule } from 'primeng/chart';
 import { MultiSelect } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { CommonModule, isPlatformBrowser, TitleCasePipe } from '@angular/common';
-import { ChartType, House, HouseAvailability, Profile, Task } from '../../core/models/data.models';
-import { TaskService } from '../../core/services/task.service';
+import { ChartType, House, HouseAvailability, Profile, Season, Task } from '../../core/models/data.models';
 import { combineLatest, take } from 'rxjs';
 import { LayoutService } from '../../layout/services/layout.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { StatisticsService } from '../../core/services/statistics.service';
+import { ChartDataService, MetricCalculationContext } from './chart-data.service';
+import { ChartOptionsBuilder } from './chart-options.builder';
+import {
+  MONTHS,
+  SEASON_MONTHS,
+  EXCLUDED_HOUSE_NAMES,
+  ALL_HOUSES,
+  PERIOD_MONTH,
+  PERIOD_YEAR,
+  PERIOD_SEASON,
+  DATA_TYPE_STAFF,
+  DATA_TYPE_GENERAL,
+  DATA_TYPE_OCCUPANCY,
+  Metric,
+} from './chart.constants';
 
 @Component({
   selector: 'app-chart',
@@ -36,12 +50,12 @@ import { StatisticsService } from '../../core/services/statistics.service';
         <div class="right-side">
           @if(canSelectDiagramType){
             <div class="field">
-              <label for="chartType" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.CHART-TYPE' | translate }}*</label>
-              <p-select 
-                id="chartType" 
-                [options]="chartTypes" 
-                [(ngModel)]="chartType" 
-                [style]="{ width: '150px' }" 
+              <label for="chartType" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.CHART-TYPE' | translate }}</label>
+              <p-select
+                id="chartType"
+                [options]="chartTypes"
+                [(ngModel)]="chartType"
+                [style]="{ width: '150px' }"
                 (onChange)="onChartSelect()"
               >
                 <ng-template let-item pTemplate="item">
@@ -53,17 +67,17 @@ import { StatisticsService } from '../../core/services/statistics.service';
               </p-select>
             </div>
           }
-  
-          @if(isPinnableToHome){ 
+
+          @if(isPinnableToHome){
             @if(isChartPinnedToHome(dataType)){
               <p-button
-                [label]="'BUTTONS.REMOVE-FROM-HOME' | translate" 
+                [label]="'BUTTONS.REMOVE-FROM-HOME' | translate"
                 [severity]="'danger'"
                 (click)="removeChartFromHome(dataType)"
               />
             } @else {
               <p-button
-                [label]="'BUTTONS.ADD-TO-HOME' | translate" 
+                [label]="'BUTTONS.ADD-TO-HOME' | translate"
                 [severity]="'primary'"
                 (click)="pinChartToHome(dataType)"
               />
@@ -74,26 +88,44 @@ import { StatisticsService } from '../../core/services/statistics.service';
       </div>
 
       <div class="buttons">
-        @for(period of periods; track $index){
+        @for(period of periods; track trackByPeriod($index, period)){
           <p-button
-            [label]="('BUTTONS.' + period | uppercase) | translate" 
+            [label]="('BUTTONS.' + period | uppercase) | translate"
             [severity]="timePeriod == period ? 'primary': 'secondary'"
-            (click)="displayPeroid(period)"
+            (click)="displayPeriod(period)"
           />
         }
       </div>
 
       <div class="fields">
+        <div class="field">
+          <label for="year" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.YEAR' | translate }}</label>
+          <p-select
+            id="year"
+            [options]="availableYears"
+            [(ngModel)]="selectedYear"
+            [placeholder]="'STATISTICS.SELECT.DATA.SELECT-YEAR' | translate"
+            [style]="{ width: '100%' }"
+            (onChange)="onYearSelect()"
+          >
+            <ng-template let-item pTemplate="item">
+              <span>{{ item }}</span>
+            </ng-template>
+            <ng-template let-item pTemplate="selectedItem">
+              <span>{{ item }}</span>
+            </ng-template>
+          </p-select>
+        </div>
         @for(metricField of metricFields; track $index){
           @if(metricField == 'month' && timePeriod == 'month'){
             <div class="field">
-              <label for="month" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.MONTH' | translate }}*</label>
-              <p-select 
-                id="month" 
-                [options]="months" 
-                [(ngModel)]="month" 
-                [placeholder]="'STATISTICS.SELECT.DATA.SELECT-MONTH' | translate" 
-                [style]="{ width: '100%' }" 
+              <label for="month" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.MONTH' | translate }}</label>
+              <p-select
+                id="month"
+                [options]="months"
+                [(ngModel)]="month"
+                [placeholder]="'STATISTICS.SELECT.DATA.SELECT-MONTH' | translate"
+                [style]="{ width: '100%' }"
                 (onChange)="onMonthSelect()"
               >
                 <ng-template let-item pTemplate="item">
@@ -106,13 +138,13 @@ import { StatisticsService } from '../../core/services/statistics.service';
             </div>
           } @else if(metricField == 'location'){
             <div class="field">
-              <label for="location" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.LOCATION' | translate }}*</label>
-              <p-select 
-                id="location" 
-                [options]="houseNumbers" 
-                [(ngModel)]="selectedHouseNumber" 
-                [placeholder]="'STATISTICS.SELECT.DATA.SELECT-LOCATION' | translate" 
-                [style]="{ width: '100%' }" 
+              <label for="location" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.LOCATION' | translate }}</label>
+              <p-select
+                id="location"
+                [options]="houseNumbers"
+                [(ngModel)]="selectedHouseNumber"
+                [placeholder]="'STATISTICS.SELECT.DATA.SELECT-LOCATION' | translate"
+                [style]="{ width: '100%' }"
                 (onChange)="onHouseNumberChange()"
               >
                 <ng-template let-item pTemplate="item">
@@ -125,15 +157,15 @@ import { StatisticsService } from '../../core/services/statistics.service';
             </div>
           } @else if(metricField == 'metrics'){
             <div class="field">
-              <label for="metric" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.METRIC' | translate }}*</label>
-              <p-multiselect 
+              <label for="metric" class="font-bold block mb-2">{{ 'STATISTICS.SELECT.TITLE.METRIC' | translate }}</label>
+              <p-multiselect
                 id="metric"
-                [options]="metrics" 
+                [options]="metrics"
                 [(ngModel)]="selectedMetrics"
-                optionLabel="name" 
-                optionValue="value" 
-                [placeholder]="'STATISTICS.SELECT.DATA.SELECT-METRIC' | translate" 
-                [style]="{ width: '100%' }" 
+                optionLabel="name"
+                optionValue="value"
+                [placeholder]="'STATISTICS.SELECT.DATA.SELECT-METRIC' | translate"
+                [style]="{ width: '100%' }"
                 (onChange)="onMetricsSelect()"
               >
                 <ng-template let-item pTemplate="item">
@@ -147,19 +179,19 @@ import { StatisticsService } from '../../core/services/statistics.service';
 
       @if(chartType == 'pie' || chartType == 'doughnut'){
         <div class="pie-card">
-          <p-chart 
+          <p-chart
             id="chart"
-            [type]="chartType" 
-            [data]="data" 
+            [type]="chartType"
+            [data]="data"
             [options]="options"
           />
         </div>
       } @else {
         <div class="card">
-          <p-chart 
+          <p-chart
             id="chart"
-            [type]="chartType" 
-            [data]="data" 
+            [type]="chartType"
+            [data]="data"
             [options]="options"
           />
         </div>
@@ -167,7 +199,7 @@ import { StatisticsService } from '../../core/services/statistics.service';
 
       @if(selectedMetrics.length && selectedHouseNumber){
         <div class="total-monthly-data">
-          @for(metric of selectedMetrics; track metric){
+          @for(metric of selectedMetrics; track trackByMetric($index, metric)){
             <span>
               {{getMetricName(metric)}}: {{totalMonthlyData[metric]}}
               @if(metric == 'occupancy') {
@@ -179,7 +211,12 @@ import { StatisticsService } from '../../core/services/statistics.service';
       }
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
+    ::ng-deep p-chart canvas {
+      max-width: 100% !important;
+    }
+
     ::ng-deep .pie-card p-chart canvas {
       width: 100% !important;
       height: 100% !important;
@@ -198,6 +235,9 @@ import { StatisticsService } from '../../core/services/statistics.service';
       align-items: center;
       justify-content: center;
       width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
 
       .header{
         display: flex;
@@ -225,20 +265,20 @@ import { StatisticsService } from '../../core/services/statistics.service';
         justify-content: center;
         gap: 50px;
         padding: 10px 0 10px 0;
-  
+
         p-button{
-  
+
           &:hover{
             cursor: pointer;
           }
         }
       }
-  
+
       .fields{
         display: flex;
         flex-direction: row;
         width: 100%;
-  
+
         .field{
           box-sizing: border-box;
           padding: 15px;
@@ -250,7 +290,7 @@ import { StatisticsService } from '../../core/services/statistics.service';
         width: 100%;
         height: 100%;
       }
-  
+
       .total-monthly-data{
         width: 100%;
         height: 20px;
@@ -259,841 +299,461 @@ import { StatisticsService } from '../../core/services/statistics.service';
         align-items: center;
         justify-content: center;
         gap: 20px;
-  
+
         span{
           font-size: 22px;
         }
       }
     }
+
+    @media (max-width: 991px) {
+      .chart-container {
+        .header {
+          flex-direction: row;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 0 4px;
+
+          h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            flex: 1;
+          }
+
+          .right-side {
+            width: auto;
+            flex-wrap: wrap;
+            gap: 6px;
+          }
+        }
+
+        .buttons {
+          gap: 6px;
+          flex-wrap: wrap;
+          justify-content: flex-start;
+          padding: 6px 4px;
+        }
+
+        .fields {
+          display: flex !important;
+          flex-direction: column !important;
+          width: 100%;
+          box-sizing: border-box;
+          overflow: hidden;
+
+          .field {
+            padding: 6px 4px;
+            box-sizing: border-box;
+            width: 100%;
+            overflow: hidden;
+
+            label {
+              font-size: 0.75rem;
+              margin-bottom: 4px !important;
+            }
+          }
+        }
+
+        ::ng-deep .fields .p-select,
+        ::ng-deep .fields .p-multiselect {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        .total-monthly-data {
+          flex-wrap: wrap;
+          height: auto;
+          gap: 6px;
+          padding: 4px;
+
+          span {
+            font-size: 14px;
+          }
+        }
+
+      }
+    }
   `
 })
 export class ChartComponent {
-
   @Input() title: string = '';
   @Input() dataType: string = '';
   @Input() canSelectDiagramType: boolean = false;
   @Input() periods: string[] = [];
-  @Input() metrics: any = [];
+  @Input() metrics: Metric[] = [];
   @Input() metricFields: string[] = [];
   @Input() isPinnableToHome: boolean = false;
   @Input() chartTypes: ChartType[] = [];
-  
+
   platformId = inject(PLATFORM_ID);
+
+  // Data sources
   houseAvailabilities: HouseAvailability[] = [];
-  houseAvailabilitiesForSelectedMonth: HouseAvailability[] = [];
   houses: House[] = [];
-  houseNumbers: string[] = ['All'];
   tasks: Task[] = [];
   profiles: Profile[] = [];
+  seasons: Season[] = [];
 
+  // UI state
+  houseNumbers: string[] = [ALL_HOUSES];
+  availableYears: number[] = [];
+  selectedYear: number = new Date().getFullYear();
+  selectedMonth: Date = new Date();
+  selectedHouseNumber: string = ALL_HOUSES;
+  selectedHouseId: number = -1;
+  month: string = '';
+  timePeriod: string = PERIOD_MONTH;
+  selectedMetrics: string[] = [];
+  chartType?: ChartType;
+
+  // Chart data
   data: any;
   options: any;
   xLabels: string[] = [];
-  selectedMonth: Date = new Date();
-  selectedHouseNumber: string = 'All';
-  selectedHouseId: number = -1;
   totalMonthlyData: { [metric: string]: number } = {};
   dataToDisplay: { [metric: string]: number[] } = {};
-  month: string = '';
-  timePeriod: string = 'month';
-  profileTaskMap: { [profileName: string]: number} = {}
-  
-  months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  season = ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'];
+  profileTaskMap: { [profileName: string]: number } = {};
+
+  readonly months = [...MONTHS];
+  readonly season = [...SEASON_MONTHS];
   staff: string[] = [];
 
-  selectedMetric: string = '';
-  selectedMetrics: string[] = [];
-
-  isOccupancyChartAddedToHome: boolean = false
-
-  chartType?: ChartType;
+  private chartOptionsBuilder?: ChartOptionsBuilder;
 
   constructor(
     private cd: ChangeDetectorRef,
     private dataService: DataService,
-    private taskService: TaskService,
     private layoutService: LayoutService,
     private statisticsService: StatisticsService,
+    private chartDataService: ChartDataService,
   ) {
     effect(() => {
       const isDark = this.layoutService.layoutConfig().darkTheme;
-      console.log('Dark mode changed:', isDark);
-
-      if(this.chartType == 'pie' || this.chartType == 'doughnut'){
-        this.initPieChart();
+      if (this.isPieChartType()) {
+        this.buildPieChart();
       } else {
-        this.initChart();
+        this.buildChart();
       }
     });
   }
 
-  ngOnInit(){
-    if(this.dataType == 'occupancy'){
-      this.chartType = 'line'
-      this.selectedMetrics = [];
-      this.selectedMetrics.push('occupancy');
-    } else if(this.dataType == 'general'){
-      this.chartType = 'line'
-      this.selectedMetrics = [];
-      this.selectedMetrics.push('adults');
-    } else if(this.dataType == 'staff'){
-      this.chartType = 'bar';
-      this.selectedMetrics = [];
-      this.selectedMetrics.push('totalCompletedTasks');
-    }
+  ngOnInit() {
+    this.initializeChartType();
 
     combineLatest([
       this.dataService.houseAvailabilities$.pipe(nonNull()),
       this.dataService.houses$.pipe(nonNull()),
       this.dataService.tasks$.pipe(nonNull()),
       this.dataService.profiles$.pipe(nonNull()),
+      this.dataService.seasons$.pipe(nonNull()),
     ])
     .pipe(take(1))
-    .subscribe(([houseAvailabilities, houses, tasks, profiles]) => {
+    .subscribe(([houseAvailabilities, houses, tasks, profiles, seasons]) => {
       this.houseAvailabilities = houseAvailabilities;
       this.houses = houses;
       this.tasks = tasks;
-      this.profiles = profiles
-        .filter(p => !p.is_test_user);
-      this.staff = profiles
-        .filter(p => !p.is_test_user)
-        .map(profile => profile.first_name ?? 'Staff');
+      this.profiles = profiles.filter(p => !p.is_test_user);
+      this.staff = this.profiles.map(profile => profile.first_name ?? 'Staff');
+      this.seasons = seasons;
 
-      this.houses.forEach(house => {
-        if(!this.houseNumbers.includes(house.house_number.toString()) && house.house_name != 'Zgrada' && house.house_name != 'Parcele'){
-          this.houseNumbers.push(house.house_number.toString());
-        }
-      });
-
-      this.houseNumbers.sort((a, b) => parseInt(a) - parseInt(b));
-
-      this.loadAvailabilities();
-      this.displayPeroid('month');
+      this.initializeAvailableYears();
+      this.selectedMonth = new Date(this.selectedYear, this.selectedMonth.getMonth(), 1);
+      this.initializeHouseNumbers();
+      this.displayPeriod(PERIOD_MONTH);
     });
   }
 
-  setDataForYear(){
-    this.xLabels = this.dataType == 'staff' ? this.staff : this.months;
-    this.generateYearlyDataset();
-  }
 
-  setDataForSeason(){
-    this.xLabels = this.dataType == 'staff' ? this.staff : this.season;
-    this.generateYearlyDataset();
-  }
-
-  getMetricName(name: string){
-    const metricObj = this.metrics.find((m: any) => m.value == name);
-    return metricObj ? metricObj.name : name;
-  }
-
-  onHouseNumberChange(){
-    const house = this.houses.find(house => house.house_name == this.selectedHouseNumber);
-
-    if(house){
-      this.selectedHouseId = house?.house_id;
-    }
-
-    if(this.timePeriod == 'month'){
-      this.generateDataset();
-    } else if (this.timePeriod == 'year' || this.timePeriod == 'season'){
-      this.generateYearlyDataset();
+  private initializeChartType(): void {
+    switch (this.dataType) {
+      case DATA_TYPE_OCCUPANCY:
+        this.chartType = 'line';
+        this.selectedMetrics = ['occupancy'];
+        break;
+      case DATA_TYPE_GENERAL:
+        this.chartType = 'line';
+        this.selectedMetrics = ['adults'];
+        break;
+      case DATA_TYPE_STAFF:
+        this.chartType = 'bar';
+        this.selectedMetrics = ['totalCompletedTasks'];
+        break;
     }
   }
 
-  loadAvailabilities(){
-    const selectedYear = this.selectedMonth.getFullYear();
-    const selectedMonthIndex = this.selectedMonth.getMonth();
+  private initializeHouseNumbers(): void {
+    const validHouses = this.houses.filter(house =>
+      !EXCLUDED_HOUSE_NAMES.includes(house.house_name as typeof EXCLUDED_HOUSE_NAMES[number]) &&
+      !this.houseNumbers.includes(house.house_number.toString())
+    );
 
-    const startOfMonth = new Date(selectedYear, selectedMonthIndex, 1);
-    const endOfMonth = new Date(selectedYear, selectedMonthIndex + 1, 0, 23, 59, 59);
-
-    this.houseAvailabilitiesForSelectedMonth = this.houseAvailabilities.filter(h => {
-      const isSameHouse = h.house_id === this.selectedHouseId;
-      const start = new Date(h.house_availability_start_date);
-      const end = new Date(h.house_availability_end_date);
-
-      const overlapsMonth =
-        (start >= startOfMonth && start <= endOfMonth) ||
-        (end >= startOfMonth && end <= endOfMonth) ||
-        (start <= startOfMonth && end >= endOfMonth);
-
-      return isSameHouse && overlapsMonth;
+    validHouses.forEach(house => {
+      this.houseNumbers.push(house.house_number.toString());
     });
+
+    this.houseNumbers.sort((a, b) => parseInt(a) - parseInt(b));
   }
 
-  onChartSelect(){
+  private initializeAvailableYears(): void {
+    const currentYear = new Date().getFullYear();
+
+    this.availableYears = this.seasons
+      .map(season => season.year)
+      .sort((a, b) => b - a);
+
+    if (this.availableYears.includes(currentYear)) {
+      this.selectedYear = currentYear;
+    } else if (this.availableYears.length > 0) {
+      this.selectedYear = this.availableYears[0];
+    }
+  }
+
+
+  onYearSelect(): void {
+    this.selectedMonth = new Date(this.selectedYear, this.selectedMonth.getMonth(), 1);
+    this.refreshData();
+  }
+
+  onHouseNumberChange(): void {
+    const house = this.houses.find(h => h.house_name === this.selectedHouseNumber);
+    this.selectedHouseId = house?.house_id ?? -1;
+    this.refreshData();
+  }
+
+  onMonthSelect(): void {
+    const monthIndex = this.months.indexOf(this.month as typeof MONTHS[number]);
+    this.selectedMonth = new Date(this.selectedYear, monthIndex, 1);
+    this.displayPeriod(PERIOD_MONTH);
+  }
+
+  onChartSelect(): void {
     this.onMetricsSelect();
   }
 
-  onMonthSelect(){
-    const monthIndex = this.months.indexOf(this.month);
-    const selectedMonth = new Date(new Date().getFullYear(), monthIndex, 1);
-
-    this.selectedMonth = selectedMonth;
-    this.displayPeroid('month');
+  onMetricsSelect(): void {
+    this.refreshData();
   }
 
-  onMetricsSelect(){
-    if(this.timePeriod == 'month'){
+  displayPeriod(period: string): void {
+    this.timePeriod = period;
+
+    if (period === PERIOD_YEAR) {
+      this.xLabels = this.dataType === DATA_TYPE_STAFF ? this.staff : this.months;
+      this.generateYearlyDataset();
+    } else if (period === PERIOD_SEASON) {
+      this.xLabels = this.dataType === DATA_TYPE_STAFF ? this.staff : this.season;
+      this.generateYearlyDataset();
+    } else if (period === PERIOD_MONTH) {
+      this.setDataForMonth();
+    }
+    this.cd.markForCheck();
+  }
+
+  private refreshData(): void {
+    if (this.timePeriod === PERIOD_MONTH) {
       this.generateDataset();
-    } else if(this.timePeriod == 'year' || this.timePeriod == 'season'){
+    } else {
       this.generateYearlyDataset();
     }
+    this.cd.markForCheck();
   }
 
-  setDataForMonth(){
+  private setDataForMonth(): void {
     const currentDate = this.selectedMonth;
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
+    const daysInMonth = this.chartDataService.getDaysInMonth(year, month);
+
     this.month = this.months[month];
-    this.xLabels = this.dataType == 'staff' ? this.staff : Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
+    this.xLabels = this.dataType === DATA_TYPE_STAFF
+      ? this.staff
+      : Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
 
-    this.generateDataset(); 
+    this.generateDataset();
   }
 
-  resetTotalMonthlyData() {
-    for (const key in this.totalMonthlyData) {
-      delete this.totalMonthlyData[key];
-    }
-
-    for (const key in this.dataToDisplay) {
-      delete this.dataToDisplay[key];
-    }
+  private getCalculationContext(): MetricCalculationContext {
+    return {
+      tasks: this.tasks,
+      profiles: this.profiles,
+      houses: this.houses,
+      houseAvailabilities: this.houseAvailabilities,
+      selectedHouseNumber: this.selectedHouseNumber,
+      selectedHouseId: this.selectedHouseId,
+      timePeriod: this.timePeriod,
+      dataType: this.dataType,
+    };
   }
 
-  initEmptyMetrics(metric: string){
-    this.totalMonthlyData[metric] = 0;
-    this.dataToDisplay[metric] = [];
-  }
+  private generateDataset(): void {
+    this.totalMonthlyData = {};
+    this.dataToDisplay = {};
 
-  initMonthlyData(){
-    if(this.timePeriod == 'year'){
-      return Array(this.months.length).fill(0); 
-    } else if (this.timePeriod == 'season'){
-      if(this.dataType == 'staff'){
-        return Array(this.profiles.length).fill(0);
-      } else {
-        return Array(this.season.length).fill(0);
-      }
-    }
+    const ctx = this.getCalculationContext();
+    const year = this.selectedMonth.getFullYear();
+    const month = this.selectedMonth.getMonth();
+    const daysInMonth = this.chartDataService.getDaysInMonth(year, month);
 
-    return [];
-  }
-
-  getMonthIndex(index: number){
-    if (this.timePeriod == 'season') {
-      const monthName = this.season[index];
-      return this.months.indexOf(monthName);
-    }
-    return index;
-  }
-
-  getOccupancyDataForMonth(year: number, month: number){
-    let houseAvailabilitiesForSelectedHouse;
-    let monthIndex = this.getMonthIndex(month);
-    
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    let data = Array(daysInMonth).fill(0); 
-    const houseCount = this.houses.filter(house => house.house_name != 'Zgrada' && house.house_name != 'Parcele').length;
-
-    if(this.selectedHouseNumber == 'All'){
-      houseAvailabilitiesForSelectedHouse = this.houseAvailabilities;
-    } else {
-      houseAvailabilitiesForSelectedHouse = this.houseAvailabilities.filter(ha => ha.house_id == this.selectedHouseId);
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const currentDay = new Date(year, monthIndex, day);
-
-      if(this.selectedHouseNumber == 'All'){
-        const houseAvailabilitiesForToday = houseAvailabilitiesForSelectedHouse.filter((availability: any) => {
-          const start = new Date(availability.house_availability_start_date);
-          const end = new Date(availability.house_availability_end_date);
-          return currentDay >= start && currentDay <= end;
-        });
-
-        data[day - 1] = (houseAvailabilitiesForToday.length / houseCount) * 100;
-      } else {
-        data[day - 1] = houseAvailabilitiesForSelectedHouse.some((availability: any) => {
-          const start = new Date(availability.house_availability_start_date);
-          const end = new Date(availability.house_availability_end_date);
-          return currentDay >= start && currentDay <= end;
-        });
-
-        data[day - 1] = data[day - 1] ? 100 : 0;
-      }
-    }
-
-    return data;
-  }
-
-  getTaskDataForMonth(metric: string, year: number, month: number){
-    const tasks = this.filterTasksForMetric(metric, year, month);
-    const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
-
-    let data; 
-
-    if(this.dataType == 'staff') {
-      const numberOfProfiles = this.staff.length;
-      data = Array(numberOfProfiles).fill(0);
-      this.profileTaskMap = {};
-
-      for (let profileIndex = 0; profileIndex <= numberOfProfiles - 1; profileIndex++) {
-        const profile = this.profiles[profileIndex];
-        let completedTasksByProfileCount;
-
-        if(this.selectedHouseNumber == 'All'){
-          completedTasksByProfileCount = this.tasks.filter(t =>
-            t.completed_by == profile.id && 
-            t.end_time?.split('T')[0].substring(0, 7) == wantedDate
-          ).length;
-
-          data[profileIndex] = completedTasksByProfileCount;
-        } else {
-          const house = this.houses.find(h => h.house_name == this.selectedHouseNumber)
-
-          completedTasksByProfileCount = this.tasks.filter(t => 
-            t.completed_by == profile.id && 
-            t.house_id == house?.house_id && 
-            t.end_time?.split('T')[0].substring(0, 7) == wantedDate
-          ).length;
-
-          data[profileIndex] = completedTasksByProfileCount;
-        }
-
-        this.profileTaskMap[profile.first_name!] = completedTasksByProfileCount;
-      }
-    } else {
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      data = Array(daysInMonth).fill(0)
-      
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dayString = `${wantedDate}-${day.toString().padStart(2, '0')}`;
-        const countForDay = tasks.filter(task => task.created_at.startsWith(dayString)).length;
-  
-        data[day - 1] = countForDay;
-      }
-    }  
-
-    return data;
-  }
-
-  calculateOccupancyMetric(metric: string, year: number, monthlyData: any){
-    for (let month = 0; month < monthlyData.length - 1; month++){
-      let monthIndex = this.getMonthIndex(month);
-      
-      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-      const data = this.getOccupancyDataForMonth(year, month);
-
-      if(this.selectedHouseNumber == 'All'){
-        let monthlyPercentages = 0;
-
-        data.forEach(data => {
-          monthlyPercentages += data;
-        });
-
-        this.totalMonthlyData[metric] = Number(((monthlyPercentages / daysInMonth)).toFixed(2)); 
-      } else {
-        let daysOccupied = 0;
-
-        data.forEach(data => {
-          daysOccupied += data ? 1 : 0;
-        });
-
-        this.totalMonthlyData[metric] = Number(((daysOccupied / daysInMonth) * 100).toFixed(2));
-      }
-
-      monthlyData[month] = this.totalMonthlyData[metric];
-    }
-
-    return monthlyData;
-  }
-
-  filterTasksForMetric(metric: string, year: number, month: number){
-    let tasks;
-    const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
-
-    if(metric == 'totalCompletedTasks'){
-      if(this.selectedHouseNumber == 'All'){
-        tasks = this.tasks.filter(task => 
-          task.completed_by && 
-          task.end_time?.split('T')[0].substring(0, 7) == wantedDate
-        );
-      } else {
-        tasks = this.tasks.filter(task => 
-          task.completed_by && 
-          task.house_id == this.selectedHouseId &&
-          task.end_time?.split('T')[0].substring(0, 7) == wantedDate
-        );
-      }
-    } else {
-      if(this.selectedHouseNumber == 'All'){
-        tasks = this.tasks.filter(task => 
-          task.created_at.startsWith(wantedDate)
-        );
-      } else {
-        tasks = this.tasks.filter(task => 
-          task.house_id == this.selectedHouseId &&
-          task.created_at.startsWith(wantedDate)
-        );
-      }
-    
-      if(metric.includes('Total') || metric.includes('total')) return tasks;
-  
-      if(metric.includes('Repair')){
-        tasks = tasks.filter(task => this.taskService.isRepairTask(task));
-      } else if(metric.includes('House')){
-        tasks = tasks.filter(task => this.taskService.isHouseCleaningTask(task));
-      } else if(metric.includes('Deck')){
-        tasks = tasks.filter(task => this.taskService.isDeckCleaningTask(task));
-      } else if(metric.includes('Unscheduled')){
-        tasks = tasks.filter(task => task.is_unscheduled);
-      } else if(metric.includes('Towel')){
-        tasks = tasks.filter(task => this.taskService.isTowelChangeTask(task));
-      } else if(metric.includes('Sheet')){
-        tasks = tasks.filter(task => this.taskService.isSheetChangeTask(task));
-      }
-    }
-
-    return tasks;
-  }
-
-  calculateTaskMetric(metric: string, year: number, monthlyData: any){
-    if(this.timePeriod == 'season'){
-      if(metric == 'totalCompletedTasks') {
-        this.profileTaskMap = {};
-        let completedTasksInSeason = [];
-        let profile;
-
-        for (let month = 0; month < this.season.length - 1; month++) {
-          const tasks = this.filterTasksForMetric(metric, year, this.getMonthIndex(month));
-          completedTasksInSeason.push(...tasks);
-        }
-
-        for(let profileIndex = 0; profileIndex < this.profiles.length; profileIndex++){
-          profile = this.profiles[profileIndex];
-          const completedTasksForProfile = completedTasksInSeason.filter(t => t.completed_by == this.profiles[profileIndex].id);
-          monthlyData[profileIndex] += completedTasksForProfile.length;
-          this.profileTaskMap[profile?.first_name!] = completedTasksForProfile.length;
-        }
-      } else {
-        for (let month = 0; month < this.season.length - 1; month++) {
-          const tasks = this.filterTasksForMetric(metric, year, this.getMonthIndex(month));
-          monthlyData[month] += tasks.length;
-        }
-      }
-    } else {
-      for (let month = 0; month < this.months.length - 1; month++) {
-        const tasks = this.filterTasksForMetric(metric, year, month);
-        monthlyData[month] += tasks.length;
-      }
-    }
-
-    return monthlyData;
-  }
-
-  calculateAvailabilityMetric(metric: string, year: number, monthlyData: any){
-    for (let month = 0; month < this.months.length - 1; month++){
-      const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
-  
-      if(this.selectedHouseNumber == 'All'){
-        this.houseAvailabilities.forEach((availability: any) => {
-          if(availability.house_availability_start_date.startsWith(wantedDate) || availability.house_availability_end_date.startsWith(wantedDate)){
-            monthlyData[month] += availability[metric] ? availability[metric] : 0;
-          }
-        });
-      } else {
-        const houseAvailabilitiesForHouse = this.houseAvailabilities.filter(ha => ha.house_id == this.selectedHouseId);
-    
-        houseAvailabilitiesForHouse.forEach((availability: any) => {
-          if(availability.house_availability_start_date.startsWith(wantedDate) || availability.house_availability_end_date.startsWith(wantedDate)){
-            monthlyData[month] += availability[metric] ? availability[metric] : 0;
-          }
-        });
-      }
-    }
-
-    return monthlyData;
-  }
-
-  getAvailabilityDataForMonth(metric: string, year: number, month: number){
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    let data = Array(daysInMonth).fill(0);
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const currentDay = new Date(year, month, day);
-
-      if(this.selectedHouseNumber == 'All'){
-        this.houseAvailabilities.forEach((availability: any) => {
-          const start = new Date(availability.house_availability_start_date);
-          const end = new Date(availability.house_availability_end_date);
-    
-          if (currentDay >= start && currentDay <= end) {
-            data[day - 1] += availability[metric] || 0;
-          }
-        });
-      } else {
-        this.houseAvailabilities.forEach((availability: any) => {
-          if (availability.house_id == this.selectedHouseId) {
-            const start = new Date(availability.house_availability_start_date);
-            const end = new Date(availability.house_availability_end_date);
-    
-            if (currentDay >= start && currentDay <= end) {
-              data[day - 1] += availability[metric] || 0;
-            }
-          }
-        });
-      }
-    }
-    
-    return data;
-  }
-
-  generateDataset() {
-    this.resetTotalMonthlyData();
-    
     this.selectedMetrics.forEach(metric => {
-      this.initEmptyMetrics(metric);
+      this.totalMonthlyData[metric] = 0;
+      this.dataToDisplay[metric] = [];
 
-      const currentDate = this.selectedMonth;
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const wantedDate = new Date(year, month + 1, 0).toISOString().split('T')[0].substring(0, 7);
-
-      let data = Array(daysInMonth).fill(0);
       const isTaskMetric = metric.includes('tasks') || metric.includes('Tasks');
       const isOccupancyMetric = metric.includes('occupancy');
 
-      if(isOccupancyMetric){
-        data = this.getOccupancyDataForMonth(year, month);  
+      let data: number[];
 
-        if(this.selectedHouseNumber == 'All'){
-          let dailyPercentages = 0;
-
-          data.forEach(data => {
-            dailyPercentages += data;
-          });
-
-          this.totalMonthlyData[metric] = Number(((dailyPercentages / daysInMonth)).toFixed(2));
-        } else {
-          let daysOccupied = 0;
-
-          data.forEach(data => {
-            daysOccupied += data ? 1 : 0;
-          });
-
-          this.totalMonthlyData[metric] = Number(((daysOccupied / daysInMonth) * 100).toFixed(2));
+      if (isOccupancyMetric) {
+        data = this.chartDataService.getOccupancyDataForMonth(year, month, ctx);
+        this.totalMonthlyData[metric] = this.calculateOccupancyTotal(data, daysInMonth);
+      } else if (isTaskMetric) {
+        const result = this.chartDataService.getTaskDataForMonth(metric, year, month, ctx);
+        data = result.data;
+        this.totalMonthlyData[metric] = result.total;
+        if (result.profileTaskMap) {
+          this.profileTaskMap = result.profileTaskMap;
         }
-      } else if(isTaskMetric){
-        data = this.getTaskDataForMonth(metric, year, month);
-
-        data.forEach(data => {
-          this.totalMonthlyData[metric] += data;
-        });
       } else {
-        data = this.getAvailabilityDataForMonth(metric, year, month);
-
-        let houseAvailabilitiesForSelectedMonth = this.houseAvailabilities
-          .filter(ha => 
-            (ha.house_availability_start_date.startsWith(wantedDate) || ha.house_availability_end_date.startsWith(wantedDate))
-          );
-
-        if(this.selectedHouseNumber != 'All'){
-          houseAvailabilitiesForSelectedMonth = houseAvailabilitiesForSelectedMonth
-            .filter(ha => ha.house_id == this.selectedHouseId
-          );
-        }
-        
-        houseAvailabilitiesForSelectedMonth.forEach((ha: any) => {
-          this.totalMonthlyData[metric] += ha[metric];
-        });
+        data = this.chartDataService.getAvailabilityDataForMonth(metric, year, month, ctx);
+        this.totalMonthlyData[metric] = this.chartDataService.calculateAvailabilityTotal(metric, year, month, ctx);
       }
 
       this.dataToDisplay[metric] = data;
     });
 
-    (this.chartType == 'pie' || this.chartType == 'doughnut') ? this.initPieChart() : this.initChart();
+    this.isPieChartType() ? this.buildPieChart() : this.buildChart();
+    this.cd.markForCheck();
   }
 
-  generateYearlyDataset() {
-    this.resetTotalMonthlyData();
-    const year = new Date().getFullYear(); 
-    
+  private generateYearlyDataset(): void {
+    this.totalMonthlyData = {};
+    this.dataToDisplay = {};
+
+    const ctx = this.getCalculationContext();
+    const year = this.selectedYear;
+
     this.selectedMetrics.forEach(metric => {
-      this.initEmptyMetrics(metric);
+      this.totalMonthlyData[metric] = 0;
+      this.dataToDisplay[metric] = [];
 
-      let monthlyData = this.initMonthlyData();
-
+      const monthlyData = this.chartDataService.initMonthlyData(this.timePeriod, this.dataType, this.profiles.length);
       const isTaskMetric = metric.includes('tasks') || metric.includes('Tasks');
       const isOccupancyMetric = metric.includes('occupancy');
 
-      let metricData;
+      let metricData: number[];
 
-      if(isOccupancyMetric){
-        metricData = this.calculateOccupancyMetric(metric, year, monthlyData);
-        
-        let totalData = 0;
-        //preskoci zadnji mjesec jer nije u sezoni, u mjesecima je jer se samo displaya na grafu
-        const monthsCount = this.timePeriod == 'season' ? monthlyData.length - 1 : monthlyData.length;
-
-        for (let i = 0; i < monthlyData.length - 1; i++){
-          totalData += metricData[i]
-        }
-
-        this.totalMonthlyData[metric] = Number((totalData / monthsCount).toFixed(2));
-      } else if(isTaskMetric){
-        metricData = this.calculateTaskMetric(metric, year, monthlyData);
-
-        metricData.forEach((data: any) => {
-          this.totalMonthlyData[metric] += data;
-        });
+      if (isOccupancyMetric) {
+        metricData = this.chartDataService.calculateOccupancyMetric(year, monthlyData, ctx);
+        const monthsCount = this.timePeriod === PERIOD_SEASON ? SEASON_MONTHS.length : MONTHS.length;
+        this.totalMonthlyData[metric] = Number((this.chartDataService.sumArray(metricData) / monthsCount).toFixed(2));
+      } else if (isTaskMetric) {
+        const result = this.chartDataService.calculateTaskMetric(metric, year, monthlyData, ctx);
+        metricData = result.data;
+        this.profileTaskMap = result.profileTaskMap;
+        this.totalMonthlyData[metric] = this.chartDataService.sumArray(metricData);
       } else {
-        metricData = this.calculateAvailabilityMetric(metric, year, monthlyData);
-        
-        metricData.forEach((data: any) => {
-          this.totalMonthlyData[metric] += data;
-        });
+        metricData = this.chartDataService.calculateAvailabilityMetric(metric, year, monthlyData, ctx);
+        this.totalMonthlyData[metric] = this.chartDataService.sumArray(metricData);
       }
 
       this.dataToDisplay[metric] = metricData;
     });
 
-    (this.chartType == 'pie' || this.chartType == 'doughnut') ? this.initPieChart() : this.initChart();
+    this.isPieChartType() ? this.buildPieChart() : this.buildChart();
+    this.cd.markForCheck();
   }
 
-  displayPeroid(period: string){
-    this.timePeriod = period;
-
-    if(period == 'year'){
-      this.setDataForYear();
-    } else if (period == 'season'){
-      this.setDataForSeason();
-    } else if (period == 'month'){
-      this.setDataForMonth();
+  private calculateOccupancyTotal(data: number[], daysInMonth: number): number {
+    if (this.selectedHouseNumber === ALL_HOUSES) {
+      return Number((this.chartDataService.sumArray(data) / daysInMonth).toFixed(2));
+    } else {
+      const daysOccupied = data.reduce((count, val) => count + (val ? 1 : 0), 0);
+      return Number(((daysOccupied / daysInMonth) * 100).toFixed(2));
     }
   }
 
-  pinChartToHome(chart: string){
+  private isPieChartType(): boolean {
+    return this.chartType === 'pie' || this.chartType === 'doughnut';
+  }
+
+  private ensureChartBuilder(): void {
+    if (!this.chartOptionsBuilder && isPlatformBrowser(this.platformId)) {
+      this.chartOptionsBuilder = new ChartOptionsBuilder();
+    }
+  }
+
+  private buildPieChart(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.ensureChartBuilder();
+
+    const isDarkMode = this.layoutService._config.darkTheme ?? false;
+    const result = this.chartOptionsBuilder!.buildPieChart(
+      this.dataToDisplay,
+      this.totalMonthlyData,
+      this.metrics,
+      isDarkMode
+    );
+
+    this.data = result.data;
+    this.options = result.options;
+  }
+
+  private buildChart(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.ensureChartBuilder();
+
+    const isDarkMode = this.layoutService._config.darkTheme ?? false;
+    const isStaffChart = this.dataType === DATA_TYPE_STAFF;
+
+    const result = this.chartOptionsBuilder!.buildBarOrLineChart(
+      this.dataToDisplay,
+      this.xLabels,
+      this.metrics,
+      this.chartType!,
+      isDarkMode,
+      isStaffChart,
+      this.profileTaskMap
+    );
+
+    this.data = result.data;
+    this.options = result.options;
+
+    if (isStaffChart && this.profileTaskMap) {
+      const combined = Object.entries(this.profileTaskMap)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value);
+      this.xLabels = combined.map(item => item.label);
+    }
+
+    this.cd.markForCheck();
+  }
+
+  getMetricName(name: string): string {
+    const metricObj = this.metrics.find((m: Metric) => m.value === name);
+    return metricObj ? metricObj.name : name;
+  }
+
+  trackByPeriod(index: number, period: string): string {
+    return period;
+  }
+
+  trackByMetric(index: number, metric: string): string {
+    return metric;
+  }
+
+  pinChartToHome(chart: string): void {
     this.statisticsService.createPinnedChart(chart);
+    this.cd.markForCheck();
   }
 
-  removeChartFromHome(chart: string){
+  removeChartFromHome(chart: string): void {
     this.statisticsService.deletePinnedChart(chart);
+    this.cd.markForCheck();
   }
 
-  isChartPinnedToHome(chart: string){
-    return this.statisticsService.isChartPinnedToHome(chart);
+  isChartPinnedToHome(chart: string): boolean {
+    return !!this.statisticsService.isChartPinnedToHome(chart);
   }
-
-  initPieChart(){
-    if(isPlatformBrowser(this.platformId)){
-      const documentStyle = getComputedStyle(document.documentElement);
-
-      const isNightMode = this.layoutService._config.darkTheme
-
-      const textColor = isNightMode ? 'white' : 'black';
-
-      let pieData: number[] = [];
-      let pieColors: string[] = [];
-      let pieLabels: string[] = [];
-
-      const colors = [
-        '--p-cyan-500',
-        '--p-orange-500',
-        '--p-green-500',
-        '--p-pink-500',
-        '--p-purple-500',
-        '--p-yellow-500',
-        '--p-red-500',
-        '--p-blue-500',
-        '--p-teal-500',
-        '--p-indigo-500',
-        '--p-lime-500'
-      ];
-
-      Object.keys(this.dataToDisplay).forEach((metric, index) => {
-        pieColors.push(documentStyle.getPropertyValue(colors[index % colors.length]));
-        pieLabels.push(this.metrics.find((m: any) => m.value == metric)?.name || metric);
-        pieData.push(this.totalMonthlyData[metric]);
-      });
-
-      this.data = {
-        labels: pieLabels,
-        datasets: [{
-          data: pieData,
-          backgroundColor: pieColors,
-          borderColor: 'white',
-          borderWidth: 1
-        }]
-      };
-
-      this.options = {
-        responsive: true,
-        maintainAspectRatio: false,
-
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              color: textColor
-            }
-          }
-        }
-      };
-    }
-  }
-
-  initChart() {
-    if (isPlatformBrowser(this.platformId)) {
-      const documentStyle = getComputedStyle(document.documentElement);
-
-      const isNightMode = this.layoutService._config.darkTheme
-
-      const textColor = isNightMode ? 'white' : 'black';
-      const textColorSecondary = isNightMode ? 'white' : 'gray';
-      const surfaceBorder = isNightMode ? 'gray' : 'lightgray';
-
-      const allValues = Object.values(this.dataToDisplay).flat();
-      const maxDataValue = Math.max(...allValues);
-
-      const hasOccupancy = Object.keys(this.dataToDisplay).includes('occupancy');
-
-      const datasets = Object.keys(this.dataToDisplay).map((metric, index) => {
-        const colors = [
-          '--p-cyan-500',
-          '--p-orange-500',
-          '--p-green-500',
-          '--p-pink-500',
-          '--p-purple-500',
-          '--p-yellow-500',
-          '--p-red-500',
-          '--p-blue-500',
-          '--p-teal-500',
-          '--p-indigo-500',
-          '--p-lime-500'
-        ];
-
-        const colorVar = colors[index % colors.length];
-
-        if(this.chartType == 'line'){
-          return {
-            label: this.metrics.find((m: any) => m.value == metric)?.name,
-            data: this.dataToDisplay[metric],
-            fill: true,
-            tension: 0,
-            borderColor: documentStyle.getPropertyValue(colorVar),
-            backgroundColor: documentStyle.getPropertyValue(colorVar) + '33',
-          };
-        } else {
-          return {
-            label: this.metrics.find((m: any) => m.value == metric)?.name,
-            data: this.dataToDisplay[metric],
-            fill: true,
-            tension: 0,
-            borderColor: 'white',
-            backgroundColor: documentStyle.getPropertyValue(colorVar),
-            borderWidth: 1,
-          };
-        }
-      });
-
-      const chartData: ChartData = {
-        textColor: textColor,
-        textColorSecondary: textColorSecondary,
-        surfaceBorder: surfaceBorder,
-        maxDataValue: maxDataValue,
-        hasOccupancy: hasOccupancy,
-        datasets: datasets,
-      }
-
-      if(this.dataType == 'staff'){
-        this.createChartData(chartData, true);
-      } else {
-        this.createChartData(chartData);
-      }
-
-      this.cd.markForCheck();
-    }
-  }
-
-  createChartData(chartData: ChartData, isHorizontalBar: boolean = false) {
-    if (this.dataType === 'staff') {
-      const combined = Object.entries(this.profileTaskMap).map(([label, value]) => ({
-        label,
-        value
-      }));
-
-      combined.sort((a, b) => b.value - a.value);
-
-      const sortedLabels = combined.map(item => item.label);
-      const sortedValues = combined.map(item => item.value);
-
-      chartData.datasets[0].data = sortedValues;
-      this.xLabels = sortedLabels;
-    }
-
-    this.data = {
-      labels: this.xLabels,
-      datasets: chartData.datasets
-    };
-
-    this.options = {
-      maintainAspectRatio: false,
-      aspectRatio: 0.6,
-      ...(isHorizontalBar && { indexAxis: 'y' }),
-      plugins: {
-        legend: {
-          labels: {
-            color: chartData.textColor
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: {
-            color: chartData.textColor,
-            autoSkip: false,
-            callback: (value: any, index: number) => {
-              if(this.dataType == 'general' || this.dataType == 'occupancy') {
-                return this.xLabels[index];
-              } else {
-                return Number.isInteger(value) ? value : null;
-              }
-            }
-          },
-          grid: {
-            color: chartData.surfaceBorder
-          }
-        },
-        y: {
-          min: 0,
-          max: chartData.hasOccupancy ? Math.max(100, chartData.maxDataValue) : undefined,
-          ticks: {
-            color: chartData.textColor,
-            autoSkip: false,  
-            callback: isHorizontalBar
-            ? (value: any, index: number) => this.xLabels[index]
-            : undefined
-          },
-          grid: {
-            color: chartData.surfaceBorder
-          }
-        }
-      }
-    };
-  }
-}
-
-interface ChartData {
-  textColor: string;
-  textColorSecondary: string;
-  surfaceBorder: string;
-  maxDataValue: number;
-  hasOccupancy: boolean;
-  datasets: any;
 }

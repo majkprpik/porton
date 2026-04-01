@@ -1,19 +1,18 @@
 
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ChartComponent } from './chart.component';
 import { StatisticsService } from '../../core/services/statistics.service';
+import { Chart } from '../../core/models/data.models';
 
 @Component({
   selector: 'app-statistics',
   imports: [
     ChartComponent,
-    FormsModule,
   ],
   template: `
     <div class="statistics-container">
       <div class="chart-row">
-        @for(chart of statisticsService.charts; track $index){
+        @for(chart of charts; track trackByChartId($index, chart)){
           <div class="chart-container">
             <app-chart
               [title]="chart.title"
@@ -41,24 +40,59 @@ import { StatisticsService } from '../../core/services/statistics.service';
       margin-bottom: 20px;
 
       .chart-row {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 10px;
+        width: 100%;
 
         .chart-container {
-          flex: 1 1 45%; 
-          height: 900px;
-          background-color: var(--surface-card);
+          min-height: 600px;
+          background: var(--glass-bg);
+          backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+          -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+          border: 1px solid var(--glass-border);
+          box-shadow: var(--glass-shadow);
           border-radius: 10px;
           padding: 20px;
           box-sizing: border-box;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+          &:last-child:nth-child(odd) {
+            grid-column: 1;
+          }
         }
       }
     }
-  `
+
+    @media (max-width: 991px) {
+      .statistics-container {
+        overflow-x: hidden;
+        max-width: 100%;
+      }
+
+      .statistics-container .chart-row {
+        grid-template-columns: 1fr;
+      }
+
+      .statistics-container .chart-container {
+        padding: 8px !important;
+        min-height: unset !important;
+        overflow: hidden;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+    }
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatisticsComponent {
+  
+  get charts(): Chart[] {
+    return this.statisticsService.charts;
+  }
 
-  constructor(public statisticsService: StatisticsService) {}
+  constructor(private statisticsService: StatisticsService) {}
+
+  trackByChartId(index: number, chart: Chart): string {
+    return chart.dataType;
+  }
 }

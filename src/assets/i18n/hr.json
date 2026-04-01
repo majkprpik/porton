@@ -11,7 +11,8 @@
         "ARCHIVE": "Arhiva zadataka",
         "WORK-SCHEDULE": "Raspored",
         "CONSOLE-MESSAGES": "Console messages",
-        "CONTENT-MANAGEMENT": "Upravljanje sadržajem"
+        "CONTENT-MANAGEMENT": "Upravljanje sadržajem",
+        "3D": "3D view"
     },
     "BUTTONS": {
         "REPORT": "Prijavi",
@@ -44,7 +45,8 @@
         "Nije dodijeljeno": "Nije dodijeljeno",
         "U tijeku": "U tijeku",
         "Pauzirano": "Pauzirano",
-        "Završeno": "Završeno"
+        "Završeno": "Završeno",
+        "Potvrđeno": "Potvrđeno"
     },
     "TASK-TYPES": { 
         "Čišćenje kućice": "Čišćenje kućice",
@@ -251,6 +253,16 @@
             "ROLE": "Pozicija",
             "ACCESS-TOKEN": "Access token",
             "FCM-TOKEN": "FCM token"
+        },
+        "SETTINGS": {
+            "TITLE": "Postavke",
+            "PROFILE": "Profil",
+            "APPEARANCE": "Izgled",
+            "THEME": "Tema",
+            "DARK": "Tamna",
+            "LIGHT": "Svijetla",
+            "LANGUAGE": "Jezik",
+            "CUSTOMIZE": "Prilagodi"
         }
     },
     "TEAMS": {
@@ -274,6 +286,7 @@
         },
         "TEAM-DETAILS": {
             "TASK-FINISHED": "Zadatak završen",
+            "TASK-CONFIRMED": "Zadatak potvrđen",
             "HOUSE-OCCUPIED": "Kućica zauzeta"
         }
     },
@@ -287,6 +300,7 @@
                 "MOBILE": "Mobilne"
             },
             "TOOLTIPS": {
+                "DOWNLOAD-XLSX": "Preuzmi .xlsx",
                 "ROW-HEIGHT-SPACIOUS": "Visina ćelije: Prostrano",
                 "ROW-HEIGHT-COMFORTABLE": "Visina ćelije: Zadano",
                 "ROW-HEIGHT-COMPACT": "Visina ćelije: Kompaktno"
@@ -334,7 +348,8 @@
             "SEARCH-HOUSES": "Pretraži kućice",
             "BY-NUMBER": "Po broju",
             "BY-TYPE": "Po tipu",
-            "BY-STATUS": "Po statusu"
+            "BY-STATUS": "Po statusu",
+            "NEEDS-CONFIRMATION": "Za potvrdu"
         },
         "HOUSE-STATUS": {
             "FREE": "Slobodna",
@@ -355,7 +370,8 @@
                 "MONTH": "Mjesec",
                 "LOCATION": "Lokacija",
                 "METRIC": "Metrika",
-                "CHART-TYPE": "Tip dijagrama"
+                "CHART-TYPE": "Tip dijagrama",
+                "YEAR": "Godina"
             },
             "DATA": {
                 "SELECT-MONTH": "Odaberi mjesec",
@@ -529,6 +545,7 @@
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
                 "HAS-POOL": "Bazen",
+                "HAS-JACUZZI": "Jacuzzi",
                 "IS-ACTIVE": "Aktivna",
                 "DESCRIPTION": "Opis",
                 "ACTIONS": "Akcije"
@@ -539,6 +556,7 @@
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
                 "HAS-POOL": "Bazen",
+                "HAS-JACUZZI": "Jacuzzi",
                 "DESCRIPTION": "Opis",
                 "DESCRIPTION-PLACEHOLDER": "Unesi dodatne informacije o ovoj kućici",
                 "IS-ACTIVE": "Aktivna"
@@ -549,6 +567,7 @@
                 "HOUSE-NAME": "Ime kućice",
                 "HOUSE-TYPE": "Tip kućice",
                 "HAS-POOL": "Bazen",
+                "HAS-JACUZZI": "Jacuzzi",
                 "DESCRIPTION": "Opis",
                 "DESCRIPTION-PLACEHOLDER": "Unesi dodatne informacije o ovoj kućici",
                 "IS-ACTIVE": "Aktivna"

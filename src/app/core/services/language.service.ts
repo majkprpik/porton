@@ -1,54 +1,51 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Language } from '../models/data.models';
 import { TranslateService } from '@ngx-translate/core';
+import { StorageService, STORAGE_KEYS } from './storage.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LanguageService {
+  private storageService = inject(StorageService);
   $selectedLanguage = new BehaviorSubject<Language>({ code: 'en', name: 'en' });
-  
+
   languages = [
-    { code: 'en', name: 'en' },
-    { code: 'hr', name: 'hr' }
+    { code: 'en', name: 'EN' },
+    { code: 'hr', name: 'HR' }
   ];
 
-  constructor(private translateService: TranslateService) { 
-    const savedLanguage = this.getSelectedLanguageFromLocalStorage();
+  constructor(private translateService: TranslateService) {
+    const savedLanguage = this.getSelectedLanguageFromStorage();
 
-     if (savedLanguage) {
-      this.setLanguage(JSON.parse(savedLanguage));
+    if (savedLanguage) {
+      this.setLanguage(savedLanguage);
     } else {
       this.setLanguage(this.languages.find(language => language.code == 'hr'));
     }
   }
 
-  private getSelectedLanguageFromLocalStorage(): string | null {
-    return localStorage.getItem('portonSelectedLanguage');
+  private getSelectedLanguageFromStorage(): Language | null {
+    return this.storageService.get<Language>(STORAGE_KEYS.SELECTED_LANGUAGE);
   }
 
-  getSelectedLanguageCode(){
-    const savedLanguage = this.getSelectedLanguageFromLocalStorage();
-
-    if(savedLanguage){
-      return JSON.parse(savedLanguage).code;
-    }
+  getSelectedLanguageCode(): string | undefined {
+    const savedLanguage = this.getSelectedLanguageFromStorage();
+    return savedLanguage?.code;
   }
 
-  private setSelectedLanguageToLocalStorage(selectedLanguage: string){
-    if(selectedLanguage){
-      localStorage.setItem('portonSelectedLanguage', selectedLanguage);
-    }
+  private setSelectedLanguageToStorage(selectedLanguage: Language): void {
+    this.storageService.set(STORAGE_KEYS.SELECTED_LANGUAGE, selectedLanguage);
   }
 
-  setLanguage(selectedLanguage: Language | undefined, reload: boolean = false) {
-    if(selectedLanguage){
+  setLanguage(selectedLanguage: Language | undefined, reload: boolean = false): void {
+    if (selectedLanguage) {
       this.$selectedLanguage.next(selectedLanguage);
       this.translateService.use(selectedLanguage.code);
-      this.setSelectedLanguageToLocalStorage(JSON.stringify(selectedLanguage));
+      this.setSelectedLanguageToStorage(selectedLanguage);
 
-      if(reload){
+      if (reload) {
         window.location.reload();
       }
     }

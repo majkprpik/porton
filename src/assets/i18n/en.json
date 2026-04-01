@@ -11,7 +11,8 @@
         "ARCHIVE": "Task archive",
         "WORK-SCHEDULE": "Work schedule",
         "CONSOLE-MESSAGES": "Console messages",
-        "CONTENT-MANAGEMENT": "Content management"
+        "CONTENT-MANAGEMENT": "Content management",
+        "3D": "3D view"
     },
     "BUTTONS": {
         "REPORT": "Report",
@@ -44,7 +45,8 @@
         "Nije dodijeljeno": "Not assigned",
         "U tijeku": "In progress",
         "Pauzirano": "Paused",
-        "Završeno": "Finished"
+        "Završeno": "Finished",
+        "Potvrđeno": "Potvrđeno"
     },
     "TASK-TYPES": { 
         "Čišćenje kućice": "House cleaning",
@@ -251,6 +253,16 @@
             "ROLE": "Role",
             "ACCESS-TOKEN": "Access token",
             "FCM-TOKEN": "FCM token"
+        },
+        "SETTINGS": {
+            "TITLE": "Settings",
+            "PROFILE": "Profile",
+            "APPEARANCE": "Appearance",
+            "THEME": "Theme",
+            "DARK": "Dark",
+            "LIGHT": "Light",
+            "LANGUAGE": "Language",
+            "CUSTOMIZE": "Customize"
         }
     },
     "TEAMS": {
@@ -274,6 +286,7 @@
         },
         "TEAM-DETAILS": {
             "TASK-FINISHED": "Task finished",
+            "TASK-CONFIRMED": "Task confirmed",
             "HOUSE-OCCUPIED": "House occupied"
         }
     },
@@ -287,6 +300,7 @@
                 "MOBILE": "Mobile"
             },
             "TOOLTIPS": {
+                "DOWNLOAD-XLSX": "Download .xlsx",
                 "ROW-HEIGHT-SPACIOUS": "Row height: Spacious",
                 "ROW-HEIGHT-COMFORTABLE": "Row height: Default",
                 "ROW-HEIGHT-COMPACT": "Row height: Compact"
@@ -334,7 +348,8 @@
             "SEARCH-HOUSES": "Search houses",
             "BY-NUMBER": "By number",
             "BY-TYPE": "By type",
-            "BY-STATUS": "By status"
+            "BY-STATUS": "By status",
+            "NEEDS-CONFIRMATION": "Needs confirmation"
         },
         "HOUSE-STATUS": {
             "FREE": "Free",
@@ -355,7 +370,8 @@
                 "MONTH": "Month",
                 "LOCATION": "Location",
                 "METRIC": "Metrics",
-                "CHART-TYPE": "Chart type"
+                "CHART-TYPE": "Chart type",
+                "YEAR": "Year"
             },
             "DATA": {
                 "SELECT-MONTH": "Select a month",
@@ -529,6 +545,7 @@
                 "HOUSE-NAME": "House name",
                 "HOUSE-TYPE": "House type",
                 "HAS-POOL": "Has pool",
+                "HAS-JACUZZI": "Has jacuzzi",
                 "IS-ACTIVE": "Is active",
                 "DESCRIPTION": "Description",
                 "ACTIONS": "Actions"
@@ -539,6 +556,7 @@
                 "HOUSE-NAME": "House name",
                 "HOUSE-TYPE": "House type",
                 "HAS-POOL": "Has pool",
+                "HAS-JACUZZI": "Has jacuzzi",
                 "DESCRIPTION": "Description",
                 "DESCRIPTION-PLACEHOLDER": "Add any notes or details about this house",
                 "IS-ACTIVE": "Is active"
@@ -549,6 +567,7 @@
                 "HOUSE-NAME": "House name",
                 "HOUSE-TYPE": "House type",
                 "HAS-POOL": "Has pool",
+                "HAS-JACUZZI": "Has jacuzzi",
                 "DESCRIPTION": "Description",
                 "DESCRIPTION-PLACEHOLDER": "Add any notes or details about this house",
                 "IS-ACTIVE": "Is active"

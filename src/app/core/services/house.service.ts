@@ -8,7 +8,6 @@ import { PushNotificationsService } from './push-notifications.service';
 import { TranslateService } from '@ngx-translate/core';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -22,6 +21,11 @@ export class HouseService {
   workGroups: WorkGroup[] = [];
   profiles: Profile[] = [];
   houseTypes: HouseType[] = [];
+
+  reservationColors = [
+    '#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA',
+    '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'
+  ];
 
   constructor(
     private supabase: SupabaseService,
@@ -122,13 +126,22 @@ export class HouseService {
 
   hasScheduledNotCompletedTasks(houseId: number): boolean {
     const notCompletedTasksForHouse = this.tasks
-      .filter(task => 
+      .filter(task =>
         task.house_id == houseId &&
         task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Completed)?.task_progress_type_id &&
+        task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Confirmed)?.task_progress_type_id &&
         !task.is_unscheduled
       );
 
     return !!notCompletedTasksForHouse.length;
+  }
+
+  hasUnconfirmedCleaningTask(houseId: number): boolean {
+    return this.tasks.some(task =>
+      task.house_id == houseId &&
+      this.taskService.isTaskCompleted(task) &&
+      this.taskService.isHouseCleaningTask(task)
+    );
   }
 
   getTasksForHouse(houseId: number): Task[] {
@@ -251,6 +264,20 @@ export class HouseService {
     });
   } 
 
+  isHouseReservedForDate(houseId: number, date: any){
+    const convertedDate = new Date(date);
+    convertedDate.setHours(0, 0, 0, 0);
+
+    return this.houseAvailabilities.find(ha => {
+      const start = new Date(ha.house_availability_start_date);
+      const end = new Date(ha.house_availability_end_date);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      return ha.house_id == houseId && convertedDate >= start && convertedDate <= end;
+    });
+  }
+
   hasDepartureForToday(houseId: number){
     const today = new Date();
     const yesterday = new Date(today);
@@ -323,10 +350,24 @@ export class HouseService {
 
   getHouseStatus(house: House): 'OCCUPIED' | 'ARRIVAL-DAY' | 'NOT-CLEANED' | 'FREE' {
     if (this.isHouseOccupied(house.house_id)) return 'OCCUPIED';
-    if (!this.isHouseOccupied(house.house_id) && this.hasScheduledNotCompletedTasks(house.house_id)) return 'NOT-CLEANED';
     if (!this.isHouseOccupied(house.house_id) && this.isHouseReservedToday(house.house_id)) return 'ARRIVAL-DAY';
-    if (!this.isHouseOccupied(house.house_id) && !this.hasScheduledNotCompletedTasks(house.house_id)) return 'FREE';
+    if (!this.isHouseOccupied(house.house_id) && (this.hasScheduledNotCompletedTasks(house.house_id) || this.hasUnconfirmedCleaningTask(house.house_id))) return 'NOT-CLEANED';
     return 'FREE';
+  }
+
+  getColorForReservation(reservation: HouseAvailability){
+    let baseColor = this.reservationColors[reservation.color_theme % this.reservationColors.length];
+    const opacity = 0.7 + (reservation.color_tint * 0.3);
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor);
+    
+    if (result) {
+      const r = parseInt(result[1], 16);
+      const g = parseInt(result[2], 16);
+      const b = parseInt(result[3], 16);
+      baseColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    } 
+
+    return baseColor;    
   }
 
   async setHouseAvailabilityDeparted(houseAvailabilityId: number, state: boolean){
@@ -434,9 +475,7 @@ export class HouseService {
       }),
     }
 
-    for(let wgp of workGroupProfiles){
-      this.pushNotificationService.sendNotification(wgp.profile_id, notification);
-    }
+    this.pushNotificationService.sendNotification(workGroupProfiles.map(wgp => wgp.profile_id), notification);
   }
 
   async updateHouseAvailabilityTime(houseAvailabilityId: number, timeField: 'arrival_time' | 'departure_time', timeValue: string) {

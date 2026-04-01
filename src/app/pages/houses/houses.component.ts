@@ -56,19 +56,21 @@ interface ExtendedHouse extends House{
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-NAME' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-TYPE' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HAS-POOL' | translate }}</th>
+            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HAS-JACUZZI' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.IS-ACTIVE' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-house>
-          <tr [ngClass]="{'divider-row': house.is_divider}">
+          <tr [ngClass]="{'divider-row': house.is_divider, 'teal-row': house.has_jacuzzi}">
             @if(house.is_divider){
-              <td colspan="6" class="divider-cell">{{ ('HOUSE-TYPES.' + house.title | translate) | uppercase}}</td>
+              <td colspan="7" class="divider-cell">{{ ('HOUSE-TYPES.' + house.title | translate) | uppercase}}</td>
             } @else {
               <td>{{ house.house_number }}</td>
               <td>{{ house.house_name }}</td>
               <td>{{ houseService.getHouseType(house.house_type_id)?.house_type_name }}</td>
               <td>{{ house.has_pool }}</td>
+              <td>{{ house.has_jacuzzi }}</td>
               <td>{{ house.is_active }}</td>
               <td>
                 <p-button 
@@ -119,25 +121,39 @@ interface ExtendedHouse extends House{
         </div>
         <div class="field flex flex-row gap-5">
           <div class="field flex items-center gap-2 mt-5">
-            <p-checkbox 
-              inputId="hasPool" 
-              name="hasPool" 
+            <p-checkbox
+              inputId="hasPool"
+              name="hasPool"
               binary="true"
-              [(ngModel)]="selectedHouse.has_pool" 
+              [(ngModel)]="selectedHouse.has_pool"
             />
-            <label 
-              [ngStyle]="{'margin-bottom': '0px'}" 
+            <label
+              [ngStyle]="{'margin-bottom': '0px'}"
               for="hasPool"
             >
               {{ 'CONTENT-MANAGEMENT.HOUSES.EDIT.HAS-POOL' | translate }}
             </label>
           </div>
           <div class="field flex items-center gap-2 mt-5">
-            <p-checkbox 
-              inputId="isActive" 
-              name="isActive" 
+            <p-checkbox
+              inputId="hasJacuzzi"
+              name="hasJacuzzi"
               binary="true"
-              [(ngModel)]="selectedHouse.is_active" 
+              [(ngModel)]="selectedHouse.has_jacuzzi"
+            />
+            <label
+              [ngStyle]="{'margin-bottom': '0px'}"
+              for="hasJacuzzi"
+            >
+              {{ 'CONTENT-MANAGEMENT.HOUSES.EDIT.HAS-JACUZZI' | translate }}
+            </label>
+          </div>
+          <div class="field flex items-center gap-2 mt-5">
+            <p-checkbox
+              inputId="isActive"
+              name="isActive"
+              binary="true"
+              [(ngModel)]="selectedHouse.is_active"
             />
             <label 
               [ngStyle]="{'margin-bottom': '0px'}" 
@@ -165,20 +181,20 @@ interface ExtendedHouse extends House{
           <div class="p-error">{{existingHouseErrorMessage}}</div>
         </div>
       }
-      <div class="p-dialog-footer">
+      <ng-template pTemplate="footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialogs()" styleClass="p-button-text"></p-button>
         <p-button [label]="'BUTTONS.SAVE' | translate" icon="pi pi-check" (click)="saveHouse(selectedHouse!)" [disabled]="!selectedHouse"></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
 
     <p-dialog [(visible)]="isDeleteHouseModuleVisible" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.HOUSES.DELETE.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
       <label>
         {{ 'CONTENT-MANAGEMENT.HOUSES.DELETE.TEXT' | translate }} <b>{{ selectedHouse?.house_name }}</b>?
       </label>
-      <div class="p-dialog-footer">
+      <ng-template pTemplate="footer">
         <p-button [label]="'BUTTONS.CANCEL' | translate" icon="pi pi-times" (click)="hideDialogs()" styleClass="p-button-text"></p-button>
         <p-button [label]="'BUTTONS.DELETE' | translate" icon="pi pi-trash" (click)="deleteHouse(selectedHouse!.house_id)" styleClass="p-button-danger" [disabled]="!selectedHouse"></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
 
     <p-dialog 
@@ -212,25 +228,39 @@ interface ExtendedHouse extends House{
         </div>
         <div class="field flex flex-row gap-5">
           <div class="field flex items-center gap-2 mt-5">
-            <p-checkbox 
-              inputId="hasPool" 
-              name="hasPool" 
+            <p-checkbox
+              inputId="hasPool"
+              name="hasPool"
               binary="true"
-              [(ngModel)]="houseToCreate.has_pool" 
+              [(ngModel)]="houseToCreate.has_pool"
             />
-            <label 
-              [ngStyle]="{'margin-bottom': '0px'}" 
+            <label
+              [ngStyle]="{'margin-bottom': '0px'}"
               for="hasPool"
             >
               {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.HAS-POOL' | translate }}
             </label>
           </div>
           <div class="field flex items-center gap-2 mt-5">
-            <p-checkbox 
-              inputId="isActive" 
-              name="isActive" 
+            <p-checkbox
+              inputId="hasJacuzzi"
+              name="hasJacuzzi"
               binary="true"
-              [(ngModel)]="houseToCreate.is_active" 
+              [(ngModel)]="houseToCreate.has_jacuzzi"
+            />
+            <label
+              [ngStyle]="{'margin-bottom': '0px'}"
+              for="hasJacuzzi"
+            >
+              {{ 'CONTENT-MANAGEMENT.HOUSES.ADD.HAS-JACUZZI' | translate }}
+            </label>
+          </div>
+          <div class="field flex items-center gap-2 mt-5">
+            <p-checkbox
+              inputId="isActive"
+              name="isActive"
+              binary="true"
+              [(ngModel)]="houseToCreate.is_active"
             />
             <label 
               [ngStyle]="{'margin-bottom': '0px'}" 
@@ -258,20 +288,20 @@ interface ExtendedHouse extends House{
           <div class="p-error">{{existingHouseErrorMessage}}</div>
         </div>
       }
-      <div class="p-dialog-footer">
-        <p-button 
-          [label]="'BUTTONS.CANCEL' | translate" 
-          icon="pi pi-times" 
-          (click)="hideDialogs()" 
+      <ng-template pTemplate="footer">
+        <p-button
+          [label]="'BUTTONS.CANCEL' | translate"
+          icon="pi pi-times"
+          (click)="hideDialogs()"
           styleClass="p-button-text">
         </p-button>
-        <p-button 
-          [label]="'BUTTONS.SAVE' | translate" 
-          icon="pi pi-check" 
-          (click)="createHouse(houseToCreate!)" 
+        <p-button
+          [label]="'BUTTONS.SAVE' | translate"
+          icon="pi pi-check"
+          (click)="createHouse(houseToCreate!)"
           [disabled]="!isCreateHouseFormValid()">
         </p-button>
-      </div>
+      </ng-template>
     </p-dialog>
     <p-toast></p-toast>
   `,
@@ -279,9 +309,12 @@ interface ExtendedHouse extends House{
     `
     .card {
       padding: 2rem;
-      background-color: var(--surface-card);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
       border-radius: 8px;
-      box-shadow: var(--card-shadow);
 
       .title{
         display: flex;
@@ -338,6 +371,11 @@ interface ExtendedHouse extends House{
     
     .divider-row {
       background-color: var(--primary-color);
+    }
+
+    .teal-row {
+      background-color: #008080;
+      color: white;
     }
     
     .divider-cell {
@@ -573,6 +611,7 @@ export class HousesComponent implements OnInit {
       house_number: undefined,
       house_type_id: this.houseTypes.find(ht => ht.house_type_name == HouseTypes.Family1)?.house_type_id,
       has_pool: false,
+      has_jacuzzi: false,
       is_active: true,
       description: '',
     }

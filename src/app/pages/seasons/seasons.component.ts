@@ -108,38 +108,38 @@ import { ConfirmationService, MessageService } from 'primeng/api';
           </p-datePicker>
         </div>
       }
-      <div class="p-dialog-footer">
-        <p-button 
-          [label]="'BUTTONS.CANCEL' | translate" 
-          icon="pi pi-times" 
-          (click)="hideDialogs()" 
+      <ng-template pTemplate="footer">
+        <p-button
+          [label]="'BUTTONS.CANCEL' | translate"
+          icon="pi pi-times"
+          (click)="hideDialogs()"
           styleClass="p-button-text"
         ></p-button>
-        <p-button 
-          [label]="'BUTTONS.SAVE' | translate" 
-          icon="pi pi-check" 
-          (click)="saveSeason()" 
+        <p-button
+          [label]="'BUTTONS.SAVE' | translate"
+          icon="pi pi-check"
+          (click)="saveSeason()"
           [disabled]="!isEditSeasonFormValid()"
         ></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
 
     <p-dialog [(visible)]="isDeleteSeasonModuleVisible" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.SEASONS.DELETE.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
       <label>{{ 'CONTENT-MANAGEMENT.SEASONS.DELETE.TEXT' | translate }} <b>{{ selectedSeason?.year }}</b>?</label>
-      <div class="p-dialog-footer">
-        <p-button 
-          [label]="'BUTTONS.CANCEL' | translate" 
-          icon="pi pi-times" 
-          (click)="hideDialogs()" 
+      <ng-template pTemplate="footer">
+        <p-button
+          [label]="'BUTTONS.CANCEL' | translate"
+          icon="pi pi-times"
+          (click)="hideDialogs()"
           styleClass="p-button-text"
         ></p-button>
-        <p-button 
-          [label]="'BUTTONS.DELETE' | translate" 
-          icon="pi pi-trash" 
-          (click)="deleteSeason(selectedSeason!.id)" 
+        <p-button
+          [label]="'BUTTONS.DELETE' | translate"
+          icon="pi pi-trash"
+          (click)="deleteSeason(selectedSeason!.id)"
           styleClass="p-button-danger"
         ></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
 
     <p-dialog [(visible)]="isCreateSeasonModuleVisible" [style]="{width: '250px'}" [header]="'CONTENT-MANAGEMENT.SEASONS.ADD.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
@@ -171,29 +171,32 @@ import { ConfirmationService, MessageService } from 'primeng/api';
         >
         </p-datePicker>
       </div>
-      <div class="p-dialog-footer">
-        <p-button 
-          [label]="'BUTTONS.CANCEL' | translate" 
-          icon="pi pi-times" 
-          (click)="hideDialogs()" 
+      <ng-template pTemplate="footer">
+        <p-button
+          [label]="'BUTTONS.CANCEL' | translate"
+          icon="pi pi-times"
+          (click)="hideDialogs()"
           styleClass="p-button-text"
         ></p-button>
-        <p-button 
-          [label]="'BUTTONS.SAVE' | translate" 
-          icon="pi pi-check" 
-          (click)="createSeason()" 
+        <p-button
+          [label]="'BUTTONS.SAVE' | translate"
+          icon="pi pi-check"
+          (click)="createSeason()"
           [disabled]="!isCreateSeasonFormValid()"
         ></p-button>
-      </div>
+      </ng-template>
     </p-dialog>
     <p-toast></p-toast>
   `,
   styles: `
     .seasons-container{
       padding: 2rem;
-      background-color: var(--surface-card);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
       border-radius: 8px;
-      box-shadow: var(--card-shadow);
 
       .title{
         display: flex;

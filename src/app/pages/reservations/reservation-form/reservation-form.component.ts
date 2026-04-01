@@ -16,7 +16,14 @@ import { DragDropModule } from "primeng/dragdrop";
 @Component({
     selector: 'app-reservation-form',
     template: `
-        <p-dialog [(visible)]="visible" [modal]="true" [style]="{width: '700px'}" [draggable]="false" [resizable]="false">
+        <p-dialog 
+            [(visible)]="visible" 
+            [modal]="true" 
+            [style]="{width: '700px'}" 
+            [draggable]="false" 
+            [resizable]="false"
+            (onHide)="onDialogHide()"
+        >
             <ng-template pTemplate="header">
                 <h3>
                     {{ reservation.house_availability_id ? 
@@ -172,7 +179,7 @@ import { DragDropModule } from "primeng/dragdrop";
                                 [label]="'BUTTONS.DELETE' | translate"
                                 icon="pi pi-trash" 
                                 (click)="onDelete()" 
-                                styleClass="p-button-danger p-button-text">
+                                severity="danger">
                             </p-button>
                         }
                     </div>
@@ -232,6 +239,13 @@ import { DragDropModule } from "primeng/dragdrop";
                 
                 .p-dialog-footer {
                     padding: 1rem;
+                    border-radius: 0 0 10px 10px;
+                }
+
+                @media (max-width: 991px) {
+                    width: calc(100vw - 2rem) !important;
+                    max-height: calc(100dvh - 56px - 5rem) !important;
+                    margin-bottom: calc(56px + 1rem) !important;
                 }
             }
             
@@ -309,26 +323,6 @@ import { DragDropModule } from "primeng/dragdrop";
                     gap: 0.5rem;
                 }
                 
-                @media (max-width: 576px) {
-                    flex-direction: column;
-                    gap: 1rem;
-                    
-                    .left-buttons {
-                        justify-content: center;
-                        
-                        .p-button {
-                            width: 100%;
-                        }
-                    }
-                    
-                    .right-buttons {
-                        justify-content: space-between;
-                        
-                        .p-button {
-                            flex: 1;
-                        }
-                    }
-                }
             }
 
             .babies-cribs-row, .pets-row {
@@ -476,15 +470,18 @@ export class ReservationFormComponent implements OnInit {
 
     setMinStartDate(){
         const prevHouseAvailability = this.houseService.getPreviousHouseAvailabilityFromHouseAvailability(this.reservation);
-        
-        if(prevHouseAvailability){
-            this.minStartDate = new Date(prevHouseAvailability.house_availability_end_date);
-            this.minStartDate.setDate(this.minStartDate.getDate() + 1);
-        } else {
-            this.minStartDate = new Date();
-        }
 
-        this.minStartDate.setHours(0, 0, 0, 0);
+        const seasonStart = new Date(this.season.season_start_date);
+        seasonStart.setHours(0, 0, 0, 0);
+
+        if(prevHouseAvailability){
+            const prevEnd = new Date(prevHouseAvailability.house_availability_end_date);
+            prevEnd.setDate(prevEnd.getDate() + 1);
+            prevEnd.setHours(0, 0, 0, 0);
+            this.minStartDate = prevEnd > seasonStart ? prevEnd : seasonStart;
+        } else {
+            this.minStartDate = seasonStart;
+        }
     }
 
     setMaxStartDate(){
@@ -650,5 +647,9 @@ export class ReservationFormComponent implements OnInit {
  
     isFormValid(){
         return !this.dateConflictError && this.reservation.last_name?.trim() && this.reservation.reservation_number?.trim();
+    }
+
+    onDialogHide(): void {
+        this.onCancel();
     }
 }

@@ -12,6 +12,7 @@ import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { MentionModule } from 'angular-mentions';
 import { AuthService } from '../../core/services/auth.service';
+import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
 
 @Component({
   selector: 'app-notes',
@@ -34,10 +35,11 @@ import { AuthService } from '../../core/services/auth.service';
             @if(isToday(selectedDate)){
               <span [ngStyle]="{'height': '20px'}">{{ 'APP-LAYOUT.NOTES.TODAY' | translate }}</span>
             } @else {
-              <p-datePicker 
-                [(ngModel)]="selectedDate" 
-                [showIcon]="true" 
+              <p-datePicker
+                [(ngModel)]="selectedDate"
+                [showIcon]="true"
                 dateFormat="dd/mm/yy"
+                appendTo="body"
                 [inputStyle]="{
                   height: '20px',
                   width: '100px',
@@ -60,10 +62,16 @@ import { AuthService } from '../../core/services/auth.service';
 
       <div class="notes-content" #messagesContainer>
         @if(!notes.length && !areNotesLoaded){
-          <span>{{ 'APP-LAYOUT.NOTES.LOADING-NOTES' | translate }}</span>
+          <div class="empty-state">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>{{ 'APP-LAYOUT.NOTES.LOADING-NOTES' | translate }}</span>
+          </div>
         }
         @if(areNotesLoaded && notesForSelectedDate.length == 0){
-          <span>{{ 'APP-LAYOUT.NOTES.NO-NOTES' | translate }}</span>
+          <div class="empty-state">
+            <i class="pi pi-comments"></i>
+            <span>{{ 'APP-LAYOUT.NOTES.NO-NOTES' | translate }}</span>
+          </div>
         }
         @if(notesForSelectedDate.length > 0){
           @for(note of notesForSelectedDate; track note?.id || i; let i = $index) {
@@ -102,13 +110,20 @@ import { AuthService } from '../../core/services/auth.service';
       </div>
 
       <div class="notes-footer">
-        <textarea 
+        <textarea
           [placeholder]="'APP-LAYOUT.NOTES.ADD-NOTE' | translate"
           [(ngModel)]="note"
           (keydown.enter)="addNote($event)"
           [disabled]="daysIndex < 0"
           [mention]="profileNames"
         ></textarea>
+        <p-button
+          icon="pi pi-send"
+          [rounded]="true"
+          [text]="true"
+          [disabled]="!note.trim() || daysIndex < 0"
+          (onClick)="addNote($event)"
+        ></p-button>
       </div>
     </div>
   `,
@@ -162,8 +177,28 @@ import { AuthService } from '../../core/services/auth.service';
         overflow-x: hidden;
         word-wrap: break-word;
         align-items: flex-start;
-        background-color: var(--surface-card);
         scrollbar-gutter: stable;
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow-elevated);
+
+        .empty-state {
+          width: 100%;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.75rem;
+          color: var(--text-color-secondary);
+
+          i {
+            font-size: 2rem;
+            opacity: 0.4;
+          }
+        }
 
         .date-sent{
           width: 100%;
@@ -192,19 +227,39 @@ import { AuthService } from '../../core/services/auth.service';
         height: 50px;
         width: 100%;
         border-radius: 0 0 10px 10px;
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding-right: 0.5rem;
 
         textarea{
-          width: 100%;
+          flex: 1;
           height: 100%;
-          border-radius: 0 0 10px 10px;
+          border: none;
+          border-radius: 0 0 0 10px;
           resize: none;
-          box-sizing: border-box; 
-          padding: 10px;
+          box-sizing: border-box;
+          padding: 12px 14px;
           outline: none;
+          background: transparent;
+          color: var(--text-color);
+          font-family: inherit;
+          font-size: 14px;
+
+          &::placeholder {
+            color: var(--text-color-secondary);
+            opacity: 0.7;
+          }
 
           &:disabled {
-            background-color: var(--surface-ground);
+            background: var(--glass-bg);
+            opacity: 0.6;
+            cursor: not-allowed;
           }
         }
       }
@@ -212,13 +267,13 @@ import { AuthService } from '../../core/services/auth.service';
 
     .left-half-line{
       height: 1px;
-      background-color: #e5e7eb; 
+      background-color: var(--glass-border);
       width: 100%;
     }
 
     .right-half-line{
       height: 1px;
-      background-color: #e5e7eb; 
+      background-color: var(--glass-border);
       width: 92%;
     }
   `
@@ -234,6 +289,9 @@ export class NotesComponent {
   profiles: Profile[] = [];
   activeProfiles: Profile[] = [];
   profileNames: string[] = [];
+
+  isToday = isToday;
+  areDaysEqual = areDaysEqual;
 
   private destroy$ = new Subject<void>();
 
@@ -389,12 +447,6 @@ export class NotesComponent {
     container.scrollTop = container.scrollHeight;
   }
 
-  areDaysEqual(date1: string | undefined, date2: string | undefined){
-    return (date1 && date2) 
-      ? date1.slice(0, 10).split('-')[2] === date2.slice(0, 10).split('-')[2] 
-      : false;
-  }
-
   hasMoreThan5MinutesPassedBetweenMessages(note1: Note, note2: Note){
     if (!note1.time_sent || !note2.time_sent) return false;
 
@@ -405,15 +457,6 @@ export class NotesComponent {
     const fiveMinutesMs = 5 * 60 * 1000; // 5 minutes in ms
 
     return diffMs > fiveMinutesMs;
-  }
-
-  isToday(time_sent: string | Date): boolean {
-    const date = new Date(time_sent);
-    const today = new Date();
-
-    return date.getFullYear() === today.getFullYear() &&
-           date.getMonth() === today.getMonth() &&
-           date.getDate() === today.getDate();
   }
 
   isCalendarDateSelected(date: any): boolean {

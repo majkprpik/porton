@@ -101,10 +101,18 @@ export class DataService {
   $areRepairTaskCommentsLoaded = new BehaviorSubject<boolean>(false);
 
   private realtimeChannel: RealtimeChannel | null = null;
+  private isLoadingInitialData = false;
 
-  constructor(private supabaseService: SupabaseService) {
-    this.loadAllEnumTypes();
-    this.loadInitialData().subscribe();
+  constructor(
+    private supabaseService: SupabaseService,
+  ) {
+    this.init();
+  }
+
+  private async init(){
+    if(await this.supabaseService.isUserLoggedIn()) {
+      this.loadInitialData().subscribe();
+    }
   }
 
   setTasks(tasks: Task[]){
@@ -214,7 +222,14 @@ export class DataService {
   }
 
   loadInitialData() {
+    if (this.isLoadingInitialData) {
+      return new Observable(subscriber => subscriber.complete());
+    }
+
+    this.isLoadingInitialData = true;
+
     return forkJoin([
+      this.loadAllEnumTypes(),
       this.loadHouseAvailabilities(),
       this.loadTempHouseAvailabilities(),
       this.loadTasks(),
@@ -233,13 +248,21 @@ export class DataService {
       this.loadSeasons(),
       this.loadPinnedCharts(),
       // this.loadAuthUsers()
-    ]);
+    ]).pipe(
+      tap(() => this.isLoadingInitialData = false),
+      catchError((error) => {
+        this.isLoadingInitialData = false;
+        return throwError(() => error);
+      })
+    );
   }
 
-  private loadAllEnumTypes(): void {
-    this.getTaskTypes().subscribe();
-    this.getTaskProgressTypes().subscribe();
-    this.getHouseTypes().subscribe();
+  private loadAllEnumTypes() {
+    return forkJoin([
+      this.getTaskTypes(),
+      this.getTaskProgressTypes(),
+      this.getHouseTypes()
+    ]);
   }
 
   getTaskTypes(): Observable<TaskType[]> {
@@ -592,28 +615,22 @@ export class DataService {
     }
   }
 
-  async getPublicUrlForImage(filePath: string) {
+  async getSignedUrlForImage(filePath: string) {
     try {
-      const response: any = await this.supabaseService
+      const { data, error } = await this.supabaseService
         .getClient()
         .storage
         .from('damage-reports-images')
-        .getPublicUrl(filePath);
-  
-      if (response && response.data && response.data.publicUrl) {
-        return response.data.publicUrl;
-      }
-  
-      if (response && response.error) {
-        console.error('Error getting public URL:', response.error);
+        .createSignedUrl(filePath, 3600);
+
+      if (error) {
+        console.error('Error getting signed URL:', error);
         return null;
       }
-  
-      console.error('Public URL not found or unknown error');
-      return null;
-  
+
+      return data?.signedUrl ?? null;
     } catch (error) {
-      console.error('Error getting public URL:', error);
+      console.error('Error getting signed URL:', error);
       return null;
     }
   }
