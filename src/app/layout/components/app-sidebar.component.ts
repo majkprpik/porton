@@ -42,6 +42,7 @@ import { NavigationEnd, Router } from '@angular/router';
                 *ngFor="let item of model; let i = index"
                 [class.active]="selectedItem === i"
                 (click)="selectItem(i); navigateTo(item.routerLink[0])"
+                [style.display]="item.hideOnMobile ? 'none' : ''"
             >
                 <i [ngClass]="item.icon"></i>
             </div>
@@ -213,12 +214,11 @@ import { NavigationEnd, Router } from '@angular/router';
                 display: flex;
                 flex-direction: row;
                 align-items: center;
-                justify-content: space-around;
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 right: 0;
-                height: 56px;
+                height: 64px;
                 z-index: 999;
                 background: var(--glass-bg);
                 backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -226,20 +226,41 @@ import { NavigationEnd, Router } from '@angular/router';
                 border-top: 1px solid var(--glass-border);
                 box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
                 padding-bottom: env(safe-area-inset-bottom);
+                overflow-x: auto;
+                overflow-y: hidden;
+                scroll-snap-type: x proximity;
+                -webkit-overflow-scrolling: touch;
+
+                /* Hide scrollbar but keep scroll functionality */
+                scrollbar-width: none;
+                &::-webkit-scrollbar {
+                    display: none;
+                }
 
                 .bottom-nav-item {
-                    flex: 1;
+                    flex: 0 0 auto;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     height: 100%;
+                    min-width: 68px;
+                    padding: 0 14px;
                     cursor: pointer;
                     color: var(--glass-text-secondary);
-                    font-size: 1.25rem;
                     transition: color 0.2s;
+                    scroll-snap-align: center;
+                    border-radius: 12px;
+                    margin: 6px 2px;
+
+                    i {
+                        font-size: 1.4rem !important;
+                    }
 
                     &.active {
                         color: var(--primary-color);
+                        background: linear-gradient(135deg, #6366f126, #3b82f61a);
+                        border: 1.5px solid var(--glass-border-accent);
+                        box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
                     }
 
                     &:active {
@@ -494,9 +515,9 @@ export class AppSidebar {
             menuItems.push(
                 { label: this.translateService.instant('MENU.STATISTICS'), icon: 'pi pi-chart-bar', routerLink: ['/statistics'] },
                 { label: this.translateService.instant('MENU.ARCHIVE'), icon: 'pi pi-book', routerLink: ['/archive'] },
-                { label: this.translateService.instant('MENU.CONSOLE-MESSAGES'), icon: 'pi pi-bullseye', routerLink: ['/console-messages'] },
-                { label: this.translateService.instant('MENU.CONTENT-MANAGEMENT'), icon: 'pi pi-microchip', routerLink: ['/content-management'] },
-                { label: this.translateService.instant('MENU.3D'), icon: 'fa-solid fa-cubes', routerLink: ['/map'] },
+                { label: this.translateService.instant('MENU.CONSOLE-MESSAGES'), icon: 'pi pi-bullseye', routerLink: ['/console-messages'], hideOnMobile: true },
+                { label: this.translateService.instant('MENU.CONTENT-MANAGEMENT'), icon: 'pi pi-microchip', routerLink: ['/content-management'], hideOnMobile: true },
+                { label: this.translateService.instant('MENU.3D'), icon: 'fa-solid fa-cubes', routerLink: ['/map'], hideOnMobile: true },
             );
         }
         
