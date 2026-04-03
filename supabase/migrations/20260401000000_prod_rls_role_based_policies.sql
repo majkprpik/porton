@@ -156,17 +156,17 @@ CREATE POLICY role_based_select ON porton.profile_work_days
 
 CREATE POLICY role_based_insert ON porton.profile_work_days
   FOR INSERT TO authenticated WITH CHECK (
-    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva'])
+    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva','Prodaja'])
   );
 
 CREATE POLICY role_based_update ON porton.profile_work_days
   FOR UPDATE TO authenticated
-  USING (porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva']))
-  WITH CHECK (porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva']));
+  USING (porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva','Prodaja']))
+  WITH CHECK (porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva','Prodaja']));
 
 CREATE POLICY role_based_delete ON porton.profile_work_days
   FOR DELETE TO authenticated USING (
-    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva'])
+    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva','Prodaja'])
   );
 
 -- ============================================================
@@ -177,17 +177,17 @@ CREATE POLICY role_based_select ON porton.profile_work_schedule
 
 CREATE POLICY role_based_insert ON porton.profile_work_schedule
   FOR INSERT TO authenticated WITH CHECK (
-    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva'])
+    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva','Prodaja'])
   );
 
 CREATE POLICY role_based_update ON porton.profile_work_schedule
   FOR UPDATE TO authenticated
-  USING (porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva']))
-  WITH CHECK (porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva']));
+  USING (porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva','Prodaja']))
+  WITH CHECK (porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva','Prodaja']));
 
 CREATE POLICY role_based_delete ON porton.profile_work_schedule
   FOR DELETE TO authenticated USING (
-    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva'])
+    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj recepcije','Voditelj kampa','Voditelj domacinstva','Prodaja'])
   );
 
 -- ============================================================
