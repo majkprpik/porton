@@ -348,7 +348,8 @@ export class HouseService {
     return this.getCurrentOccupantCount(houseId, HouseOccupant.Pets);
   }
 
-  getHouseStatus(house: House): 'OCCUPIED' | 'ARRIVAL-DAY' | 'NOT-CLEANED' | 'FREE' {
+  getHouseStatus(house: House): 'OCCUPIED' | 'ARRIVAL-DAY' | 'NOT-CLEANED' | 'FREE' | 'INACTIVE' {
+    if (!house.is_active) return 'INACTIVE';
     if (this.isHouseOccupied(house.house_id)) return 'OCCUPIED';
     if (!this.isHouseOccupied(house.house_id) && this.isHouseReservedToday(house.house_id)) return 'ARRIVAL-DAY';
     if (!this.isHouseOccupied(house.house_id) && (this.hasScheduledNotCompletedTasks(house.house_id) || this.hasUnconfirmedCleaningTask(house.house_id))) return 'NOT-CLEANED';

@@ -353,6 +353,7 @@
         },
         "HOUSE-STATUS": {
             "FREE": "Free",
+            "INACTIVE": "Inactive",
             "OCCUPIED": "Occupied",
             "ARRIVAL-DAY": "Arrival day",
             "CLEANED": "Cleaned",
@@ -361,14 +362,30 @@
         "HOUSE-DETAIL": {
             "ZA-POTVRDU": "To confirm",
             "ZADACI": "Tasks",
-            "NO-TASKS": "No tasks"
+            "NO-TASKS": "No tasks",
+            "NO-RESERVATIONS": "No reservations for this house"
         }
+    },
+    "MONTHS": {
+        "JANUARY": "January",
+        "FEBRUARY": "February",
+        "MARCH": "March",
+        "APRIL": "April",
+        "MAY": "May",
+        "JUNE": "June",
+        "JULY": "July",
+        "AUGUST": "August",
+        "SEPTEMBER": "September",
+        "OCTOBER": "October",
+        "NOVEMBER": "November",
+        "DECEMBER": "December"
     },
     "STATISTICS": {
         "TITLES": {
             "GENERAL": "General statistics",
             "OCCUPANCY": "Occupancy statistics",
-            "STAFF": "Staff statistics"
+            "STAFF": "Staff statistics",
+            "HOUSE-RANKING": "House rankings"
         },
         "SELECT": {
             "TITLE": {
@@ -383,6 +400,24 @@
                 "SELECT-LOCATION": "Select a location",
                 "SELECT-METRIC": "Select a metric"
             }
+        },
+        "METRICS": {
+            "ADULTS": "Adults",
+            "CHILDREN": "Children",
+            "PETS": "Pets",
+            "BABY-CRIBS": "Baby Cribs",
+            "REPAIR-TASKS": "Repair Tasks",
+            "HOUSE-CLEANING-TASKS": "House Cleaning Tasks",
+            "DECK-CLEANING-TASKS": "Deck Cleaning Tasks",
+            "SHEET-CHANGE-TASKS": "Sheet Change Tasks",
+            "TOWEL-CHANGE-TASKS": "Towel Change Tasks",
+            "UNSCHEDULED-TASKS": "Unscheduled Tasks",
+            "TOTAL-TASKS": "Total Tasks",
+            "OCCUPANCY": "Occupancy",
+            "TOTAL-COMPLETED-TASKS": "Total completed tasks",
+            "NUMBER-OF-RESERVATIONS": "Number of reservations",
+            "NUMBER-OF-RESERVED-DAYS": "Number of reserved days",
+            "RESERVED-PERCENT": "Reserved %"
         }
     },
     "TASK-ARCHIVE": {

@@ -13,6 +13,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { MentionModule } from 'angular-mentions';
 import { AuthService } from '../../core/services/auth.service';
 import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
+import { CdkDragHandle } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-notes',
@@ -24,10 +25,11 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
     TranslateModule,
     DatePickerModule,
     MentionModule,
+    CdkDragHandle,
   ],
   template: `
     <div class="notes-container">
-      <div class="header-container">
+      <div class="header-container" cdkDragHandle>
         <div class="notes-header">
           <p-button [disabled]="daysIndex <= -365" (onClick)="decreaseIndex()" icon="pi pi-angle-left"></p-button>
           <div class="notes-title">
@@ -79,31 +81,29 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
               <div class="date-sent" [ngStyle]="{'padding-top': i != 0 ? '10px': '5px'}">
                 <div class="left-half-line"></div>
                 @if(isToday(note.time_sent)){
-                  <span>
-                    {{ 'APP-LAYOUT.NOTES.TODAY' | translate }}
-                  </span>
+                  <span>{{ 'APP-LAYOUT.NOTES.TODAY' | translate }}</span>
                 } @else {
-                  <span>
-                    {{ note.time_sent | date: 'dd MMM YYYY' }}
-                  </span>
+                  <span>{{ note.time_sent | date: 'dd MMM YYYY' }}</span>
                 }
                 <div class="right-half-line"></div>
               </div>
             }
-            <div class="note-entry">
+            <div class="note-entry" [class.own]="note.profile_id === currentUserId">
               @if(i == 0 || notesForSelectedDate[i].profile_id != notesForSelectedDate[i-1].profile_id || hasMoreThan5MinutesPassedBetweenMessages(notesForSelectedDate[i], notesForSelectedDate[i-1])){
-                <br>
-                  @if(profileService.isProfileDeleted(note.profile_id)){
-                    <b>
-                      <i>{{ findProfileNameForNote(note)}} ({{ 'APP-LAYOUT.NOTES.PROFILE-DELETED' | translate }})</i>
-                    </b>
-                    <span [ngStyle]="{'color': 'gray'}"> - {{note.time_sent | date:'HH:mm'}}</span>
-                  } @else {
-                    <b>{{ findProfileNameForNote(note)}} </b> <span [ngStyle]="{'color': 'gray'}"> - {{note.time_sent | date:'HH:mm'}}</span>
-                  }
-                <br>
+                @if(note.profile_id !== currentUserId){
+                  <div class="bubble-sender">
+                    @if(profileService.isProfileDeleted(note.profile_id)){
+                      <i>{{ findProfileNameForNote(note) }} ({{ 'APP-LAYOUT.NOTES.PROFILE-DELETED' | translate }})</i>
+                    } @else {
+                      {{ findProfileNameForNote(note) }}
+                    }
+                  </div>
+                }
               }
+              <div class="bubble">
                 <span [innerHTML]="formatNoteText(note.note)"></span>
+                <span class="bubble-time">{{ note.time_sent | date:'HH:mm' }}</span>
+              </div>
             </div>
           }
         }
@@ -145,6 +145,11 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
         justify-content: center;
         border-radius: 10px 10px 0 0;
         background-color: var(--surface-ground);
+        cursor: grab;
+
+        &:active {
+          cursor: grabbing;
+        }
 
         .notes-header{
           width: 80%;
@@ -213,13 +218,55 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
         }
 
         .note-entry {
-          display: block;
-          width: 100%;
-          text-align: left;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          white-space: normal;
-          font-size: 14px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          max-width: 85%;
+          margin-bottom: 2px;
+
+          &.own {
+            align-self: flex-end;
+            align-items: flex-end;
+          }
+
+          .bubble-sender {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 3px;
+            padding-left: 4px;
+          }
+
+          .bubble {
+            background: var(--surface-hover);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px 16px 16px 4px;
+            padding: 6px 10px;
+            font-size: 14px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+
+            .bubble-time {
+              font-size: 10px;
+              color: var(--text-color-secondary);
+              align-self: flex-end;
+            }
+          }
+
+          &.own .bubble {
+            background: var(--primary-color);
+            color: #ffffff;
+            border-color: transparent;
+            border-radius: 16px 16px 4px 16px;
+
+            .bubble-time {
+              color: rgba(255, 255, 255, 0.65);
+            }
+          }
         }
       }
 
@@ -293,9 +340,38 @@ export class NotesComponent {
   isToday = isToday;
   areDaysEqual = areDaysEqual;
 
+  get currentUserId(): string | null {
+    return this.authService.getStoredUserId();
+  }
+
   formatNoteText(text: string): string {
     const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return escaped.replace(/@\S+/g, '<b>$&</b>');
+    const firstNames = this.activeProfiles
+      .map(p => p.first_name)
+      .filter((n): n is string => !!n)
+      .sort((a, b) => b.length - a.length);
+    if (!firstNames.length) return escaped;
+
+    const parts = escaped.split('@');
+    const out = [parts[0]];
+    for (let i = 1; i < parts.length; i++) {
+      const seg = parts[i];
+      const match = firstNames.find(name =>
+        seg.startsWith(name) && (seg.length === name.length || seg[name.length] === ' ' || seg[name.length] === '\n')
+      );
+      if (match) {
+        const rest = seg.slice(match.length);
+        const lastNameMatch = rest.match(/^( [A-Z\u00C0-\u024F]\S*)/);
+        if (lastNameMatch) {
+          out.push(`<b>@${match}${lastNameMatch[1]}</b>${rest.slice(lastNameMatch[1].length)}`);
+        } else {
+          out.push(`<b>@${match}</b>${rest}`);
+        }
+      } else {
+        out.push('@' + seg);
+      }
+    }
+    return out.join('');
   }
 
   private destroy$ = new Subject<void>();

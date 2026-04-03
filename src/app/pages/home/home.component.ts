@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { House, HouseAvailability, Task, TaskType, HouseType } from '../../core/models/data.models';
+import { House, HouseAvailability, Task, TaskType, HouseType, Season } from '../../core/models/data.models';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -51,6 +51,7 @@ interface SpecialLocation {
                         <div class="legend-item"><span class="legend-color legend-yellow"></span> {{ 'HOME.HOUSE-STATUS.FREE' | translate }} ({{ 'HOME.HOUSE-STATUS.NOT-CLEANED' | translate }}) </div>
                         <div class="legend-item"><span class="legend-color legend-red"></span> {{ 'HOME.HOUSE-STATUS.OCCUPIED' | translate }} </div>
                         <div class="legend-item"><span class="legend-color legend-lightred"></span> {{ 'HOME.HOUSE-STATUS.ARRIVAL-DAY' | translate }} ({{ 'HOME.HOUSE-STATUS.CLEANED' | translate }}) </div>
+                        <div class="legend-item"><span class="legend-color legend-gray"></span> {{ 'HOME.HOUSE-STATUS.INACTIVE' | translate }} </div>
                     </div>
                     <div class="house-controls">
                         <div class="search-container">
@@ -173,6 +174,7 @@ interface SpecialLocation {
             [houseAvailabilities]="houseAvailabilities"
             [tasks]="tasks"
             [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+            [currentSeason]="currentSeason"
             [(visible)]="showHouseModal"
         ></app-house-detail-modal>
     `,
@@ -293,6 +295,7 @@ interface SpecialLocation {
                                 .legend-yellow { background: var(--p-yellow-400, #fde047); }
                                 .legend-red { background: var(--p-red-600, #ef4444); }
                                 .legend-lightred { background: var(--p-red-400, #f87171); }
+                                .legend-gray { background: #555; }
                             }
                         }
     
@@ -447,6 +450,7 @@ export class Home implements OnInit, OnDestroy {
     houseAvailabilities = signal<HouseAvailability[]>([]);
     houseTypes = signal<HouseType[]>([]);
     tasks = signal<Task[]>([]);
+    currentSeason: Season | null = null;
 
     selectedHouse: House | null = null;
     showHouseModal = false;
@@ -520,6 +524,15 @@ export class Home implements OnInit, OnDestroy {
             this.applyFilters();
         });
 
+        this.dataService.seasons$.pipe(nonNull(), takeUntil(this.destroy$))
+        .subscribe(seasons => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            this.currentSeason = seasons.find(s =>
+                today >= new Date(s.season_start_date) && today <= new Date(s.season_end_date)
+            ) ?? seasons.sort((a, b) => b.year - a.year)[0] ?? null;
+        });
+
         this.dataService.pinnedCharts$.pipe(nonNull(), takeUntil(this.destroy$))
         .subscribe(pinnedCharts => {
             this.pinnedCharts = this.statisticsService.charts.filter(c =>
@@ -582,7 +595,7 @@ export class Home implements OnInit, OnDestroy {
             this.groupedHouses.set(grouped);
             this.filteredHouses.set(result);
         } else if (this.sortType == 'status') {
-            const statusOrder = ['OCCUPIED', 'ARRIVAL-DAY', 'NOT-CLEANED', 'FREE'];
+            const statusOrder = ['OCCUPIED', 'ARRIVAL-DAY', 'NOT-CLEANED', 'FREE', 'INACTIVE'];
             const statusCache = new Map<number, string>();
             result.forEach(house => {
                 statusCache.set(house.house_id, this.houseService.getHouseStatus(house));

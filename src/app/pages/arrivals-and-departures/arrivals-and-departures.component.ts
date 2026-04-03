@@ -18,6 +18,7 @@ import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { isToday } from '../../shared/utils/date-utils';
 import { AuthService } from '../../core/services/auth.service';
+import { CdkDragHandle } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-arrivals-and-departures',
@@ -34,13 +35,14 @@ import { AuthService } from '../../core/services/auth.service';
     DatePickerModule,
     ConfirmDialogModule,
     TranslateModule,
+    CdkDragHandle,
   ],
   providers: [
     ConfirmationService,
   ],
   template: `
     <div class="arrivals-departures-container">
-      <div class="header">
+      <div class="header" cdkDragHandle>
         <div class="section-header">
           <p-button icon="pi pi-angle-left" (click)="goToPreviousDay()"></p-button>
           <div class="name-with-icon">
@@ -201,6 +203,11 @@ import { AuthService } from '../../core/services/auth.service';
         width: 100%;
         background-color: var(--surface-ground);
         height: 50px;
+        cursor: grab;
+
+        &:active {
+          cursor: grabbing;
+        }
 
         .selected-date{
           width: 95px;

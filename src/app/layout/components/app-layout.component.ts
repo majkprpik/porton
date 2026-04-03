@@ -73,13 +73,6 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     <div class="notes-window" cdkDrag (cdkDragEnded)="onDragEnd('notes', $event)" [cdkDragBoundary]="dragBoundary" [cdkDragFreeDragPosition]="positions['notes'] || { x: 0, y: 0 }">
                         <app-notes></app-notes>
 
-                        <div class="example-handle" cdkDragHandle>
-                            <svg width="24px" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
-                                <path d="M0 0h24v24H0z" fill="none"></path>
-                            </svg>
-                        </div>
-
                         <div (click)="closeNotesWindow()" class="close-notes-window">
                             <i class="pi pi-times"></i>
                         </div>
@@ -89,13 +82,6 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 @if (isArrivalsAndDeparturesWindowVisible) {
                     <div class="arrivals-and-departures-window" cdkDrag (cdkDragEnded)="onDragEnd('arrivals', $event)" [cdkDragBoundary]="dragBoundary" [cdkDragFreeDragPosition]="positions['arrivals'] || { x: 0, y: 0 }">
                         <app-arrivals-and-departures></app-arrivals-and-departures>
-
-                        <div class="example-handle" cdkDragHandle>
-                            <svg width="24px" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
-                                <path d="M0 0h24v24H0z" fill="none"></path>
-                            </svg>
-                        </div>
 
                         <div (click)="closeArrivalsAndDeparturesWindow()" class="close-arrivals-and-departures-window">
                             <i class="pi pi-times"></i>
@@ -847,21 +833,6 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 position: relative;
                 transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1), var(--glass-transition);
 
-                .example-handle {
-                    position: absolute;
-                    top: 17px;
-                    left: 15px;
-                    color: var(--text-color-secondary);
-                    cursor: move;
-                    width: 24px;
-                    height: 24px;
-                    transition: color 0.2s ease;
-
-                    &:hover {
-                        color: var(--text-color);
-                    }
-                }
-
                 .close-notes-window {
                     position: absolute;
                     top: 13px;
@@ -902,21 +873,6 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                 text-align: center;
                 position: relative;
                 transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1), var(--glass-transition);
-
-                .example-handle {
-                    position: absolute;
-                    top: 12px;
-                    left: 12px;
-                    color: var(--text-color-secondary);
-                    cursor: move;
-                    width: 24px;
-                    height: 24px;
-                    transition: color 0.2s ease;
-
-                    &:hover {
-                        color: var(--text-color);
-                    }
-                }
 
                 .close-arrivals-and-departures-window {
                     position: absolute;

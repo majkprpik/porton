@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
   template: `
     <div
         class="house-card"
+        [class.inactive]="isInactive"
         [class.occupied]="isOccupied"
         [class.available]="isAvailable"
         [class.available-with-tasks]="isAvailableWithTasks"
@@ -91,6 +92,21 @@ import { CommonModule } from '@angular/common';
             }
             to {
                 transform: rotate(360deg);
+            }
+        }
+
+        &.inactive {
+            background: linear-gradient(
+                135deg,
+                rgba(100, 100, 100, 0.7),
+                rgba(60, 60, 60, 0.6)
+            );
+            border-color: rgba(120, 120, 120, 0.35);
+            cursor: default;
+
+            .house-number {
+                color: rgba(255, 255, 255, 0.55);
+                text-shadow: none;
             }
         }
 
@@ -231,8 +247,9 @@ export class HouseCardComponent {
     @Input() tasks: Signal<Task[]> = signal([]);
     @Input() isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
 
-    @Output() houseClick = new EventEmitter<House>();
+    @Output() houseClick: EventEmitter<House> = new EventEmitter<House>();
 
+    isInactive = false;
     isOccupied = false;
     isAvailable = false;
     isAvailableWithTasks = false;
@@ -258,6 +275,17 @@ export class HouseCardComponent {
         if (!this.house) return;
 
         const houseId = this.house.house_id;
+
+        this.isInactive = !this.house.is_active;
+        if (this.isInactive) {
+            this.isOccupied = false;
+            this.isAvailable = false;
+            this.isAvailableWithTasks = false;
+            this.isAvailableWithArrival = false;
+            this.hasCompletedHouseCleaningTask = false;
+            this.notCompletedTasks = [];
+            return;
+        }
 
         this.isOccupied = this.houseService.isHouseOccupied(houseId);
         const hasScheduledTasks = this.houseService.hasScheduledNotCompletedTasks(houseId);

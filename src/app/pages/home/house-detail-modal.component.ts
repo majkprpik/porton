@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TranslateModule } from '@ngx-translate/core';
-import { House, HouseAvailability, Task, TaskProgressTypeName, ProfileRoles } from '../../core/models/data.models';
+import { House, HouseAvailability, Task, TaskProgressTypeName, ProfileRoles, Season } from '../../core/models/data.models';
 import { HouseService } from '../../core/services/house.service';
 import { TaskService } from '../../core/services/task.service';
 import { ProfileService } from '../../core/services/profile.service';
@@ -33,14 +33,30 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
 
                 <div class="house-name">{{ house?.house_name }}</div>
 
-                <div class="date-nav">
-                    <i class="fa fa-chevron-left nav-arrow" (click)="navigate('prev', $event)"></i>
-                    <span>{{ reservationDateDisplay }}</span>
-                    <i class="fa fa-chevron-right nav-arrow" (click)="navigate('next', $event)"></i>
-                </div>
+                @if (house && !house.is_active) {
+                    @if (house.description) {
+                        <div class="house-description">{{ house.description }}</div>
+                    }
+                } @else {
+                    @if (isEmptyState) {
+                        <div class="no-reservation">{{ 'HOME.HOUSE-DETAIL.NO-RESERVATIONS' | translate }}</div>
+                    } @else {
+                        <div class="date-nav">
+                            @if (canNavigatePrev) {
+                                <i class="fa fa-chevron-left nav-arrow" (click)="navigate('prev', $event)"></i>
+                            } @else {
+                                <i class="fa fa-chevron-left nav-arrow invisible"></i>
+                            }
+                            <span [class]="slideClass">{{ reservationDateDisplay }}</span>
+                            @if (canNavigateNext) {
+                                <i class="fa fa-chevron-right nav-arrow" (click)="navigate('next', $event)"></i>
+                            } @else {
+                                <i class="fa fa-chevron-right nav-arrow invisible"></i>
+                            }
+                        </div>
+                    }
 
-                @if (!isCurrentSlotGap && (occupancy.adults || occupancy.dogs || occupancy.babies || occupancy.cribs)) {
-                    <div class="occupancy">
+                    <div class="occupancy" [class]="slideClass" [style.visibility]="showOccupancy ? 'visible' : 'hidden'">
                         @if (occupancy.adults) {
                             <div class="occ-item"><span>{{ occupancy.adults }}</span><i class="fa-solid fa-person"></i></div>
                         }
@@ -126,6 +142,9 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
             &.with-tasks {
                 background: linear-gradient(135deg, rgba(250, 204, 21, 0.92), rgba(234, 179, 8, 0.85));
             }
+            &.inactive {
+                background: linear-gradient(135deg, rgba(90, 90, 90, 0.92), rgba(55, 55, 55, 0.85));
+            }
             &.available {
                 background: linear-gradient(135deg, rgba(34, 197, 94, 0.92), rgba(22, 163, 74, 0.85));
             }
@@ -168,6 +187,11 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                 gap: 0.6rem;
                 font-size: 1rem;
                 margin-bottom: 0.4rem;
+                overflow: hidden;
+
+                span {
+                    display: inline-block;
+                }
 
                 .nav-arrow {
                     cursor: pointer;
@@ -178,7 +202,41 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                     &:hover {
                         background: rgba(255,255,255,0.25);
                     }
+
+                    &.invisible {
+                        visibility: hidden;
+                        pointer-events: none;
+                    }
                 }
+            }
+
+            .no-reservation {
+                font-size: 1rem;
+                margin-bottom: 0.4rem;
+            }
+
+            .house-description {
+                font-size: 0.9rem;
+                opacity: 0.85;
+                line-height: 1.4;
+            }
+
+            @keyframes slideFromRight {
+                from { transform: translateX(16px); opacity: 0; }
+                to   { transform: translateX(0);    opacity: 1; }
+            }
+
+            @keyframes slideFromLeft {
+                from { transform: translateX(-16px); opacity: 0; }
+                to   { transform: translateX(0);     opacity: 1; }
+            }
+
+            .slide-from-right {
+                animation: slideFromRight 0.22s ease-out;
+            }
+
+            .slide-from-left {
+                animation: slideFromLeft 0.22s ease-out;
             }
 
             .occupancy {
@@ -187,6 +245,7 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                 gap: 0.5rem;
                 font-size: 1rem;
                 font-weight: 500;
+                min-height: 1.5rem;
 
                 .occ-item {
                     display: flex;
@@ -297,6 +356,7 @@ export class HouseDetailModalComponent implements OnChanges {
     @Input() houseAvailabilities!: Signal<HouseAvailability[]>;
     @Input() tasks!: Signal<Task[]>;
     @Input() isUrgentIconVisibleMap: { [taskId: number]: boolean } = {};
+    @Input() currentSeason: Season | null = null;
     @Input() visible = false;
     @Output() visibleChange = new EventEmitter<boolean>();
 
@@ -306,6 +366,8 @@ export class HouseDetailModalComponent implements OnChanges {
     isCurrentSlotGap = true;
     reservationDateDisplay = '';
     occupancy = { adults: 0, dogs: 0, babies: 0, cribs: 0 };
+    slideClass = '';
+    private slideTimeout: any;
 
     constructor(
         public houseService: HouseService,
@@ -313,6 +375,14 @@ export class HouseDetailModalComponent implements OnChanges {
         private profileService: ProfileService,
         private storageService: StorageService,
     ) {}
+
+    get isEmptyState(): boolean {
+        return this.cachedSlots.length === 0 || this.currentIndex === -1;
+    }
+
+    get showOccupancy(): boolean {
+        return !this.isCurrentSlotGap && !!(occupancy => occupancy.adults || occupancy.dogs || occupancy.babies || occupancy.cribs)(this.occupancy);
+    }
 
     get canConfirmTasks(): boolean {
         return this.profileService.isHouseholdManager(this.storageService.getString(STORAGE_KEYS.PROFILE_ID)) ||
@@ -328,9 +398,44 @@ export class HouseDetailModalComponent implements OnChanges {
         }
     }
 
+    get canNavigatePrev(): boolean {
+        if (this.currentIndex > 0) return true;
+        if (this.currentIndex === -1) {
+            const today = new Date();
+            return this.cachedSlots.some(s => s.endDate && s.endDate < today);
+        }
+        return false;
+    }
+
+    get canNavigateNext(): boolean {
+        if (this.currentIndex !== -1 && this.currentIndex < this.cachedSlots.length - 1) return true;
+        if (this.currentIndex === -1) {
+            const today = new Date();
+            return this.cachedSlots.some(s => s.startDate > today);
+        }
+        return false;
+    }
+
     get headerClass(): string {
+        if (this.house && !this.house.is_active) return 'inactive';
         if (this.isCurrentSlotGap) return 'available';
         if (!this.house) return 'available';
+
+        const slot = this.cachedSlots[this.currentIndex];
+        if (!slot || slot.isGap) return 'available';
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const slotStart = new Date(slot.startDate);
+        slotStart.setHours(0, 0, 0, 0);
+        const slotEnd = new Date(slot.endDate!);
+        slotEnd.setHours(23, 59, 59, 999);
+
+        if (today < slotStart || today > slotEnd) {
+            // Viewing a past or future reservation — show as booking, not current occupancy
+            return 'arrival';
+        }
+
         const id = this.house.house_id;
         if (this.houseService.isHouseReservedToday(id)) return 'arrival';
         if (this.houseService.hasScheduledNotCompletedTasks(id) || this.houseService.hasUnconfirmedCleaningTask(id)) return 'with-tasks';
@@ -372,6 +477,13 @@ export class HouseDetailModalComponent implements OnChanges {
             if (past.length) this.currentIndex = past[past.length - 1].i;
         }
         this.updateDisplayData();
+        this.triggerSlide(direction);
+    }
+
+    private triggerSlide(direction: 'prev' | 'next'): void {
+        clearTimeout(this.slideTimeout);
+        this.slideClass = direction === 'next' ? 'slide-from-right' : 'slide-from-left';
+        this.slideTimeout = setTimeout(() => { this.slideClass = ''; }, 250);
     }
 
     @HostListener('document:keydown.escape')
@@ -380,8 +492,8 @@ export class HouseDetailModalComponent implements OnChanges {
     }
 
     @HostListener('document:click', ['$event.target'])
-    onMaskClick(target: HTMLElement): void {
-        if (this.visible && target?.classList?.contains('p-dialog-mask')) {
+    onMaskClick(target: EventTarget | null): void {
+        if (this.visible && target instanceof HTMLElement && target.classList.contains('p-dialog-mask')) {
             this.close();
         }
     }
@@ -405,8 +517,16 @@ export class HouseDetailModalComponent implements OnChanges {
 
     private rebuildSlots(): void {
         if (!this.house) return;
+        const seasonStart = this.currentSeason ? new Date(this.currentSeason.season_start_date) : null;
+        const seasonEnd = this.currentSeason ? new Date(this.currentSeason.season_end_date) : null;
+
         const reservations = this.houseAvailabilities()
-            .filter(a => a.house_id === this.house!.house_id)
+            .filter(a => {
+                if (a.house_id !== this.house!.house_id) return false;
+                if (!seasonStart || !seasonEnd) return true;
+                const resStart = new Date(a.house_availability_start_date);
+                return resStart >= seasonStart && resStart <= seasonEnd;
+            })
             .sort((a, b) => new Date(a.house_availability_start_date).getTime() - new Date(b.house_availability_start_date).getTime());
 
         this.cachedSlots = [];
