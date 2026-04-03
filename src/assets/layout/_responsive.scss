@@ -59,16 +59,10 @@
     .layout-main-container {
         padding: 0 !important;
         padding-bottom: 56px !important;
-        height: 100vh;
-        height: 100dvh;
-        box-sizing: border-box;
     }
 
     .layout-main {
         overflow-x: hidden;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        height: 100%;
     }
 }
 
