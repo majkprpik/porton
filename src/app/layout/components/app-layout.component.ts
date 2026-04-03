@@ -1246,7 +1246,7 @@ export class AppLayout {
 
     private isIgnoredError(error: any): boolean {
         const msg = error instanceof Error ? error.message : String(error);
-        return msg.includes('Navigator LockManager') || msg.includes('lock:sb-');
+        return msg.includes('Navigator LockManager') || msg.includes('lock:sb-') || msg.includes('unsupported-browser') || msg.includes("Can't find variable: Notification");
     }
 
     private async onAppVisible() {

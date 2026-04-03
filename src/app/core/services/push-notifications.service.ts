@@ -17,18 +17,20 @@ export class PushNotificationsService {
   private fcmTokenSource = new BehaviorSubject<string | null>(this.getStoredFcmToken());
   fcmToken$ = this.fcmTokenSource.asObservable();
 
-  private messaging = inject(AngularMessaging);
+  private messaging = inject(AngularMessaging, { optional: true });
 
   constructor(
     private http: HttpClient,
     private supabaseService: SupabaseService,
     private deviceService: DeviceService,
   ) {
-    this.setupForegroundMessageHandler();
+    if (this.messaging) {
+      this.setupForegroundMessageHandler();
+    }
   }
 
   private setupForegroundMessageHandler(): void {
-    onMessage(this.messaging, (payload) => {
+    onMessage(this.messaging!, (payload) => {
       console.log('FCM message received in foreground:', payload);
 
       if (
@@ -52,6 +54,10 @@ export class PushNotificationsService {
   }
 
   async requestPermissionAndGetToken(profileId: string): Promise<string | null> {
+    if (!this.messaging || !('Notification' in window)) {
+      return null;
+    }
+
     if (this.getFcmToken()) {
       await this.deviceService.registerDevice(profileId, this.getFcmToken()!);
       return this.getFcmToken();
@@ -92,6 +98,8 @@ export class PushNotificationsService {
   }
 
   async clearToken(): Promise<void> {
+    if (!this.messaging) return;
+
     try {
       const deleted = await deleteToken(this.messaging);
       if (deleted) {

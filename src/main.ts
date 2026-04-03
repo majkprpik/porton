@@ -8,6 +8,7 @@ import localeHr from '@angular/common/locales/hr';
 import './app/firebase/firebase.init';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideMessaging, getMessaging } from '@angular/fire/messaging';
+import { isSupported } from 'firebase/messaging';
 import { environment } from './environments/environment';
 
 const firebaseConfig = {
@@ -23,17 +24,23 @@ const firebaseConfig = {
 registerLocaleData(localeEn);
 registerLocaleData(localeHr);
 
-bootstrapApplication(AppComponent, {
-  ...appConfig,
-  providers: [
-    ...(appConfig.providers ?? []),
-    provideFirebaseApp(() => initializeApp(firebaseConfig)),
-    provideMessaging(() => getMessaging()),
-  ],
-}).catch((err) => console.error(err));
+async function main() {
+  const messagingSupported = await isSupported().catch(() => false);
 
-if ('serviceWorker' in navigator && environment.production) {
-  navigator.serviceWorker.register('/firebase-messaging-sw.js')
-    .then(() => console.log('✅ Firebase Messaging SW registered'))
-    .catch(err => console.error('🚫 SW registration failed:', err));
+  await bootstrapApplication(AppComponent, {
+    ...appConfig,
+    providers: [
+      ...(appConfig.providers ?? []),
+      provideFirebaseApp(() => initializeApp(firebaseConfig)),
+      ...(messagingSupported ? [provideMessaging(() => getMessaging())] : []),
+    ],
+  });
+
+  if ('serviceWorker' in navigator && environment.production) {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then(() => console.log('✅ Firebase Messaging SW registered'))
+      .catch(err => console.error('🚫 SW registration failed:', err));
+  }
 }
+
+main().catch((err) => console.error(err));
