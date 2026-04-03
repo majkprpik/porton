@@ -7,6 +7,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { CommonModule, isPlatformBrowser, TitleCasePipe } from '@angular/common';
 import { ChartType, House, HouseAvailability, Profile, Season, Task } from '../../core/models/data.models';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, take } from 'rxjs';
 import { LayoutService } from '../../layout/services/layout.service';
 import { DataService } from '../../core/services/data.service';
@@ -25,6 +26,7 @@ import {
   DATA_TYPE_STAFF,
   DATA_TYPE_GENERAL,
   DATA_TYPE_OCCUPANCY,
+  DATA_TYPE_HOUSE_RANKING,
   Metric,
 } from './chart.constants';
 
@@ -207,7 +209,7 @@ import {
           @for(metric of selectedMetrics; track trackByMetric($index, metric)){
             <span>
               {{getMetricName(metric)}}: {{totalMonthlyData[metric]}}
-              @if(metric == 'occupancy') {
+              @if(metric == 'occupancy' || metric == 'Reserved %') {
                 %
               }
             </span>
@@ -221,6 +223,7 @@ import {
     ::ng-deep p-chart canvas {
       max-width: 100% !important;
     }
+
 
     ::ng-deep .pie-card p-chart canvas {
       width: 100% !important;
@@ -420,9 +423,10 @@ export class ChartComponent {
   totalMonthlyData: { [metric: string]: number } = {};
   dataToDisplay: { [metric: string]: number[] } = {};
   profileTaskMap: { [profileName: string]: number } = {};
+  houseTaskMap: { [houseName: string]: number } = {};
 
-  readonly months = [...MONTHS];
-  readonly season = [...SEASON_MONTHS];
+  months: string[] = [...MONTHS];
+  season: string[] = [...SEASON_MONTHS];
   staff: string[] = [];
 
   private chartOptionsBuilder?: ChartOptionsBuilder;
@@ -433,6 +437,7 @@ export class ChartComponent {
     private layoutService: LayoutService,
     private statisticsService: StatisticsService,
     private chartDataService: ChartDataService,
+    private translateService: TranslateService,
   ) {
     effect(() => {
       const isDark = this.layoutService.layoutConfig().darkTheme;
@@ -463,6 +468,10 @@ export class ChartComponent {
       this.staff = this.profiles.map(profile => profile.first_name ?? 'Staff');
       this.seasons = seasons;
 
+      this.months = MONTHS.map(m => this.translateService.instant('MONTHS.' + m.toUpperCase()));
+      this.season = SEASON_MONTHS.map(m => this.translateService.instant('MONTHS.' + m.toUpperCase()));
+      this.metrics = this.metrics.map(m => ({ ...m, name: this.translateService.instant(m.name) }));
+
       this.initializeAvailableYears();
       this.selectedMonth = new Date(this.selectedYear, this.selectedMonth.getMonth(), 1);
       this.initializeHouseNumbers();
@@ -484,6 +493,10 @@ export class ChartComponent {
       case DATA_TYPE_STAFF:
         this.chartType = 'bar';
         this.selectedMetrics = ['totalCompletedTasks'];
+        break;
+      case DATA_TYPE_HOUSE_RANKING:
+        this.chartType = 'bar';
+        this.selectedMetrics = ['Total tasks'];
         break;
     }
   }
@@ -528,7 +541,7 @@ export class ChartComponent {
   }
 
   onMonthSelect(): void {
-    const monthIndex = this.months.indexOf(this.month as typeof MONTHS[number]);
+    const monthIndex = this.months.indexOf(this.month);
     this.selectedMonth = new Date(this.selectedYear, monthIndex, 1);
     this.displayPeriod(PERIOD_MONTH);
   }
@@ -544,6 +557,15 @@ export class ChartComponent {
   displayPeriod(period: string): void {
     this.timePeriod = period;
 
+    if (this.dataType === DATA_TYPE_HOUSE_RANKING) {
+      if (period === PERIOD_MONTH) {
+        this.month = this.months[this.selectedMonth.getMonth()];
+      }
+      this.generateHouseRankingDataset();
+      this.cd.markForCheck();
+      return;
+    }
+
     if (period === PERIOD_YEAR) {
       this.xLabels = this.dataType === DATA_TYPE_STAFF ? this.staff : this.months;
       this.generateYearlyDataset();
@@ -557,6 +579,11 @@ export class ChartComponent {
   }
 
   private refreshData(): void {
+    if (this.dataType === DATA_TYPE_HOUSE_RANKING) {
+      this.generateHouseRankingDataset();
+      this.cd.markForCheck();
+      return;
+    }
     if (this.timePeriod === PERIOD_MONTH) {
       this.generateDataset();
     } else {
@@ -670,6 +697,48 @@ export class ChartComponent {
     this.cd.markForCheck();
   }
 
+  private generateHouseRankingDataset(): void {
+    if (!this.selectedMetrics.length) return;
+
+    this.totalMonthlyData = {};
+    this.dataToDisplay = {};
+    this.houseTaskMap = {};
+
+    const year = this.timePeriod === PERIOD_MONTH
+      ? this.selectedMonth.getFullYear()
+      : this.selectedYear;
+    const monthIndex = this.selectedMonth.getMonth();
+    const ctx = this.getCalculationContext();
+
+    let orderedHouseNames: string[] = [];
+
+    this.selectedMetrics.forEach((metric, metricIndex) => {
+      const result = this.chartDataService.getHouseRankingData(metric, year, monthIndex, ctx);
+
+      if (metricIndex === 0) {
+        orderedHouseNames = result.houseNames;
+        this.dataToDisplay[metric] = result.counts;
+        result.houseNames.forEach((name, i) => {
+          this.houseTaskMap[name] = result.counts[i];
+        });
+      } else {
+        this.dataToDisplay[metric] = orderedHouseNames.map(name => {
+          const idx = result.houseNames.indexOf(name);
+          return idx >= 0 ? result.counts[idx] : 0;
+        });
+      }
+
+      const values = this.dataToDisplay[metric];
+      this.totalMonthlyData[metric] = metric === 'Reserved %'
+        ? Math.round(values.reduce((s, v) => s + v, 0) / (values.length || 1) * 10) / 10
+        : values.reduce((s, v) => s + v, 0);
+    });
+
+    this.xLabels = orderedHouseNames;
+    this.buildChart();
+    this.cd.markForCheck();
+  }
+
   private calculateOccupancyTotal(data: number[], daysInMonth: number): number {
     if (this.selectedHouseNumber === ALL_HOUSES) {
       return Number((this.chartDataService.sumArray(data) / daysInMonth).toFixed(2));
@@ -711,6 +780,11 @@ export class ChartComponent {
 
     const isDarkMode = this.layoutService._config.darkTheme ?? false;
     const isStaffChart = this.dataType === DATA_TYPE_STAFF;
+    const isHouseRankingChart = this.dataType === DATA_TYPE_HOUSE_RANKING;
+    const isHorizontalBar = isStaffChart || isHouseRankingChart;
+    const rankingMap = isStaffChart ? this.profileTaskMap
+      : isHouseRankingChart ? this.houseTaskMap
+      : undefined;
 
     const result = this.chartOptionsBuilder!.buildBarOrLineChart(
       this.dataToDisplay,
@@ -718,15 +792,15 @@ export class ChartComponent {
       this.metrics,
       this.chartType!,
       isDarkMode,
-      isStaffChart,
-      this.profileTaskMap
+      isHorizontalBar,
+      rankingMap
     );
 
     this.data = result.data;
     this.options = result.options;
 
-    if (isStaffChart && this.profileTaskMap) {
-      const combined = Object.entries(this.profileTaskMap)
+    if (isHorizontalBar && rankingMap) {
+      const combined = Object.entries(rankingMap)
         .map(([label, value]) => ({ label, value }))
         .sort((a, b) => b.value - a.value);
       this.xLabels = combined.map(item => item.label);

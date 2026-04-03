@@ -1,6 +1,6 @@
 export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as const;
 
-export const SEASON_MONTHS = ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'] as const;
+export const SEASON_MONTHS = ['March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'] as const;
 
 export const CHART_COLORS = [
   '--p-cyan-500',
@@ -27,6 +27,7 @@ export const PERIOD_SEASON = 'season';
 export const DATA_TYPE_STAFF = 'staff';
 export const DATA_TYPE_GENERAL = 'general';
 export const DATA_TYPE_OCCUPANCY = 'occupancy';
+export const DATA_TYPE_HOUSE_RANKING = 'house-ranking';
 
 export interface Metric {
   name: string;

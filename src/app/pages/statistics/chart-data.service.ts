@@ -6,6 +6,7 @@ import {
   SEASON_MONTHS,
   EXCLUDED_HOUSE_NAMES,
   ALL_HOUSES,
+  PERIOD_MONTH,
   PERIOD_YEAR,
   PERIOD_SEASON,
   DATA_TYPE_STAFF,
@@ -360,6 +361,106 @@ export class ChartDataService {
     }
 
     return monthlyData;
+  }
+
+  getHouseRankingData(
+    metric: string,
+    year: number,
+    monthIndex: number,
+    ctx: MetricCalculationContext
+  ): { houseNames: string[]; counts: number[] } {
+    const validHouses = ctx.houses.filter(h =>
+      !EXCLUDED_HOUSE_NAMES.includes(h.house_name as typeof EXCLUDED_HOUSE_NAMES[number])
+    );
+
+    const isReservationMetric = metric === 'Reservations' || metric === 'Reserved days' || metric === 'Reserved %';
+
+    if (isReservationMetric) {
+      const { periodStart, periodEnd, totalDays } = this.getPeriodBounds(year, monthIndex, ctx.timePeriod);
+
+      const houseCounts = validHouses
+        .map(h => {
+          const avails = ctx.houseAvailabilities.filter(a => a.house_id === h.house_id);
+          let count: number;
+
+          if (metric === 'Reservations') {
+            count = avails.filter(a => {
+              const start = new Date(a.house_availability_start_date);
+              return start >= periodStart && start <= periodEnd;
+            }).length;
+          } else {
+            let reservedDays = 0;
+            avails.forEach(a => {
+              const start = new Date(a.house_availability_start_date);
+              const end = new Date(a.house_availability_end_date);
+              const overlapStart = start < periodStart ? periodStart : start;
+              const overlapEnd = end > periodEnd ? periodEnd : end;
+              if (overlapStart <= overlapEnd) {
+                reservedDays += Math.round((overlapEnd.getTime() - overlapStart.getTime()) / 86400000) + 1;
+              }
+            });
+            count = metric === 'Reserved days'
+              ? reservedDays
+              : totalDays > 0 ? Math.round((reservedDays / totalDays) * 1000) / 10 : 0;
+          }
+
+          return { name: h.house_number.toString(), count };
+        })
+        .filter(h => h.count > 0)
+        .sort((a, b) => b.count - a.count);
+
+      return {
+        houseNames: houseCounts.map(h => h.name),
+        counts: houseCounts.map(h => h.count)
+      };
+    }
+
+    let tasks: Task[] = [];
+
+    if (ctx.timePeriod === PERIOD_MONTH) {
+      tasks = this.filterTasksForMetric(metric, year, monthIndex, ctx);
+    } else if (ctx.timePeriod === PERIOD_SEASON) {
+      for (let i = 0; i < SEASON_MONTHS.length; i++) {
+        const mIdx = this.getMonthIndex(i, PERIOD_SEASON);
+        tasks.push(...this.filterTasksForMetric(metric, year, mIdx, ctx));
+      }
+    } else if (ctx.timePeriod === PERIOD_YEAR) {
+      for (let m = 0; m < 12; m++) {
+        tasks.push(...this.filterTasksForMetric(metric, year, m, ctx));
+      }
+    }
+
+    const houseCounts = validHouses
+      .map(h => ({
+        name: h.house_number.toString(),
+        count: tasks.filter(t => t.house_id === h.house_id).length
+      }))
+      .filter(h => h.count > 0)
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      houseNames: houseCounts.map(h => h.name),
+      counts: houseCounts.map(h => h.count)
+    };
+  }
+
+  private getPeriodBounds(year: number, monthIndex: number, timePeriod: string): { periodStart: Date; periodEnd: Date; totalDays: number } {
+    let periodStart: Date;
+    let periodEnd: Date;
+
+    if (timePeriod === PERIOD_MONTH) {
+      periodStart = new Date(year, monthIndex, 1);
+      periodEnd = new Date(year, monthIndex + 1, 0);
+    } else if (timePeriod === PERIOD_YEAR) {
+      periodStart = new Date(year, 0, 1);
+      periodEnd = new Date(year, 11, 31);
+    } else {
+      periodStart = new Date(year, 3, 1);
+      periodEnd = new Date(year, 10, 30);
+    }
+
+    const totalDays = Math.round((periodEnd.getTime() - periodStart.getTime()) / 86400000) + 1;
+    return { periodStart, periodEnd, totalDays };
   }
 
   calculateAvailabilityTotal(

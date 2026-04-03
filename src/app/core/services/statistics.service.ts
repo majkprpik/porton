@@ -14,34 +14,48 @@ export class StatisticsService {
   staffMetricsFields = ['month', 'location', 'metrics'];
 
   generalMetrics = [
-    { name: 'Adults', value: 'adults' },
-    { name: 'Children', value: 'babies' },
-    { name: 'Pets', value: 'dogs_d' },
-    { name: 'Baby Cribs', value: 'cribs' },
-    { name: 'Repair Tasks', value: 'Repair tasks' },
-    { name: 'House Cleaning Tasks', value: 'House cleaning tasks' },
-    { name: 'Deck Cleaning Tasks', value: 'Deck cleaning tasks' },
-    { name: 'Sheet Change Tasks', value: 'Sheet change tasks' },
-    { name: 'Towel Change Tasks', value: 'Towel change tasks' },
-    { name: 'Unscheduled Tasks', value: 'Unscheduled tasks' },
-    { name: 'Total Tasks', value: 'Total tasks' },
+    { name: 'STATISTICS.METRICS.ADULTS', value: 'adults' },
+    { name: 'STATISTICS.METRICS.CHILDREN', value: 'babies' },
+    { name: 'STATISTICS.METRICS.PETS', value: 'dogs_d' },
+    { name: 'STATISTICS.METRICS.BABY-CRIBS', value: 'cribs' },
+    { name: 'STATISTICS.METRICS.REPAIR-TASKS', value: 'Repair tasks' },
+    { name: 'STATISTICS.METRICS.HOUSE-CLEANING-TASKS', value: 'House cleaning tasks' },
+    { name: 'STATISTICS.METRICS.DECK-CLEANING-TASKS', value: 'Deck cleaning tasks' },
+    { name: 'STATISTICS.METRICS.SHEET-CHANGE-TASKS', value: 'Sheet change tasks' },
+    { name: 'STATISTICS.METRICS.TOWEL-CHANGE-TASKS', value: 'Towel change tasks' },
+    { name: 'STATISTICS.METRICS.UNSCHEDULED-TASKS', value: 'Unscheduled tasks' },
+    { name: 'STATISTICS.METRICS.TOTAL-TASKS', value: 'Total tasks' },
   ];
 
   occupancyMetrics = [
-    { name: 'Occupancy', value: 'occupancy' },
+    { name: 'STATISTICS.METRICS.OCCUPANCY', value: 'occupancy' },
   ];
 
   staffMetrics = [
-    { name: 'Total completed tasks', value: 'totalCompletedTasks' }
+    { name: 'STATISTICS.METRICS.TOTAL-COMPLETED-TASKS', value: 'totalCompletedTasks' }
   ]
+
+  houseRankingMetrics = [
+    { name: 'STATISTICS.METRICS.NUMBER-OF-RESERVATIONS', value: 'Reservations' },
+    { name: 'STATISTICS.METRICS.NUMBER-OF-RESERVED-DAYS', value: 'Reserved days' },
+    { name: 'STATISTICS.METRICS.RESERVED-PERCENT', value: 'Reserved %' },
+    { name: 'STATISTICS.METRICS.TOTAL-TASKS', value: 'Total tasks' },
+    { name: 'STATISTICS.METRICS.REPAIR-TASKS', value: 'Repair tasks' },
+    { name: 'STATISTICS.METRICS.HOUSE-CLEANING-TASKS', value: 'House cleaning tasks' },
+    { name: 'STATISTICS.METRICS.DECK-CLEANING-TASKS', value: 'Deck cleaning tasks' },
+    { name: 'STATISTICS.METRICS.SHEET-CHANGE-TASKS', value: 'Sheet change tasks' },
+    { name: 'STATISTICS.METRICS.TOWEL-CHANGE-TASKS', value: 'Towel change tasks' },
+  ];
 
   generalMetricsPeriods: string[] = ['year', 'month'];
   occupancyMetricsPeriods: string[] = ['season', 'month'];
   staffMetricsPeriods: string[] = ['season', 'month'];
+  houseRankingMetricsPeriods: string[] = ['month', 'season', 'year'];
 
   generalMetricsChartTypes: ChartType[] = ['bar', 'line', 'pie', 'doughnut'];
   occupancyMetricsChartTypes: ChartType[] = ['line'];
   staffMetricsChartTypes: ChartType[] = ['bar'];
+  houseRankingMetricsChartTypes: ChartType[] = ['bar'];
 
   charts: Chart[] = [
     {
@@ -73,6 +87,16 @@ export class StatisticsService {
       metricFields: this.staffMetricsFields,
       isPinnableToHome: true,
       chartTypes: this.staffMetricsChartTypes
+    },
+    {
+      title: 'House rankings',
+      dataType: 'house-ranking',
+      canSelectDiagramType: false,
+      periods: this.houseRankingMetricsPeriods,
+      metrics: this.houseRankingMetrics,
+      metricFields: ['month', 'metrics'],
+      isPinnableToHome: true,
+      chartTypes: this.houseRankingMetricsChartTypes
     }
   ];
 
