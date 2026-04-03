@@ -31,15 +31,31 @@ export class ErrorLoggingService {
   }
 
   private stringify(error: any): string {
+    let raw: string;
+
     if (error instanceof Error) {
-      return `${error.name}: ${error.message}\n${error.stack}`;
+      raw = `${error.name}: ${error.message}\n${error.stack}`;
+    } else {
+      try {
+        raw = JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
+      } catch (e) {
+        raw = String(error);
+      }
     }
 
-    try {
-      return JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
-    } catch (e) {
-      return String(error);
-    }
+    return this.redact(raw);
+  }
+
+  private redact(text: string): string {
+    // JWT tokens (three base64url segments separated by dots)
+    text = text.replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*/g, '[JWT_REDACTED]');
+    // Bearer tokens in Authorization headers
+    text = text.replace(/Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]');
+    // Supabase anon/service keys (long base64-like strings after "apikey" or "key")
+    text = text.replace(/(apikey|api_key|service_role|anon)["\s:=]+[A-Za-z0-9\-._~+/]{20,}/gi, '$1: [REDACTED]');
+    // Generic long base64 strings that look like tokens (40+ chars, no spaces)
+    text = text.replace(/[A-Za-z0-9+/]{40,}={0,2}/g, '[REDACTED]');
+    return text;
   }
 
   clear() {

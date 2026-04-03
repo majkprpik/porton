@@ -1216,7 +1216,10 @@ export class AppLayout {
 
         const originalConsoleError = console.error;
         console.error = (...args: any[]) => {
-            args.forEach(arg => this.errorLogger.logError(arg));
+            args.forEach(arg => {
+                if (this.isIgnoredError(arg)) return;
+                this.errorLogger.logError(arg);
+            });
             originalConsoleError.apply(console, args);
         };
 
@@ -1236,8 +1239,14 @@ export class AppLayout {
         };
 
         window.addEventListener('unhandledrejection', (event) => {
+            if (this.isIgnoredError(event.reason)) return;
             this.errorLogger.logError(event.reason);
         });
+    }
+
+    private isIgnoredError(error: any): boolean {
+        const msg = error instanceof Error ? error.message : String(error);
+        return msg.includes('Navigator LockManager') || msg.includes('lock:sb-');
     }
 
     private async onAppVisible() {

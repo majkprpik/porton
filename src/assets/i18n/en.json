@@ -357,6 +357,11 @@
             "ARRIVAL-DAY": "Arrival day",
             "CLEANED": "Cleaned",
             "NOT-CLEANED": "Not cleaned"
+        },
+        "HOUSE-DETAIL": {
+            "ZA-POTVRDU": "To confirm",
+            "ZADACI": "Tasks",
+            "NO-TASKS": "No tasks"
         }
     },
     "STATISTICS": {

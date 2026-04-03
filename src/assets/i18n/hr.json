@@ -357,6 +357,11 @@
             "ARRIVAL-DAY": "Dolazna",
             "CLEANED": "Očišćena",
             "NOT-CLEANED": "Neočišćena"
+        },
+        "HOUSE-DETAIL": {
+            "ZA-POTVRDU": "Za potvrdu",
+            "ZADACI": "Zadaci",
+            "NO-TASKS": "Nema zadataka"
         }
     },
     "STATISTICS": {

@@ -17,6 +17,7 @@ import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 import { StatisticsService } from '../../core/services/statistics.service';
 import { HouseCardComponent } from './house-card/house-card.component';
+import { HouseDetailModalComponent } from './house-detail-modal.component';
 import { AuthService } from '../../core/services/auth.service';
 
 // Define the special location option interface
@@ -39,9 +40,10 @@ interface SpecialLocation {
         TranslateModule,
         ChartComponent,
         HouseCardComponent,
+        HouseDetailModalComponent,
     ],
     template: `
-        <div class="home-container" (click)="handleContainerClick($event)">
+        <div class="home-container">
             <div class="legend-container">
                 <div class="legend-wrapper">
                     <div class="legend-items">
@@ -107,8 +109,8 @@ interface SpecialLocation {
                                 [house]="house"
                                 [houseAvailabilities]="houseAvailabilities"
                                 [tasks]="tasks"
-                                [expandedHouseId]="expandedHouseId"
                                 [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+                                (houseClick)="openHouseModal($event)"
                             ></app-house-card>
                         }
                     } @else if (sortType == 'type') {
@@ -119,8 +121,8 @@ interface SpecialLocation {
                                     [house]="house"
                                     [houseAvailabilities]="houseAvailabilities"
                                     [tasks]="tasks"
-                                    [expandedHouseId]="expandedHouseId"
                                     [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+                                    (houseClick)="openHouseModal($event)"
                                 ></app-house-card>
                             }
                         }
@@ -137,8 +139,8 @@ interface SpecialLocation {
                                     [house]="house"
                                     [houseAvailabilities]="houseAvailabilities"
                                     [tasks]="tasks"
-                                    [expandedHouseId]="expandedHouseId"
                                     [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+                                    (houseClick)="openHouseModal($event)"
                                 ></app-house-card>
                             }
                         }
@@ -165,6 +167,14 @@ interface SpecialLocation {
                 </div>
             </div>
         </div>
+
+        <app-house-detail-modal
+            [house]="selectedHouse"
+            [houseAvailabilities]="houseAvailabilities"
+            [tasks]="tasks"
+            [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+            [(visible)]="showHouseModal"
+        ></app-house-detail-modal>
     `,
     styles: [
         `
@@ -437,7 +447,9 @@ export class Home implements OnInit, OnDestroy {
     houseAvailabilities = signal<HouseAvailability[]>([]);
     houseTypes = signal<HouseType[]>([]);
     tasks = signal<Task[]>([]);
-    expandedHouseId: number | null = null;
+
+    selectedHouse: House | null = null;
+    showHouseModal = false;
 
     searchTerm: string = '';
     sortType: 'number' | 'type' | 'status' | null = 'number';
@@ -527,9 +539,9 @@ export class Home implements OnInit, OnDestroy {
         });
     }
 
-    handleContainerClick(event: Event) {
-        // Prevent document click listener from handling container clicks
-        event.stopPropagation();
+    openHouseModal(house: House): void {
+        this.selectedHouse = house;
+        this.showHouseModal = true;
     }
 
     applyFilters() {

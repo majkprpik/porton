@@ -640,7 +640,7 @@ export class DataService {
   }
 
   listenToDatabaseChanges(){
-    console.log('Database listening called! Realtime channel: ', this.realtimeChannel);
+    console.log('Database listening started');
     if (this.realtimeChannel) return;
 
     this.realtimeChannel = this.supabaseService.getClient().channel('porton')
@@ -759,7 +759,7 @@ export class DataService {
     )
     .subscribe();
 
-    console.log('New realtime channel: ', this.realtimeChannel);
+    console.log('New realtime channel registered');
   }
 
   async unsubscribeFromRealtime() {

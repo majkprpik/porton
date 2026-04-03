@@ -99,7 +99,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
   `,
   styles: `
    .console-messages-container {
-      height: 82vh;
+      height: calc(100vh - 120px);
       width: 100%;
       background-color: var(--surface-card);
       border-radius: 10px;
