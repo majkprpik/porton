@@ -290,7 +290,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         <!-- <app-debug-overlay></app-debug-overlay> -->
         <div class="custom-overlay" *ngIf="isSpeedDialVisible" (click)="closeSpeedDial()"></div>
 
-        @if(!faultReportVisible && !isUnscheduledTaskVisible){
+        @if(!faultReportVisible && !isUnscheduledTaskVisible && !isLoggedUserDetailsVisible){
             <p-speedDial
                 [(visible)]="isSpeedDialVisible"
                 [model]="speedDialItems"
@@ -316,11 +316,12 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
             <div class="fault-report-form">
                 <div class="field">
                     <label for="location" class="font-bold block mb-2">{{ 'APP-LAYOUT.REPAIR-TASK-REPORT.LOCATION' | translate }}*</label>
-                    <p-select id="location" 
-                        [options]="houses" 
-                        [(ngModel)]="selectedHouseForFaultReport" 
-                        [placeholder]="'APP-LAYOUT.REPAIR-TASK-REPORT.SELECT-LOCATION' | translate" 
-                        [style]="{ width: '100%' }" 
+                    <p-select id="location"
+                        [options]="houses"
+                        [(ngModel)]="selectedHouseForFaultReport"
+                        [placeholder]="'APP-LAYOUT.REPAIR-TASK-REPORT.SELECT-LOCATION' | translate"
+                        [style]="{ width: '100%' }"
+                        appendTo="body"
                     >
                         <ng-template let-item pTemplate="item">
                             <span>{{ item.name || item.house_name }}</span>
@@ -406,14 +407,15 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
             <div class="task-form">
                 <div class="field">
                     <label for="location" class="font-bold block mb-2">{{ 'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.LOCATION' | translate }}*</label>
-                    <p-multiselect 
-                        [options]="houses" 
+                    <p-multiselect
+                        [options]="houses"
                         [(ngModel)]="selectedHouseNamesForTaskReport"
-                        optionLabel="house_name" 
-                        optionValue="house_name" 
-                        [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-LOCATION' | translate" 
-                        [style]="{ width: '100%' }" 
+                        optionLabel="house_name"
+                        optionValue="house_name"
+                        [placeholder]="'APP-LAYOUT.UNSCHEDULED-TASK-REPORT.SELECT-LOCATION' | translate"
+                        [style]="{ width: '100%' }"
                         (onChange)="onLocationSelect()"
+                        appendTo="body"
                     >
                         <ng-template let-item pTemplate="item">
                             <span>{{ item.house_name }}</span>

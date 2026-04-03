@@ -383,6 +383,14 @@ Local environment expects:
 
 ## Common Pitfalls
 
+## Git & Commits
+
+**NEVER suggest or ask the user to commit.** Always finish the full job first. The user will explicitly ask to commit when ready. Do not add notes like "you may want to commit" or "let's commit this" at the end of responses.
+
+**When the user asks to commit**, first list the files you intend to stage and ask for confirmation before running `git add` and `git commit`. This prevents accidentally committing unrelated changes.
+
+## Common Pitfalls
+
 - **Schema confusion:** Always use `porton` schema, NOT `public` schema
 - **State management:** Never bypass DataService - always update state through it
 - **Realtime subscriptions:** Ensure channel is cleaned up on logout (memory leaks)

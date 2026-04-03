@@ -26,13 +26,14 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       <div class="test-notification">
         <div class="field">
           <label for="notificationTitle" class="font-bold block mb-2">Profiles</label>
-          <p-multiselect 
+          <p-multiselect
               id="profiles-select"
-              [options]="profiles" 
+              [options]="profiles"
               [(ngModel)]="selectedProfiles"
-              optionLabel="first_name" 
-              [placeholder]="'Select profiles...'" 
-              [style]="{ width: '200px' }" 
+              optionLabel="first_name"
+              [placeholder]="'Select profiles...'"
+              [style]="{ width: '200px' }"
+              appendTo="body"
             >
               <ng-template let-item pTemplate="item">
                 <span>{{ item.first_name }}</span>

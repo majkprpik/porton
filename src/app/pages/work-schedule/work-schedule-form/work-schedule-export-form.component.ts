@@ -121,13 +121,14 @@ import { LayoutService } from '../../../layout/services/layout.service';
 
           <div class="export-buttons">
             <div class="export-type">
-              <p-select 
-                id="exportType" 
-                [options]="exportTypes" 
-                [(ngModel)]="selectedExportType" 
+              <p-select
+                id="exportType"
+                [options]="exportTypes"
+                [(ngModel)]="selectedExportType"
                 optionLabel="label"
                 optionValue="value"
-                [style]="{ width: '100px' }" 
+                [style]="{ width: '100px' }"
+                appendTo="body"
               >
               </p-select>
               

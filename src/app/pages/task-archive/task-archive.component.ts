@@ -29,14 +29,15 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       <div class="fields">
         <div class="field">
           <label for="location" class="font-bold block mb-2">{{ 'TASK-ARCHIVE.FIELDS.TASK-TYPES.TITLE' | translate }}</label>
-          <p-multiselect 
-            [options]="taskService.getAllTaskTypes()" 
+          <p-multiselect
+            [options]="taskService.getAllTaskTypes()"
             [(ngModel)]="selectedTaskTypes"
-            optionLabel="task_type_name" 
+            optionLabel="task_type_name"
             [placeholder]="'TASK-ARCHIVE.FIELDS.TASK-TYPES.SELECT-TYPE' | translate"
-            [style]="{ width: '100%' }" 
+            [style]="{ width: '100%' }"
             (onChange)="onMetricsSelect()"
             display="chip"
+            appendTo="body"
           >
             <ng-template let-group pTemplate="group">
               <div class="font-semibold text-primary">

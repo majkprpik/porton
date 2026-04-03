@@ -56,6 +56,7 @@ import {
                 [options]="chartTypes"
                 [(ngModel)]="chartType"
                 [style]="{ width: '150px' }"
+                appendTo="body"
                 (onChange)="onChartSelect()"
               >
                 <ng-template let-item pTemplate="item">
@@ -106,6 +107,7 @@ import {
             [(ngModel)]="selectedYear"
             [placeholder]="'STATISTICS.SELECT.DATA.SELECT-YEAR' | translate"
             [style]="{ width: '100%' }"
+            appendTo="body"
             (onChange)="onYearSelect()"
           >
             <ng-template let-item pTemplate="item">
@@ -126,6 +128,7 @@ import {
                 [(ngModel)]="month"
                 [placeholder]="'STATISTICS.SELECT.DATA.SELECT-MONTH' | translate"
                 [style]="{ width: '100%' }"
+                appendTo="body"
                 (onChange)="onMonthSelect()"
               >
                 <ng-template let-item pTemplate="item">
@@ -145,6 +148,7 @@ import {
                 [(ngModel)]="selectedHouseNumber"
                 [placeholder]="'STATISTICS.SELECT.DATA.SELECT-LOCATION' | translate"
                 [style]="{ width: '100%' }"
+                appendTo="body"
                 (onChange)="onHouseNumberChange()"
               >
                 <ng-template let-item pTemplate="item">
@@ -166,6 +170,7 @@ import {
                 optionValue="value"
                 [placeholder]="'STATISTICS.SELECT.DATA.SELECT-METRIC' | translate"
                 [style]="{ width: '100%' }"
+                appendTo="body"
                 (onChange)="onMetricsSelect()"
               >
                 <ng-template let-item pTemplate="item">
