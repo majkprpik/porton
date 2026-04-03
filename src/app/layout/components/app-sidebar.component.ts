@@ -218,7 +218,7 @@ import { NavigationEnd, Router } from '@angular/router';
                 bottom: 0;
                 left: 0;
                 right: 0;
-                height: 64px;
+                height: calc(64px + env(safe-area-inset-bottom));
                 z-index: 999;
                 background: var(--glass-bg);
                 backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));

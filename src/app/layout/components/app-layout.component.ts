@@ -605,7 +605,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
 
             @media (max-width: 991px) {
                 ::ng-deep .p-speeddial {
-                    bottom: calc(56px + 1rem) !important;
+                    bottom: calc(64px + env(safe-area-inset-bottom) + 1rem) !important;
                 }
             }
 

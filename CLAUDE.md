@@ -383,11 +383,15 @@ Local environment expects:
 
 ## Common Pitfalls
 
+## After Making Changes
+
+Always end every response that includes code changes with a short summary of what was changed and why — file names, what was modified, and the reason. Keep it concise but complete enough that the user knows exactly what happened without reading the diff.
+
 ## Git & Commits
 
 **NEVER suggest or ask the user to commit.** Always finish the full job first. The user will explicitly ask to commit when ready. Do not add notes like "you may want to commit" or "let's commit this" at the end of responses.
 
-**When the user asks to commit**, first list the files you intend to stage and ask for confirmation before running `git add` and `git commit`. This prevents accidentally committing unrelated changes.
+**When the user asks to commit**, first list the files you intend to stage and tell the user which branch they are currently on. Wait for confirmation before running `git add` and `git commit`. This prevents accidentally committing unrelated changes to the wrong branch.
 
 ## Common Pitfalls
 
