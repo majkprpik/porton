@@ -80,7 +80,9 @@ const ARRIVALS_AND_DEPARTURES_ROLES = [
     ProfileRoles.KorisnickaSluzba,
     ProfileRoles.Recepcija,
     ProfileRoles.NocnaRecepcija,
-    ProfileRoles.VoditeljDomacinstva
+    ProfileRoles.VoditeljDomacinstva,
+    ProfileRoles.VoditeljRecepcije,
+    ProfileRoles.Prodaja
 ];
 
 const NOTES_ROLES = [
@@ -89,7 +91,9 @@ const NOTES_ROLES = [
     ProfileRoles.KorisnickaSluzba,
     ProfileRoles.Recepcija,
     ProfileRoles.NocnaRecepcija,
-    ProfileRoles.VoditeljDomacinstva
+    ProfileRoles.VoditeljDomacinstva,
+    ProfileRoles.VoditeljRecepcije,
+    ProfileRoles.Prodaja
 ];
 
 const WORK_SCHEDULE_ROLES = [

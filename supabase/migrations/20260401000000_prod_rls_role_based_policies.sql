@@ -111,12 +111,12 @@ CREATE POLICY role_based_delete ON porton.houses
 -- ============================================================
 CREATE POLICY role_based_select ON porton.notes
   FOR SELECT TO authenticated USING (
-    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj kampa','Korisnicka sluzba','Recepcija','Nocna recepcija','Voditelj domacinstva'])
+    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj kampa','Korisnicka sluzba','Recepcija','Nocna recepcija','Voditelj domacinstva','Voditelj recepcije','Prodaja'])
   );
 
 CREATE POLICY role_based_insert ON porton.notes
   FOR INSERT TO authenticated WITH CHECK (
-    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj kampa','Korisnicka sluzba','Recepcija','Nocna recepcija','Voditelj domacinstva'])
+    porton.get_my_role() = ANY (ARRAY['Uprava','Voditelj kampa','Korisnicka sluzba','Recepcija','Nocna recepcija','Voditelj domacinstva','Voditelj recepcije','Prodaja'])
   );
 
 -- ============================================================

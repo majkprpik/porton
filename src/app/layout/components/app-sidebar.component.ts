@@ -427,7 +427,9 @@ export class AppSidebar {
             profileRole.name == ProfileRoles.Uprava ||
             profileRole.name == ProfileRoles.Recepcija ||
             profileRole.name == ProfileRoles.NocnaRecepcija ||
-            profileRole.name == ProfileRoles.VoditeljDomacinstva
+            profileRole.name == ProfileRoles.VoditeljDomacinstva ||
+            profileRole.name == ProfileRoles.VoditeljRecepcije ||
+            profileRole.name == ProfileRoles.Prodaja
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
@@ -442,7 +444,9 @@ export class AppSidebar {
             profileRole.name == ProfileRoles.Uprava ||
             profileRole.name == ProfileRoles.Recepcija ||
             profileRole.name == ProfileRoles.NocnaRecepcija ||
-            profileRole.name == ProfileRoles.VoditeljDomacinstva
+            profileRole.name == ProfileRoles.VoditeljDomacinstva ||
+            profileRole.name == ProfileRoles.VoditeljRecepcije ||
+            profileRole.name == ProfileRoles.Prodaja
         );
 
         return allowedRoles.some(allowedRole => allowedRole.name == role);
