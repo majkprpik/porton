@@ -20,22 +20,24 @@ import { UpperCasePipe } from '@angular/common';
     <div class="content-management-container">
       <div class="header">
         <h1>{{ 'CONTENT-MANAGEMENT.TITLE' | translate }}</h1>
-        <div class="conent-buttons">
+        <div class="tab-bar">
           @for(c of content; track $index){
-            <p-button 
-              [label]="('CONTENT-MANAGEMENT.TABS.' + c | uppercase) | translate" 
-              [severity]="selectedContent == c ? 'primary' : 'secondary'"
-              (click)="setSelectedContent(c)">
-            </p-button>  
+            <button
+              class="tab-item"
+              [class.active]="selectedContent === c.key"
+              (click)="setSelectedContent(c.key)">
+              <i [class]="'pi ' + c.icon"></i>
+              {{ ('CONTENT-MANAGEMENT.TABS.' + c.key | uppercase) | translate }}
+            </button>
           }
         </div>
       </div>
       <div class="content-management">
-          @if(selectedContent == 'Profiles'){
+          @if(selectedContent === 'Profiles'){
             <app-profiles></app-profiles>
-          } @else if(selectedContent == 'Seasons'){
+          } @else if(selectedContent === 'Seasons'){
             <app-seasons></app-seasons>
-          } @else if(selectedContent == 'Houses'){
+          } @else if(selectedContent === 'Houses'){
             <app-houses></app-houses>
           }
       </div>
@@ -54,19 +56,67 @@ import { UpperCasePipe } from '@angular/common';
       padding: 20px;
       overflow-y: auto;
 
-      .header{
+      .header {
         width: 100%;
-        height: 13%;
+        padding-bottom: 0;
 
-        .conent-buttons{
+        h1 {
+          margin: 0 0 0.25rem 0;
+        }
+
+        .tab-bar {
           display: flex;
           flex-direction: row;
-          gap: 8px;
+          border-bottom: 2px solid var(--surface-border);
+          gap: 0;
+          margin-bottom: 1.5rem;
+        }
+
+        .tab-item {
+          position: relative;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 1rem 1.75rem;
+          font-size: 1.05rem;
+          font-weight: 500;
+          color: var(--text-color-secondary);
+          transition: color 0.2s;
+          white-space: nowrap;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          i { font-size: 1rem; }
+
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-color);
+            transform: scaleX(0);
+            transition: transform 0.2s;
+          }
+
+          &:hover {
+            color: var(--text-color);
+          }
+
+          &.active {
+            color: var(--primary-color);
+            font-weight: 600;
+
+            &::after {
+              transform: scaleX(1);
+            }
+          }
         }
       }
 
-      .content-management{
-        height: 87%;
+      .content-management {
         overflow-y: auto;
       }
     }
@@ -74,19 +124,15 @@ import { UpperCasePipe } from '@angular/common';
 })
 export class ContentManagementComponent {
   content = [
-    'Profiles',
-    'Seasons',
-    'Houses'
+    { key: 'Profiles', icon: 'pi-users' },
+    { key: 'Seasons',  icon: 'pi-calendar' },
+    { key: 'Houses',   icon: 'pi-home' },
   ];
 
   selectedContent: string = '';
 
-  constructor() {
-    
-  }
-
   ngOnInit(){
-    this.selectedContent = this.content[0];
+    this.selectedContent = this.content[0].key;
   }
 
   setSelectedContent(content: string){

@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { DataService } from '../../core/services/data.service';
 import { Season } from '../../core/models/data.models';
 import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SeasonService } from '../../core/services/season.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
@@ -31,38 +31,39 @@ import { ConfirmationService, MessageService } from 'primeng/api';
   ],
   providers: [MessageService, ConfirmationService],
   template: `
-    <div class="seasons-container">
-      <div class="title">
-        <p-button 
-          severity="primary"
-          (click)="openCreateSeasonWindow()"
-        >
+    <div class="card">
+      <div class="toolbar">
+        <p-button severity="primary" (click)="openCreateSeasonWindow()">
           <i class="pi pi-plus mr-2"></i> {{ 'CONTENT-MANAGEMENT.SEASONS.ADD-NEW-SEASON' | translate }}
         </p-button>
       </div>
-      <p-table [value]="seasons" [tableStyle]="{'min-width': '50rem'}">
+      <p-table #dt [value]="seasons" [tableStyle]="{'min-width': '30rem'}" [stripedRows]="true" (onSort)="onSort($event)">
         <ng-template pTemplate="header">
           <tr>
-            <th>{{ 'CONTENT-MANAGEMENT.SEASONS.TABLE-COLUMNS.YEAR' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.SEASONS.TABLE-COLUMNS.START-DATE' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.SEASONS.TABLE-COLUMNS.END-DATE' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.SEASONS.TABLE-COLUMNS.ACTIONS' | translate }}</th>
+            <th pSortableColumn="year">{{ 'CONTENT-MANAGEMENT.SEASONS.TABLE-COLUMNS.YEAR' | translate }} <p-sortIcon field="year" /></th>
+            <th pSortableColumn="season_start_date">{{ 'CONTENT-MANAGEMENT.SEASONS.TABLE-COLUMNS.START-DATE' | translate }} <p-sortIcon field="season_start_date" /></th>
+            <th pSortableColumn="season_end_date">{{ 'CONTENT-MANAGEMENT.SEASONS.TABLE-COLUMNS.END-DATE' | translate }} <p-sortIcon field="season_end_date" /></th>
+            <th style="width: 6rem; text-align: center">{{ 'CONTENT-MANAGEMENT.SEASONS.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-season>
           <tr>
-            <td>{{ season.year }}</td>
+            <td class="year-cell">{{ season.year }}</td>
             <td>{{ season.season_start_date | date: 'dd MMM yyyy' }}</td>
-            <td>{{ season.season_end_date | date: 'dd MMM yyyy'}}</td>
-            <td>
-              <p-button 
-                icon="pi pi-pencil" 
-                styleClass="p-button-rounded p-button-success mr-2" 
+            <td>{{ season.season_end_date | date: 'dd MMM yyyy' }}</td>
+            <td class="action-cell">
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true"
+                severity="secondary"
+                size="small"
                 (click)="openEditSeasonWindow(season)">
               </p-button>
-              <p-button 
-                icon="pi pi-trash" 
-                styleClass="p-button-rounded p-button-danger mr-2" 
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                size="small"
                 (click)="openDeleteSeasonWindow(season)">
               </p-button>
             </td>
@@ -189,7 +190,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
     <p-toast></p-toast>
   `,
   styles: `
-    .seasons-container{
+    .card {
       padding: 2rem;
       background: var(--glass-bg);
       backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -197,30 +198,61 @@ import { ConfirmationService, MessageService } from 'primeng/api';
       border: 1px solid var(--glass-border);
       box-shadow: var(--glass-shadow);
       border-radius: 8px;
-
-      .title{
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
-        padding-bottom: 10px;
-      }
     }
 
-    .field{
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1.25rem;
+    }
+
+    .year-cell {
+      font-weight: 600;
+    }
+
+    .action-cell {
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+    }
+
+    ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+    }
+
+    .field {
       display: flex;
       flex-direction: column;
-
       width: 200px;
       padding-bottom: 20px;
     }
 
-    .p-dialog-footer{
+    .p-dialog-footer {
       padding-top: 20px;
     }
   `
 })
 export class SeasonsComponent {
+  @ViewChild('dt') dt!: Table;
+  private prevSortField = '';
+  private prevSortOrder = 0;
+
+  onSort(event: { field: string; order: number }) {
+    if (event.field === this.prevSortField && this.prevSortOrder === -1 && event.order === 1) {
+      setTimeout(() => this.dt.reset());
+      this.prevSortField = '';
+      this.prevSortOrder = 0;
+    } else {
+      this.prevSortField = event.field;
+      this.prevSortOrder = event.order;
+    }
+  }
+
   seasons: Season[] = [];
   selectedSeason?: Season;
 

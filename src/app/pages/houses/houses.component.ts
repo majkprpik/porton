@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { House, HouseType, HouseTypes } from '../../core/models/data.models';
 import { CommonModule } from '@angular/common';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
@@ -41,50 +41,65 @@ interface ExtendedHouse extends House{
   providers: [MessageService],
   template: `
     <div class="card">
-      <div class="title">
-        <p-button 
-          severity="primary"
-          (click)="openCreateHouseWindow()"
-        >
+      <div class="toolbar">
+        <div class="tab-bar">
+          @for(opt of typeOptions; track opt.value){
+            <button
+              class="tab-item"
+              [class.active]="selectedType === opt.value"
+              (click)="selectedType = opt.value">
+              {{ opt.key | translate }}
+            </button>
+          }
+        </div>
+        <p-button severity="primary" (click)="openCreateHouseWindow()">
           <i class="pi pi-plus mr-2"></i> {{ 'CONTENT-MANAGEMENT.HOUSES.ADD-NEW-HOUSE' | translate }}
         </p-button>
       </div>
-      <p-table [value]="houses" [tableStyle]="{'min-width': '50rem'}">
+      <p-table #dt [value]="filteredHouses" [tableStyle]="{'min-width': '50rem'}" [stripedRows]="true" (onSort)="onSort($event)">
         <ng-template pTemplate="header">
           <tr>
-            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-NUMBER' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-NAME' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-TYPE' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HAS-POOL' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HAS-JACUZZI' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.IS-ACTIVE' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.ACTIONS' | translate }}</th>
+            <th pSortableColumn="house_number" style="width: 10rem">{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-NUMBER' | translate }} <p-sortIcon field="house_number" /></th>
+            <th pSortableColumn="house_name" style="width: 13rem">{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-NAME' | translate }} <p-sortIcon field="house_name" /></th>
+            <th pSortableColumn="house_type_name" style="width: 10rem">{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HOUSE-TYPE' | translate }} <p-sortIcon field="house_type_name" /></th>
+            <th class="spacer-col"></th>
+            <th style="width: 7rem; text-align: center; padding-left: 1.5rem">{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HAS-POOL' | translate }}</th>
+            <th style="width: 7rem; text-align: center">{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.HAS-JACUZZI' | translate }}</th>
+            <th pSortableColumn="is_active" style="width: 7rem; text-align: center">{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.IS-ACTIVE' | translate }} <p-sortIcon field="is_active" /></th>
+            <th style="width: 7rem; text-align: center">{{ 'CONTENT-MANAGEMENT.HOUSES.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-house>
-          <tr [ngClass]="{'divider-row': house.is_divider, 'teal-row': house.has_jacuzzi}">
-            @if(house.is_divider){
-              <td colspan="7" class="divider-cell">{{ ('HOUSE-TYPES.' + house.title | translate) | uppercase}}</td>
-            } @else {
-              <td>{{ house.house_number }}</td>
-              <td>{{ house.house_name }}</td>
-              <td>{{ houseService.getHouseType(house.house_type_id)?.house_type_name }}</td>
-              <td>{{ house.has_pool }}</td>
-              <td>{{ house.has_jacuzzi }}</td>
-              <td>{{ house.is_active }}</td>
-              <td>
-                <p-button 
-                  icon="pi pi-pencil" 
-                  styleClass="p-button-rounded p-button-success mr-2" 
-                  (click)="openEditHouseWindow(house)">
-                </p-button>
-                <p-button 
-                  icon="pi pi-trash" 
-                  styleClass="p-button-rounded p-button-danger mr-2"
-                  (click)="openDeleteHouseWindow(house)">
-                </p-button>
-              </td>
-            }
+          <tr>
+            <td>{{ house.house_number }}</td>
+            <td>{{ house.house_name }}</td>
+            <td><span class="type-badge type-{{ house.house_type_name?.replace(' ', '-') }}">{{ house.house_type_name }}</span></td>
+            <td class="spacer-col"></td>
+            <td class="bool-cell" style="padding-left: 1.5rem">
+              <i [class]="house.has_pool ? 'pi pi-check bool-true' : 'pi pi-times bool-false'"></i>
+            </td>
+            <td class="bool-cell">
+              <i [class]="house.has_jacuzzi ? 'pi pi-check bool-true' : 'pi pi-times bool-false'"></i>
+            </td>
+            <td class="bool-cell">
+              <i [class]="house.is_active ? 'pi pi-check bool-true' : 'pi pi-times bool-false'"></i>
+            </td>
+            <td class="action-cell">
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                (click)="openEditHouseWindow(house)">
+              </p-button>
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                size="small"
+                (click)="openDeleteHouseWindow(house)">
+              </p-button>
+            </td>
           </tr>
         </ng-template>
       </p-table>
@@ -315,22 +330,56 @@ interface ExtendedHouse extends House{
       border: 1px solid var(--glass-border);
       box-shadow: var(--glass-shadow);
       border-radius: 8px;
+    }
 
-      .title{
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
-        padding-bottom: 10px;
+    .toolbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 2px solid var(--surface-border);
+    }
+
+    .tab-bar {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .tab-item {
+      position: relative;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-color-secondary);
+      transition: color 0.2s;
+      white-space: nowrap;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-color);
+        transform: scaleX(0);
+        transition: transform 0.2s;
+      }
+
+      &:hover { color: var(--text-color); }
+
+      &.active {
+        color: var(--primary-color);
+        font-weight: 600;
+
+        &::after { transform: scaleX(1); }
       }
     }
-    
-    h1 {
-      margin-top: 0;
-      margin-bottom: 1.5rem;
-      color: var(--text-color);
-    }
-    
+
     .p-field {
       margin-bottom: 1.5rem;
     }
@@ -344,60 +393,111 @@ interface ExtendedHouse extends House{
       border-radius: 4px;
     }
 
-    .field{
+    .field {
       margin-bottom: 10px;
 
-      textarea{
-        width: 100%;
-      }
-
-      input{
-        width: 100%;
-      }
+      textarea { width: 100%; }
+      input { width: 100%; }
     }
-    
+
     label {
       display: block;
       margin-bottom: 0.5rem;
       user-select: none;
     }
-    
+
     .p-dialog-footer {
       display: flex;
       justify-content: flex-end;
       gap: 0.5rem;
       padding-top: 1.5rem;
     }
-    
-    .divider-row {
-      background-color: var(--primary-color);
+
+    .bool-cell {
+      text-align: center;
+
+      .bool-true {
+        color: #22c55e;
+        font-size: 0.95rem;
+      }
+
+      .bool-false {
+        color: #ef4444;
+        font-size: 0.95rem;
+      }
     }
 
-    .teal-row {
-      background-color: #008080;
-      color: white;
+    .type-badge {
+      display: inline-block;
+      padding: 0.2rem 0.65rem;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+
+      &.type-family-1  { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
+      &.type-family-2  { background: rgba(139, 92, 246, 0.15); color: #7c3aed; }
+      &.type-couple    { background: rgba(236, 72, 153, 0.15); color: #db2777; }
+      &.type-mobilne   { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+      &.type-dodatno   { background: var(--surface-hover);     color: var(--text-color-secondary); }
     }
-    
-    .divider-cell {
-      font-weight: bold;
+
+    .spacer-col {
+      width: auto;
+    }
+
+    .action-cell {
       text-align: center;
-      padding: 0.75rem;
-      color: white;
+      white-space: nowrap;
+    }
+
+    ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+    }
+
+    ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
     }
     `
   ]
 })
 export class HousesComponent implements OnInit {
-  houses: (House | Partial<ExtendedHouse>)[] = [];
+  @ViewChild('dt') dt!: Table;
+  private prevSortField = '';
+  private prevSortOrder = 0;
+
+  onSort(event: { field: string; order: number }) {
+    if (event.field === this.prevSortField && this.prevSortOrder === -1 && event.order === 1) {
+      setTimeout(() => this.dt.reset());
+      this.prevSortField = '';
+      this.prevSortOrder = 0;
+    } else {
+      this.prevSortField = event.field;
+      this.prevSortOrder = event.order;
+    }
+  }
+  houses: (House & { house_type_name: string })[] = [];
   houseTypes: HouseType[] = [];
   selectedHouse?: House;
   houseToCreate?: Partial<House>;
 
-  family1Houses: (House | Partial<ExtendedHouse>)[] = [];
-  family2Houses: (House | Partial<ExtendedHouse>)[] = [];
-  coupleHouses: (House | Partial<ExtendedHouse>)[] = [];
-  mobileHouses: (House | Partial<ExtendedHouse>)[] = [];
-  otherHouses: (House | Partial<ExtendedHouse>)[] = [];
+  selectedType = 'ALL';
+  typeOptions: { key: string; value: string }[] = [
+    { key: 'HOUSE-TYPES.ALL',      value: 'ALL' },
+    { key: 'HOUSE-TYPES.FAMILY-1', value: HouseTypes.Family1 },
+    { key: 'HOUSE-TYPES.FAMILY-2', value: HouseTypes.Family2 },
+    { key: 'HOUSE-TYPES.COUPLE',   value: HouseTypes.Couple },
+    { key: 'HOUSE-TYPES.MOBILE',   value: HouseTypes.Mobile },
+    { key: 'HOUSE-TYPES.OTHER',    value: HouseTypes.Other },
+  ];
+
+  get filteredHouses(): House[] {
+    if (this.selectedType === 'ALL') return this.houses;
+    const typeId = this.houseTypes.find(ht => ht.house_type_name === this.selectedType)?.house_type_id;
+    return this.houses.filter(h => h.house_type_id === typeId);
+  }
 
   isExistingHouseErrorDisplayed = false;
   existingHouseErrorMessage = ''
@@ -423,66 +523,11 @@ export class HousesComponent implements OnInit {
     ])
     .pipe(takeUntil(this.destroy$))
     .subscribe({
-      next: async ([houseTypes, houses]) => {
+      next: ([houseTypes, houses]) => {
         this.houseTypes = houseTypes;
-
-        this.family1Houses = [];
-        this.family2Houses = [];
-        this.coupleHouses = [];
-        this.mobileHouses = [];
-        this.otherHouses = [];
-
-        const family1Houses = houses.filter(house => {
-          const family1HouseType = this.houseTypes.find(ht => ht.house_type_name == HouseTypes.Family1);
-          return house.house_type_id == family1HouseType?.house_type_id;
-        }).sort((a, b) => a.house_number - b.house_number);
-
-        if(family1Houses.length){
-          this.family1Houses.push(this.createDividerHouse('FAMILY-1'));
-          this.family1Houses.push(...family1Houses);
-        }
-
-        const family2Houses = houses.filter(house => {
-          const family2HouseType = this.houseTypes.find(ht => ht.house_type_name == HouseTypes.Family2);
-          return house.house_type_id == family2HouseType?.house_type_id;
-        }).sort((a, b) => a.house_number - b.house_number);
-
-        if(family2Houses.length){
-          this.family2Houses.push(this.createDividerHouse('FAMILY-2'));
-          this.family2Houses.push(...family2Houses);
-        }
-
-        const coupleHouses = houses.filter(house => {
-          const coupleHouseType = this.houseTypes.find(ht => ht.house_type_name == HouseTypes.Couple);
-          return house.house_type_id == coupleHouseType?.house_type_id;
-        }).sort((a, b) => a.house_number - b.house_number);
-
-        if(coupleHouses.length){
-          this.coupleHouses.push(this.createDividerHouse('COUPLE'));
-          this.coupleHouses.push(...coupleHouses);
-        }
-
-        const mobileHouses = houses.filter(house => {
-          const mobileHouseType = this.houseTypes.find(ht => ht.house_type_name == HouseTypes.Mobile);
-          return house.house_type_id == mobileHouseType?.house_type_id;
-        }).sort((a, b) => a.house_number - b.house_number);
-
-        if(mobileHouses.length){
-          this.mobileHouses.push(this.createDividerHouse('MOBILE'));
-          this.mobileHouses.push(...mobileHouses);
-        }
-
-        const otherHouses = houses.filter(house => {
-          const otherHouseType = this.houseTypes.find(ht => ht.house_type_name == HouseTypes.Other);
-          return house.house_type_id == otherHouseType?.house_type_id;
-        }).sort((a, b) => a.house_number - b.house_number);
-
-        if(otherHouses.length){
-          this.mobileHouses.push(this.createDividerHouse('OTHER'));
-          this.mobileHouses.push(...otherHouses);
-        }
-
-        this.houses = [...this.family1Houses, ...this.family2Houses, ...this.coupleHouses, ...this.mobileHouses, ...this.otherHouses];
+        this.houses = [...houses]
+          .map(h => ({ ...h, house_type_name: houseTypes.find(ht => ht.house_type_id === h.house_type_id)?.house_type_name ?? '' }))
+          .sort((a, b) => a.house_number - b.house_number);
       },
       error: (error) => {
         console.error(error);
@@ -493,14 +538,6 @@ export class HousesComponent implements OnInit {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  createDividerHouse(title: string): Partial<ExtendedHouse> {
-    return {
-      id: `divider-${title}`,
-      title: title,
-      is_divider: true,
-    };
   }
 
   hideDialogs(){

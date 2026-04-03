@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ProfileRole, Profile, ProfileRoles, UserToRegister, Departments } from '../../core/models/data.models';
 import { CommonModule } from '@angular/common';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
@@ -13,6 +13,7 @@ import { ProfileService } from '../../core/services/profile.service';
 import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SelectModule } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { LanguageService } from '../../core/services/language.service';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
@@ -23,6 +24,7 @@ interface ExtendedProfile {
   first_name: string | null;
   last_name: string | null;
   isDivider?: boolean;
+  department?: string;
   password?: string;
   email?: string;
   is_test_user?: boolean;
@@ -35,10 +37,10 @@ interface ExtendedProfile {
   selector: 'app-profiles',
   standalone: true,
   imports: [
-    CommonModule, 
-    TableModule, 
-    ButtonModule, 
-    DialogModule, 
+    CommonModule,
+    TableModule,
+    ButtonModule,
+    DialogModule,
     FormsModule,
     ToastModule,
     InputTextModule,
@@ -48,48 +50,65 @@ interface ExtendedProfile {
   providers: [MessageService],
   template: `
     <div class="card">
-      <div class="title">
-        <p-button 
-          severity="primary"
-          (click)="openCreateProfileWindow()"
-        >
+      <div class="toolbar">
+        <div class="tab-bar">
+          @for(opt of deptOptions; track opt.value){
+            <button
+              class="tab-item"
+              [class.active]="selectedDept === opt.value"
+              (click)="selectedDept = opt.value">
+              {{ opt.key | translate }}
+            </button>
+          }
+        </div>
+        <p-button severity="primary" (click)="openCreateProfileWindow()">
           <i class="pi pi-plus mr-2"></i> {{ 'CONTENT-MANAGEMENT.PROFILES.ADD-NEW-PROFILE' | translate }}
         </p-button>
       </div>
-      <p-table [value]="profiles" [tableStyle]="{'min-width': '50rem'}">
+      <p-table #dt [value]="filteredProfiles" [tableStyle]="{'min-width': '60rem'}" [stripedRows]="true" (onSort)="onSort($event)">
         <ng-template pTemplate="header">
           <tr>
-            <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.NAME' | translate }}</th>
+            <th pSortableColumn="first_name">{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.NAME' | translate }} <p-sortIcon field="first_name" /></th>
+            <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.DEPARTMENT' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.POSITION' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.EMAIL' | translate }}</th>
             <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.PASSWORD' | translate }}</th>
-            <th>{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.ACTIONS' | translate }}</th>
+            <th style="width: 6rem; text-align: center">{{ 'CONTENT-MANAGEMENT.PROFILES.TABLE-COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-profile>
-          <tr [ngClass]="{'divider-row': profile.isDivider}">
-            @if(profile.isDivider){
-              <td colspan="5" class="divider-cell">{{ 'PROFILE-DEPARTMENTS.' + profile.first_name | uppercase | translate | uppercase}}</td>
-            }
-            @if(!profile.isDivider){
-              <td>{{ profile.first_name }} {{ profile.last_name }}</td>
-              <td>{{ 'PROFILE-ROLES.' + getProfileRoleNameById(profile.role_id) | translate }}</td>
-              <td>{{ profile.email }}</td>
-              <td>{{ profile.password }}</td>
-              <td>
-                <p-button 
-                  icon="pi pi-pencil" 
-                  styleClass="p-button-rounded p-button-success mr-2" 
-                  (click)="editProfile(profile)">
-                </p-button>
-                <p-button 
-                  [disabled]="profile.id == authService.getStoredUserId()"
-                  icon="pi pi-trash" 
-                  styleClass="p-button-rounded p-button-danger mr-2" 
-                  (click)="profile.id !== authService.getStoredUserId() && showDeleteProfile(profile)">
-                </p-button>
-              </td>
-            }
+          <tr>
+            <td class="name-cell">{{ profile.first_name }} {{ profile.last_name }}</td>
+            <td><span class="dept-badge dept-{{ profile.department?.toLowerCase() }}">{{ 'PROFILE-DEPARTMENTS.' + (profile.department?.toUpperCase()) | translate }}</span></td>
+            <td><span class="role-badge">{{ 'PROFILE-ROLES.' + getProfileRoleNameById(profile.role_id) | translate }}</span></td>
+            <td class="email-cell">{{ getDisplayEmail(profile.email) }}</td>
+            <td class="password-cell">
+              <span class="password-text">{{ revealedPasswords.has(profile.id) ? (profile.password || '—') : '••••••' }}</span>
+              <p-button
+                [icon]="revealedPasswords.has(profile.id) ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                (click)="togglePassword(profile.id)">
+              </p-button>
+            </td>
+            <td class="action-cell">
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                (click)="editProfile(profile)">
+              </p-button>
+              <p-button
+                [disabled]="profile.id == authService.getStoredUserId()"
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                size="small"
+                (click)="profile.id !== authService.getStoredUserId() && showDeleteProfile(profile)">
+              </p-button>
+            </td>
           </tr>
         </ng-template>
       </p-table>
@@ -207,39 +226,74 @@ interface ExtendedProfile {
       border: 1px solid var(--glass-border);
       box-shadow: var(--glass-shadow);
       border-radius: 8px;
+    }
 
-      .title{
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
-        padding-bottom: 10px;
+    .toolbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 2px solid var(--surface-border);
+    }
+
+    .tab-bar {
+      display: flex;
+      flex-direction: row;
+      gap: 0;
+    }
+
+    .tab-item {
+      position: relative;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-color-secondary);
+      transition: color 0.2s;
+      white-space: nowrap;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-color);
+        transform: scaleX(0);
+        transition: transform 0.2s;
+      }
+
+      &:hover { color: var(--text-color); }
+
+      &.active {
+        color: var(--primary-color);
+        font-weight: 600;
+
+        &::after { transform: scaleX(1); }
       }
     }
-    
-    h1 {
-      margin-top: 0;
-      margin-bottom: 1.5rem;
-      color: var(--text-color);
-    }
-    
+
     .p-field {
       margin-bottom: 1.5rem;
     }
 
-    .field{
+    .field {
       margin-bottom: 10px;
 
-      input{
+      input {
         width: 100%;
       }
     }
-    
+
     label {
       display: block;
       margin-bottom: 0.5rem;
     }
-    
+
     ::ng-deep .p-dialog {
       border-radius: 10px;
       overflow: hidden;
@@ -259,22 +313,111 @@ interface ExtendedProfile {
       gap: 0.5rem;
       padding: 1.5rem 0 0 0;
     }
-    
-    .divider-row {
-      background-color: var(--primary-color);
+
+    ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
     }
-    
-    .divider-cell {
-      font-weight: bold;
+
+    ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+    }
+
+    .name-cell {
+      font-weight: 500;
+    }
+
+    .email-cell {
+      color: var(--text-color-secondary);
+    }
+
+    .password-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+
+      .password-text {
+        font-family: monospace;
+        letter-spacing: 0.1em;
+        color: var(--text-color-secondary);
+      }
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      background: var(--surface-hover);
+      color: var(--text-color);
+    }
+
+    .dept-badge {
+      display: inline-block;
+      padding: 0.2rem 0.65rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+
+      &.dept-management  { background: rgba(139, 92, 246, 0.15); color: #7c3aed; }
+      &.dept-reception   { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
+      &.dept-housekeeping{ background: rgba(16, 185, 129, 0.15); color: #059669; }
+      &.dept-technical   { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+      &.dept-other       { background: var(--surface-hover);     color: var(--text-color-secondary); }
+    }
+
+    .action-cell {
       text-align: center;
-      padding: 0.75rem;
-      color: white;
+      white-space: nowrap;
     }
     `
   ]
 })
 export class ProfilesComponent implements OnInit {
   profiles: ExtendedProfile[] = [];
+  flatProfiles: ExtendedProfile[] = [];
+  selectedDept = 'ALL';
+  @ViewChild('dt') dt!: Table;
+  private prevSortField = '';
+  private prevSortOrder = 0;
+
+  onSort(event: { field: string; order: number }) {
+    if (event.field === this.prevSortField && this.prevSortOrder === -1 && event.order === 1) {
+      setTimeout(() => this.dt.reset());
+      this.prevSortField = '';
+      this.prevSortOrder = 0;
+    } else {
+      this.prevSortField = event.field;
+      this.prevSortOrder = event.order;
+    }
+  }
+
+  revealedPasswords = new Set<string>();
+
+  togglePassword(id: string) {
+    if (this.revealedPasswords.has(id)) {
+      this.revealedPasswords.delete(id);
+    } else {
+      this.revealedPasswords.add(id);
+    }
+  }
+  deptOptions: { key: string; value: string }[] = [
+    { key: 'PROFILE-DEPARTMENTS.ALL',          value: 'ALL' },
+    { key: 'PROFILE-DEPARTMENTS.MANAGEMENT',   value: Departments.Management },
+    { key: 'PROFILE-DEPARTMENTS.RECEPTION',    value: Departments.Reception },
+    { key: 'PROFILE-DEPARTMENTS.HOUSEKEEPING', value: Departments.Housekeeping },
+    { key: 'PROFILE-DEPARTMENTS.TECHNICAL',    value: Departments.Technical },
+    { key: 'PROFILE-DEPARTMENTS.OTHER',        value: Departments.Ostalo },
+  ];
+
+  get filteredProfiles(): ExtendedProfile[] {
+    if (this.selectedDept === 'ALL') return this.flatProfiles;
+    return this.flatProfiles.filter(p => p.department === this.selectedDept);
+  }
+
   profileDialog: boolean = false;
   showNewProfileDialog: boolean = false;
   showDeleteProfileDialog: boolean = false;
@@ -367,79 +510,62 @@ export class ProfilesComponent implements OnInit {
     .pipe(takeUntil(this.destroy$))
     .subscribe({
       next: async ([profileRoles, profiles]) => {
-        this.sortedProfiles = [];
         this.activeProfiles = profiles.filter(p => !p.is_deleted);
-        
+
         this.profileRoles = profileRoles.map(role => ({
           ...role,
           translatedName: this.languageService.getSelectedLanguageCode() === 'en'
             ? this.profileService.translationMap[role.name]
             : role.name
         }));
-        
+
+        const withDept = (dept: string) => (profile: Profile): ExtendedProfile => ({
+          ...this.addPasswordsAndEmailsToProfiles([profile])[0],
+          department: dept,
+        });
+
+        const getRoleName = (profile: Profile) =>
+          profileRoles.find(role => role.id === profile.role_id)?.name;
+
         const managementProfiles = this.activeProfiles
-          .filter(profile => {
-            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
-            return roleName !== undefined && this.managementRoles.includes(roleName);
-          })
-          .sort(this.sortByName);
-        if (managementProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile(Departments.Management));
-          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(managementProfiles));
-        }
-        
+          .filter(p => { const r = getRoleName(p); return r !== undefined && this.managementRoles.includes(r); })
+          .sort(this.sortByName)
+          .map(withDept(Departments.Management));
+
         const receptionProfiles = this.activeProfiles
-          .filter(profile => {
-            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
-            return roleName !== undefined && this.receptionRoles.includes(roleName);
-          })
-          .sort(this.sortByName);
-        if (receptionProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile(Departments.Reception));
-          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(receptionProfiles));
-        }
-        
+          .filter(p => { const r = getRoleName(p); return r !== undefined && this.receptionRoles.includes(r); })
+          .sort(this.sortByName)
+          .map(withDept(Departments.Reception));
+
         const housekeepingProfiles = this.activeProfiles
-          .filter(profile => {
-            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
-            return roleName !== undefined && this.housekeepingRoles.includes(roleName);
-          })
-          .sort(this.sortByName);
-        if (housekeepingProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile(Departments.Housekeeping));
-          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(housekeepingProfiles));
-        }
-        
+          .filter(p => { const r = getRoleName(p); return r !== undefined && this.housekeepingRoles.includes(r); })
+          .sort(this.sortByName)
+          .map(withDept(Departments.Housekeeping));
+
         const technicalProfiles = this.activeProfiles
-          .filter(profile => {
-            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
-            return roleName !== undefined && this.technicalRoles.includes(roleName);
-          })
-          .sort(this.sortByName);
-        if (technicalProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile(Departments.Technical));
-          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(technicalProfiles));
-        }
-        
+          .filter(p => { const r = getRoleName(p); return r !== undefined && this.technicalRoles.includes(r); })
+          .sort(this.sortByName)
+          .map(withDept(Departments.Technical));
+
         const otherProfiles = this.activeProfiles
-          .filter(profile => {
-            if (!profile.role_id) return true;
-
-            const roleName = profileRoles.find(role => role.id === profile.role_id)?.name;
-            if (!roleName) return true;
-
-            return !this.managementRoles.includes(roleName) &&
-                  !this.receptionRoles.includes(roleName) &&
-                  !this.housekeepingRoles.includes(roleName) &&
-                  !this.technicalRoles.includes(roleName);
+          .filter(p => {
+            if (!p.role_id) return true;
+            const r = getRoleName(p);
+            if (!r) return true;
+            return !this.managementRoles.includes(r) && !this.receptionRoles.includes(r) &&
+                   !this.housekeepingRoles.includes(r) && !this.technicalRoles.includes(r);
           })
-          .sort(this.sortByName);
-        if (otherProfiles.length > 0) {
-          this.sortedProfiles.push(this.createDividerProfile(Departments.Ostalo));
-          this.sortedProfiles.push(...this.addPasswordsAndEmailsToProfiles(otherProfiles));
-        }
-        
-        this.profiles = [...this.sortedProfiles];
+          .sort(this.sortByName)
+          .map(withDept(Departments.Ostalo));
+
+        this.flatProfiles = [
+          ...managementProfiles,
+          ...receptionProfiles,
+          ...housekeepingProfiles,
+          ...technicalProfiles,
+          ...otherProfiles,
+        ];
+        this.profiles = [...this.flatProfiles];
       },
       error: (error) => {
         console.error(error);
@@ -480,16 +606,6 @@ export class ProfilesComponent implements OnInit {
     const nameA = `${a.first_name || ''} ${a.last_name || ''}`.toLowerCase();
     const nameB = `${b.first_name || ''} ${b.last_name || ''}`.toLowerCase();
     return nameA.localeCompare(nameB);
-  }
-
-  createDividerProfile(title: string): ExtendedProfile {
-    return {
-      id: `divider-${title}`,
-      first_name: title,
-      last_name: '',
-      role_id: -1,
-      isDivider: true,
-    };
   }
 
   editProfile(profile: ExtendedProfile) {

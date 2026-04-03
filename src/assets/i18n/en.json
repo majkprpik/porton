@@ -57,13 +57,15 @@
         "Ostalo": "Other"
     },
     "PROFILE-DEPARTMENTS": {
-        "MANAGEMENT": "Management Department",
-        "RECEPTION": "Reception Department",
-        "HOUSEKEEPING": "Housekeeping Department",
-        "TECHNICAL": "Technical Department",
+        "ALL": "All",
+        "MANAGEMENT": "Management",
+        "RECEPTION": "Reception",
+        "HOUSEKEEPING": "Housekeeping",
+        "TECHNICAL": "Technical",
         "OTHER": "Other"
     },
     "HOUSE-TYPES": {
+        "ALL": "All",
         "FAMILY-1": "Family 1",
         "FAMILY-2": "Family 2",
         "COUPLE": "Couple",
@@ -509,6 +511,7 @@
                 "POSITION": "Position",
                 "EMAIL": "Email",
                 "PASSWORD": "Password",
+                "DEPARTMENT": "Department",
                 "ACTIONS": "Actions"
             },
             "ADD": {

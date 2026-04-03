@@ -57,18 +57,20 @@
         "Ostalo": "Ostalo"
     },
     "PROFILE-DEPARTMENTS": {
+        "ALL": "Sve",
         "MANAGEMENT": "Uprava",
-        "RECEPTION": "Odjel Recepcija",
-        "HOUSEKEEPING": "Odjel domaćinstva",
-        "TECHNICAL": "Odjel Tehnika",
-        "OTHER": "Other"
+        "RECEPTION": "Recepcija",
+        "HOUSEKEEPING": "Domaćinstvo",
+        "TECHNICAL": "Tehnika",
+        "OTHER": "Ostalo"
     },
     "HOUSE-TYPES": {
+        "ALL": "Sve",
         "FAMILY-1": "Family 1",
         "FAMILY-2": "Family 2",
         "COUPLE": "Couple",
         "MOBILE": "Mobilne",
-        "OTHER": "Other"
+        "OTHER": "Ostalo"
     },
     "PROFILE-ROLES": {
         "Uprava": "Uprava",
@@ -509,6 +511,7 @@
                 "POSITION": "Pozicija",
                 "EMAIL": "Email",
                 "PASSWORD": "Lozinka",
+                "DEPARTMENT": "Odjel",
                 "ACTIONS": "Akcije"
             },
             "ADD": {
