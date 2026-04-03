@@ -103,7 +103,7 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
                   }
                 <br>
               }
-                {{note.note}}
+                <span [innerHTML]="formatNoteText(note.note)"></span>
             </div>
           }
         }
@@ -292,6 +292,11 @@ export class NotesComponent {
 
   isToday = isToday;
   areDaysEqual = areDaysEqual;
+
+  formatNoteText(text: string): string {
+    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return escaped.replace(/@\S+/g, '<b>$&</b>');
+  }
 
   private destroy$ = new Subject<void>();
 

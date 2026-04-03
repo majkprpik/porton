@@ -101,7 +101,7 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
                   }
                 <br>
               }
-                {{note.note}}
+                <span [innerHTML]="formatNoteText(note.note)"></span>
             </div>
           }
         }
@@ -143,6 +143,8 @@ import { isToday, areDaysEqual } from '../../shared/utils/date-utils';
       backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
       border-bottom: 1px solid var(--glass-border);
+      position: relative;
+      z-index: 2;
 
       .notes-header {
         width: 300px;
@@ -279,6 +281,11 @@ export class NotesPageComponent {
 
   isToday = isToday;
   areDaysEqual = areDaysEqual;
+
+  formatNoteText(text: string): string {
+    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return escaped.replace(/@\S+/g, '<b>$&</b>');
+  }
 
   private destroy$ = new Subject<void>();
 
