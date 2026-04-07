@@ -70,6 +70,16 @@ export class HouseService {
   }
 
   isHouseOccupied(houseId: number): boolean {
+    const earlyOrActiveArrival = this.houseAvailabilities.some(availability =>
+      availability.house_id == houseId &&
+      availability.has_arrived &&
+      !availability.has_departed
+    );
+
+    if (earlyOrActiveArrival) {
+      return true;
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTime = today.getTime();

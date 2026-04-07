@@ -506,17 +506,19 @@ export class HouseCardComponent {
         this.hasCompletedHouseCleaningTask = this.houseService.getTasksForHouse(houseId)
             .some(t => this.taskService.isTaskCompleted(t) && this.taskService.isHouseCleaningTask(t));
 
-        const nextOrSameDayReservation = this.houseService.getNextOrSameDayHouseAvailabilityForHouse(houseId);
+        const currentOrTodayReservations = this.houseService.getTodaysHouseAvailabilityForHouse(houseId);
+        const hasCurrentPendingArrival = currentOrTodayReservations.some(reservation => !reservation.has_arrived);
         const hasOutstandingTasks = this.houseService.getTasksForHouse(houseId)
             .some(t => !this.taskService.isTaskCompleted(t) && !this.taskService.isTaskConfirmed(t));
         const hideBadgeBeforeLongVacancyArrival = this.houseService.shouldHideConfirmedCleaningBadgeBeforeArrival(houseId, this.currentSeason);
 
         this.showConfirmedCleaningBadge =
+            !this.isOccupied &&
             !hasOutstandingTasks &&
             !hasPendingCleaningConfirmation &&
             !hideBadgeBeforeLongVacancyArrival &&
             hasConfirmedCleaningTask &&
-            (!nextOrSameDayReservation || !nextOrSameDayReservation.has_arrived);
+            !hasCurrentPendingArrival;
 
         this.isAvailable = !this.isOccupied && !hasBlockingTasks && !isReservedToday;
         this.isAvailableWithTasks = !this.isOccupied && hasBlockingTasks;
