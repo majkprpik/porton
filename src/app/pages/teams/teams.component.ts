@@ -137,6 +137,10 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         }
     `,
     styles: `
+        :host {
+            display: block;
+        }
+
         :host ::ng-deep {
             .no-groups-assigned{
                 width: 100%;
@@ -300,6 +304,10 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         }
 
         @media screen and (max-width: 460px){
+            :host {
+                padding-bottom: 8rem;
+            }
+
             .teams-grid{
                 display: flex; 
                 flex-direction: column; 

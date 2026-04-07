@@ -215,7 +215,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                                             }
 
                                             <div class="task-images-container" [ngStyle]="{ 'justify-content': taskImages.length ? 'flex-start' : 'center' }">
-                                                <input type="file" accept="image/*" capture="environment" (change)="handleImageCapture($event)" hidden #fileInput />
+                                                <input type="file" accept="image/*" (change)="handleImageCapture($event)" hidden #fileInput />
 
                                                 @for (image of taskImages; track image.url) {
                                                     <div class="task-images">
@@ -338,7 +338,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                         }
 
                         <div class="task-images-container" [ngStyle]="{ 'justify-content': taskImages.length ? 'flex-start' : 'center' }">
-                            <input type="file" accept="image/*" capture="environment" (change)="handleImageCapture($event)" hidden #fileInput />
+                            <input type="file" accept="image/*" (change)="handleImageCapture($event)" hidden #fileInput />
 
                             @for (image of taskImages; let i = $index; track i) {
                                 <div class="task-images">
@@ -543,11 +543,22 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     bottom: 2rem !important;
                     right: 2rem !important;
                     z-index: 99999 !important;
+                    pointer-events: none;
+
+                    &:not(.p-speeddial-open) {
+                        .p-speeddial-list {
+                            width: 0 !important;
+                            height: 0 !important;
+                            margin: 0 !important;
+                            overflow: hidden;
+                        }
+                    }
 
                     .p-speeddial-button {
                         width: 4rem !important;
                         height: 4rem !important;
                         z-index: inherit !important;
+                        pointer-events: auto;
                         background: var(--primary-color) !important;
                         border-color: var(--primary-color) !important;
                         transition: transform 0.3s ease;
@@ -569,6 +580,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                         border: 1px solid var(--surface-border);
                         margin-bottom: 0.5rem;
                         z-index: inherit !important;
+                        pointer-events: auto;
                         transition: transform 0.3s ease;
 
                         &:hover {
@@ -584,6 +596,13 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                         padding: 0;
                         margin: 0;
                         z-index: inherit !important;
+                    }
+
+                    &.p-speeddial-open {
+                        .p-speeddial-list {
+                            pointer-events: auto;
+                            overflow: visible;
+                        }
                     }
                 }
             }

@@ -238,6 +238,10 @@ import { DetailedTaskCardComponent } from './detailed-task-card.component';
         }
 
         @media screen and (max-width: 991px) {
+            .work-group-container {
+                padding-bottom: 9rem;
+            }
+
             .tasks-list {
                 flex-direction: column;
             }
