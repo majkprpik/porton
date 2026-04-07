@@ -382,7 +382,13 @@ export class WorkGroupDetail implements OnInit {
         event.stopPropagation();
         let newProgressTypeName: TaskProgressTypeName;
         
-        if (this.taskService.isTaskInProgress(task)) {
+        if (
+            !this.taskService.isTaskCompleted(task) &&
+            !this.taskService.isTaskConfirmed(task) &&
+            (this.taskService.isSheetChangeTask(task) || this.taskService.isTowelChangeTask(task))
+        ) {
+            newProgressTypeName = TaskProgressTypeName.Completed;
+        } else if (this.taskService.isTaskInProgress(task)) {
             newProgressTypeName = TaskProgressTypeName.Completed;
         } else if (this.taskService.isTaskCompleted(task)) {
             newProgressTypeName = TaskProgressTypeName.Confirmed;

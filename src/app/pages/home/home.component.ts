@@ -6,6 +6,7 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
 import { TaskService } from '../../core/services/task.service';
@@ -35,6 +36,7 @@ interface SpecialLocation {
         ButtonModule, 
         DialogModule, 
         DropdownModule, 
+        MultiSelectModule,
         FormsModule,
         InputTextModule,
         TranslateModule,
@@ -64,30 +66,55 @@ interface SpecialLocation {
                                 (input)="applyFilters()">
                         </div>
                         <div class="sort-buttons">
-                            <p-button
-                                [outlined]="sortType !== 'number'"
-                                [raised]="sortType === 'number'"
-                                icon="pi pi-sort-numeric-up"
-                                [label]="'HOME.SEARCH.BY-NUMBER' | translate"
-                                (onClick)="sortBy('number')"
-                                styleClass="p-button-sm sort-btn">
-                            </p-button>
-                            <p-button
-                                [outlined]="sortType !== 'type'"
-                                [raised]="sortType === 'type'"
-                                icon="pi pi-sort-alpha-up"
-                                [label]="'HOME.SEARCH.BY-TYPE' | translate"
-                                (onClick)="sortBy('type')"
-                                styleClass="p-button-sm sort-btn">
-                            </p-button>
-                            <p-button
-                                [outlined]="sortType !== 'status'"
-                                [raised]="sortType === 'status'"
-                                icon="pi pi-filter"
-                                [label]="'HOME.SEARCH.BY-STATUS' | translate"
-                                (onClick)="sortBy('status')"
-                                styleClass="p-button-sm sort-btn">
-                            </p-button>
+                            <p-dropdown
+                                [options]="sortOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                [(ngModel)]="sortType"
+                                (onChange)="applyFilters()"
+                                styleClass="sort-dropdown"
+                                appendTo="body"
+                            >
+                                <ng-template let-selected pTemplate="selectedItem">
+                                    @if (selected) {
+                                        <div class="sort-option-content selected-sort-option-content">
+                                            <i [class]="selected.icon" [style.color]="'var(--primary-color)'"></i>
+                                            <span class="selected-sort-option-label" [style.fontSize]="'12.25px'">{{ selected.label }}</span>
+                                        </div>
+                                    }
+                                </ng-template>
+                                <ng-template let-option pTemplate="item">
+                                    <div class="sort-option-content">
+                                        <span class="sort-option-inline">
+                                            <i [class]="option.icon + ' sort-option-icon'" [style.color]="'var(--primary-color)'"></i>&nbsp;<span class="sort-option-label">{{ option.label }}</span>
+                                        </span>
+                                    </div>
+                                </ng-template>
+                            </p-dropdown>
+                            <p-multiSelect
+                                [options]="reservationFilterOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                [(ngModel)]="activeReservationFilters"
+                                (onChange)="applyFilters()"
+                                defaultLabel="Reservation Filters"
+                                selectedItemsLabel="{0} filters"
+                                styleClass="reservation-filter-dropdown"
+                                appendTo="body"
+                            ></p-multiSelect>
+                            <div class="reservation-thresholds">
+                                @if (activeReservationFilters.includes('minAdults')) {
+                                    <input
+                                        type="number"
+                                        pInputText
+                                        min="1"
+                                        class="threshold-input"
+                                        [(ngModel)]="minAdultsFilter"
+                                        (input)="applyFilters()"
+                                        placeholder="Min Adults"
+                                    >
+                                }
+                            </div>
                             <p-button
                                 [outlined]="!showNeedsConfirmation"
                                 [raised]="showNeedsConfirmation"
@@ -95,6 +122,14 @@ interface SpecialLocation {
                                 icon="pi pi-check-circle"
                                 [label]="'HOME.SEARCH.NEEDS-CONFIRMATION' | translate"
                                 (onClick)="toggleNeedsConfirmation()"
+                                styleClass="p-button-sm sort-btn">
+                            </p-button>
+                            <p-button
+                                [outlined]="!showDetailedView"
+                                [raised]="showDetailedView"
+                                icon="pi pi-eye"
+                                [label]="'Show House Details'"
+                                (onClick)="toggleDetailedView()"
                                 styleClass="p-button-sm sort-btn">
                             </p-button>
                         </div>
@@ -110,7 +145,9 @@ interface SpecialLocation {
                                 [house]="house"
                                 [houseAvailabilities]="houseAvailabilities"
                                 [tasks]="tasks"
+                                [currentSeason]="currentSeason"
                                 [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+                                [showDetailedView]="showDetailedView"
                                 (houseClick)="openHouseModal($event)"
                             ></app-house-card>
                         }
@@ -122,7 +159,9 @@ interface SpecialLocation {
                                     [house]="house"
                                     [houseAvailabilities]="houseAvailabilities"
                                     [tasks]="tasks"
+                                    [currentSeason]="currentSeason"
                                     [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+                                    [showDetailedView]="showDetailedView"
                                     (houseClick)="openHouseModal($event)"
                                 ></app-house-card>
                             }
@@ -140,7 +179,9 @@ interface SpecialLocation {
                                     [house]="house"
                                     [houseAvailabilities]="houseAvailabilities"
                                     [tasks]="tasks"
+                                    [currentSeason]="currentSeason"
                                     [isUrgentIconVisibleMap]="isUrgentIconVisibleMap"
+                                    [showDetailedView]="showDetailedView"
                                     (houseClick)="openHouseModal($event)"
                                 ></app-house-card>
                             }
@@ -184,12 +225,99 @@ interface SpecialLocation {
                 height: 30px !important;
             }
 
+            :host ::ng-deep .sort-dropdown {
+                min-width: 170px;
+            }
+
+            :host ::ng-deep .reservation-filter-dropdown {
+                min-width: 165px;
+            }
+
+            :host ::ng-deep .threshold-input {
+                width: 105px;
+                height: 30px;
+            }
+
+            :host ::ng-deep .sort-dropdown .p-dropdown {
+                height: 30px !important;
+                align-items: center;
+                font-size: 12.25px;
+            }
+
+            :host ::ng-deep .sort-dropdown .p-dropdown-label {
+                font-size: 12.25px;
+            }
+
+            :host ::ng-deep .reservation-filter-dropdown .p-multiselect {
+                min-height: 30px !important;
+                align-items: center;
+                font-size: 0.85rem;
+            }
+
+            :host ::ng-deep .reservation-filter-dropdown .p-multiselect-label {
+                padding-right: 0.2rem;
+                font-size: 12.25px;
+            }
+
+            :host ::ng-deep .reservation-filter-dropdown .p-placeholder {
+                font-size: 12.25px;
+            }
+
+            :host ::ng-deep .p-multiselect-panel {
+                min-width: 170px !important;
+                width: auto !important;
+                font-size: 0.85rem;
+            }
+
+            :host ::ng-deep .p-multiselect-panel .p-multiselect-header {
+                padding: 0.45rem;
+            }
+
+            :host ::ng-deep .sort-option-content {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            :host ::ng-deep .sort-option-icon {
+                min-width: 0.9rem;
+            }
+
+            :host ::ng-deep .sort-option-label {
+                margin-left: 0.35rem;
+            }
+
+            :host ::ng-deep .sort-option-inline {
+                display: inline-flex;
+                align-items: center;
+            }
+
+            :host ::ng-deep .selected-sort-option-content {
+                gap: 0.2rem;
+            }
+
+            :host ::ng-deep .selected-sort-option-label {
+                margin-left: 0;
+            }
+
             @media screen and (max-width: 991px) {
                 :host ::ng-deep .sort-btn .p-button-label {
                     display: none !important;
                 }
                 :host ::ng-deep .sort-btn .p-button {
                     padding: 0.4rem !important;
+                }
+
+                :host ::ng-deep .sort-dropdown {
+                    min-width: 130px;
+                }
+
+                :host ::ng-deep .reservation-filter-dropdown {
+                    min-width: 135px;
+                }
+
+                :host ::ng-deep .threshold-input {
+                    width: 82px;
                 }
 
                 .home-container {
@@ -317,6 +445,13 @@ interface SpecialLocation {
                                 display: flex;
                                 gap: 0.5rem;
                                 align-items: center;
+                                flex-wrap: wrap;
+                            }
+
+                            .reservation-thresholds {
+                                display: flex;
+                                gap: 0.5rem;
+                                align-items: center;
                             }
                         }
                     }
@@ -432,14 +567,18 @@ interface SpecialLocation {
                     
                 }
                 
-                :host ::ng-deep .p-button.p-button-sm {
-                    font-size: 0.875rem;
-                    padding: 0.4rem 0.75rem;
-                }
+            :host ::ng-deep .p-button.p-button-sm {
+                font-size: 0.875rem;
+                padding: 0.4rem 0.75rem;
+            }
+
+            :host ::ng-deep .sort-btn .p-button-label {
+                font-size: 12.25px;
+            }
                 
-                :host ::ng-deep .p-button.p-button-sm .p-button-icon {
-                    font-size: 0.875rem;
-                }
+            :host ::ng-deep .p-button.p-button-sm .p-button-icon {
+                font-size: 0.875rem;
+            }
             }
         `
     ]
@@ -458,6 +597,21 @@ export class Home implements OnInit, OnDestroy {
     searchTerm: string = '';
     sortType: 'number' | 'type' | 'status' | null = 'number';
     showNeedsConfirmation: boolean = false;
+    showDetailedView: boolean = false;
+    activeReservationFilters: ReservationFilterType[] = [];
+    minAdultsFilter: number | null = 4;
+    sortOptions = [
+        { label: 'By Number', value: 'number' as const, icon: 'pi pi-sort-numeric-up' },
+        { label: 'By Type', value: 'type' as const, icon: 'pi pi-sort-alpha-up' },
+        { label: 'By Status', value: 'status' as const, icon: 'pi pi-filter' },
+    ];
+    reservationFilterOptions = [
+        { label: 'Adults', value: 'adults' as const },
+        { label: 'Dogs', value: 'dogs' as const },
+        { label: 'Babies', value: 'babies' as const },
+        { label: 'Cribs', value: 'cribs' as const },
+        { label: 'Min Adults', value: 'minAdults' as const },
+    ];
 
     // Group houses by type for divider display
     groupedHouses = signal<{ type: HouseType; houses: House[] }[]>([]);
@@ -571,6 +725,10 @@ export class Home implements OnInit, OnDestroy {
         if (this.showNeedsConfirmation) {
             result = result.filter(house => this.houseService.hasUnconfirmedCleaningTask(house.house_id));
         }
+
+        if (this.activeReservationFilters.length > 0) {
+            result = result.filter(house => this.matchesReservationFilters(house));
+        }
         
         if (this.sortType == 'number') {
             result.sort((a, b) => a.house_number - b.house_number);
@@ -627,13 +785,48 @@ export class Home implements OnInit, OnDestroy {
         this.applyFilters();
     }
 
-    sortBy(type: 'number' | 'type' | 'status') {
-        this.sortType = this.sortType === type ? null : type;
-
-        if (this.sortType !== 'type') {
-            this.groupedHouses.set([]);
-        }
-
-        this.applyFilters();
+    toggleDetailedView() {
+        this.showDetailedView = !this.showDetailedView;
     }
+
+    private matchesReservationFilters(house: House): boolean {
+        const currentReservations = this.getReservationsForToday(house.house_id);
+        if (currentReservations.length === 0) return false;
+
+        return this.activeReservationFilters.some(filter => {
+            switch (filter) {
+                case 'adults':
+                    return currentReservations.some(res => (res.adults || 0) > 0);
+                case 'dogs':
+                    return currentReservations.some(res => (res.dogs_d || 0) + (res.dogs_s || 0) + (res.dogs_b || 0) > 0);
+                case 'babies':
+                    return currentReservations.some(res => (res.babies || 0) > 0);
+                case 'cribs':
+                    return currentReservations.some(res => (res.cribs || 0) > 0);
+                case 'minAdults':
+                    return currentReservations.some(res => (res.adults || 0) >= (this.minAdultsFilter || 1));
+                default:
+                    return true;
+            }
+        });
+    }
+
+    private getReservationsForToday(houseId: number): HouseAvailability[] {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return this.houseAvailabilities().filter(reservation => {
+            if (reservation.house_id !== houseId) return false;
+
+            const start = new Date(reservation.house_availability_start_date);
+            const end = new Date(reservation.house_availability_end_date);
+            start.setHours(0, 0, 0, 0);
+            end.setHours(23, 59, 59, 999);
+
+            return today >= start && today <= end;
+        });
+    }
+
 }
+
+type ReservationFilterType = 'adults' | 'dogs' | 'babies' | 'cribs' | 'minAdults';

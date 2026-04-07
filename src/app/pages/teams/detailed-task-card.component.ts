@@ -75,9 +75,9 @@ import { StorageService, STORAGE_KEYS } from '../../core/services/storage.servic
                                 <span>
                                     <b>Check OUT</b>: {{ houseService.getTodaysHouseAvailabilityForHouse(task.house_id)[0].departure_time.split(':').slice(0,2).join(':') }}
                                 </span>
-                                @if(houseService.getNextHouseAvailabilityForHouse(task.house_id)){
+                                @if(houseService.getNextOrSameDayHouseAvailabilityForHouse(task.house_id)){
                                     <span>
-                                        <b>Check IN</b>: {{ houseService.getNextHouseAvailabilityForHouse(task.house_id).house_availability_start_date | date: 'dd/MM/yyyy' }}
+                                        <b>Check IN</b>: {{ houseService.getNextOrSameDayHouseAvailabilityForHouse(task.house_id).house_availability_start_date | date: 'dd/MM/yyyy' }}
                                     </span>
                                 }
                             } @else {
@@ -436,6 +436,12 @@ export class DetailedTaskCardComponent {
 
     getActionButtonLabel(): string {
         if (this.taskService.isTaskInProgress(this.task)) {
+            return 'FINISH';
+        } else if (
+            !this.taskService.isTaskCompleted(this.task) &&
+            !this.taskService.isTaskConfirmed(this.task) &&
+            (this.taskService.isSheetChangeTask(this.task) || this.taskService.isTowelChangeTask(this.task))
+        ) {
             return 'FINISH';
         } else if (this.taskService.isTaskPaused(this.task)) {
             return 'CONTINUE';

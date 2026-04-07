@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup, Profile, HouseOccupant, HouseType, TaskTypeName } from '../models/data.models';
+import { House, HouseAvailability, Task, TaskProgressTypeName, WorkGroupProfile, WorkGroupTask, PushNotification, WorkGroup, Profile, HouseOccupant, HouseType, TaskTypeName, Season } from '../models/data.models';
 import { combineLatest } from 'rxjs';
 import { TaskService } from './task.service';
 import { DataService } from './data.service';
@@ -26,6 +26,15 @@ export class HouseService {
     '#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFE4BA',
     '#E8BAFF', '#BAF2FF', '#FFC9BA', '#D4FFBA', '#FFBAEC'
   ];
+
+  private parseLocalDate(dateString: string): Date {
+    const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  private formatLocalDate(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
 
   constructor(
     private supabase: SupabaseService,
@@ -144,6 +153,21 @@ export class HouseService {
     );
   }
 
+  getLatestHouseCleaningTask(houseId: number): Task | null {
+    const houseCleaningTasks = this.tasks.filter(task =>
+      task.house_id == houseId &&
+      this.taskService.isHouseCleaningTask(task)
+    );
+
+    if (!houseCleaningTasks.length) return null;
+
+    return houseCleaningTasks.sort((a, b) => {
+      const createdAtDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (createdAtDiff !== 0) return createdAtDiff;
+      return b.task_id - a.task_id;
+    })[0];
+  }
+
   getTasksForHouse(houseId: number): Task[] {
     return this.tasks.filter(task => task.house_id == houseId);
   }
@@ -165,49 +189,95 @@ export class HouseService {
   }
 
   getTodaysHouseAvailabilityForHouse(houseId: number){
-    const today = new Date(); 
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-
-    const yesterdayString = yesterday.getFullYear() + '-' + 
-                            String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + 
-                            String(yesterday.getDate()).padStart(2, '0');
+    const today = new Date();
+    const todayString = this.formatLocalDate(today);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayString = this.formatLocalDate(yesterday);
 
     const houseAvailabilties = this.houseAvailabilities?.filter(item => {
       if(item.house_id == houseId){
-        const startDate = new Date(item.house_availability_start_date);
-        const endDate = new Date(item.house_availability_end_date);
-    
-        const endDateString = endDate.getFullYear() + '-' + 
-                              String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                              String(endDate.getDate()).padStart(2, '0');
-    
-        return (today >= startDate && today <= endDate) || yesterdayString === endDateString;
+        const startDateString = item.house_availability_start_date.split('T')[0];
+        const endDateString = item.house_availability_end_date.split('T')[0];
+
+        return (startDateString <= todayString && todayString <= endDateString) || yesterdayString === endDateString;
       } 
     
       return false;
     });
 
     return houseAvailabilties.sort((a, b) => 
-      new Date(a.house_availability_start_date).getTime() - new Date(b.house_availability_start_date).getTime()
+      this.parseLocalDate(a.house_availability_start_date).getTime() - this.parseLocalDate(b.house_availability_start_date).getTime()
     );
   }
 
-  getNextHouseAvailabilityForHouse(houseId: number) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  getNextHouseAvailabilityForHouse(houseId: number, includeToday = false) {
+    const todayString = this.formatLocalDate(new Date());
 
     const futureAvailabilities = this.houseAvailabilities?.filter(item => {
-      return item.house_id === houseId &&
-            new Date(item.house_availability_start_date) > today;
+      if (item.house_id !== houseId) return false;
+
+      const startDateString = item.house_availability_start_date.split('T')[0];
+      return includeToday ? startDateString >= todayString : startDateString > todayString;
     }) || [];
 
     return futureAvailabilities
       .sort((a, b) =>
-        new Date(a.house_availability_start_date).getTime() -
-        new Date(b.house_availability_start_date).getTime()
+        this.parseLocalDate(a.house_availability_start_date).getTime() -
+        this.parseLocalDate(b.house_availability_start_date).getTime()
       )[0] || null;
+  }
+
+  getNextOrSameDayHouseAvailabilityForHouse(houseId: number) {
+    return this.getNextHouseAvailabilityForHouse(houseId, true);
+  }
+
+  getNextPendingArrivalForHouse(houseId: number) {
+    const todayString = this.formatLocalDate(new Date());
+
+    const pendingArrivals = this.houseAvailabilities?.filter(item => {
+      if (item.house_id !== houseId || item.has_arrived) return false;
+
+      const startDateString = item.house_availability_start_date.split('T')[0];
+      return startDateString >= todayString;
+    }) || [];
+
+    return pendingArrivals
+      .sort((a, b) =>
+        this.parseLocalDate(a.house_availability_start_date).getTime() -
+        this.parseLocalDate(b.house_availability_start_date).getTime()
+      )[0] || null;
+  }
+
+  shouldHideConfirmedCleaningBadgeBeforeArrival(houseId: number, currentSeason: Season | null): boolean {
+    const nextArrival = this.getNextPendingArrivalForHouse(houseId);
+    if (!nextArrival) return false;
+
+    const today = this.parseLocalDate(this.formatLocalDate(new Date()));
+    const arrivalDate = this.parseLocalDate(nextArrival.house_availability_start_date);
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysUntilArrival = Math.round((arrivalDate.getTime() - today.getTime()) / msPerDay);
+
+    if (daysUntilArrival !== 1) return false;
+
+    const previousReservation = this.getPreviousHouseAvailabilityFromHouseAvailability(nextArrival);
+    const seasonStart = currentSeason ? this.parseLocalDate(currentSeason.season_start_date) : null;
+
+    let lastOccupiedDate: Date | null = null;
+
+    if (previousReservation?.house_availability_end_date) {
+      lastOccupiedDate = this.parseLocalDate(previousReservation.house_availability_end_date);
+    } else if (seasonStart) {
+      const dayBeforeSeasonStart = new Date(seasonStart);
+      dayBeforeSeasonStart.setDate(dayBeforeSeasonStart.getDate() - 1);
+      lastOccupiedDate = dayBeforeSeasonStart;
+    } else {
+      return false;
+    }
+
+    const emptyDaysBeforeArrival = Math.round((arrivalDate.getTime() - lastOccupiedDate.getTime()) / msPerDay) - 1;
+
+    return emptyDaysBeforeArrival >= 5;
   }
 
   getPreviousHouseAvailabilityFromHouseAvailability(currentAvailability: Partial<HouseAvailability>) {
@@ -282,14 +352,13 @@ export class HouseService {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    const specificDateStr = yesterday.toISOString().split('T')[0];
+    const specificDateStr = this.formatLocalDate(yesterday);
 
     return this.houseAvailabilities.find(ha => ha.house_availability_end_date.split('T')[0] == specificDateStr && ha.house_id == houseId);
   }
 
   hasArrivalForToday(houseId: number) {
-    const today = new Date();
-    const specificDateStr = today.toISOString().split('T')[0];
+    const specificDateStr = this.formatLocalDate(new Date());
 
     return this.houseAvailabilities.find(ha =>
       ha.house_availability_start_date.split('T')[0] == specificDateStr &&
@@ -316,7 +385,9 @@ export class HouseService {
       todayAvailabilities.length == 0 || 
       (todayAvailabilities.length == 1 && this.hasDepartureForToday(houseId) && todayAvailabilities[0].has_departed)
     ) {
-      const nextAvailability = this.getNextHouseAvailabilityForHouse(houseId);
+      const nextAvailability = this.hasDepartureForToday(houseId)
+        ? this.getNextOrSameDayHouseAvailabilityForHouse(houseId)
+        : this.getNextHouseAvailabilityForHouse(houseId);
       return nextAvailability ? nextAvailability[key] ?? 0 : 0;
     }
 

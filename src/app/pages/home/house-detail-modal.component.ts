@@ -31,12 +31,55 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                     <i class="pi pi-times"></i>
                 </button>
 
-                <div class="house-name">{{ house?.house_name }}</div>
+                <div class="house-name-row">
+                    <div class="house-name">{{ house?.house_name }}</div>
+                    @if (house?.description) {
+                        <div class="house-description-inline">{{ house?.description }}</div>
+                    }
+                </div>
 
                 @if (house && !house.is_active) {
-                    @if (house.description) {
-                        <div class="house-description">{{ house.description }}</div>
+                    @if (isEmptyState) {
+                        <div class="no-reservation">{{ 'HOME.HOUSE-DETAIL.NO-RESERVATIONS' | translate }}</div>
+                    } @else {
+                        <div class="date-nav">
+                            @if (canNavigatePrev) {
+                                <i class="fa fa-chevron-left nav-arrow" (click)="navigate('prev', $event)"></i>
+                            } @else {
+                                <i class="fa fa-chevron-left nav-arrow invisible"></i>
+                            }
+                            <span [class]="slideClass">{{ reservationDateDisplay }}</span>
+                            @if (canNavigateNext) {
+                                <i class="fa fa-chevron-right nav-arrow" (click)="navigate('next', $event)"></i>
+                            } @else {
+                                <i class="fa fa-chevron-right nav-arrow invisible"></i>
+                            }
+                        </div>
                     }
+
+                    <div class="occupancy" [ngClass]="slideClass" [style.visibility]="showOccupancy ? 'visible' : 'hidden'">
+                        @if (occupancy.adults) {
+                            <div class="occ-item"><span>{{ occupancy.adults }}</span><i class="fa-solid fa-person"></i></div>
+                        }
+                        @if (occupancy.dogs) {
+                            <span class="sep">|</span>
+                            <div class="occ-item"><span>{{ occupancy.dogs }}</span><i class="fa-solid fa-paw"></i></div>
+                        }
+                        @if (occupancy.babies) {
+                            <span class="sep">|</span>
+                            <div class="occ-item"><span>{{ occupancy.babies }}</span><i class="fa-solid fa-baby"></i></div>
+                        }
+                        @if (occupancy.cribs) {
+                            <span class="sep">|</span>
+                            <div class="occ-item"><span>{{ occupancy.cribs }}</span><i class="fa-solid fa-baby-carriage"></i></div>
+                        }
+                    </div>
+
+                    <div class="reservation-note" [ngClass]="reservationNote ? slideClass : 'hidden'">
+                        @if (reservationNote) {
+                            {{ reservationNote }}
+                        }
+                    </div>
                 } @else {
                     @if (isEmptyState) {
                         <div class="no-reservation">{{ 'HOME.HOUSE-DETAIL.NO-RESERVATIONS' | translate }}</div>
@@ -56,7 +99,7 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                         </div>
                     }
 
-                    <div class="occupancy" [class]="slideClass" [style.visibility]="showOccupancy ? 'visible' : 'hidden'">
+                    <div class="occupancy" [ngClass]="slideClass" [style.visibility]="showOccupancy ? 'visible' : 'hidden'">
                         @if (occupancy.adults) {
                             <div class="occ-item"><span>{{ occupancy.adults }}</span><i class="fa-solid fa-person"></i></div>
                         }
@@ -71,6 +114,12 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                         @if (occupancy.cribs) {
                             <span class="sep">|</span>
                             <div class="occ-item"><span>{{ occupancy.cribs }}</span><i class="fa-solid fa-baby-carriage"></i></div>
+                        }
+                    </div>
+
+                    <div class="reservation-note" [ngClass]="reservationNote ? slideClass : 'hidden'">
+                        @if (reservationNote) {
+                            {{ reservationNote }}
                         }
                     </div>
                 }
@@ -174,11 +223,18 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                 }
             }
 
+            .house-name-row {
+                display: flex;
+                align-items: baseline;
+                gap: 0.6rem;
+                flex-wrap: wrap;
+                margin-bottom: 0.4rem;
+            }
+
             .house-name {
                 font-size: 1.5rem;
                 font-weight: 700;
                 text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-                margin-bottom: 0.4rem;
             }
 
             .date-nav {
@@ -219,6 +275,13 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                 font-size: 0.9rem;
                 opacity: 0.85;
                 line-height: 1.4;
+                margin-top: 0.35rem;
+            }
+
+            .house-description-inline {
+                font-size: 0.95rem;
+                opacity: 0.9;
+                line-height: 1.2;
             }
 
             @keyframes slideFromRight {
@@ -246,15 +309,44 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                 font-size: 1rem;
                 font-weight: 500;
                 min-height: 1.5rem;
+                line-height: 1;
 
                 .occ-item {
-                    display: flex;
+                    display: inline-flex;
                     align-items: center;
                     gap: 0.25rem;
+                    line-height: 1;
+                    height: 1.1rem;
+                }
+
+                .occ-item span,
+                .occ-item i {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    line-height: 1;
+                    height: 1.1rem;
                 }
 
                 .sep {
                     opacity: 0.7;
+                }
+            }
+
+            .reservation-note {
+                margin-top: 0.35rem;
+                font-size: 0.9rem;
+                line-height: 1.25;
+                opacity: 0.95;
+                min-height: 1.15rem;
+                height: 1.15rem;
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+
+                &.hidden {
+                    visibility: hidden;
                 }
             }
         }
@@ -361,11 +453,12 @@ export class HouseDetailModalComponent implements OnChanges {
     @Output() visibleChange = new EventEmitter<boolean>();
 
     private currentIndex = -1;
-    private cachedSlots: { isGap: boolean; startDate: Date; endDate: Date | null }[] = [];
+    private cachedSlots: { isGap: boolean; startDate: Date; endDate: Date | null; reservation?: HouseAvailability }[] = [];
 
     isCurrentSlotGap = true;
     reservationDateDisplay = '';
     occupancy = { adults: 0, dogs: 0, babies: 0, cribs: 0 };
+    reservationNote = '';
     slideClass = '';
     private slideTimeout: any;
 
@@ -377,7 +470,7 @@ export class HouseDetailModalComponent implements OnChanges {
     ) {}
 
     get isEmptyState(): boolean {
-        return this.cachedSlots.length === 0 || this.currentIndex === -1;
+        return this.cachedSlots.length === 0;
     }
 
     get showOccupancy(): boolean {
@@ -393,7 +486,7 @@ export class HouseDetailModalComponent implements OnChanges {
         if (!this.house || !this.visible) return;
         if (changes['house'] || changes['visible']) {
             this.rebuildSlots();
-            this.currentIndex = this.findTodayIndex();
+            this.currentIndex = this.findInitialIndex();
             this.updateDisplayData();
         }
     }
@@ -534,11 +627,13 @@ export class HouseDetailModalComponent implements OnChanges {
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const effectiveGapStart = seasonStart ? new Date(seasonStart) : new Date(today);
+        effectiveGapStart.setHours(0, 0, 0, 0);
         const firstStart = new Date(reservations[0].house_availability_start_date);
         firstStart.setHours(0, 0, 0, 0);
 
-        if (firstStart > today) {
-            this.cachedSlots.push({ isGap: true, startDate: today, endDate: new Date(firstStart) });
+        if (firstStart > effectiveGapStart) {
+            this.cachedSlots.push({ isGap: true, startDate: effectiveGapStart, endDate: new Date(firstStart) });
         }
 
         for (let i = 0; i < reservations.length; i++) {
@@ -548,6 +643,7 @@ export class HouseDetailModalComponent implements OnChanges {
                 isGap: false,
                 startDate: new Date(r.house_availability_start_date),
                 endDate: new Date(r.house_availability_end_date),
+                reservation: r,
             });
             if (next) {
                 const currentEnd = new Date(r.house_availability_end_date);
@@ -560,15 +656,41 @@ export class HouseDetailModalComponent implements OnChanges {
         }
     }
 
-    private findTodayIndex(): number {
+    private findCurrentSlotIndex(): number {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+
+        const reservationStartingTodayIndex = this.cachedSlots.findIndex(slot => {
+            if (slot.isGap || !slot.reservation) return false;
+            const start = new Date(slot.startDate);
+            start.setHours(0, 0, 0, 0);
+            return start.getTime() === today.getTime();
+        });
+
+        if (reservationStartingTodayIndex !== -1) {
+            return reservationStartingTodayIndex;
+        }
+
         return this.cachedSlots.findIndex(slot => {
-            if (slot.isGap) return false;
-            const start = new Date(slot.startDate); start.setHours(0, 0, 0, 0);
-            const end = new Date(slot.endDate!); end.setHours(23, 59, 59, 999);
+            const start = new Date(slot.startDate);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(slot.endDate ?? slot.startDate);
+            end.setHours(23, 59, 59, 999);
             return today >= start && today <= end;
         });
+    }
+
+    private findInitialIndex(): number {
+        const currentSlotIndex = this.findCurrentSlotIndex();
+        if (currentSlotIndex !== -1) return currentSlotIndex;
+
+        if (!this.cachedSlots.length) return -1;
+
+        const now = new Date();
+        const nextIndex = this.cachedSlots.findIndex(slot => slot.startDate > now);
+        if (nextIndex !== -1) return nextIndex;
+
+        return this.cachedSlots.length - 1;
     }
 
     private updateDisplayData(): void {
@@ -579,6 +701,7 @@ export class HouseDetailModalComponent implements OnChanges {
             this.reservationDateDisplay = '----- - -----';
             this.isCurrentSlotGap = true;
             this.occupancy = { adults: 0, dogs: 0, babies: 0, cribs: 0 };
+            this.reservationNote = '';
             return;
         }
 
@@ -588,16 +711,13 @@ export class HouseDetailModalComponent implements OnChanges {
         if (slot.isGap) {
             this.reservationDateDisplay = `${fmt(slot.startDate)} - ${fmt(slot.endDate!)}`;
             this.occupancy = { adults: 0, dogs: 0, babies: 0, cribs: 0 };
+            this.reservationNote = '';
         } else {
             const nextDay = new Date(slot.endDate!);
             nextDay.setDate(nextDay.getDate() + 1);
             this.reservationDateDisplay = `${fmt(slot.startDate)} - ${fmt(nextDay)}`;
 
-            const nonGapsBefore = this.cachedSlots.slice(0, this.currentIndex + 1).filter(s => !s.isGap).length;
-            const reservations = this.houseAvailabilities()
-                .filter(a => a.house_id === this.house!.house_id)
-                .sort((a, b) => new Date(a.house_availability_start_date).getTime() - new Date(b.house_availability_start_date).getTime());
-            const res = reservations[nonGapsBefore - 1];
+            const res = slot.reservation;
             if (res) {
                 this.occupancy = {
                     adults: res.adults || 0,
@@ -605,6 +725,7 @@ export class HouseDetailModalComponent implements OnChanges {
                     babies: res.babies || 0,
                     cribs: res.cribs || 0,
                 };
+                this.reservationNote = res.note || '';
             }
         }
     }

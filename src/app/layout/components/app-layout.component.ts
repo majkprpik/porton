@@ -16,7 +16,7 @@ import { TaskService } from '../../core/services/task.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { NotesComponent } from '../../pages/notes/notes.component';
-import { CdkDrag, CdkDragEnd, CdkDragHandle } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { ArrivalsAndDeparturesComponent } from '../../pages/arrivals-and-departures/arrivals-and-departures.component';
 import { ChipModule } from 'primeng/chip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -52,7 +52,6 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
         NotesComponent,
         ArrivalsAndDeparturesComponent,
         CdkDrag,
-        CdkDragHandle,
         ChipModule,
         ConfirmDialogModule,
         TranslateModule,

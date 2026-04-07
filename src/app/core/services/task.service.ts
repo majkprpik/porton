@@ -255,6 +255,7 @@ export class TaskService {
   async updateTaskProgressType(task: Task, taskProgressTypeId: number){
     const isCompleted = this.getTaskProgressTypeById(taskProgressTypeId)?.task_progress_type_name == 'Završeno';
     const isInProgress = this.getTaskProgressTypeById(taskProgressTypeId)?.task_progress_type_name == 'U tijeku';
+    const now = this.supabaseService.formatDateTimeForSupabase(new Date());
 
     try{
       const { data: updatedTask, error: updateTaskError } = await this.supabaseService.getClient()
@@ -263,8 +264,12 @@ export class TaskService {
         .update({ 
           task_progress_type_id: taskProgressTypeId,
           completed_by: isCompleted ? this.authService.getStoredUserId() : task?.completed_by ?? null,
-          end_time: isCompleted ? this.supabaseService.formatDateTimeForSupabase(new Date()) : task?.end_time ?? null,
-          start_time: isInProgress ? (task?.start_time ?? this.supabaseService.formatDateTimeForSupabase(new Date())) : task?.start_time,
+          end_time: isCompleted ? now : task?.end_time ?? null,
+          start_time: isCompleted
+            ? (task?.start_time ?? now)
+            : isInProgress
+              ? (task?.start_time ?? now)
+              : task?.start_time,
         })
         .eq('task_id', task.task_id)
         .select()

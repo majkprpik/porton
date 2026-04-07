@@ -9,24 +9,25 @@ import { TranslateService } from '@ngx-translate/core';
 import { Profile, ProfileRole, ProfileRoles } from '../../core/models/data.models';
 import { combineLatest, filter, Subject, takeUntil } from 'rxjs';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 
 @Component({
     selector: 'app-sidebar',
     standalone: true,
-    imports: [CommonModule, ButtonModule],
+    imports: [CommonModule, ButtonModule, RouterLink],
     template: `
         <div class="layout-sidebar">
             <div class="sidebar-content">
-                <div
+                <a
                     class="menu-item"
                     *ngFor="let item of model; let i = index"
                     [class.active]="selectedItem === i"
-                    (click)="selectItem(i); navigateTo(item.routerLink[0])"
+                    [routerLink]="item.routerLink"
+                    (click)="handleItemClick(i, $event)"
                 >
                     <i class="menu-icon" [ngClass]="item.icon"></i>
                     <span class="menu-text">{{ item.label }}</span>
-                </div>
+                </a>
             </div>
             <div class="sidebar-footer">
                 <div class="settings" (click)="openSettings()" role="button" tabindex="0">
@@ -37,15 +38,16 @@ import { NavigationEnd, Router } from '@angular/router';
         </div>
 
         <nav class="bottom-nav">
-            <div
+            <a
                 class="bottom-nav-item"
                 *ngFor="let item of model; let i = index"
                 [class.active]="selectedItem === i"
-                (click)="selectItem(i); navigateTo(item.routerLink[0])"
+                [routerLink]="item.routerLink"
+                (click)="handleItemClick(i, $event)"
                 [style.display]="item.hideOnMobile ? 'none' : ''"
             >
                 <i [ngClass]="item.icon"></i>
-            </div>
+            </a>
             <div class="bottom-nav-item" (click)="openSettings()">
                 <i class="pi pi-cog"></i>
             </div>
@@ -87,6 +89,8 @@ import { NavigationEnd, Router } from '@angular/router';
                 gap: 0.75rem;
                 padding: 0.5rem 1rem;
                 cursor: pointer;
+                text-decoration: none;
+                color: inherit;
                 border-radius: var(--content-border-radius);
                 border: 1px solid transparent;
                 transition: background 0.2s, border-color 0.2s;
@@ -246,6 +250,7 @@ import { NavigationEnd, Router } from '@angular/router';
                     min-width: 68px;
                     padding: 0 14px;
                     cursor: pointer;
+                    text-decoration: none;
                     color: var(--glass-text-secondary);
                     transition: color 0.2s;
                     scroll-snap-align: center;
@@ -537,11 +542,34 @@ export class AppSidebar {
         }
     }
 
-    navigateTo(url: string){
-        this.router.navigate([url]);
-    }
-
     selectItem(index: number) {
         this.selectedItem = index;
+    }
+
+    handleItemClick(index: number, event: MouseEvent) {
+        this.selectItem(index);
+
+        const isPlainLeftClick =
+            event.button === 0 &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.shiftKey &&
+            !event.altKey;
+
+        if (!isPlainLeftClick) {
+            return;
+        }
+
+        const target = event.currentTarget as HTMLElement | null;
+        setTimeout(() => target?.blur(), 0);
+
+        if (this.layoutService.isMobile() || this.layoutService.isOverlay()) {
+            this.layoutService.layoutState.update((prev) => ({
+                ...prev,
+                overlayMenuActive: false,
+                staticMenuMobileActive: false,
+                menuHoverActive: false,
+            }));
+        }
     }
 }
