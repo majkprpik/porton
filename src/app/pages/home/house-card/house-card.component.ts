@@ -501,7 +501,7 @@ export class HouseCardComponent {
         const hasPendingCleaningConfirmation = !!latestHouseCleaningTask && this.taskService.isTaskCompleted(latestHouseCleaningTask);
         const hasConfirmedCleaningTask = !!latestHouseCleaningTask && this.taskService.isTaskConfirmed(latestHouseCleaningTask);
         const isReservedToday = this.houseService.isHouseReservedToday(houseId);
-        const hasBlockingTasks = hasScheduledTasks || hasPendingCleaningConfirmation;
+        const hasBlockingTasks = hasScheduledTasks;
 
         this.hasCompletedHouseCleaningTask = this.houseService.getTasksForHouse(houseId)
             .some(t => this.taskService.isTaskCompleted(t) && this.taskService.isHouseCleaningTask(t));
@@ -616,12 +616,21 @@ export class HouseCardComponent {
             .sort((a, b) => new Date(a.house_availability_start_date).getTime() - new Date(b.house_availability_start_date).getTime());
 
         this.cachedSlots = [];
-        if (!reservations.length) return;
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const effectiveGapStart = seasonStart ? new Date(seasonStart) : new Date(today);
         effectiveGapStart.setHours(0, 0, 0, 0);
+
+        if (!reservations.length) {
+            if (seasonEnd && effectiveGapStart <= seasonEnd) {
+                const gapEnd = new Date(seasonEnd);
+                gapEnd.setHours(0, 0, 0, 0);
+                this.cachedSlots.push({ isGap: true, startDate: effectiveGapStart, endDate: gapEnd });
+            }
+            return;
+        }
+
         const firstStart = new Date(reservations[0].house_availability_start_date);
         firstStart.setHours(0, 0, 0, 0);
 
@@ -645,6 +654,18 @@ export class HouseCardComponent {
                 if (currentEnd < nextStart) {
                     this.cachedSlots.push({ isGap: true, startDate: currentEnd, endDate: new Date(nextStart) });
                 }
+            }
+        }
+
+        if (seasonEnd) {
+            const lastEnd = new Date(reservations[reservations.length - 1].house_availability_end_date);
+            lastEnd.setHours(0, 0, 0, 0);
+            lastEnd.setDate(lastEnd.getDate() + 1);
+            const gapEnd = new Date(seasonEnd);
+            gapEnd.setHours(0, 0, 0, 0);
+
+            if (lastEnd <= gapEnd) {
+                this.cachedSlots.push({ isGap: true, startDate: lastEnd, endDate: gapEnd });
             }
         }
     }

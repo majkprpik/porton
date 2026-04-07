@@ -423,7 +423,7 @@ export class HouseService {
     if (!house.is_active) return 'INACTIVE';
     if (this.isHouseOccupied(house.house_id)) return 'OCCUPIED';
     if (!this.isHouseOccupied(house.house_id) && this.isHouseReservedToday(house.house_id)) return 'ARRIVAL-DAY';
-    if (!this.isHouseOccupied(house.house_id) && (this.hasScheduledNotCompletedTasks(house.house_id) || this.hasUnconfirmedCleaningTask(house.house_id))) return 'NOT-CLEANED';
+    if (!this.isHouseOccupied(house.house_id) && this.hasScheduledNotCompletedTasks(house.house_id)) return 'NOT-CLEANED';
     return 'FREE';
   }
 
