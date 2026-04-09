@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, Signal, OnChanges, SimpleChanges, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, Signal, OnChanges, SimpleChanges, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -26,19 +26,21 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
             [style]="{'width': '500px', 'max-width': '95vw'}"
             [contentStyle]="{'padding': '0', 'border-radius': '10px', 'overflow': 'hidden'}"
         >
-            <div class="modal-header" [ngClass]="headerClass">
-                <button class="close-btn" (click)="close()">
-                    <i class="pi pi-times"></i>
-                </button>
+            <div class="modal-header">
+                <div class="modal-header-top" [ngClass]="topSectionClass">
+                    <button class="close-btn" (click)="close()">
+                        <i class="pi pi-times"></i>
+                    </button>
 
-                <div class="house-name-row">
-                    <div class="house-name">{{ house?.house_name }}</div>
-                    @if (house?.description) {
-                        <div class="house-description-inline">{{ house?.description }}</div>
-                    }
+                    <div class="house-name-row">
+                        <div class="house-name">{{ house?.house_name }}</div>
+                        @if (house?.description) {
+                            <div class="house-description-inline">{{ house?.description }}</div>
+                        }
+                    </div>
                 </div>
 
-                @if (house && !house.is_active) {
+                <div class="detail-strip" [ngClass]="headerClass">
                     @if (isEmptyState) {
                         <div class="no-reservation">{{ 'HOME.HOUSE-DETAIL.NO-RESERVATIONS' | translate }}</div>
                     } @else {
@@ -55,74 +57,32 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                                 <i class="fa fa-chevron-right nav-arrow invisible"></i>
                             }
                         </div>
-                    }
 
-                    <div class="occupancy" [ngClass]="slideClass" [style.visibility]="showOccupancy ? 'visible' : 'hidden'">
-                        @if (occupancy.adults) {
-                            <div class="occ-item"><span>{{ occupancy.adults }}</span><i class="fa-solid fa-person"></i></div>
-                        }
-                        @if (occupancy.dogs) {
-                            <span class="sep">|</span>
-                            <div class="occ-item"><span>{{ occupancy.dogs }}</span><i class="fa-solid fa-paw"></i></div>
-                        }
-                        @if (occupancy.babies) {
-                            <span class="sep">|</span>
-                            <div class="occ-item"><span>{{ occupancy.babies }}</span><i class="fa-solid fa-baby"></i></div>
-                        }
-                        @if (occupancy.cribs) {
-                            <span class="sep">|</span>
-                            <div class="occ-item"><span>{{ occupancy.cribs }}</span><i class="fa-solid fa-baby-carriage"></i></div>
-                        }
-                    </div>
-
-                    <div class="reservation-note" [ngClass]="reservationNote ? slideClass : 'hidden'">
-                        @if (reservationNote) {
-                            {{ reservationNote }}
-                        }
-                    </div>
-                } @else {
-                    @if (isEmptyState) {
-                        <div class="no-reservation">{{ 'HOME.HOUSE-DETAIL.NO-RESERVATIONS' | translate }}</div>
-                    } @else {
-                        <div class="date-nav">
-                            @if (canNavigatePrev) {
-                                <i class="fa fa-chevron-left nav-arrow" (click)="navigate('prev', $event)"></i>
-                            } @else {
-                                <i class="fa fa-chevron-left nav-arrow invisible"></i>
+                        <div class="occupancy" [ngClass]="slideClass" [style.visibility]="showOccupancy ? 'visible' : 'hidden'">
+                            @if (occupancy.adults) {
+                                <div class="occ-item"><span>{{ occupancy.adults }}</span><i class="fa-solid fa-person"></i></div>
                             }
-                            <span [class]="slideClass">{{ reservationDateDisplay }}</span>
-                            @if (canNavigateNext) {
-                                <i class="fa fa-chevron-right nav-arrow" (click)="navigate('next', $event)"></i>
-                            } @else {
-                                <i class="fa fa-chevron-right nav-arrow invisible"></i>
+                            @if (occupancy.dogs) {
+                                <span class="sep">|</span>
+                                <div class="occ-item"><span>{{ occupancy.dogs }}</span><i class="fa-solid fa-paw"></i></div>
+                            }
+                            @if (occupancy.babies) {
+                                <span class="sep">|</span>
+                                <div class="occ-item"><span>{{ occupancy.babies }}</span><i class="fa-solid fa-baby"></i></div>
+                            }
+                            @if (occupancy.cribs) {
+                                <span class="sep">|</span>
+                                <div class="occ-item"><span>{{ occupancy.cribs }}</span><i class="fa-solid fa-baby-carriage"></i></div>
+                            }
+                        </div>
+
+                        <div class="reservation-note" [ngClass]="reservationNote ? slideClass : 'hidden'">
+                            @if (reservationNote) {
+                                {{ reservationNote }}
                             }
                         </div>
                     }
-
-                    <div class="occupancy" [ngClass]="slideClass" [style.visibility]="showOccupancy ? 'visible' : 'hidden'">
-                        @if (occupancy.adults) {
-                            <div class="occ-item"><span>{{ occupancy.adults }}</span><i class="fa-solid fa-person"></i></div>
-                        }
-                        @if (occupancy.dogs) {
-                            <span class="sep">|</span>
-                            <div class="occ-item"><span>{{ occupancy.dogs }}</span><i class="fa-solid fa-paw"></i></div>
-                        }
-                        @if (occupancy.babies) {
-                            <span class="sep">|</span>
-                            <div class="occ-item"><span>{{ occupancy.babies }}</span><i class="fa-solid fa-baby"></i></div>
-                        }
-                        @if (occupancy.cribs) {
-                            <span class="sep">|</span>
-                            <div class="occ-item"><span>{{ occupancy.cribs }}</span><i class="fa-solid fa-baby-carriage"></i></div>
-                        }
-                    </div>
-
-                    <div class="reservation-note" [ngClass]="reservationNote ? slideClass : 'hidden'">
-                        @if (reservationNote) {
-                            {{ reservationNote }}
-                        }
-                    </div>
-                }
+                </div>
             </div>
 
             <div class="modal-body">
@@ -178,24 +138,28 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
     `,
     styles: `
         .modal-header {
-            padding: 1.25rem 1rem 1rem;
             color: white;
-            position: relative;
+            overflow: hidden;
 
-            &.occupied {
-                background: linear-gradient(135deg, rgba(220, 38, 38, 0.92), rgba(185, 28, 28, 0.85));
-            }
-            &.arrival {
-                background: linear-gradient(135deg, rgba(248, 113, 113, 0.92), rgba(239, 68, 68, 0.85));
-            }
-            &.with-tasks {
-                background: linear-gradient(135deg, rgba(250, 204, 21, 0.92), rgba(234, 179, 8, 0.85));
-            }
-            &.inactive {
-                background: linear-gradient(135deg, rgba(90, 90, 90, 0.92), rgba(55, 55, 55, 0.85));
-            }
-            &.available {
-                background: linear-gradient(135deg, rgba(34, 197, 94, 0.92), rgba(22, 163, 74, 0.85));
+            .modal-header-top {
+                padding: 1.25rem 1rem 1rem;
+                position: relative;
+
+                &.occupied {
+                    background: linear-gradient(135deg, rgba(220, 38, 38, 0.92), rgba(185, 28, 28, 0.85));
+                }
+                &.arrival {
+                    background: linear-gradient(135deg, rgba(248, 113, 113, 0.92), rgba(239, 68, 68, 0.85));
+                }
+                &.with-tasks {
+                    background: linear-gradient(135deg, rgba(250, 204, 21, 0.92), rgba(234, 179, 8, 0.85));
+                }
+                &.inactive {
+                    background: linear-gradient(135deg, rgba(90, 90, 90, 0.92), rgba(55, 55, 55, 0.85));
+                }
+                &.available {
+                    background: linear-gradient(135deg, rgba(34, 197, 94, 0.92), rgba(22, 163, 74, 0.85));
+                }
             }
 
             .close-btn {
@@ -215,7 +179,8 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                 transition: background 0.2s;
 
                 &:hover {
-                    background: rgba(255,255,255,0.35);
+                    background: rgba(255,255,255,0.2);
+                    color: var(--red-500) !important;
                 }
 
                 i {
@@ -228,7 +193,7 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                 align-items: baseline;
                 gap: 0.6rem;
                 flex-wrap: wrap;
-                margin-bottom: 0.4rem;
+                margin-bottom: 0.1rem;
             }
 
             .house-name {
@@ -237,16 +202,50 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
                 text-shadow: 0 1px 2px rgba(0,0,0,0.2);
             }
 
+            .house-description-inline {
+                font-size: 0.95rem;
+                opacity: 0.9;
+                line-height: 1.2;
+            }
+
+            .detail-strip {
+                padding: 0.45rem 1rem 0.6rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.22);
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                gap: 0.3rem;
+                min-height: 5.6rem;
+
+                &.occupied {
+                    background: linear-gradient(135deg, rgba(220, 38, 38, 0.92), rgba(185, 28, 28, 0.85));
+                }
+                &.arrival {
+                    background: linear-gradient(135deg, rgba(248, 113, 113, 0.92), rgba(239, 68, 68, 0.85));
+                }
+                &.with-tasks {
+                    background: linear-gradient(135deg, rgba(250, 204, 21, 0.92), rgba(234, 179, 8, 0.85));
+                }
+                &.inactive {
+                    background: linear-gradient(135deg, rgba(90, 90, 90, 0.92), rgba(55, 55, 55, 0.85));
+                }
+                &.available {
+                    background: linear-gradient(135deg, rgba(34, 197, 94, 0.92), rgba(22, 163, 74, 0.85));
+                }
+            }
+
             .date-nav {
                 display: flex;
                 align-items: center;
                 gap: 0.6rem;
                 font-size: 1rem;
-                margin-bottom: 0.4rem;
                 overflow: hidden;
+                font-weight: 700;
 
                 span {
                     display: inline-block;
+                    flex: 1;
+                    text-align: center;
                 }
 
                 .nav-arrow {
@@ -268,20 +267,6 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
 
             .no-reservation {
                 font-size: 1rem;
-                margin-bottom: 0.4rem;
-            }
-
-            .house-description {
-                font-size: 0.9rem;
-                opacity: 0.85;
-                line-height: 1.4;
-                margin-top: 0.35rem;
-            }
-
-            .house-description-inline {
-                font-size: 0.95rem;
-                opacity: 0.9;
-                line-height: 1.2;
             }
 
             @keyframes slideFromRight {
@@ -305,10 +290,11 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
             .occupancy {
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                font-size: 1rem;
-                font-weight: 500;
-                min-height: 1.5rem;
+                justify-content: center;
+                gap: 0.55rem;
+                font-size: 0.95rem;
+                font-weight: 700;
+                flex: 0 0 1.2rem;
                 line-height: 1;
 
                 .occ-item {
@@ -334,13 +320,11 @@ import { TaskCardComponent } from '../daily-sheet/task-card.component';
             }
 
             .reservation-note {
-                margin-top: 0.35rem;
-                font-size: 0.9rem;
-                line-height: 1.25;
+                font-size: 12.25px;
+                line-height: 1.15;
+                text-align: center;
                 opacity: 0.95;
-                min-height: 1.15rem;
-                height: 1.15rem;
-                display: block;
+                flex: 0 0 1.2rem;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -467,7 +451,15 @@ export class HouseDetailModalComponent implements OnChanges {
         public taskService: TaskService,
         private profileService: ProfileService,
         private storageService: StorageService,
-    ) {}
+    ) {
+        effect(() => {
+            const _ = this.houseAvailabilities();
+            if (this.house && this.visible) {
+                this.rebuildSlots();
+                this.updateDisplayData();
+            }
+        });
+    }
 
     get isEmptyState(): boolean {
         return this.cachedSlots.length === 0;
@@ -510,7 +502,6 @@ export class HouseDetailModalComponent implements OnChanges {
     }
 
     get headerClass(): string {
-        if (this.house && !this.house.is_active) return 'inactive';
         if (this.isCurrentSlotGap) return 'available';
         if (!this.house) return 'available';
 
@@ -521,18 +512,28 @@ export class HouseDetailModalComponent implements OnChanges {
         today.setHours(0, 0, 0, 0);
         const slotStart = new Date(slot.startDate);
         slotStart.setHours(0, 0, 0, 0);
-        const slotEnd = new Date(slot.endDate!);
-        slotEnd.setHours(23, 59, 59, 999);
+        // checkout day = endDate + 1 (guests leave the morning after the last night)
+        const checkoutDay = new Date(slot.endDate!);
+        checkoutDay.setDate(checkoutDay.getDate() + 1);
+        checkoutDay.setHours(0, 0, 0, 0);
 
-        if (today < slotStart || today > slotEnd) {
-            // Viewing a past or future reservation — show as booking, not current occupancy
+        if (today < slotStart || today > checkoutDay) {
             return 'arrival';
         }
 
+        const res = slot.reservation;
+        if (res?.has_arrived && !res?.has_departed) return 'occupied';
+        return 'arrival';
+    }
+
+    get topSectionClass(): string {
+        if (!this.house) return 'available';
+        if (!this.house.is_active) return 'inactive';
         const id = this.house.house_id;
+        if (this.houseService.isHouseOccupied(id)) return 'occupied';
+        if (this.houseService.hasScheduledNotCompletedTasks(id)) return 'with-tasks';
         if (this.houseService.isHouseReservedToday(id)) return 'arrival';
-        if (this.houseService.hasScheduledNotCompletedTasks(id) || this.houseService.hasUnconfirmedCleaningTask(id)) return 'with-tasks';
-        return 'occupied';
+        return 'available';
     }
 
     get confirmTasks(): Task[] {
@@ -680,6 +681,19 @@ export class HouseDetailModalComponent implements OnChanges {
     private findCurrentSlotIndex(): number {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+
+        // If a reservation checks out today but hasn't departed, show it instead of the incoming one
+        const departingTodayIndex = this.cachedSlots.findIndex(slot => {
+            if (slot.isGap || !slot.reservation) return false;
+            const checkoutDay = new Date(slot.endDate!);
+            checkoutDay.setHours(0, 0, 0, 0);
+            checkoutDay.setDate(checkoutDay.getDate() + 1);
+            return checkoutDay.getTime() === today.getTime() && !slot.reservation.has_departed;
+        });
+
+        if (departingTodayIndex !== -1) {
+            return departingTodayIndex;
+        }
 
         const reservationStartingTodayIndex = this.cachedSlots.findIndex(slot => {
             if (slot.isGap || !slot.reservation) return false;

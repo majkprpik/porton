@@ -351,7 +351,8 @@
             "BY-NUMBER": "Po broju",
             "BY-TYPE": "Po tipu",
             "BY-STATUS": "Po statusu",
-            "NEEDS-CONFIRMATION": "Za potvrdu"
+            "NEEDS-CONFIRMATION": "Za potvrdu",
+            "SHOW-HOUSE-DETAILS": "Detalji kućice"
         },
         "HOUSE-STATUS": {
             "FREE": "Slobodna",

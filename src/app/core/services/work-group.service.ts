@@ -312,6 +312,83 @@ export class WorkGroupService {
     }
   }
 
+  async getDbWorkGroupTaskIds(workGroupId: number): Promise<number[]> {
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_tasks')
+        .select('task_id')
+        .eq('work_group_id', workGroupId);
+      if (error) throw error;
+      return data?.map((t: any) => t.task_id) ?? [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async getDbWorkGroupProfileIds(workGroupId: number): Promise<string[]> {
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_profiles')
+        .select('profile_id')
+        .eq('work_group_id', workGroupId);
+      if (error) throw error;
+      return data?.map((p: any) => p.profile_id) ?? [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async deleteWorkGroupTasksByWorkGroupIdAndTaskIds(workGroupId: number, taskIds: number[]) {
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_tasks')
+        .delete()
+        .eq('work_group_id', workGroupId)
+        .in('task_id', taskIds)
+        .select();
+      if (error) throw error;
+      if (data?.length) {
+        const removedTaskIds = data.map((t: any) => t.task_id);
+        const filtered = this.workGroupTasks.filter(
+          wgt => !(wgt.work_group_id === workGroupId && removedTaskIds.includes(wgt.task_id))
+        );
+        this.dataService.setWorkGroupTasks(filtered);
+      }
+      return data;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  async deleteWorkGroupProfilesByIds(workGroupId: number, profileIds: string[]) {
+    try {
+      const { data, error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_profiles')
+        .delete()
+        .eq('work_group_id', workGroupId)
+        .in('profile_id', profileIds)
+        .select();
+      if (error) throw error;
+      if (data?.length) {
+        const filtered = this.workGroupProfiles.filter(
+          wgp => !(wgp.work_group_id === workGroupId && profileIds.includes(wgp.profile_id))
+        );
+        this.dataService.setWorkGroupProfiles(filtered);
+      }
+      return data;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
   private getFormattedDateTimeNowForSupabase(){
     const now = new Date();
     const isoString = now.toISOString();

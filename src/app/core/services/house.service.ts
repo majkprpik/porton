@@ -163,6 +163,16 @@ export class HouseService {
     );
   }
 
+  getLastDepartedReservation(houseId: number): HouseAvailability | null {
+    const departed = this.houseAvailabilities.filter(a =>
+      a.house_id === houseId && a.has_departed
+    );
+    if (!departed.length) return null;
+    return departed.sort((a, b) =>
+      new Date(b.house_availability_end_date).getTime() - new Date(a.house_availability_end_date).getTime()
+    )[0];
+  }
+
   getLatestHouseCleaningTask(houseId: number): Task | null {
     const houseCleaningTasks = this.tasks.filter(task =>
       task.house_id == houseId &&
@@ -340,7 +350,7 @@ export class HouseService {
       start.setHours(0, 0, 0, 0);
       end.setHours(0, 0, 0, 0);
 
-      return ha.house_id == houseId && today >= start && today <= end;
+      return ha.house_id == houseId && today >= start && today <= end && !ha.has_departed;
     });
   } 
 

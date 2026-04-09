@@ -866,11 +866,10 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     transition: background-color 0.2s ease, color 0.2s ease;
 
                     &:hover {
-                        background-color: var(--red-500);
                         cursor: pointer;
 
                         i {
-                            color: white;
+                            color: var(--red-500) !important;
                         }
                     }
                 }
@@ -907,11 +906,10 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     transition: background-color 0.2s ease, color 0.2s ease;
 
                     &:hover {
-                        background-color: var(--red-500);
                         cursor: pointer;
 
                         i {
-                            color: white;
+                            color: var(--red-500) !important;
                         }
                     }
                 }

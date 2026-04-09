@@ -351,7 +351,8 @@
             "BY-NUMBER": "By number",
             "BY-TYPE": "By type",
             "BY-STATUS": "By status",
-            "NEEDS-CONFIRMATION": "Needs confirmation"
+            "NEEDS-CONFIRMATION": "Needs confirmation",
+            "SHOW-HOUSE-DETAILS": "Show house details"
         },
         "HOUSE-STATUS": {
             "FREE": "Free",

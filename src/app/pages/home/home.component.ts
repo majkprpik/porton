@@ -6,7 +6,6 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { MultiSelectModule } from 'primeng/multiselect';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
 import { TaskService } from '../../core/services/task.service';
@@ -21,12 +20,6 @@ import { HouseCardComponent } from './house-card/house-card.component';
 import { HouseDetailModalComponent } from './house-detail-modal.component';
 import { AuthService } from '../../core/services/auth.service';
 
-// Define the special location option interface
-interface SpecialLocation {
-    name: string;
-    type: string;
-}
-
 @Component({
     selector: 'app-home',
     standalone: true,
@@ -36,7 +29,6 @@ interface SpecialLocation {
         ButtonModule, 
         DialogModule, 
         DropdownModule, 
-        MultiSelectModule,
         FormsModule,
         InputTextModule,
         TranslateModule,
@@ -78,43 +70,28 @@ interface SpecialLocation {
                                 <ng-template let-selected pTemplate="selectedItem">
                                     @if (selected) {
                                         <div class="sort-option-content selected-sort-option-content">
-                                            <i [class]="selected.icon" [style.color]="'var(--primary-color)'"></i>
-                                            <span class="selected-sort-option-label" [style.fontSize]="'12.25px'">{{ selected.label }}</span>
+                                            <i [class]="selected.icon" [style.color]="'var(--text-color-secondary)'"></i>
+                                            <span class="selected-sort-option-label" [style.fontSize]="'12.25px'" [style.color]="'var(--text-color-secondary)'">{{ selected.label | translate }}</span>
                                         </div>
                                     }
                                 </ng-template>
                                 <ng-template let-option pTemplate="item">
                                     <div class="sort-option-content">
                                         <span class="sort-option-inline">
-                                            <i [class]="option.icon + ' sort-option-icon'" [style.color]="'var(--primary-color)'"></i>&nbsp;<span class="sort-option-label">{{ option.label }}</span>
+                                            <i [class]="option.icon + ' sort-option-icon'" [style.color]="'var(--text-color-secondary)'"></i>&nbsp;<span class="sort-option-label">{{ option.label | translate }}</span>
                                         </span>
                                     </div>
                                 </ng-template>
                             </p-dropdown>
-                            <p-multiSelect
-                                [options]="reservationFilterOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                [(ngModel)]="activeReservationFilters"
-                                (onChange)="applyFilters()"
-                                defaultLabel="Reservation Filters"
-                                selectedItemsLabel="{0} filters"
-                                styleClass="reservation-filter-dropdown"
-                                appendTo="body"
-                            ></p-multiSelect>
-                            <div class="reservation-thresholds">
-                                @if (activeReservationFilters.includes('minAdults')) {
-                                    <input
-                                        type="number"
-                                        pInputText
-                                        min="1"
-                                        class="threshold-input"
-                                        [(ngModel)]="minAdultsFilter"
-                                        (input)="applyFilters()"
-                                        placeholder="Min Adults"
-                                    >
-                                }
-                            </div>
+                            <p-button
+                                [outlined]="!showDogsFilter"
+                                [raised]="showDogsFilter"
+                                (onClick)="toggleDogsFilter()"
+                                styleClass="p-button-sm sort-btn dogs-filter-btn">
+                                <ng-template pTemplate="icon">
+                                    <i class="fa-solid fa-paw"></i>
+                                </ng-template>
+                            </p-button>
                             <p-button
                                 [outlined]="!showNeedsConfirmation"
                                 [raised]="showNeedsConfirmation"
@@ -128,7 +105,7 @@ interface SpecialLocation {
                                 [outlined]="!showDetailedView"
                                 [raised]="showDetailedView"
                                 icon="pi pi-eye"
-                                [label]="'Show House Details'"
+                                [label]="'HOME.SEARCH.SHOW-HOUSE-DETAILS' | translate"
                                 (onClick)="toggleDetailedView()"
                                 styleClass="p-button-sm sort-btn">
                             </p-button>
@@ -229,15 +206,6 @@ interface SpecialLocation {
                 min-width: 170px;
             }
 
-            :host ::ng-deep .reservation-filter-dropdown {
-                min-width: 165px;
-            }
-
-            :host ::ng-deep .threshold-input {
-                width: 105px;
-                height: 30px;
-            }
-
             :host ::ng-deep .sort-dropdown .p-dropdown {
                 height: 30px !important;
                 align-items: center;
@@ -246,31 +214,6 @@ interface SpecialLocation {
 
             :host ::ng-deep .sort-dropdown .p-dropdown-label {
                 font-size: 12.25px;
-            }
-
-            :host ::ng-deep .reservation-filter-dropdown .p-multiselect {
-                min-height: 30px !important;
-                align-items: center;
-                font-size: 0.85rem;
-            }
-
-            :host ::ng-deep .reservation-filter-dropdown .p-multiselect-label {
-                padding-right: 0.2rem;
-                font-size: 12.25px;
-            }
-
-            :host ::ng-deep .reservation-filter-dropdown .p-placeholder {
-                font-size: 12.25px;
-            }
-
-            :host ::ng-deep .p-multiselect-panel {
-                min-width: 170px !important;
-                width: auto !important;
-                font-size: 0.85rem;
-            }
-
-            :host ::ng-deep .p-multiselect-panel .p-multiselect-header {
-                padding: 0.45rem;
             }
 
             :host ::ng-deep .sort-option-content {
@@ -310,14 +253,6 @@ interface SpecialLocation {
 
                 :host ::ng-deep .sort-dropdown {
                     min-width: 130px;
-                }
-
-                :host ::ng-deep .reservation-filter-dropdown {
-                    min-width: 135px;
-                }
-
-                :host ::ng-deep .threshold-input {
-                    width: 82px;
                 }
 
                 .home-container {
@@ -598,19 +533,11 @@ export class Home implements OnInit, OnDestroy {
     sortType: 'number' | 'type' | 'status' | null = 'number';
     showNeedsConfirmation: boolean = false;
     showDetailedView: boolean = false;
-    activeReservationFilters: ReservationFilterType[] = [];
-    minAdultsFilter: number | null = 4;
+    showDogsFilter: boolean = false;
     sortOptions = [
-        { label: 'By Number', value: 'number' as const, icon: 'pi pi-sort-numeric-up' },
-        { label: 'By Type', value: 'type' as const, icon: 'pi pi-sort-alpha-up' },
-        { label: 'By Status', value: 'status' as const, icon: 'pi pi-filter' },
-    ];
-    reservationFilterOptions = [
-        { label: 'Adults', value: 'adults' as const },
-        { label: 'Dogs', value: 'dogs' as const },
-        { label: 'Babies', value: 'babies' as const },
-        { label: 'Cribs', value: 'cribs' as const },
-        { label: 'Min Adults', value: 'minAdults' as const },
+        { label: 'HOME.SEARCH.BY-NUMBER', value: 'number' as const, icon: 'pi pi-sort-numeric-up' },
+        { label: 'HOME.SEARCH.BY-TYPE', value: 'type' as const, icon: 'pi pi-sort-alpha-up' },
+        { label: 'HOME.SEARCH.BY-STATUS', value: 'status' as const, icon: 'pi pi-filter' },
     ];
 
     // Group houses by type for divider display
@@ -726,8 +653,9 @@ export class Home implements OnInit, OnDestroy {
             result = result.filter(house => this.houseService.hasUnconfirmedCleaningTask(house.house_id));
         }
 
-        if (this.activeReservationFilters.length > 0) {
-            result = result.filter(house => this.matchesReservationFilters(house));
+        if (this.showDogsFilter) {
+            result = result.filter(house => this.getReservationsForToday(house.house_id)
+                .some(res => (res.dogs_d || 0) + (res.dogs_s || 0) + (res.dogs_b || 0) > 0));
         }
         
         if (this.sortType == 'number') {
@@ -789,26 +717,9 @@ export class Home implements OnInit, OnDestroy {
         this.showDetailedView = !this.showDetailedView;
     }
 
-    private matchesReservationFilters(house: House): boolean {
-        const currentReservations = this.getReservationsForToday(house.house_id);
-        if (currentReservations.length === 0) return false;
-
-        return this.activeReservationFilters.some(filter => {
-            switch (filter) {
-                case 'adults':
-                    return currentReservations.some(res => (res.adults || 0) > 0);
-                case 'dogs':
-                    return currentReservations.some(res => (res.dogs_d || 0) + (res.dogs_s || 0) + (res.dogs_b || 0) > 0);
-                case 'babies':
-                    return currentReservations.some(res => (res.babies || 0) > 0);
-                case 'cribs':
-                    return currentReservations.some(res => (res.cribs || 0) > 0);
-                case 'minAdults':
-                    return currentReservations.some(res => (res.adults || 0) >= (this.minAdultsFilter || 1));
-                default:
-                    return true;
-            }
-        });
+    toggleDogsFilter() {
+        this.showDogsFilter = !this.showDogsFilter;
+        this.applyFilters();
     }
 
     private getReservationsForToday(houseId: number): HouseAvailability[] {
@@ -819,14 +730,15 @@ export class Home implements OnInit, OnDestroy {
             if (reservation.house_id !== houseId) return false;
 
             const start = new Date(reservation.house_availability_start_date);
-            const end = new Date(reservation.house_availability_end_date);
             start.setHours(0, 0, 0, 0);
-            end.setHours(23, 59, 59, 999);
+            // checkout day is end_date + 1 (guests leave the morning after the last night)
+            const checkoutDay = new Date(reservation.house_availability_end_date);
+            checkoutDay.setDate(checkoutDay.getDate() + 1);
+            checkoutDay.setHours(23, 59, 59, 999);
 
-            return today >= start && today <= end;
+            return today >= start && today <= checkoutDay;
         });
     }
 
 }
 
-type ReservationFilterType = 'adults' | 'dogs' | 'babies' | 'cribs' | 'minAdults';

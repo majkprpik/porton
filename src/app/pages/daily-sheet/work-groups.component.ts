@@ -384,9 +384,7 @@ export class WorkGroups implements OnInit {
   lockedTeams: LockedTeam[] = [];
   isRepairsCollapsed: boolean = true;
   isCleaningCollapsed: boolean = false;
-  tasksToRemove: Task[] = [];
   profiles: Profile[] = [];
-  tasksToAdd: Task[] = [];
 
   isToday = isToday;
   areDaysEqual = areDaysEqual;
@@ -425,23 +423,6 @@ export class WorkGroups implements OnInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => this.handleWorkGroupsUpdate(res));
 
-    this.taskService.$taskToRemove
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(res => {
-        if (res) {
-          this.tasksToRemove.push(res);
-          this.tasksToAdd = this.tasksToAdd.filter(task => task.task_id !== res.task_id);
-        }
-      });
-
-    this.taskService.$selectedTask
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(res => {
-        if (res) {
-          this.tasksToAdd.push(res);
-          this.tasksToRemove = this.tasksToRemove.filter(ttrm => ttrm.task_id !== res.task_id);
-        }
-      });
   }
 
   ngOnDestroy() {
@@ -542,27 +523,13 @@ export class WorkGroups implements OnInit {
     this.lockedTeams = [];
 
     this.workGroups.forEach(workGroup => {
-      if (!workGroup.is_repair && this.is2DaysOld(workGroup)){
-        const workGroupTasks = this.workGroupTasks.filter(wgt => wgt.work_group_id == workGroup.work_group_id);
-        const filteredTasks = this.tasks.filter(task => workGroupTasks.some(wgt => wgt.task_id == task.task_id));
-        const allTasksDone = filteredTasks.every(task =>
-          this.taskService.isHouseCleaningTask(task)
-            ? this.taskService.isTaskConfirmed(task)
-            : this.taskService.isTaskCompleted(task)
-        );
-
-        if(allTasksDone){
-          this.deleteWorkGroup(workGroup.work_group_id);
-        }
-      } else {
-        this.lockedTeams.push({
-          id: workGroup.work_group_id,
-          name: "Team " + workGroup.work_group_id.toString(),
-          members: this.getProfilesForWorkGroup(workGroup.work_group_id),
-          tasks: this.getTasksForWorkGroup(workGroup.work_group_id),
-          isLocked: workGroup.is_locked,
-        });
-      } 
+      this.lockedTeams.push({
+        id: workGroup.work_group_id,
+        name: "Team " + workGroup.work_group_id.toString(),
+        members: this.getProfilesForWorkGroup(workGroup.work_group_id),
+        tasks: this.getTasksForWorkGroup(workGroup.work_group_id),
+        isLocked: workGroup.is_locked,
+      });
     });
 
     this.workGroupService.setLockedTeams(this.lockedTeams);
@@ -644,80 +611,114 @@ export class WorkGroups implements OnInit {
   }
 
   async publishWorkGroups() {
-    let lockedWorkGroups = this.workGroupService.getLockedTeams();
-    let unlockedWorkGroups = lockedWorkGroups.filter(lwg => !lwg.isLocked);
+    const lockedWorkGroups = this.workGroupService.getLockedTeams();
+    const unlockedWorkGroups = lockedWorkGroups.filter(lwg => !lwg.isLocked);
 
-    const workGroupPromises = unlockedWorkGroups.map(async (lockedWorkGroup) => {
-      const workGroupTasksBeforeDelete = [...this.workGroupTasks];
-      const workGroupId = lockedWorkGroup.id;
-  
-      await this.workGroupService.updateWorkGroupToLocked(workGroupId);
-  
-      await Promise.all([
-        this.workGroupService.deleteAllWorkGroupTasksByWorkGroupId(workGroupId),
-        this.workGroupService.deleteAllWorkGroupProfilesByWorkGroupId(workGroupId)
-      ]);
-    
+    // Phase 1: compute all diffs before any mutations so we can cross-reference
+    const diffs = await Promise.all(unlockedWorkGroups.map(async (lockedWorkGroup) => {
       lockedWorkGroup.tasks ??= [];
       lockedWorkGroup.members ??= [];
-  
-      const createTaskPromises = lockedWorkGroup.tasks.map((task) => 
-        this.workGroupService.createWorkGroupTask(workGroupId, task.task_id, workGroupTasksBeforeDelete.find(wgt => wgt.task_id == task.task_id)!.index)
+
+      const workGroupId = lockedWorkGroup.id;
+      const [dbTaskIds, dbProfileIds] = await Promise.all([
+        this.workGroupService.getDbWorkGroupTaskIds(workGroupId),
+        this.workGroupService.getDbWorkGroupProfileIds(workGroupId),
+      ]);
+
+      const desiredTaskIds = lockedWorkGroup.tasks.map(t => t.task_id);
+      const desiredProfileIds = lockedWorkGroup.members.map(m => m.id);
+
+      return {
+        lockedWorkGroup,
+        workGroupId,
+        dbTaskIds,
+        dbProfileIds,
+        desiredTaskIds,
+        desiredProfileIds,
+        taskIdsToDelete: dbTaskIds.filter(id => !desiredTaskIds.includes(id)),
+        taskIdsToCreate: desiredTaskIds.filter(id => !dbTaskIds.includes(id)),
+        profileIdsToDelete: dbProfileIds.filter(id => !desiredProfileIds.includes(id)),
+        profileIdsToCreate: desiredProfileIds.filter(id => !dbProfileIds.includes(id)),
+      };
+    }));
+
+    // Any task being created in some group is being "moved" — don't mark it NotAssigned
+    const allTaskIdsBeingCreated = new Set(diffs.flatMap(d => d.taskIdsToCreate));
+    const currentWorkGroupTasks = [...this.workGroupTasks];
+
+    const AssignedId = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Assigned)!.task_progress_type_id;
+    const NotAssignedId = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.NotAssigned)!.task_progress_type_id;
+    const CompletedId = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Completed)!.task_progress_type_id;
+    const InProgressId = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.InProgress)!.task_progress_type_id;
+    const PausedId = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Paused)!.task_progress_type_id;
+    const ConfirmedId = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Confirmed)!.task_progress_type_id;
+
+    // Phase 2: apply updates per group
+    const workGroupPromises = diffs.map(async ({ lockedWorkGroup, workGroupId, taskIdsToDelete, taskIdsToCreate, profileIdsToDelete, profileIdsToCreate }) => {
+      await this.workGroupService.updateWorkGroupToLocked(workGroupId);
+
+      // Delete only entries removed from this specific group (scoped by work_group_id)
+      const deletePromises: Promise<any>[] = [];
+      if (taskIdsToDelete.length > 0) {
+        deletePromises.push(this.workGroupService.deleteWorkGroupTasksByWorkGroupIdAndTaskIds(workGroupId, taskIdsToDelete));
+      }
+      if (profileIdsToDelete.length > 0) {
+        deletePromises.push(this.workGroupService.deleteWorkGroupProfilesByIds(workGroupId, profileIdsToDelete));
+      }
+      if (deletePromises.length > 0) {
+        await Promise.all(deletePromises);
+      }
+
+      const createTaskPromises = taskIdsToCreate.map(taskId => {
+        const index = currentWorkGroupTasks.find(wgt => wgt.task_id === taskId)?.index ?? 0;
+        return this.workGroupService.createWorkGroupTask(workGroupId, taskId, index);
+      });
+
+      const updateTaskProgressPromises = (lockedWorkGroup.tasks ?? [])
+        .filter(task =>
+          task.task_progress_type_id !== CompletedId &&
+          task.task_progress_type_id !== InProgressId &&
+          task.task_progress_type_id !== PausedId &&
+          task.task_progress_type_id !== ConfirmedId)
+        .map(task => this.taskService.updateTaskProgressType(task, AssignedId));
+
+      // Only mark as NotAssigned if the task is not being moved to another group
+      const updateRemovedTasksPromises = this.tasks
+        .filter(t =>
+          taskIdsToDelete.includes(t.task_id) &&
+          !allTaskIdsBeingCreated.has(t.task_id) &&
+          t.task_progress_type_id !== InProgressId &&
+          t.task_progress_type_id !== PausedId &&
+          t.task_progress_type_id !== CompletedId &&
+          t.task_progress_type_id !== ConfirmedId)
+        .map(t => this.taskService.updateTaskProgressType(t, NotAssignedId));
+
+      const createProfilePromises = profileIdsToCreate.map(profileId =>
+        this.workGroupService.createWorkGroupProfile(workGroupId, profileId)
       );
 
-      const updateTaskProgressPromises = lockedWorkGroup.tasks
-        .filter(task => 
-          task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Completed)!.task_progress_type_id && 
-          task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.InProgress)!.task_progress_type_id &&
-          task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Paused)!.task_progress_type_id &&
-          task.task_progress_type_id != this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Confirmed)!.task_progress_type_id)
-        .map(task => 
-          this.taskService.updateTaskProgressType(task, this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Assigned)!.task_progress_type_id)
-        );
-      
-      const updateRemovedTasksPromises = this.tasksToRemove.map(ttrm =>
-        this.taskService.updateTaskProgressType(ttrm, this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.NotAssigned)!.task_progress_type_id)
-      );
-
-      this.tasksToRemove = [];
-
-      const createProfilePromises = lockedWorkGroup.members.map(member =>
-        this.workGroupService.createWorkGroupProfile(workGroupId, member.id)
-      );
-  
       await Promise.all([
         ...createTaskPromises,
         ...updateTaskProgressPromises,
+        ...updateRemovedTasksPromises,
         ...createProfilePromises,
-        ...updateRemovedTasksPromises
       ]);
 
-      this.tasksToAdd.forEach(task => {
-        if(!task.is_unscheduled) return;
-
-        const houseTechnicians = lockedWorkGroup.members.filter(member => this.profileService.isHouseTechnician(member.id));
-
-        this.pushNotificationsService.sendNotification(
-          houseTechnicians.map(member => member.id),
-          {
-            title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'),
-            body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
-          }
-        );
-      });
-
-      this.tasksToAdd = [];
+      const houseTechnicians = lockedWorkGroup.members.filter(member => this.profileService.isHouseTechnician(member.id));
+      (lockedWorkGroup.tasks ?? [])
+        .filter(task => taskIdsToCreate.includes(task.task_id) && task.is_unscheduled)
+        .forEach(() => {
+          this.pushNotificationsService.sendNotification(
+            houseTechnicians.map(member => member.id),
+            {
+              title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'),
+              body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
+            }
+          );
+        });
     });
-  
+
     await Promise.all(workGroupPromises);
   }
 
-  is2DaysOld(workGroup: WorkGroupObject): boolean {
-    const createdAt = new Date(workGroup.created_at);
-    const twoDaysAgo = new Date();
-
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-
-    return createdAt < twoDaysAgo;
-  }
 } 

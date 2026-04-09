@@ -252,3 +252,11 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; -webkit-ove
 body.reservation-form-open .p-speeddial {
     display: none !important;
 }
+
+// Close button X icon turns red on hover (global override to bypass ViewEncapsulation)
+.close-notes-window:hover i,
+.close-arrivals-and-departures-window:hover i,
+button.close-btn:hover i,
+button.close-btn:hover {
+    color: #ef4444 !important;
+}

@@ -295,7 +295,7 @@ import { CommonModule } from '@angular/common';
                 rgba(60, 60, 60, 0.6)
             );
             border-color: rgba(120, 120, 120, 0.35);
-            cursor: default;
+            cursor: pointer;
 
             .house-number {
                 color: rgba(255, 255, 255, 0.55);
@@ -500,6 +500,9 @@ export class HouseCardComponent {
         const latestHouseCleaningTask = this.houseService.getLatestHouseCleaningTask(houseId);
         const hasPendingCleaningConfirmation = !!latestHouseCleaningTask && this.taskService.isTaskCompleted(latestHouseCleaningTask);
         const hasConfirmedCleaningTask = !!latestHouseCleaningTask && this.taskService.isTaskConfirmed(latestHouseCleaningTask);
+        const lastDepartedReservation = this.houseService.getLastDepartedReservation(houseId);
+        const cleaningTaskPostDeparture = !lastDepartedReservation || !latestHouseCleaningTask ||
+            latestHouseCleaningTask.created_at.split('T')[0] >= lastDepartedReservation.house_availability_start_date.split('T')[0];
         const isReservedToday = this.houseService.isHouseReservedToday(houseId);
         const hasBlockingTasks = hasScheduledTasks;
 
@@ -518,7 +521,8 @@ export class HouseCardComponent {
             !hasPendingCleaningConfirmation &&
             !hideBadgeBeforeLongVacancyArrival &&
             hasConfirmedCleaningTask &&
-            !hasCurrentPendingArrival;
+            !hasCurrentPendingArrival &&
+            cleaningTaskPostDeparture;
 
         this.isAvailable = !this.isOccupied && !hasBlockingTasks && !isReservedToday;
         this.isAvailableWithTasks = !this.isOccupied && hasBlockingTasks;
@@ -676,6 +680,19 @@ export class HouseCardComponent {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // If a reservation checks out today but hasn't departed, show it instead of the incoming one
+        const departingTodayIndex = this.cachedSlots.findIndex(slot => {
+            if (slot.isGap || !slot.reservation) return false;
+            const checkoutDay = new Date(slot.endDate!);
+            checkoutDay.setHours(0, 0, 0, 0);
+            checkoutDay.setDate(checkoutDay.getDate() + 1);
+            return checkoutDay.getTime() === today.getTime() && !slot.reservation.has_departed;
+        });
+
+        if (departingTodayIndex !== -1) {
+            return departingTodayIndex;
+        }
+
         const reservationStartingTodayIndex = this.cachedSlots.findIndex(slot => {
             if (slot.isGap || !slot.reservation) return false;
             const start = new Date(slot.startDate);
@@ -750,16 +767,16 @@ export class HouseCardComponent {
         today.setHours(0, 0, 0, 0);
         const slotStart = new Date(slot.startDate);
         slotStart.setHours(0, 0, 0, 0);
-        const slotEnd = new Date(slot.endDate!);
-        slotEnd.setHours(23, 59, 59, 999);
+        const checkoutDay = new Date(slot.endDate!);
+        checkoutDay.setDate(checkoutDay.getDate() + 1);
+        checkoutDay.setHours(0, 0, 0, 0);
 
-        if (today < slotStart || today > slotEnd) {
+        if (today < slotStart || today > checkoutDay) {
             return 'arrival';
         }
 
-        const id = this.house.house_id;
-        if (this.houseService.isHouseReservedToday(id)) return 'arrival';
-        if (this.houseService.hasScheduledNotCompletedTasks(id) || this.houseService.hasUnconfirmedCleaningTask(id)) return 'with-tasks';
-        return 'occupied';
+        const res = slot.reservation;
+        if (res?.has_arrived && !res?.has_departed) return 'occupied';
+        return 'arrival';
     }
 }
