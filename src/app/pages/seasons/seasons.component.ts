@@ -72,12 +72,13 @@ import { ConfirmationService, MessageService } from 'primeng/api';
       </p-table>
     </div>
 
-    <p-dialog 
-      [(visible)]="isEditSeasonModuleVisible" 
-      [style]="{width: '250px'}" 
-      [header]="'CONTENT-MANAGEMENT.SEASONS.EDIT.TITLE' | translate" 
-      [modal]="true" 
+    <p-dialog
+      [(visible)]="isEditSeasonModuleVisible"
+      [style]="{width: '250px'}"
+      [header]="'CONTENT-MANAGEMENT.SEASONS.EDIT.TITLE' | translate"
+      [modal]="true"
       [contentStyle]="{overflow: 'visible'}"
+      appendTo="body"
     >
       @if(selectedSeason){
         <div class="field">
@@ -125,7 +126,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
       </ng-template>
     </p-dialog>
 
-    <p-dialog [(visible)]="isDeleteSeasonModuleVisible" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.SEASONS.DELETE.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+    <p-dialog [(visible)]="isDeleteSeasonModuleVisible" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.SEASONS.DELETE.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}" appendTo="body">
       <label>{{ 'CONTENT-MANAGEMENT.SEASONS.DELETE.TEXT' | translate }} <b>{{ selectedSeason?.year }}</b>?</label>
       <ng-template pTemplate="footer">
         <p-button
@@ -143,7 +144,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
       </ng-template>
     </p-dialog>
 
-    <p-dialog [(visible)]="isCreateSeasonModuleVisible" [style]="{width: '250px'}" [header]="'CONTENT-MANAGEMENT.SEASONS.ADD.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+    <p-dialog [(visible)]="isCreateSeasonModuleVisible" [style]="{width: '250px'}" [header]="'CONTENT-MANAGEMENT.SEASONS.ADD.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}" appendTo="body">
       <div class="field">
         <label for="seasonStartDate">{{ 'CONTENT-MANAGEMENT.SEASONS.ADD.SEASON-START-DATE' | translate }}</label>
         <p-datePicker  

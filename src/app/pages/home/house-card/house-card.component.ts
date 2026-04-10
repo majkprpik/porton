@@ -497,7 +497,7 @@ export class HouseCardComponent {
 
         this.isOccupied = this.houseService.isHouseOccupied(houseId);
         const hasScheduledTasks = this.houseService.hasScheduledNotCompletedTasks(houseId);
-        const latestHouseCleaningTask = this.houseService.getLatestHouseCleaningTask(houseId);
+        const latestHouseCleaningTask = this.houseService.getLatestHouseCleaningTask(houseId, this.currentSeason?.year);
         const hasPendingCleaningConfirmation = !!latestHouseCleaningTask && this.taskService.isTaskCompleted(latestHouseCleaningTask);
         const hasConfirmedCleaningTask = !!latestHouseCleaningTask && this.taskService.isTaskConfirmed(latestHouseCleaningTask);
         const lastDepartedReservation = this.houseService.getLastDepartedReservation(houseId);

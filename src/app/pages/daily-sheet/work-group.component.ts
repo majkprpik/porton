@@ -117,12 +117,13 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       </div>
     </div>
 
-    <p-dialog 
-      [header]="'DAILY-SHEET.WORK-GROUPS.SORT-TASKS' | translate" 
-      [modal]="true" 
-      [(visible)]="isSortDialogVisible" 
+    <p-dialog
+      [header]="'DAILY-SHEET.WORK-GROUPS.SORT-TASKS' | translate"
+      [modal]="true"
+      [(visible)]="isSortDialogVisible"
       [style]="{ width: '25rem' }"
       [draggable]="false"
+      appendTo="body"
     >
       <div cdkDropList class="sorted-tasks-list" (cdkDropListDropped)="drop($event)">
         @for (task of assignedTasks | tasksIndexSort; track task.task_id; let i = $index) {
@@ -341,6 +342,8 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
           flex-direction: row;
           align-items: center;
           justify-content: center;
+          min-width: 2.5rem;
+          flex-shrink: 0;
         }
       }
 
@@ -699,7 +702,7 @@ export class WorkGroup implements OnInit {
     let lockedTeam;
 
     if(res.eventType === 'INSERT') {
-      if(this.workGroupTasks.find(wgt => wgt.task_id === res.new.task_id)) return;
+      if(this.workGroupTasks.find(wgt => wgt.task_id === res.new.task_id && wgt.work_group_id === res.new.work_group_id)) return;
       lockedTeam = lockedTeams.find(team => team.id === res.new.work_group_id);
       if(!lockedTeam || lockedTeam.tasks?.find(t => t.task_id === res.new.task_id)) return;
 

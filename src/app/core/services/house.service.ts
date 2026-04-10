@@ -173,11 +173,12 @@ export class HouseService {
     )[0];
   }
 
-  getLatestHouseCleaningTask(houseId: number): Task | null {
-    const houseCleaningTasks = this.tasks.filter(task =>
-      task.house_id == houseId &&
-      this.taskService.isHouseCleaningTask(task)
-    );
+  getLatestHouseCleaningTask(houseId: number, year?: number): Task | null {
+    const houseCleaningTasks = this.tasks.filter(task => {
+      if (task.house_id != houseId || !this.taskService.isHouseCleaningTask(task)) return false;
+      if (year !== undefined) return new Date(task.created_at).getFullYear() === year;
+      return true;
+    });
 
     if (!houseCleaningTasks.length) return null;
 
@@ -728,7 +729,8 @@ export class HouseService {
 
   async updateHouse(house: House){
     try{
-      const { house_id, ...houseToUpdate } = house;
+      const { house_id, ...houseToUpdate } = house as House & { house_type_name?: string };
+      delete (houseToUpdate as any).house_type_name;
 
       const { data: updatedHouse, error: updateHouseError } = await this.supabase.getClient()
         .schema('porton')

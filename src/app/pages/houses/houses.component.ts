@@ -70,7 +70,7 @@ interface ExtendedHouse extends House{
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-house>
-          <tr>
+          <tr [class.inactive-row]="!house.is_active">
             <td>{{ house.house_number }}</td>
             <td>{{ house.house_name }}</td>
             <td><span class="type-badge type-{{ house.house_type_name?.replace(' ', '-') }}">{{ house.house_type_name }}</span></td>
@@ -105,12 +105,13 @@ interface ExtendedHouse extends House{
       </p-table>
     </div>
 
-    <p-dialog 
-      [(visible)]="isEditHouseModuleVisible" 
-      [style]="{width: '450px'}" 
-      [header]="'CONTENT-MANAGEMENT.HOUSES.EDIT.TITLE' | translate" 
-      [modal]="true" 
+    <p-dialog
+      [(visible)]="isEditHouseModuleVisible"
+      [style]="{width: '450px'}"
+      [header]="'CONTENT-MANAGEMENT.HOUSES.EDIT.TITLE' | translate"
+      [modal]="true"
       [contentStyle]="{overflow: 'visible'}"
+      appendTo="body"
     >
       @if(selectedHouse){
         <div class="field">
@@ -202,7 +203,7 @@ interface ExtendedHouse extends House{
       </ng-template>
     </p-dialog>
 
-    <p-dialog [(visible)]="isDeleteHouseModuleVisible" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.HOUSES.DELETE.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+    <p-dialog [(visible)]="isDeleteHouseModuleVisible" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.HOUSES.DELETE.TITLE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}" appendTo="body">
       <label>
         {{ 'CONTENT-MANAGEMENT.HOUSES.DELETE.TEXT' | translate }} <b>{{ selectedHouse?.house_name }}</b>?
       </label>
@@ -212,12 +213,13 @@ interface ExtendedHouse extends House{
       </ng-template>
     </p-dialog>
 
-    <p-dialog 
-      [(visible)]="isCreateHouseModuleVisible" 
-      [style]="{width: '450px'}" 
-      [header]="'CONTENT-MANAGEMENT.HOUSES.ADD.TITLE' | translate" 
-      [modal]="true" 
+    <p-dialog
+      [(visible)]="isCreateHouseModuleVisible"
+      [style]="{width: '450px'}"
+      [header]="'CONTENT-MANAGEMENT.HOUSES.ADD.TITLE' | translate"
+      [modal]="true"
       [contentStyle]="{overflow: 'visible'}"
+      appendTo="body"
     >
       @if(houseToCreate){
         <div class="field">
@@ -411,6 +413,10 @@ interface ExtendedHouse extends House{
       justify-content: flex-end;
       gap: 0.5rem;
       padding-top: 1.5rem;
+    }
+
+    tr.inactive-row td {
+      background-color: rgba(239, 68, 68, 0.08);
     }
 
     .bool-cell {

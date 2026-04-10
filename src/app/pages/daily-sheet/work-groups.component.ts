@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { WorkGroup } from './work-group.component';
-import { combineLatest, from, of, Subject } from 'rxjs';
+import { combineLatest, firstValueFrom, from, of, Subject } from 'rxjs';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { catchError, switchMap, takeUntil } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
@@ -386,6 +386,7 @@ export class WorkGroups implements OnInit {
   isCleaningCollapsed: boolean = false;
   profiles: Profile[] = [];
 
+  isPublishing = false;
   isToday = isToday;
   areDaysEqual = areDaysEqual;
   
@@ -517,8 +518,10 @@ export class WorkGroups implements OnInit {
     this.workGroups = workGroups;
     this.tasks = tasks;
     this.workGroupTasks = workGroupTasks;
-    this.workGroupProfiles = workGroupProfiles; 
+    this.workGroupProfiles = workGroupProfiles;
     this.profiles = profiles.filter(p => !p.is_deleted);
+
+    if (this.isPublishing) return;
 
     this.lockedTeams = [];
 
@@ -611,6 +614,7 @@ export class WorkGroups implements OnInit {
   }
 
   async publishWorkGroups() {
+    this.isPublishing = true;
     const lockedWorkGroups = this.workGroupService.getLockedTeams();
     const unlockedWorkGroups = lockedWorkGroups.filter(lwg => !lwg.isLocked);
 
@@ -654,7 +658,7 @@ export class WorkGroups implements OnInit {
     const ConfirmedId = this.taskService.getTaskProgressTypeByName(TaskProgressTypeName.Confirmed)!.task_progress_type_id;
 
     // Phase 2: apply updates per group
-    const workGroupPromises = diffs.map(async ({ lockedWorkGroup, workGroupId, taskIdsToDelete, taskIdsToCreate, profileIdsToDelete, profileIdsToCreate }) => {
+    const workGroupPromises = diffs.map(async ({ lockedWorkGroup, workGroupId, dbTaskIds, desiredTaskIds, taskIdsToDelete, taskIdsToCreate, profileIdsToDelete, profileIdsToCreate }) => {
       await this.workGroupService.updateWorkGroupToLocked(workGroupId);
 
       // Delete only entries removed from this specific group (scoped by work_group_id)
@@ -673,6 +677,13 @@ export class WorkGroups implements OnInit {
         const index = currentWorkGroupTasks.find(wgt => wgt.task_id === taskId)?.index ?? 0;
         return this.workGroupService.createWorkGroupTask(workGroupId, taskId, index);
       });
+
+      const updateIndexPromises = dbTaskIds
+        .filter(id => desiredTaskIds.includes(id))
+        .map((taskId: number) => {
+          const index = currentWorkGroupTasks.find(wgt => wgt.task_id === taskId)?.index ?? 0;
+          return this.workGroupService.updateWorkGroupTaskIndex(workGroupId, taskId, index);
+        });
 
       const updateTaskProgressPromises = (lockedWorkGroup.tasks ?? [])
         .filter(task =>
@@ -699,6 +710,7 @@ export class WorkGroups implements OnInit {
 
       await Promise.all([
         ...createTaskPromises,
+        ...updateIndexPromises,
         ...updateTaskProgressPromises,
         ...updateRemovedTasksPromises,
         ...createProfilePromises,
@@ -719,6 +731,21 @@ export class WorkGroups implements OnInit {
     });
 
     await Promise.all(workGroupPromises);
+
+    await firstValueFrom(this.dataService.loadWorkGroupTasks());
+
+    this.isPublishing = false;
+    this.lockedTeams = [];
+    this.workGroups.forEach(workGroup => {
+      this.lockedTeams.push({
+        id: workGroup.work_group_id,
+        name: "Team " + workGroup.work_group_id.toString(),
+        members: this.getProfilesForWorkGroup(workGroup.work_group_id),
+        tasks: this.getTasksForWorkGroup(workGroup.work_group_id),
+        isLocked: workGroup.is_locked,
+      });
+    });
+    this.workGroupService.setLockedTeams(this.lockedTeams);
   }
 
 } 

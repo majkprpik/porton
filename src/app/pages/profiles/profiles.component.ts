@@ -114,12 +114,13 @@ interface ExtendedProfile {
       </p-table>
     </div>
 
-    <p-dialog 
-      [(visible)]="profileDialog" 
-      [style]="{width: '450px'}" 
-      [header]="'CONTENT-MANAGEMENT.PROFILES.EDIT.TITLE' | translate" 
-      [modal]="true" 
+    <p-dialog
+      [(visible)]="profileDialog"
+      [style]="{width: '450px'}"
+      [header]="'CONTENT-MANAGEMENT.PROFILES.EDIT.TITLE' | translate"
+      [modal]="true"
       [contentStyle]="{overflow: 'visible'}"
+      appendTo="body"
     >
       @if(selectedProfile){
         <div class="field">
@@ -160,7 +161,7 @@ interface ExtendedProfile {
       </ng-template>
     </p-dialog>
 
-    <p-dialog [(visible)]="showDeleteProfileDialog" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.PROFILES.DELETE.HEADER' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+    <p-dialog [(visible)]="showDeleteProfileDialog" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.PROFILES.DELETE.HEADER' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}" appendTo="body">
       <label>
         {{ 'CONTENT-MANAGEMENT.PROFILES.DELETE.MESSAGE' | translate }} <b>{{ selectedProfile.first_name }}</b>?
       </label>
@@ -170,7 +171,7 @@ interface ExtendedProfile {
       </ng-template>
     </p-dialog>
 
-    <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.PROFILES.ADD.ADD-NEW-PROFILE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}">
+    <p-dialog [(visible)]="showNewProfileDialog" [style]="{width: '450px'}" [header]="'CONTENT-MANAGEMENT.PROFILES.ADD.ADD-NEW-PROFILE' | translate" [modal]="true" [contentStyle]="{overflow: 'visible'}" appendTo="body">
       <div class="field">
          <label for="firstName">{{ 'CONTENT-MANAGEMENT.PROFILES.ADD.FULL-NAME' | translate }}</label>
          <input id="firstName" type="text" pInputText [(ngModel)]="newProfile.name" />

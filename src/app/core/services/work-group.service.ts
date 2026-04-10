@@ -264,6 +264,21 @@ export class WorkGroupService {
     }
   }
 
+  async updateWorkGroupTaskIndex(workGroupId: number, taskId: number, index: number){
+    try{
+      const { error } = await this.supabaseService.getClient()
+        .schema('porton')
+        .from('work_group_tasks')
+        .update({ index })
+        .eq('work_group_id', workGroupId)
+        .eq('task_id', taskId);
+
+      if(error) throw error;
+    } catch(error){
+      console.log(error);
+    }
+  }
+
   async deleteAllWorkGroupProfilesByWorkGroupId(workGroupId: number){
     try{
       const { data: deletedWorkGroupProfiles, error: deleteWorkGroupProfilesError } = await this.supabaseService.getClient()
