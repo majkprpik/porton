@@ -683,6 +683,17 @@ export class DataService {
         table: 'work_group_tasks'
       },
       async (payload: any) => {
+        if (payload.eventType === 'UPDATE' && payload.new) {
+          const current = this.workGroupTasksSubject.getValue();
+          if (current) {
+            const updated = current.map((wgt: any) =>
+              wgt.work_group_id === payload.new.work_group_id && wgt.task_id === payload.new.task_id
+                ? { ...wgt, ...payload.new }
+                : wgt
+            );
+            this.setWorkGroupTasks(updated);
+          }
+        }
         this.$workGroupTasksUpdate.next(payload);
       }
     ).on(

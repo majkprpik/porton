@@ -327,7 +327,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
       max-width: 100%;
       min-height: 60px;
       display: block;
-      background: white;
+      background: var(--surface-card);
       border-radius: 4px;
       overflow: hidden;
 

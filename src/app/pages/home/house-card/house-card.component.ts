@@ -521,7 +521,6 @@ export class HouseCardComponent {
             !hasPendingCleaningConfirmation &&
             !hideBadgeBeforeLongVacancyArrival &&
             hasConfirmedCleaningTask &&
-            !hasCurrentPendingArrival &&
             cleaningTaskPostDeparture;
 
         this.isAvailable = !this.isOccupied && !hasBlockingTasks && !isReservedToday;

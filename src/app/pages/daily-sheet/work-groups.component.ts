@@ -716,18 +716,16 @@ export class WorkGroups implements OnInit {
         ...createProfilePromises,
       ]);
 
-      const houseTechnicians = lockedWorkGroup.members.filter(member => this.profileService.isHouseTechnician(member.id));
-      (lockedWorkGroup.tasks ?? [])
-        .filter(task => taskIdsToCreate.includes(task.task_id) && task.is_unscheduled)
-        .forEach(() => {
-          this.pushNotificationsService.sendNotification(
-            houseTechnicians.map(member => member.id),
-            {
-              title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'),
-              body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
-            }
-          );
-        });
+      const unscheduledNewTasks = (lockedWorkGroup.tasks ?? []).filter(task => taskIdsToCreate.includes(task.task_id) && task.is_unscheduled);
+      if (unscheduledNewTasks.length > 0) {
+        this.pushNotificationsService.sendNotification(
+          lockedWorkGroup.members.map(member => member.id),
+          {
+            title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'),
+            body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
+          }
+        );
+      }
     });
 
     await Promise.all(workGroupPromises);
