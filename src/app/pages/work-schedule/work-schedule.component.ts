@@ -95,41 +95,43 @@ import { StorageService, STORAGE_KEYS } from '../../core/services/storage.servic
 
           <div class="schedule-buttons">
             @if(!isRestrictedUser){
-              <div 
-                class="quick-delete"
-                tooltipPosition="top"
-              >
-                @if(isDeleteMode){
-                  <span id="selected-schedules">Selected schedules: {{ schedulesToDelete.length }}</span>
-                  <p-button
-                    [severity]="'danger'"
-                    (click)="deleteSelectedSchedules()"
-                    [raised]="true"
-                  >
-                    <span>Delete</span>
-                  </p-button>
-                  <p-button
-                    [severity]="'danger'"
-                    (click)="cancelQuickDelete()"
-                    styleClass="p-button-text"
-                    [raised]="true"
-                  >
-                    <span>Cancel</span>
-                  </p-button>
-                } @else {
-                  <p-button
-                    [severity]="'danger'"
-                    (click)="onQuickDelete()"
-                    [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.QUICK-DELETE' | translate"
-                    tooltipPosition="top"
-                  >
-                    <i class="pi pi-eraser"></i>
-                  </p-button>
-                }
-              </div>
-              <div 
+              @if(canEditSchedule){
+                <div
+                  class="quick-delete"
+                  tooltipPosition="top"
+                >
+                  @if(isDeleteMode){
+                    <span id="selected-schedules">Selected schedules: {{ schedulesToDelete.length }}</span>
+                    <p-button
+                      [severity]="'danger'"
+                      (click)="deleteSelectedSchedules()"
+                      [raised]="true"
+                    >
+                      <span>Delete</span>
+                    </p-button>
+                    <p-button
+                      [severity]="'danger'"
+                      (click)="cancelQuickDelete()"
+                      styleClass="p-button-text"
+                      [raised]="true"
+                    >
+                      <span>Cancel</span>
+                    </p-button>
+                  } @else {
+                    <p-button
+                      [severity]="'danger'"
+                      (click)="onQuickDelete()"
+                      [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.QUICK-DELETE' | translate"
+                      tooltipPosition="top"
+                    >
+                      <i class="pi pi-eraser"></i>
+                    </p-button>
+                  }
+                </div>
+              }
+              <div
                 class="export"
-                [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.EXPORT' | translate" 
+                [pTooltip]="'WORK-SCHEDULE.HEADER.TOOLTIPS.EXPORT' | translate"
                 tooltipPosition="top"
               >
                 <p-button
@@ -878,9 +880,19 @@ export class WorkScheduleComponent {
     ProfileRoles.VoditeljDomacinstva,
     ProfileRoles.Prodaja,
     ProfileRoles.VoditeljRecepcije,
+    ProfileRoles.Recepcija,
+    ProfileRoles.SavjetnikUprave,
+  ];
+  editorRoles = [
+    ProfileRoles.VoditeljKampa,
+    ProfileRoles.Uprava,
+    ProfileRoles.VoditeljDomacinstva,
+    ProfileRoles.Prodaja,
+    ProfileRoles.VoditeljRecepcije,
     ProfileRoles.SavjetnikUprave,
   ];
   isRestrictedUser = false;
+  canEditSchedule = false;
 
   constructor(
     private dataService: DataService,
@@ -929,20 +941,18 @@ export class WorkScheduleComponent {
       });
   }
 
-  isUserRestricted(profiles: Profile[]){
-    const profile = profiles.find(p => p.id == this.authService.getStoredUserId())
-    const userRole = this.profileService.getProfileRoleNameById(profile?.role_id);
-
-    return !this.nonRestrictedUserRoles.includes(userRole as ProfileRoles);
-  }
-
   filterProfiles(profiles: Profile[]){
-    if(this.isUserRestricted(profiles)){
-      this.profiles = profiles.filter(p => p.id == this.authService.getStoredUserId() && (!p.is_deleted || p.is_test_user));
-      this.isRestrictedUser = true;
+    const userId = this.authService.getStoredUserId();
+    const profile = profiles.find(p => p.id == userId);
+    const userRole = this.profileService.getProfileRoleNameById(profile?.role_id) as ProfileRoles;
+
+    this.isRestrictedUser = !this.nonRestrictedUserRoles.includes(userRole);
+    this.canEditSchedule = this.editorRoles.includes(userRole);
+
+    if(this.isRestrictedUser){
+      this.profiles = profiles.filter(p => p.id == userId && (!p.is_deleted || p.is_test_user));
     } else {
       this.profiles = profiles.filter(p => !p.is_deleted || p.is_test_user);
-      this.isRestrictedUser = false;
     }
   }
 
@@ -1393,7 +1403,7 @@ export class WorkScheduleComponent {
   }
 
   onCellMouseDown(event: MouseEvent, row: number, col: number): void {
-    if(this.isRestrictedUser) return;
+    if(!this.canEditSchedule) return;
 
     this.selectedCellRowIndex.set(row);
     this.selectedStartColIndex.set(col);
@@ -1405,7 +1415,7 @@ export class WorkScheduleComponent {
 
   // Handle mouse move to update selection range
   onCellMouseMove(event: MouseEvent, row: number, col: number): void {
-    if(this.isRestrictedUser) return;
+    if(!this.canEditSchedule) return;
 
     if (this.isSelecting && row === this.selectedCellRowIndex()) {
       if (this.hasCellSchedule(row, col)) return;
@@ -1449,7 +1459,7 @@ export class WorkScheduleComponent {
 
   // Handle mouse up to end selection
   onDocumentMouseUp(event: any, row: number, col: number): void {
-    if(this.isRestrictedUser) return;
+    if(!this.canEditSchedule) return;
 
     setTimeout(() => {
       if(!this.isSelecting) return;
