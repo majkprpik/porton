@@ -32,12 +32,14 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
     CheckboxModule,
   ],
   template: `
-  <p-dialog 
-    [(visible)]="visible" 
-    [modal]="true" 
-    [style]="{width: '600px'}" 
-    [draggable]="false" 
+  <p-dialog
+    [(visible)]="visible"
+    [modal]="true"
+    [style]="{width: '600px'}"
+    [draggable]="false"
     [resizable]="false"
+    appendTo="body"
+    styleClass="work-schedule-form-dialog"
     (onHide)="onCancel()"
   >
     <ng-template pTemplate="header">
@@ -218,150 +220,94 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
   </p-dialog> 
   `,
   styles: `
-  :host ::ng-deep {
-    .p-dialog {
-      .p-dialog-header {
-        padding: 1rem 1.5rem;
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-        border-radius: 10px 10px 0 0;
+  ::ng-deep .work-schedule-form-dialog {
+    .p-dialog-header {
+      padding: 1rem 1.5rem;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      border-radius: 10px 10px 0 0;
 
-        h3{
+      h3{
         margin: 0;
-        }
+      }
+    }
+
+    .top{
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    @media (max-width: 991px) {
+      .top {
+        flex-direction: column;
+        gap: 0.75rem;
       }
 
-      .top{
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
+      .top .field p-multiselect,
+      .top .field .p-multiselect,
+      .top .field p-select,
+      .top .field .p-select {
+        width: 100% !important;
+      }
+    }
+
+    .p-dialog-content {
+      padding: 1.5rem;
+    }
+
+    .p-dialog-footer {
+      padding: 1rem !important;
+    }
+
+    @media (max-width: 991px) {
+      width: calc(100vw - 2rem) !important;
+      max-height: calc(100dvh - 56px - 5rem) !important;
+      margin-bottom: calc(56px + 1rem) !important;
+    }
+
+    .schedule{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      #set-schedule-label{
+        width: 100px;
+        padding-bottom: 10px;
       }
 
-      @media (max-width: 991px) {
-        .top {
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        .top .field p-multiselect,
-        .top .field .p-multiselect,
-        .top .field p-select,
-        .top .field .p-select {
-          width: 100% !important;
-        }
-      }
-
-      .p-dialog-content {
-        padding: 1.5rem;
-      }
-      
-      .p-dialog-footer {
-        padding: 1rem !important;
-      }
-
-      @media (max-width: 991px) {
-        .p-dialog {
-          width: calc(100vw - 2rem) !important;
-          max-height: calc(100dvh - 56px - 5rem) !important;
-          margin-bottom: calc(56px + 1rem) !important;
-        }
-      }
-
-      .schedule{
-        display: flex;
-        flex-direction: column; 
-        gap: 10px;
-
-        #set-schedule-label{
-          width: 100px;
-          padding-bottom: 10px;
-        }
-
-        .days{
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-          justify-content: space-between;
-          box-sizing: border-box;
-          padding: 5px;
-          border-radius: 10px;
-
-          .day{
-            display: flex;
-            flex-direction: row;
-            justify-content: space-evenly;
-            gap: 120px;
-            padding-bottom: 10px;
-
-            .day-date{
-              display: flex;
-              flex-direction: row;
-              align-items: center;
-              gap: 20px;
-              width: 90px;
-
-              b{
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-              }
-            }
-
-            .each-day-times{
-              display: flex;
-              flex-direction: row;
-              gap: 20px;
-
-              .start-time, .end-time{
-                display: flex;
-                flex-direction: column;
-              }
-            }
-          }
-        }
-
-        .no-click:hover {
-          cursor: not-allowed;
-        }
-      }
-
-      .set-all-schedule{
+      .days{
         display: flex;
         flex-direction: column;
         width: 100%;
-        padding-bottom: 10px;
+        justify-content: space-between;
+        box-sizing: border-box;
+        padding: 5px;
+        border-radius: 10px;
 
-        .set-schedule{
-          display: flex;
-          flex-direction: row;
-          gap: 20px;
-          padding: 10px 0 10px 0;
-        }
-
-        #set-all-schedule-label{
-          width: 170px;
-          padding-bottom: 10px;
-        }
-        
-        .days{
+        .day{
           display: flex;
           flex-direction: row;
           justify-content: space-evenly;
-          gap: 96px;
-          width: 100%;
-          box-sizing: border-box;
-          padding: 5px;
-          border-radius: 10px;
+          gap: 120px;
+          padding-bottom: 10px;
 
-          b{
-            width: 140px;
+          .day-date{
             display: flex;
             flex-direction: row;
             align-items: center;
+            gap: 20px;
+            width: 90px;
+
+            b{
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+            }
           }
 
-          .whole-schedule-times{
+          .each-day-times{
             display: flex;
             flex-direction: row;
             gap: 20px;
@@ -372,27 +318,78 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
             }
           }
         }
+      }
 
-        .no-click:hover {
-          cursor: not-allowed !important;
+      .no-click:hover {
+        cursor: not-allowed;
+      }
+    }
+
+    .set-all-schedule{
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      padding-bottom: 10px;
+
+      .set-schedule{
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        padding: 10px 0 10px 0;
+      }
+
+      #set-all-schedule-label{
+        width: 170px;
+        padding-bottom: 10px;
+      }
+
+      .days{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        gap: 96px;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 5px;
+        border-radius: 10px;
+
+        b{
+          width: 140px;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+        }
+
+        .whole-schedule-times{
+          display: flex;
+          flex-direction: row;
+          gap: 20px;
+
+          .start-time, .end-time{
+            display: flex;
+            flex-direction: column;
+          }
         }
       }
-    }
-    
-    // Simple two-column grid layout
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr; // One column by default (mobile)
-      gap: 1rem;
-      
-      @media (min-width: 768px) {
-        grid-template-columns: 1fr 1fr; // Two columns on wider screens
+
+      .no-click:hover {
+        cursor: not-allowed !important;
       }
     }
-    
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+
+      @media (min-width: 768px) {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
     .field {
       margin-bottom: 1.25rem;
-      
+
       label {
         font-weight: 500;
         margin-bottom: 0.5rem;
@@ -404,20 +401,19 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
         font-size: 16px;
       }
     }
-    
-    // Full width inputs
-    .p-calendar, 
+
+    .p-calendar,
     .p-inputnumber,
     input[type="text"],
     textarea {
         width: 100%;
     }
-    
+
     textarea {
       resize: vertical;
       min-height: 80px;
     }
-    
+
     .p-error {
       margin-top: 0.25rem;
       color: #dc3545;
@@ -435,18 +431,17 @@ import { nonNull } from '../../../shared/rxjs-operators/non-null';
       display: flex;
       justify-content: space-between;
       width: 100%;
-      
+
       .left-buttons {
         display: flex;
         justify-content: flex-start;
       }
-      
+
       .right-buttons {
         display: flex;
         justify-content: flex-end;
         gap: 0.5rem;
       }
-      
     }
   }
 `

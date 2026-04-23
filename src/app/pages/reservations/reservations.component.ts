@@ -247,12 +247,13 @@ interface CellData {
             </p-dialog>
 
             @if(showReservationForm()){
-                <app-reservation-form 
+                <app-reservation-form
                     [reservation]="editingReservation()"
                     [visible]="showReservationForm()"
                     [colors]="colors"
                     [existingReservations]="houseAvailabilities()"
                     [season]="selectedSeason"
+                    [readOnly]="isReadOnly"
                     (save)="handleReservationSave($event)"
                     (delete)="handleDeleteReservation($event)"
                     (cancel)="handleReservationCancel()"
@@ -1784,7 +1785,6 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     }
 
     onCellDoubleClick(event: MouseEvent, row: number, col: number): void {
-        if(this.isReadOnly) return;
         if(this.isCellInPast(col)) return;
 
         const houses = this.filteredHouses();
@@ -1796,6 +1796,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
             if (isReserved) {
                 this.handleEditReservation(row, col);
             } else {
+                if (this.isReadOnly) return;
                 this.handleAddReservation(row, col);
             }
         }
@@ -2118,7 +2119,6 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
     onReservationCellClick(event: MouseEvent, row: number, col: number): void {
         event.stopPropagation();
-        if(this.isReadOnly) return;
 
         const grid = this.gridMatrix();
         if (!grid || grid.length <= row || !grid[row] || grid[row].length <= col) {

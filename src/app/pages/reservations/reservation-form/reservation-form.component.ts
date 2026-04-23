@@ -16,12 +16,14 @@ import { DragDropModule } from "primeng/dragdrop";
 @Component({
     selector: 'app-reservation-form',
     template: `
-        <p-dialog 
-            [(visible)]="visible" 
-            [modal]="true" 
-            [style]="{width: '700px'}" 
-            [draggable]="false" 
+        <p-dialog
+            [(visible)]="visible"
+            [modal]="true"
+            [style]="{width: '700px'}"
+            [draggable]="false"
             [resizable]="false"
+            appendTo="body"
+            styleClass="reservation-form-dialog"
             (onHide)="onDialogHide()"
         >
             <ng-template pTemplate="header">
@@ -44,17 +46,17 @@ import { DragDropModule } from "primeng/dragdrop";
                     <div class="form-col">
                         <div class="field">
                             <label for="lastName">{{ 'RESERVATIONS.MODAL.LAST-NAME' | translate }}*</label>
-                            <input id="lastName" type="text" pInputText [(ngModel)]="reservation.last_name" />
+                            <input id="lastName" type="text" pInputText [(ngModel)]="reservation.last_name" [disabled]="readOnly" />
                         </div>
                         <div class="field">
                             <label for="reservationNumber">{{ 'RESERVATIONS.MODAL.RESERVATION-NUMBER' | translate }}*</label>
-                            <input id="reservationNumber" type="text" pInputText [(ngModel)]="reservation.reservation_number" />
+                            <input id="reservationNumber" type="text" pInputText [(ngModel)]="reservation.reservation_number" [disabled]="readOnly" />
                         </div>
                         <div class="field">
                             <div class="pets-row">
                                 <div class="half-field">
                                     <label for="arrivalTime">{{ 'RESERVATIONS.MODAL.CHECK-IN' | translate }}</label>
-                                    <p-datepicker [(ngModel)]="reservation.arrival_time" [iconDisplay]="'input'" [showIcon]="true" [timeOnly]="true" inputId="arrivalTime">
+                                    <p-datepicker [(ngModel)]="reservation.arrival_time" [iconDisplay]="'input'" [showIcon]="true" [timeOnly]="true" inputId="arrivalTime" [disabled]="readOnly">
                                         <ng-template #inputicon let-clickCallBack="clickCallBack">
                                             <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
                                         </ng-template>
@@ -63,7 +65,7 @@ import { DragDropModule } from "primeng/dragdrop";
                                 </div>
                                 <div class="half-field">
                                     <label for="departureTime">{{ 'RESERVATIONS.MODAL.CHECK-OUT' | translate }}</label>
-                                    <p-datepicker [(ngModel)]="reservation.departure_time" [iconDisplay]="'input'" [showIcon]="true" [timeOnly]="true" inputId="departureTime">
+                                    <p-datepicker [(ngModel)]="reservation.departure_time" [iconDisplay]="'input'" [showIcon]="true" [timeOnly]="true" inputId="departureTime" [disabled]="readOnly">
                                         <ng-template #inputicon let-clickCallBack="clickCallBack">
                                             <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
                                         </ng-template>
@@ -73,52 +75,54 @@ import { DragDropModule } from "primeng/dragdrop";
                         </div>
                         <div class="field">
                             <label for="startDate">{{ 'RESERVATIONS.MODAL.START-DATE' | translate }}</label>
-                            <p-datePicker  
-                                id="startDate" 
-                                [(ngModel)]="startDate" 
-                                [readonlyInput]="true" 
+                            <p-datePicker
+                                id="startDate"
+                                [(ngModel)]="startDate"
+                                [readonlyInput]="true"
                                 dateFormat="dd.mm.yy"
-                                [minDate]="minStartDate" 
-                                [maxDate]="maxStartDate" 
+                                [minDate]="minStartDate"
+                                [maxDate]="maxStartDate"
                                 [showIcon]="true"
-                                [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate" 
+                                [placeholder]="'RESERVATIONS.MODAL.SELECT-START-DATE' | translate"
                                 (onSelect)="onStartDateChange()"
                                 appendTo="body"
+                                [disabled]="readOnly"
                             >
                             </p-datePicker>
                         </div>
                     </div>
-                    
+
                     <div class="form-col">
                         <div class="field">
                             <label for="adults">{{ 'RESERVATIONS.MODAL.ADULTS' | translate }}</label>
-                            <p-inputNumber id="adults" [(ngModel)]="reservation.adults" [min]="0" [max]="10"></p-inputNumber>
+                            <p-inputNumber id="adults" [(ngModel)]="reservation.adults" [min]="0" [max]="10" [disabled]="readOnly"></p-inputNumber>
                         </div>
                         <div class="field">
                             <div class="babies-cribs-row">
                                 <div class="half-field">
                                     <label for="defaultPets">{{ 'RESERVATIONS.MODAL.PETS' | translate }}</label>
-                                    <p-inputNumber class="small-input" id="defaultPets" [(ngModel)]="reservation.dogs_d" [min]="0" [max]="10"></p-inputNumber>
+                                    <p-inputNumber class="small-input" id="defaultPets" [(ngModel)]="reservation.dogs_d" [min]="0" [max]="10" [disabled]="readOnly"></p-inputNumber>
                                 </div>
                                 <div class="half-field">
                                     <label for="babies">{{ 'RESERVATIONS.MODAL.BABIES' | translate }}</label>
-                                    <p-inputNumber class="small-input" id="babies" [(ngModel)]="reservation.babies" [min]="0" [max]="10"></p-inputNumber>
+                                    <p-inputNumber class="small-input" id="babies" [(ngModel)]="reservation.babies" [min]="0" [max]="10" [disabled]="readOnly"></p-inputNumber>
                                 </div>
                                 <div class="half-field">
                                     <label for="cribs">{{ 'RESERVATIONS.MODAL.BABY-CRIBS' | translate }}</label>
-                                    <p-inputNumber class="small-input" id="cribs" [(ngModel)]="reservation.cribs" [min]="0" [max]="10"></p-inputNumber>
+                                    <p-inputNumber class="small-input" id="cribs" [(ngModel)]="reservation.cribs" [min]="0" [max]="10" [disabled]="readOnly"></p-inputNumber>
                                 </div>
                             </div>
                         </div>
                         <div class="field">
                             <label for="colors">{{ 'RESERVATIONS.MODAL.COLOR' | translate }}</label>
-                            <p-select 
-                                [options]="colors" 
+                            <p-select
+                                [options]="colors"
                                 [(ngModel)]="selectedColor"
                                 [ngStyle]="{ 'width': '210px'}"
                                 [panelStyle]="{ 'max-height': '200px' }"
                                 [placeholder]="'RESERVATIONS.MODAL.SELECT-A-COLOR' | translate"
                                 appendTo="body"
+                                [disabled]="readOnly"
                             >
                                 <ng-template let-option pTemplate="item">
                                     <div class="color-item" [style.background]="option"></div>
@@ -130,17 +134,18 @@ import { DragDropModule } from "primeng/dragdrop";
                         </div>
                         <div class="field">
                             <label for="endDate">{{ 'RESERVATIONS.MODAL.END-DATE' | translate }}</label>
-                            <p-datePicker  
-                                id="endDate" 
-                                [(ngModel)]="endDate" 
-                                [readonlyInput]="true" 
+                            <p-datePicker
+                                id="endDate"
+                                [(ngModel)]="endDate"
+                                [readonlyInput]="true"
                                 dateFormat="dd.mm.yy"
-                                [minDate]="minEndDate" 
-                                [maxDate]="maxEndDate" 
+                                [minDate]="minEndDate"
+                                [maxDate]="maxEndDate"
                                 [showIcon]="true"
-                                [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate" 
+                                [placeholder]="'RESERVATIONS.MODAL.SELECT-END-DATE' | translate"
                                 (onSelect)="onEndDateChange()"
                                 appendTo="body"
+                                [disabled]="readOnly"
                             >
                             </p-datePicker>
                         </div>
@@ -149,14 +154,15 @@ import { DragDropModule } from "primeng/dragdrop";
 
                 <div class="field mt-3">
                     <label for="notes">{{ 'RESERVATIONS.MODAL.NOTES' | translate }}</label>
-                    <textarea 
-                        id="notes" 
-                        rows="4" 
+                    <textarea
+                        id="notes"
+                        rows="4"
                         class="p-inputtext"
-                        pTextarea  
-                        [(ngModel)]="notes" 
+                        pTextarea
+                        [(ngModel)]="notes"
                         [placeholder]="'RESERVATIONS.MODAL.NOTES-ENTER-INFO' | translate"
                         style="resize: none"
+                        [disabled]="readOnly"
                     >
                     </textarea>
                 </div>
@@ -167,105 +173,107 @@ import { DragDropModule } from "primeng/dragdrop";
                     </div>
                 }
 
-                <div class="info-field">
-                    <div class="p-info">{{ 'RESERVATIONS.MODAL.REQUIRED-FIELDS' | translate }}</div>
-                </div>
+                @if(!readOnly){
+                    <div class="info-field">
+                        <div class="p-info">{{ 'RESERVATIONS.MODAL.REQUIRED-FIELDS' | translate }}</div>
+                    </div>
+                }
             </div>
             <ng-template pTemplate="footer">
                 <div class="form-footer">
                     <div class="left-buttons">
-                        @if(isEditMode){
+                        @if(isEditMode && !readOnly){
                             <p-button
                                 [label]="'BUTTONS.DELETE' | translate"
-                                icon="pi pi-trash" 
-                                (click)="onDelete()" 
+                                icon="pi pi-trash"
+                                (click)="onDelete()"
                                 severity="danger">
                             </p-button>
                         }
                     </div>
                     <div class="right-buttons">
-                        <p-button 
-                            [label]="'BUTTONS.CANCEL' | translate" 
-                            icon="pi pi-times" 
-                            (click)="onCancel()" 
+                        <p-button
+                            [label]="'BUTTONS.CANCEL' | translate"
+                            icon="pi pi-times"
+                            (click)="onCancel()"
                             styleClass="p-button-text"
                         ></p-button>
-                        <p-button 
-                            [label]="'BUTTONS.SAVE' | translate" 
-                            icon="pi pi-check" 
-                            (click)="onSave()" 
-                            [disabled]="!isFormValid()" 
-                            styleClass="p-button-text"
-                        ></p-button>
+                        @if(!readOnly){
+                            <p-button
+                                [label]="'BUTTONS.SAVE' | translate"
+                                icon="pi pi-check"
+                                (click)="onSave()"
+                                [disabled]="!isFormValid()"
+                                styleClass="p-button-text"
+                            ></p-button>
+                        }
                     </div>
                 </div>
             </ng-template>
         </p-dialog> 
     `,
     styles: `
-        :host ::ng-deep {
-            .p-dialog {
-                .p-dialog-header {
-                    padding: 1rem 1.5rem;
-                    background-color: var(--surface-ground);
-                    border-radius: 10px 10px 0 0;
+        ::ng-deep .reservation-form-dialog {
+            .p-dialog-header {
+                padding: 1rem 1.5rem;
+                background-color: var(--surface-ground);
+                border-radius: 10px 10px 0 0;
+                width: 100%;
+
+                h3 {
+                    margin: 0;
                     width: 100%;
+                }
 
-                    h3 {
-                        margin: 0;
-                        width: 100%;
-                    }
+                .house-number{
+                    font-size: 24px;
+                    font-weight: bold;
 
-                    .house-number{
-                        font-size: 24px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 8px;
+                    margin-right: 10px;
+
+                    i{
+                        font-size: 21px;
                         font-weight: bold;
-
-                        display: flex;
-                        flex-direction: row;
-                        align-items: center;
-                        gap: 8px;
-                        margin-right: 10px;
-
-                        i{
-                            font-size: 21px;
-                            font-weight: bold;
-                        }
                     }
-                }
-                
-                .p-dialog-content {
-                    padding: 1.5rem;
-                }
-                
-                .p-dialog-footer {
-                    padding: 1rem;
-                    border-radius: 0 0 10px 10px;
-                }
-
-                @media (max-width: 991px) {
-                    width: calc(100vw - 2rem) !important;
-                    max-height: calc(100dvh - 56px - 5rem) !important;
-                    margin-bottom: calc(56px + 1rem) !important;
                 }
             }
-            
+
+            .p-dialog-content {
+                padding: 1.5rem;
+            }
+
+            .p-dialog-footer {
+                padding: 1rem;
+                border-radius: 0 0 10px 10px;
+            }
+
+            @media (max-width: 991px) {
+                width: calc(100vw - 2rem) !important;
+                max-height: calc(100dvh - 56px - 5rem) !important;
+                margin-bottom: calc(56px + 1rem) !important;
+            }
+
             .form-grid {
                 display: grid;
-                grid-template-columns: 1fr; 
+                grid-template-columns: 1fr;
                 gap: 1rem;
-                
+
                 @media (min-width: 768px) {
                     grid-template-columns: 1fr 1fr;
                 }
             }
-            
+
             .form-col {
                 padding: 0 0.5rem;
             }
-            
+
             .field {
                 margin-bottom: 1.25rem;
-                
+
                 label {
                     font-weight: 500;
                     margin-bottom: 0.5rem;
@@ -276,19 +284,19 @@ import { DragDropModule } from "primeng/dragdrop";
             .info-field{
                 margin-top: 30px;
             }
-            
-            .p-calendar, 
+
+            .p-calendar,
             .p-inputnumber,
             input[type="text"],
             textarea {
                 width: 100%;
             }
-            
+
             textarea {
                 resize: vertical;
                 min-height: 80px;
             }
-            
+
             .p-error {
                 margin-top: 0.25rem;
                 color: #dc3545;
@@ -311,18 +319,18 @@ import { DragDropModule } from "primeng/dragdrop";
                 display: flex;
                 justify-content: space-between;
                 width: 100%;
-                
+
                 .left-buttons {
                     display: flex;
                     justify-content: flex-start;
                 }
-                
+
                 .right-buttons {
                     display: flex;
                     justify-content: flex-end;
                     gap: 0.5rem;
                 }
-                
+
             }
 
             .babies-cribs-row, .pets-row {
@@ -331,7 +339,7 @@ import { DragDropModule } from "primeng/dragdrop";
                 flex-direction: row;
                 align-items: center;
                 justify-content: space-between;
-                
+
                 .half-field {
                     flex: 1;
                     min-width: 0;
@@ -341,7 +349,7 @@ import { DragDropModule } from "primeng/dragdrop";
                 .half-field:last-child {
                     margin-right: 0;
                 }
-                
+
                 .p-inputnumber{
                     width: 100% !important;
                 }
@@ -350,7 +358,7 @@ import { DragDropModule } from "primeng/dragdrop";
                     width: 40px !important;
                 }
             }
-        } 
+        }
     `,
     standalone: true,
     imports: [
@@ -369,9 +377,10 @@ import { DragDropModule } from "primeng/dragdrop";
 export class ReservationFormComponent implements OnInit {
     @Input() visible = false;
     @Input() reservation!: Partial<HouseAvailability>;
-    @Input() existingReservations: HouseAvailability[] = [];  
+    @Input() existingReservations: HouseAvailability[] = [];
     @Input() colors: any[] = [];
     @Input() season!: Season;
+    @Input() readOnly = false;
     
     notes: string = '';
 

@@ -23,12 +23,13 @@ import { LayoutService } from '../../../layout/services/layout.service';
     RadioButtonModule,
   ],
   template: `
-    <p-dialog 
-      [(visible)]="visible" 
-      [modal]="true" 
-      [style]="{ width: '1200px' }" 
-      [draggable]="false" 
+    <p-dialog
+      [(visible)]="visible"
+      [modal]="true"
+      [style]="{ width: '1200px' }"
+      [draggable]="false"
       [resizable]="false"
+      appendTo="body"
       (onHide)="onCancel()"
     >
       <ng-template pTemplate="header">
