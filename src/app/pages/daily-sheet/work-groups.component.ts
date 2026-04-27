@@ -723,7 +723,8 @@ export class WorkGroups implements OnInit {
           {
             title: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.TITLE'),
             body: this.translateService.instant('NOTIFICATIONS.UNSCHEDULED-TASK.BODY'),
-          }
+          },
+          'unscheduled_task',
         );
       }
     });

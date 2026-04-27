@@ -31,12 +31,6 @@ export class TaskService {
     "Ostalo": "Other"
   };
 
-  private profilesToReceiveTaskCompletedNotification = [
-    'Matej Adrić',
-    'Mia Lukić',
-    'Marko Sovulj',
-  ]
-
   private isUrgentIconVisibleSubject = new BehaviorSubject<boolean>(false);
   isUrgentIconVisible$ = this.isUrgentIconVisibleSubject.asObservable();
   private intervalId: any;
@@ -291,25 +285,20 @@ export class TaskService {
     }
   }
 
-  handleRepairTaskCompleteNotificationSend(updatedTask: Task){
-    if(this.isTaskCompleted(updatedTask) && updatedTask.is_unscheduled && this.isRepairTask(updatedTask)){
-      const profilesToReceiveNotification = this.profiles.filter(profile => 
-        this.profilesToReceiveTaskCompletedNotification.some(p => p == profile.first_name));
+  async handleRepairTaskCompleteNotificationSend(updatedTask: Task){
+    if(!(this.isTaskCompleted(updatedTask) && updatedTask.is_unscheduled && this.isRepairTask(updatedTask))) return;
 
-      let completedBy: any = this.profiles.find(profile => profile.id == updatedTask.completed_by)?.first_name;
-      if(!completedBy) completedBy = 'User';
+    const completedBy = this.profiles.find(profile => profile.id == updatedTask.completed_by)?.first_name ?? 'User';
+    const houseNumber = this.houses.find(house => house.house_id == updatedTask.house_id)?.house_name ?? '0';
 
-      let houseNumber = this.houses.find(house => house.house_id == updatedTask.house_id)?.house_name;
-      if(!houseNumber) houseNumber = '0';
-
-      this.pushNotificationsService.sendNotification(
-        profilesToReceiveNotification.map(p => p.id),
-        {
-          title: 'Task completed',
-          body: completedBy + ' completed a repair task on house ' + houseNumber,
-        }
-      );
-    }
+    this.pushNotificationsService.sendNotification(
+      [],
+      {
+        title: 'Task completed',
+        body: completedBy + ' completed a repair task on house ' + houseNumber,
+      },
+      'repair_task_completed',
+    );
   }
 
   private async compressImage(image: File, targetMegaBytes: number){

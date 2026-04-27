@@ -4,6 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { ProfilesComponent } from '../profiles/profiles.component';
 import { SeasonsComponent } from '../seasons/seasons.component';
 import { HousesComponent } from '../houses/houses.component';
+import { NotificationSubscriptionsComponent } from '../notification-subscriptions/notification-subscriptions.component';
 import { UpperCasePipe } from '@angular/common';
 
 @Component({
@@ -14,6 +15,7 @@ import { UpperCasePipe } from '@angular/common';
     ProfilesComponent,
     SeasonsComponent,
     HousesComponent,
+    NotificationSubscriptionsComponent,
     UpperCasePipe,
   ],
   template: `
@@ -39,6 +41,8 @@ import { UpperCasePipe } from '@angular/common';
             <app-seasons></app-seasons>
           } @else if(selectedContent === 'Houses'){
             <app-houses></app-houses>
+          } @else if(selectedContent === 'Notifications'){
+            <app-notification-subscriptions></app-notification-subscriptions>
           }
       </div>
     </div>
@@ -124,9 +128,10 @@ import { UpperCasePipe } from '@angular/common';
 })
 export class ContentManagementComponent {
   content = [
-    { key: 'Profiles', icon: 'pi-users' },
-    { key: 'Seasons',  icon: 'pi-calendar' },
-    { key: 'Houses',   icon: 'pi-home' },
+    { key: 'Profiles',      icon: 'pi-users' },
+    { key: 'Seasons',       icon: 'pi-calendar' },
+    { key: 'Houses',        icon: 'pi-home' },
+    { key: 'Notifications', icon: 'pi-bell' },
   ];
 
   selectedContent: string = '';

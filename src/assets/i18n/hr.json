@@ -502,7 +502,35 @@
         "TABS": {
             "PROFILES": "Profili",
             "SEASONS": "Sezone",
-            "HOUSES": "Kućice"
+            "HOUSES": "Kućice",
+            "NOTIFICATIONS": "Obavijesti"
+        },
+        "NOTIFICATION-SUBSCRIPTIONS": {
+            "SELECT-PROFILES": "Odaberi profile",
+            "EDIT-TITLE": "Uredi obavijesti",
+            "ACTIONS": "Akcije",
+            "REPAIR-TASK-COMPLETED": {
+                "TITLE": "Popravak završen",
+                "DESCRIPTION": "Obavijesti korisnika kada netko označi popravak kao završen."
+            },
+            "NOTE-MENTION": {
+                "TITLE": "Spominjanja u bilješci",
+                "DESCRIPTION": "Obavijesti korisnika kada je spomenut u bilješci."
+            },
+            "HOUSE-DEPARTED": {
+                "TITLE": "Odlazak iz kućice",
+                "DESCRIPTION": "Obavijesti korisnika kada gosti napuste kućicu dodijeljenu njegovoj radnoj grupi."
+            },
+            "UNSCHEDULED-TASK": {
+                "TITLE": "Izvanredni zadatak",
+                "DESCRIPTION": "Obavijesti korisnika kada je njegovoj grupi dodijeljen izvanredni zadatak."
+            },
+            "MESSAGES": {
+                "SUCCESS": "Uspjeh",
+                "ERROR": "Greška",
+                "SAVE-SUCCESS": "Pretplate na obavijesti spremljene",
+                "SAVE-ERROR": "Greška prilikom spremanja pretplata na obavijesti"
+            }
         },
         "PROFILES": {
             "TITLE": "Upravljanje profilima",

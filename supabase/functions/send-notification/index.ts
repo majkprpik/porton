@@ -118,28 +118,76 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body — accepts profileId (string) or profileIds (string[])
+    // Optional notificationType filters recipients to opted-in subscribers of that type.
     const body = await req.json();
     const notification = body.notification;
     const profileIds: string[] = body.profileIds ?? (body.profileId ? [body.profileId] : []);
+    const notificationType: string | undefined = body.notificationType;
 
-    if (!profileIds.length || !notification?.title || !notification?.body) {
+    if (!notification?.title || !notification?.body) {
       return jsonResponse(
-        { error: "Missing required fields: profileId(s), notification.title, notification.body" },
+        { error: "Missing required fields: notification.title, notification.body" },
         400
       );
     }
 
-    // Use service role client to read devices (RLS may restrict access)
+    if (!profileIds.length && !notificationType) {
+      return jsonResponse(
+        { error: "Must provide profileIds or notificationType" },
+        400
+      );
+    }
+
+    // Use service role client to read devices and subscriptions (bypasses RLS)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { db: { schema: "porton" } }
     );
 
+    let recipientIds = profileIds;
+
+    if (notificationType) {
+      let subQuery = supabaseAdmin
+        .from("notification_subscriptions")
+        .select("profile_id")
+        .eq("notification_type", notificationType);
+      if (profileIds.length) {
+        subQuery = subQuery.in("profile_id", profileIds);
+      }
+      const { data: subs, error: subsErr } = await subQuery;
+      if (subsErr) {
+        return jsonResponse({ error: subsErr.message }, 500);
+      }
+      recipientIds = (subs ?? []).map((s: { profile_id: string }) => s.profile_id);
+    }
+
+    if (!recipientIds.length) {
+      return jsonResponse({ message: "No subscribers for this notification", sent: 0 });
+    }
+
+    // Exclude soft-deleted profiles — they are retained only as references for
+    // historical data (notes, comments, statistics) and must not receive pushes.
+    const { data: activeProfiles, error: activeErr } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .in("id", recipientIds)
+      .or("is_deleted.is.null,is_deleted.eq.false");
+
+    if (activeErr) {
+      return jsonResponse({ error: activeErr.message }, 500);
+    }
+
+    recipientIds = (activeProfiles ?? []).map((p: { id: string }) => p.id);
+
+    if (!recipientIds.length) {
+      return jsonResponse({ message: "No active recipients", sent: 0 });
+    }
+
     const { data: devices, error: devicesErr } = await supabaseAdmin
       .from("user_devices")
       .select("fcm_token")
-      .in("profile_id", profileIds);
+      .in("profile_id", recipientIds);
 
     if (devicesErr) {
       return jsonResponse({ error: devicesErr.message }, 500);

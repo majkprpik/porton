@@ -73,7 +73,8 @@ export class NotesService {
       {
         title: sendingProfileFirstName + ' mentioned you in a note',
         body: note,
-      }
+      },
+      'note_mention',
     );
   }
 }

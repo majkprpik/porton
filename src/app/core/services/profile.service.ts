@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { Profile, ProfileRole, ProfileRoles, RepairTaskComment, WorkGroupProfile } from '../models/data.models';
 import { DataService } from './data.service';
+import { DeviceService } from './device.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Injectable({
@@ -37,6 +38,7 @@ export class ProfileService {
   constructor(
     private supabase: SupabaseService,
     private dataService: DataService,
+    private deviceService: DeviceService,
   ) {
     combineLatest([
       this.dataService.profiles$.pipe(nonNull()),
@@ -217,8 +219,10 @@ export class ProfileService {
 
       if (softDeleteProfileError) throw softDeleteProfileError;
 
-      const { error: disableAuthError } = await this.supabase.getAdminClient().auth.admin.updateUserById(profileId, { disabled: true } as any);
+      const { error: disableAuthError } = await this.supabase.getAdminClient().auth.admin.updateUserById(profileId, { ban_duration: '876000h' });
       if (disableAuthError) throw disableAuthError;
+
+      await this.deviceService.unregisterAllDevicesForProfile(profileId);
 
       if (softDeletedProfile?.id) {
         const filteredProfiles = this.profiles.filter(p => p.id !== softDeletedProfile.id);

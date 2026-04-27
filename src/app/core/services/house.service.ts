@@ -568,7 +568,11 @@ export class HouseService {
       }),
     }
 
-    this.pushNotificationService.sendNotification(workGroupProfiles.map(wgp => wgp.profile_id), notification);
+    this.pushNotificationService.sendNotification(
+      workGroupProfiles.map(wgp => wgp.profile_id),
+      notification,
+      'house_departed',
+    );
   }
 
   async updateHouseAvailabilityTime(houseAvailabilityId: number, timeField: 'arrival_time' | 'departure_time', timeValue: string) {

@@ -113,6 +113,23 @@ export class DeviceService {
     }
   }
 
+  async unregisterAllDevicesForProfile(profileId: string): Promise<boolean> {
+    try {
+      const { error } = await this.supabaseService.getAdminClient()
+        .schema('porton')
+        .from('user_devices')
+        .delete()
+        .eq('profile_id', profileId);
+
+      if (error) throw error;
+
+      return true;
+    } catch (error) {
+      console.error('Error unregistering all devices for profile:', error);
+      return false;
+    }
+  }
+
   async getDevicesForProfile(profileId: string): Promise<any[]> {
     try {
       const { data, error } = await this.supabaseService.getClient()

@@ -180,6 +180,19 @@ export interface PushNotification {
   icon?: string,
 }
 
+export type NotificationType =
+  | 'repair_task_completed'
+  | 'note_mention'
+  | 'house_departed'
+  | 'unscheduled_task';
+
+export interface NotificationSubscription {
+  id: number;
+  profile_id: string;
+  notification_type: NotificationType;
+  created_at?: string;
+}
+
 export interface Season {
   id: number;
   year: number; 

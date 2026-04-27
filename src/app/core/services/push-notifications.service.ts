@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
-import { PushNotification } from '../models/data.models';
+import { NotificationType, PushNotification } from '../models/data.models';
 import { Messaging as AngularMessaging } from '@angular/fire/messaging';
 import { deleteToken, getToken, onMessage } from 'firebase/messaging';
 import { environment } from '../../../environments/environment';
@@ -129,7 +129,11 @@ export class PushNotificationsService {
     this.fcmTokenSource.next(null);
   }
 
-  async sendNotification(profileIds: string | string[], notification: PushNotification): Promise<void> {
+  async sendNotification(
+    profileIds: string | string[],
+    notification: PushNotification,
+    notificationType?: NotificationType,
+  ): Promise<void> {
     const token = await this.supabaseService.getAccessToken();
 
     if (!token) {
@@ -138,13 +142,17 @@ export class PushNotificationsService {
     }
 
     const ids = Array.isArray(profileIds) ? profileIds : [profileIds];
-    if (!ids.length) return;
+    if (!ids.length && !notificationType) return;
+
+    const payload: Record<string, unknown> = { notification };
+    if (ids.length) payload['profileIds'] = ids;
+    if (notificationType) payload['notificationType'] = notificationType;
 
     try {
       await firstValueFrom(
         this.http.post(
           `${environment.supabaseUrl}/functions/v1/send-notification`,
-          { profileIds: ids, notification },
+          payload,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -502,7 +502,35 @@
         "TABS": {
             "PROFILES": "Profiles",
             "SEASONS": "Seasons",
-            "HOUSES": "Houses"
+            "HOUSES": "Houses",
+            "NOTIFICATIONS": "Notifications"
+        },
+        "NOTIFICATION-SUBSCRIPTIONS": {
+            "SELECT-PROFILES": "Select profiles",
+            "EDIT-TITLE": "Edit notifications",
+            "ACTIONS": "Actions",
+            "REPAIR-TASK-COMPLETED": {
+                "TITLE": "Repair task completed",
+                "DESCRIPTION": "Users selected here will be notified when a repair task is marked completed."
+            },
+            "NOTE-MENTION": {
+                "TITLE": "Note mentions",
+                "DESCRIPTION": "Notify the user when they are mentioned in a note."
+            },
+            "HOUSE-DEPARTED": {
+                "TITLE": "House departed",
+                "DESCRIPTION": "Notify the user when guests depart from a house assigned to their work group."
+            },
+            "UNSCHEDULED-TASK": {
+                "TITLE": "Unscheduled task",
+                "DESCRIPTION": "Notify the user when an unscheduled task is assigned to their work group."
+            },
+            "MESSAGES": {
+                "SUCCESS": "Success",
+                "ERROR": "Error",
+                "SAVE-SUCCESS": "Notification subscriptions saved",
+                "SAVE-ERROR": "Error while saving notification subscriptions"
+            }
         },
         "PROFILES": {
             "TITLE": "Profile management",
