@@ -13,7 +13,6 @@ import { WorkGroupService } from '../../core/services/work-group.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileService } from '../../core/services/profile.service';
-import { Router } from '@angular/router';
 import { DataService } from '../../core/services/data.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
 
@@ -41,99 +40,99 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
             <div class="no-groups-assigned">
                 <span>Nemate dodijeljenih radnih grupa.</span>
             </div>
-        } @else if(
-            !profileService.isHousekeeper(storedUserId) && 
-            !profileService.isCustomerService(storedUserId) && 
-            !profileService.isHouseTechnician(storedUserId)
-        ) {
-            <p-panel
-                [toggleable]="true"
-                class="cleaning-group"
-                [(collapsed)]="isCleaningCollapsed"
-            >
-                <ng-template pTemplate="header" class="work-group-container-header">
-                    <div class="left-side">
-                    <h3 class="group-name">{{ 'TEAMS.CLEANING' | translate }}</h3>
-                    <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroups)}}</span>
-                    </div>
-                </ng-template>
-                <div class="teams-container">
-                    <div class="teams-list">
-                        @if (cleaningGroups.length === 0) {
-                            <div class="empty-state">
-                                <p>{{ 'TEAMS.NO-CLEANING-GROUPS' | translate }}</p>
-                            </div>
-                        } @else {
-                            <div class="teams-grid">
-                                @for (group of cleaningGroups; track group.work_group_id; let i = $index) {
-                                    @if(i == 0 || !areDaysEqual(cleaningGroups[i].created_at, cleaningGroups[i-1].created_at)){
-                                        <div class="date-separator">
-                                            <div class="left-half-line"></div>
-                                            @if(isToday(group.created_at)){
-                                                <span>{{ 'TEAMS.TODAY' | translate }}</span>
-                                            } @else {
-                                                <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
-                                            }
-                                            <div class="right-half-line"></div>
-                                        </div>
+        } @else {
+            @if(!profileService.isHouseTechnician(storedUserId)) {
+                <p-panel
+                    [toggleable]="true"
+                    class="cleaning-group"
+                    [(collapsed)]="isCleaningCollapsed"
+                >
+                    <ng-template pTemplate="header" class="work-group-container-header">
+                        <div class="left-side">
+                        <h3 class="group-name">{{ 'TEAMS.CLEANING' | translate }}</h3>
+                        <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroups)}}</span>
+                        </div>
+                    </ng-template>
+                    <div class="teams-container">
+                        <div class="teams-list">
+                            @if (cleaningGroups.length === 0) {
+                                <div class="empty-state">
+                                    <p>{{ 'TEAMS.NO-CLEANING-GROUPS' | translate }}</p>
+                                </div>
+                            } @else {
+                                <div class="teams-grid">
+                                    @for (group of cleaningGroups; track group.work_group_id; let i = $index) {
+                                        @if(i == 0 || !areDaysEqual(cleaningGroups[i].created_at, cleaningGroups[i-1].created_at)){
+                                            <div class="date-separator">
+                                                <div class="left-half-line"></div>
+                                                @if(isToday(group.created_at)){
+                                                    <span>{{ 'TEAMS.TODAY' | translate }}</span>
+                                                } @else {
+                                                    <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
+                                                }
+                                                <div class="right-half-line"></div>
+                                            </div>
+                                        }
+                                        <app-team-task-card
+                                            [workGroup]="group"
+                                            [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                                            [assignedProfiles]="getAssignedProfiles(group.work_group_id)"
+                                            [isRepairGroup]="group.is_repair"
+                                        ></app-team-task-card>
                                     }
-                                    <app-team-task-card
-                                        [workGroup]="group"
-                                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
-                                        [assignedProfiles]="getAssignedProfiles(group.work_group_id)"
-                                        [isRepairGroup]="group.is_repair"
-                                    ></app-team-task-card> 
-                                }
-                            </div>
-                        }
+                                </div>
+                            }
+                        </div>
                     </div>
-                </div>
-            </p-panel>
+                </p-panel>
+            }
 
-            <p-panel
-                [toggleable]="true"
-                class="cleaning-group"
-                [(collapsed)]="isRepairsCollapsed"
-            >
-                <ng-template pTemplate="header" class="work-group-container-header">
-                    <div class="left-side">
-                    <h3 class="group-name">{{ 'TEAMS.REPAIRS' | translate }}</h3>
-                    <span class="work-groups-count">{{workGroupService.getNumberOfRepairWorkGroups(workGroups)}}</span>
-                    </div>
-                </ng-template>
+            @if(!profileService.isHousekeeper(storedUserId)) {
+                <p-panel
+                    [toggleable]="true"
+                    class="cleaning-group"
+                    [(collapsed)]="isRepairsCollapsed"
+                >
+                    <ng-template pTemplate="header" class="work-group-container-header">
+                        <div class="left-side">
+                        <h3 class="group-name">{{ 'TEAMS.REPAIRS' | translate }}</h3>
+                        <span class="work-groups-count">{{workGroupService.getNumberOfRepairWorkGroups(workGroups)}}</span>
+                        </div>
+                    </ng-template>
 
-                <div class="teams-container">
-                    <div class="teams-list">
-                        @if (repairGroups.length === 0) {
-                            <div class="empty-state">
-                                <p>{{ 'TEAMS.NO-REPAIR-GROUPS' | translate }}</p>
-                            </div>
-                        } @else {
-                            <div class="teams-grid">
-                                @for (group of repairGroups; track group.work_group_id; let i = $index) {
-                                    @if(i == 0 || !areDaysEqual(repairGroups[i].created_at, repairGroups[i-1].created_at)){
-                                        <div class="date-separator">
-                                            <div class="left-half-line"></div>
-                                            @if(isToday(group.created_at)){
-                                                <span>{{ 'TEAMS.TODAY' | translate }}</span>
-                                            } @else {
-                                                <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
-                                            }
-                                            <div class="right-half-line"></div>
-                                        </div>
+                    <div class="teams-container">
+                        <div class="teams-list">
+                            @if (repairGroups.length === 0) {
+                                <div class="empty-state">
+                                    <p>{{ 'TEAMS.NO-REPAIR-GROUPS' | translate }}</p>
+                                </div>
+                            } @else {
+                                <div class="teams-grid">
+                                    @for (group of repairGroups; track group.work_group_id; let i = $index) {
+                                        @if(i == 0 || !areDaysEqual(repairGroups[i].created_at, repairGroups[i-1].created_at)){
+                                            <div class="date-separator">
+                                                <div class="left-half-line"></div>
+                                                @if(isToday(group.created_at)){
+                                                    <span>{{ 'TEAMS.TODAY' | translate }}</span>
+                                                } @else {
+                                                    <span>{{ group.created_at | date: 'dd MMM YYYY' }}</span>
+                                                }
+                                                <div class="right-half-line"></div>
+                                            </div>
+                                        }
+                                        <app-team-task-card
+                                            [workGroup]="group"
+                                            [assignedTasks]="getAssignedTasks(group.work_group_id)"
+                                            [assignedProfiles]="getAssignedProfiles(group.work_group_id)"
+                                            [isRepairGroup]="group.is_repair"
+                                       ></app-team-task-card>
                                     }
-                                    <app-team-task-card
-                                        [workGroup]="group"
-                                        [assignedTasks]="getAssignedTasks(group.work_group_id)"
-                                        [assignedProfiles]="getAssignedProfiles(group.work_group_id)"
-                                        [isRepairGroup]="group.is_repair"
-                                   ></app-team-task-card> 
-                                }
-                            </div>
-                        }
+                                </div>
+                            }
+                        </div>
                     </div>
-                </div>
-            </p-panel>
+                </p-panel>
+            }
         }
     `,
     styles: `
@@ -336,15 +335,29 @@ export class Teams implements OnInit {
     private destroy$ = new Subject<void>();
 
     get cleaningGroups() {
-        return this.workGroups
-            .filter(g => !g.is_repair)
+        return this.scopeToUserIfRestrictedRole(this.workGroups.filter(g => !g.is_repair))
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
     get repairGroups() {
-        return this.workGroups
-            .filter(g => g.is_repair)
+        return this.scopeToUserIfRestrictedRole(this.workGroups.filter(g => g.is_repair))
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    private scopeToUserIfRestrictedRole(groups: WorkGroup[]): WorkGroup[] {
+        const isRestricted =
+            this.profileService.isHousekeeper(this.storedUserId) ||
+            this.profileService.isCustomerService(this.storedUserId) ||
+            this.profileService.isHouseTechnician(this.storedUserId);
+
+        if (!isRestricted) return groups;
+
+        const userWgIds = new Set(
+            this.workGroupProfiles
+                .filter(wgp => wgp.profile_id == this.storedUserId)
+                .map(wgp => wgp.work_group_id)
+        );
+        return groups.filter(g => userWgIds.has(g.work_group_id));
     }
 
     constructor(
@@ -352,7 +365,6 @@ export class Teams implements OnInit {
         public workGroupService: WorkGroupService,
         public authService: AuthService,
         public profileService: ProfileService,
-        private router: Router,
     ) {}
 
     ngOnInit() {
@@ -374,12 +386,6 @@ export class Teams implements OnInit {
                 this.houses = houses;
                 this.workGroupTasks = workGroupTasks;
                 this.workGroupProfiles = workGroupProfiles;
-
-                if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isCustomerService(this.storedUserId)) {
-                    this.navigateToTodaysWorkGroup();
-                } else if(this.profileService.isHouseTechnician(this.storedUserId)){
-                    this.navigateToWorkGroup();
-                }
 
                 this.loading = false;
             },
@@ -450,42 +456,12 @@ export class Teams implements OnInit {
                date.getDate() === today.getDate();
     }
 
-    isAssignedToTodaysWorkGroup(profileId: string | null){
-        const today = new Date();
-        const workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == profileId);
-        const todaysWorkGroup = this.workGroups.find(wg => workGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id) && wg.created_at.startsWith(today.toISOString().split('T')[0]));
-
-        return !!todaysWorkGroup;
-    }
-
-    navigateToTodaysWorkGroup(){
-        const today = new Date();
-        const workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.storedUserId);
-        const todaysWorkGroup = this.workGroups.find(wg => workGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id) && wg.created_at.startsWith(today.toISOString().split('T')[0]));
-
-        if (todaysWorkGroup && this.router.url == '/teams') {
-            this.router.navigate(['/teams', todaysWorkGroup.work_group_id]);
-        }
-    }
-
-    navigateToWorkGroup(){
-        const workGroupProfiles = this.workGroupProfiles.filter(wgp => wgp.profile_id == this.storedUserId);
-        const workGroup = this.workGroups.find(wg => workGroupProfiles.some(wgp => wgp.work_group_id == wg.work_group_id));
-
-        if (workGroup && this.router.url == '/teams') {
-            this.router.navigate(['/teams', workGroup.work_group_id]);
-        }
-    }
-
     isNoAssignedGroupsMessageDisplayed(){
-        const isHouseStaff = 
-            this.profileService.isHousekeeper(this.storedUserId) || 
-            this.profileService.isCustomerService(this.storedUserId);
+        const isRestricted =
+            this.profileService.isHousekeeper(this.storedUserId) ||
+            this.profileService.isCustomerService(this.storedUserId) ||
+            this.profileService.isHouseTechnician(this.storedUserId);
 
-        const isTechWithoutGroup =
-            this.profileService.isHouseTechnician(this.storedUserId) &&
-            !this.profileService.isProfileAssignedToWorkGroup(this.storedUserId);
-
-        return (!this.isAssignedToTodaysWorkGroup(this.storedUserId) && isHouseStaff) || isTechWithoutGroup;
+        return isRestricted && !this.profileService.isProfileAssignedToWorkGroup(this.storedUserId);
     }
 } 

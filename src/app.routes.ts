@@ -9,7 +9,6 @@ import { ReservationsComponent } from './app/pages/reservations/reservations.com
 import { AuthGuard } from './app/core/guards/auth.guard';
 import { RoleGuard } from './app/core/guards/role.guard';
 import { ArrivalsAndDeparturesPageComponent } from './app/pages/arrivals-and-departures/arrivals-and-departures-page.component';
-import { TeamsGuard } from './app/core/guards/teams.guard';
 import { TeamDetailGuard } from './app/core/guards/team-detail.guard';
 import { NotesPageComponent } from './app/pages/notes/notes-page.component';
 import { StatisticsComponent } from './app/pages/statistics/statistics.component';
@@ -143,8 +142,7 @@ export const appRoutes: Routes = [
             {
                 path: 'teams',
                 component: Teams,
-                data: { roles: TEAMS_ROLES },
-                canActivate: [TeamsGuard]
+                data: { roles: TEAMS_ROLES }
             },
             {
                 path: 'teams/:id',
