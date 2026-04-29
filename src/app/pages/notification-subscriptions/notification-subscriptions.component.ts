@@ -8,11 +8,12 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Subject, takeUntil } from 'rxjs';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
 import { SupabaseService } from '../../core/services/supabase.service';
-import { NotificationSubscription, NotificationType, Profile } from '../../core/models/data.models';
+import { NotificationSubscription, NotificationType, Profile, ProfileRole } from '../../core/models/data.models';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { NOTES_ROLES } from '../../../app.routes';
 
 interface NotificationColumn {
   type: NotificationType;
@@ -58,7 +59,11 @@ interface NotificationColumn {
             <td>{{ profile.first_name }} {{ profile.last_name }}</td>
             @for(col of columns; track col.type){
               <td class="bool-cell">
-                <i [class]="isSubscribed(profile.id, col.type) ? 'pi pi-check bool-true' : 'pi pi-times bool-false'"></i>
+                @if(isEligible(profile.id, col.type)){
+                  <i [class]="isSubscribed(profile.id, col.type) ? 'pi pi-check bool-true' : 'pi pi-times bool-false'"></i>
+                } @else {
+                  <i class="pi pi-times bool-locked"></i>
+                }
               </td>
             }
             <td class="action-cell">
@@ -84,7 +89,7 @@ interface NotificationColumn {
       appendTo="body">
       @if(editingProfile){
         <div class="edit-list">
-          @for(col of columns; track col.type){
+          @for(col of editableColumnsForProfile(editingProfile); track col.type){
             <div class="edit-row">
               <div class="edit-info">
                 <label [for]="'notif-' + col.type">{{ col.titleKey | translate }}</label>
@@ -137,6 +142,12 @@ interface NotificationColumn {
 
       .bool-false {
         color: #ef4444;
+        font-size: 0.95rem;
+      }
+
+      .bool-locked {
+        color: var(--text-color-secondary);
+        opacity: 0.45;
         font-size: 0.95rem;
       }
     }
@@ -213,6 +224,11 @@ export class NotificationSubscriptionsComponent implements OnInit, OnDestroy {
   ];
 
   private subscriptionsByProfile = new Map<string, Set<NotificationType>>();
+  private roleNameByProfileId = new Map<string, string>();
+
+  private readonly roleGatedTypes: Partial<Record<NotificationType, readonly string[]>> = {
+    note_mention: NOTES_ROLES,
+  };
 
   editDialogVisible = false;
   editingProfile: Profile | null = null;
@@ -227,9 +243,20 @@ export class NotificationSubscriptionsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.dataService.profiles$
-      .pipe(nonNull(), takeUntil(this.destroy$))
-      .subscribe(profiles => {
+    combineLatest([
+      this.dataService.profiles$.pipe(nonNull()),
+      this.dataService.profileRoles$.pipe(nonNull()),
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([profiles, roles]) => {
+        const roleById = new Map<number, string>(roles.map((r: ProfileRole) => [r.id, r.name]));
+        this.roleNameByProfileId.clear();
+        for (const p of profiles) {
+          if (p.role_id != null) {
+            const name = roleById.get(p.role_id);
+            if (name) this.roleNameByProfileId.set(p.id, name);
+          }
+        }
         this.profiles = profiles
           .filter(p => !p.is_deleted && !p.is_test_user)
           .sort((a, b) => (a.first_name ?? '').localeCompare(b.first_name ?? ''));
@@ -258,6 +285,17 @@ export class NotificationSubscriptionsComponent implements OnInit, OnDestroy {
 
   isSubscribed(profileId: string, type: NotificationType): boolean {
     return this.subscriptionsByProfile.get(profileId)?.has(type) ?? false;
+  }
+
+  isEligible(profileId: string, type: NotificationType): boolean {
+    const allowedRoles = this.roleGatedTypes[type];
+    if (!allowedRoles) return true;
+    const roleName = this.roleNameByProfileId.get(profileId);
+    return !!roleName && allowedRoles.includes(roleName);
+  }
+
+  editableColumnsForProfile(profile: Profile): NotificationColumn[] {
+    return this.columns.filter(col => this.isEligible(profile.id, col.type));
   }
 
   get dialogHeader(): string {
