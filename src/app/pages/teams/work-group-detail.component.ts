@@ -323,12 +323,6 @@ export class WorkGroupDetail implements OnInit {
                 this.assignedTasks = this.getAssignedTasks(workGroupId);
                 this.assignedProfiles = this.getAssignedProfiles(workGroupId);
 
-                if(this.profileService.isHousekeeper(this.storedUserId) || this.profileService.isCustomerService(this.storedUserId)) {
-                    this.redirectToTeamsIfNoTodaysWorkGroup();
-                } else if(this.profileService.isHouseTechnician(this.storedUserId)) {
-                    this.redirectToTeamsIfNoWorkGroup();
-                }
-
                 this.setupUrgentIcons();
                 this.loading = false;
             },
@@ -424,24 +418,4 @@ export class WorkGroupDetail implements OnInit {
     openTaskDetails(task: Task){
         this.taskService.$taskModalData.next(task);
     }
-
-    redirectToTeamsIfNoTodaysWorkGroup(){
-        const housekeepingWorkGroupProfile = this.workGroupProfiles.find(wgp => wgp.profile_id == this.authService.getStoredUserId());
-        const todaysWorkGroup = this.workGroups.find(wg => 
-            wg.work_group_id == housekeepingWorkGroupProfile?.work_group_id &&
-            wg.created_at.startsWith(new Date().toISOString().split('T')[0])
-        );
-
-        if(!todaysWorkGroup && this.router.url.includes('/teams') && this.router.url != '/teams') {
-            this.router.navigate(['/teams']);
-        }
-    }
-
-    redirectToTeamsIfNoWorkGroup(){
-        const isInWorkGroup = this.profileService.isProfileAssignedToWorkGroup(this.storedUserId);
-
-        if(!isInWorkGroup && this.router.url.includes('/teams') && this.router.url != '/teams') {
-            this.router.navigate(['/teams']);
-        }
-    }
-} 
+}
