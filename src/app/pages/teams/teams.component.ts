@@ -50,7 +50,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     <ng-template pTemplate="header" class="work-group-container-header">
                         <div class="left-side">
                         <h3 class="group-name">{{ 'TEAMS.CLEANING' | translate }}</h3>
-                        <span class="work-groups-count">{{workGroupService.getNumberOfCleaningWorkGroups(workGroups)}}</span>
+                        <span class="work-groups-count">{{cleaningGroups.length}}</span>
                         </div>
                     </ng-template>
                     <div class="teams-container">
@@ -96,7 +96,7 @@ import { nonNull } from '../../shared/rxjs-operators/non-null';
                     <ng-template pTemplate="header" class="work-group-container-header">
                         <div class="left-side">
                         <h3 class="group-name">{{ 'TEAMS.REPAIRS' | translate }}</h3>
-                        <span class="work-groups-count">{{workGroupService.getNumberOfRepairWorkGroups(workGroups)}}</span>
+                        <span class="work-groups-count">{{repairGroups.length}}</span>
                         </div>
                     </ng-template>
 

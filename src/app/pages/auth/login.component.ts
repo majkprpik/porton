@@ -106,29 +106,32 @@ export class Login {
                 const data = await this.authService.login(this.email.trim() + '@porton.com', this.password.trim());
                 if (!data) {
                     this.errorMessage = 'Invalid email or password';
+                    this.loading = false;
                     return;
                 }
 
                 const userAccessData = await this.authService.getUserAccessData();
 
                 if(!userAccessData || userAccessData.is_deleted) {
+                    this.loading = false;
                     this.authService.logout();
                     return;
                 }
-                
+
                 this.dataService.loadInitialData().subscribe({
                     next: () => {
-                        this.redirectUserByRole(userAccessData.role)
+                        this.redirectUserByRole(userAccessData.role);
+                        this.loading = false;
                     },
                     error: (err) => {
                         console.error("Failed to load data:", err);
+                        this.loading = false;
                         this.authService.logout();
                     },
                 });
             } catch (error) {
                 this.errorMessage = 'An error occurred during login';
                 console.error('Login error:', error);
-            } finally {
                 this.loading = false;
             }
         }

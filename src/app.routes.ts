@@ -84,7 +84,7 @@ const ARRIVALS_AND_DEPARTURES_ROLES = [
     ProfileRoles.Prodaja
 ];
 
-const NOTES_ROLES = [
+export const NOTES_ROLES = [
     ProfileRoles.VoditeljKampa,
     ProfileRoles.Uprava,
     ProfileRoles.KorisnickaSluzba,

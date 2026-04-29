@@ -8,13 +8,21 @@ import { DeviceService } from './device.service';
 import { DataService } from './data.service';
 import { StorageService, STORAGE_KEYS } from './storage.service';
 import { nonNull } from '../../shared/rxjs-operators/non-null';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {  
+export class AuthService {
   profileRoles: ProfileRole[] = [];
   private isLoggingOut = false;
+
+  private isAuthLoadingSubject = new BehaviorSubject<boolean>(false);
+  isAuthLoading$ = this.isAuthLoadingSubject.asObservable();
+
+  setAuthLoading(loading: boolean): void {
+    this.isAuthLoadingSubject.next(loading);
+  }
 
   constructor(
     private router: Router,
@@ -108,6 +116,7 @@ export class AuthService {
     if (this.isLoggingOut) return;
 
     this.isLoggingOut = true;
+    this.setAuthLoading(true);
 
     try {
       const storedUserID = this.getStoredUserId();
@@ -126,6 +135,7 @@ export class AuthService {
       await this.router.navigate(['/login']);
     } finally {
       this.isLoggingOut = false;
+      this.setAuthLoading(false);
     }
   }
 
@@ -254,6 +264,7 @@ export class AuthService {
       { name: 'Ivo Pranjić', role: ProfileRoles.Odrzavanje, password: 'i4Ls1D' },
       { name: 'Daniel Begzić', role: ProfileRoles.Odrzavanje, password: 'j3Mt2E' },
       { name: 'Deleted User', role: ProfileRoles.VoditeljRecepcije, password: 'test123', id: '11111111-1111-1111-1111-111111111111' },
+      { name: 'testuser2', role: ProfileRoles.VoditeljRecepcije, password: 'URBx0m' }, // na prod
     ];
   
     for (const user of users) {
