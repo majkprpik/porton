@@ -363,7 +363,7 @@ export class AppSidebar {
     private isRoleAllowedForPregled(role?: string): boolean {
         if (!role) return false;
 
-        const allowedRoles = this.profileRoles.filter(profileRole => 
+        const allowedRoles = this.profileRoles.filter(profileRole =>
             profileRole.name == ProfileRoles.KucniMajstor ||
             profileRole.name == ProfileRoles.Odrzavanje ||
             profileRole.name == ProfileRoles.VoditeljRecepcije ||
@@ -374,7 +374,8 @@ export class AppSidebar {
             profileRole.name == ProfileRoles.VoditeljKampa ||
             profileRole.name == ProfileRoles.Uprava ||
             profileRole.name == ProfileRoles.SavjetnikUprave ||
-            profileRole.name == ProfileRoles.VoditeljDomacinstva
+            profileRole.name == ProfileRoles.VoditeljDomacinstva ||
+            profileRole.name == ProfileRoles.Terasar
         );
         
         return allowedRoles.some(allowedRole => allowedRole.name == role);
