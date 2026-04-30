@@ -34,7 +34,8 @@ const ALL_STAFF_ROLES = [
     ProfileRoles.KucniMajstor,
     ProfileRoles.NocnaRecepcija,
     ProfileRoles.Odrzavanje,
-    ProfileRoles.KorisnickaSluzba
+    ProfileRoles.KorisnickaSluzba,
+    ProfileRoles.Terasar
 ];
 
 const MANAGEMENT_AND_SALES_ROLES = [
