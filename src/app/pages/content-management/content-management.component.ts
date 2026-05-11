@@ -6,6 +6,11 @@ import { SeasonsComponent } from '../seasons/seasons.component';
 import { HousesComponent } from '../houses/houses.component';
 import { NotificationSubscriptionsComponent } from '../notification-subscriptions/notification-subscriptions.component';
 import { UpperCasePipe } from '@angular/common';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
+import { DataService } from '../../core/services/data.service';
+import { StorageService, STORAGE_KEYS } from '../../core/services/storage.service';
+import { ProfileRoles } from '../../core/models/data.models';
+import { nonNull } from '../../shared/rxjs-operators/non-null';
 
 @Component({
   selector: 'app-content-management',
@@ -127,17 +132,49 @@ import { UpperCasePipe } from '@angular/common';
   `
 })
 export class ContentManagementComponent {
-  content = [
+  private readonly allContent = [
     { key: 'Profiles',      icon: 'pi-users' },
     { key: 'Seasons',       icon: 'pi-calendar' },
     { key: 'Houses',        icon: 'pi-home' },
     { key: 'Notifications', icon: 'pi-bell' },
   ];
 
+  content = this.allContent;
   selectedContent: string = '';
 
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private dataService: DataService,
+    private storageService: StorageService,
+  ) {}
+
   ngOnInit(){
-    this.selectedContent = this.content[0].key;
+    combineLatest([
+      this.dataService.profiles$.pipe(nonNull()),
+      this.dataService.profileRoles$.pipe(nonNull()),
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([profiles, profileRoles]) => {
+        const userId = this.storageService.getString(STORAGE_KEYS.PROFILE_ID);
+        const userProfile = profiles.find(p => p.id == userId);
+        const userRole = profileRoles.find(r => r.id == userProfile?.role_id);
+
+        if (userRole?.name === ProfileRoles.Prodaja) {
+          this.content = this.allContent.filter(c => c.key !== 'Profiles');
+        } else {
+          this.content = this.allContent;
+        }
+
+        if (!this.selectedContent || !this.content.some(c => c.key === this.selectedContent)) {
+          this.selectedContent = this.content[0].key;
+        }
+      });
+  }
+
+  ngOnDestroy(){
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   setSelectedContent(content: string){

@@ -465,6 +465,18 @@ export class AppSidebar {
         return !!this.profileRoles.find(pr => pr.name == role);
     }
 
+    private canViewContentManagement(role?: string): boolean {
+        if (!role) return false;
+
+        const allowedRoles = this.profileRoles.filter(profileRole =>
+            profileRole.name == ProfileRoles.VoditeljKampa ||
+            profileRole.name == ProfileRoles.Uprava ||
+            profileRole.name == ProfileRoles.Prodaja
+        );
+
+        return allowedRoles.some(allowedRole => allowedRole.name == role);
+    }
+
     private canViewDnevniList(role?: string): boolean {
         if (!role) return false;
 
@@ -526,7 +538,17 @@ export class AppSidebar {
                 { label: this.translateService.instant('MENU.STATISTICS'), icon: 'pi pi-chart-bar', routerLink: ['/statistics'] },
                 { label: this.translateService.instant('MENU.ARCHIVE'), icon: 'pi pi-book', routerLink: ['/archive'] },
                 { label: this.translateService.instant('MENU.CONSOLE-MESSAGES'), icon: 'pi pi-bullseye', routerLink: ['/console-messages'] },
+            );
+        }
+
+        if (this.canViewContentManagement(userRole?.name)) {
+            menuItems.push(
                 { label: this.translateService.instant('MENU.CONTENT-MANAGEMENT'), icon: 'pi pi-microchip', routerLink: ['/content-management'], hideOnMobile: true },
+            );
+        }
+
+        if (this.isVoditeljKampa(userRole?.name)) {
+            menuItems.push(
                 { label: this.translateService.instant('MENU.3D'), icon: 'fa-solid fa-cubes', routerLink: ['/map'], hideOnMobile: true },
             );
         }
