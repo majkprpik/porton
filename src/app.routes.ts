@@ -109,6 +109,12 @@ const ADMIN_ROLES = [
     ProfileRoles.Uprava
 ];
 
+const CONTENT_MANAGEMENT_ROLES = [
+    ProfileRoles.VoditeljKampa,
+    ProfileRoles.Uprava,
+    ProfileRoles.Prodaja
+];
+
 const STATISTICS_ROLES = [
     ProfileRoles.VoditeljKampa
 ];
@@ -184,7 +190,7 @@ export const appRoutes: Routes = [
             {
                 path: 'content-management',
                 component: ContentManagementComponent,
-                data: { roles: ADMIN_ROLES }
+                data: { roles: CONTENT_MANAGEMENT_ROLES }
             },
             { path: 'documentation', component: Documentation },
             { path: 'profile-details', component: ProfileDetailsComponent },
